@@ -1,0 +1,581 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model SuperAdmin {
+  id        String   @id @default(uuid())
+  email     String   @unique
+  senha     String
+  nome      String   @default("Super Admin")
+  createdAt DateTime @default(now())
+  ticketsRespondidos TicketMessage[] @relation("TicketMensagemSuperAdmin")
+}
+
+model BillingSettings {
+  id                 String   @id @default(uuid())
+  nomeRecebedor      String
+  cpfCnpjRecebedor   String
+  chavePix           String
+  cidadeRecebedor    String
+  descricaoPadrao    String?
+  instrucoesPagamento String?
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+}
+
+model Salao {
+  id                String   @id @default(uuid())
+  nome              String
+  slug              String   @unique
+  plano             String   @default("basic") // basic, pro, enterprise
+  planoStatus       String   @default("trial") // trial, ativo, inadimplente, suspenso
+  ativo             Boolean  @default(true)
+  logoUrl           String?
+  corPrimaria       String   @default("#7c3aed")
+  corSecundaria     String   @default("#1e293b")
+  bannerUrl         String?
+  bannerTexto       String?  @default("Agende seu horário com facilidade.")
+  tema              String   @default("dark") // dark, light
+  telefone          String?
+  endereco          String?
+  whatsapp          String?
+  evolutionUrl      String?
+  evolutionKey      String?
+  evolutionInstance String?
+  geminiKey         String?
+  infoFaq           String?
+  infoPoliticas     String?
+  infoPromocoes     String?
+  infoRegras        String?
+  notaInterna       String?
+  maxProfissionais  Int      @default(5)
+  moduloWhatsapp    Boolean  @default(false)
+  moduloIA          Boolean  @default(false)
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+  fidelidadeAtiva   Boolean  @default(false)
+  fidelidadeTipo    String   @default("cashback") // cashback, pontos
+  fidelidadeRegra   String?  // Ex: "5" (5% cashback) ou "1" (1 real = 1 ponto)
+  fidelidadeMeta    Int?     // Ex: 100 pontos para resgate
+  fidelidadePremio  String?  // Descrição do prêmio para pontos
+
+  templateConfirmacao String? @default("✅ *Agendamento confirmado!*\n\nOlá, {{cliente}}! Seu agendamento foi confirmado.\n\n✂️ *Serviço:* {{servico}}\n👤 *Profissional:* {{profissional}}\n📅 *Data:* {{data}} às {{hora}}\n\n{{salao}}")
+  templateLembrete    String? @default("⏰ *Lembrete de agendamento*\n\nOlá, {{cliente}}! Lembrando que seu agendamento é *amanhã*.\n\n✂️ *Serviço:* {{servico}}\n👤 *Profissional:* {{profissional}}\n🕐 *Horário:* {{hora}}\n\nAté amanhã! 😊")
+  templateCancelamento String? @default("❌ *Agendamento cancelado*\n\nOlá, {{cliente}}! Seu agendamento para {{data}} às {{hora}} foi cancelado.")
+
+  usuarios      Usuario[]
+  profissionais Profissional[]
+  categoriasProfissionais CategoriaProfissional[]
+  servicos      Servico[]
+  clientes      Cliente[]
+  produtos      Produto[]
+  listaEspera   ListaEspera[]
+  pacotes       Pacote[]
+  agendamentos  Agendamento[]
+  despesas      Despesa[]
+  conversas          Conversa[]
+  respostasRapidas   RespostaRapida[]
+  caixas             CaixaSessao[]
+  auditLogs     AuditLog[]
+  invoices      Invoice[]
+  supportTickets SupportTicket[]
+}
+
+model Usuario {
+  id             String        @id @default(uuid())
+  salaoId        String
+  nome           String?
+  email          String        @unique
+  senha          String
+  role           String        @default("admin") // admin, gestor, recepcao, profissional
+  permissions    String[]      @default([])
+  actionPermissions String[]   @default([])
+  profissionalId String?       @unique
+  createdAt      DateTime      @default(now())
+  passwordUpdatedAt DateTime   @default(now())
+  salao          Salao         @relation(fields: [salaoId], references: [id], onDelete: Cascade)
+  profissional   Profissional? @relation("UsuarioProfissional", fields: [profissionalId], references: [id])
+  caixasAbertos  CaixaSessao[] @relation("CaixaAbertoPor")
+  caixasFechados CaixaSessao[] @relation("CaixaFechadoPor")
+  auditLogs      AuditLog[]
+  resetTokens    PasswordResetToken[]
+}
+
+model Profissional {
+  id              String                @id @default(uuid())
+  salaoId         String
+  nome            String
+  email           String?
+  telefone        String?
+  cpf             String?
+  rg              String?
+  dataNascimento  DateTime?
+  endereco        String?
+  numero          String?
+  complemento     String?
+  bairro          String?
+  cep             String?
+  cidade          String?
+  estado          String?
+  fotoUrl         String?
+  bio             String?
+  ativo           Boolean               @default(true)
+  caixa           Boolean               @default(false)
+  comissaoPercent Float                 @default(50)
+  banco           String?
+  agencia         String?
+  conta           String?
+  pix             String?
+  metaMensal      Float                 @default(0)
+  bonusMetaValor  Float                 @default(0)
+  bonusMetaPercent Float                @default(0)
+  createdAt       DateTime              @default(now())
+  salao           Salao                 @relation(fields: [salaoId], references: [id], onDelete: Cascade)
+  horarios        Horario[]
+  bloqueios       Bloqueio[]
+  servicos        ProfissionalServico[]
+  categorias      ProfissionalCategoria[]
+  listaEspera     ListaEspera[]
+  agendamentos    Agendamento[]
+  usuario         Usuario?              @relation("UsuarioProfissional")
+}
+
+model CategoriaProfissional {
+  id            String                  @id @default(uuid())
+  salaoId       String
+  nome          String
+  ativo         Boolean                 @default(true)
+  createdAt     DateTime                @default(now())
+  salao         Salao                   @relation(fields: [salaoId], references: [id], onDelete: Cascade)
+  profissionais ProfissionalCategoria[]
+
+  @@unique([salaoId, nome])
+}
+
+model ProfissionalCategoria {
+  profissionalId String
+  categoriaId    String
+  profissional   Profissional          @relation(fields: [profissionalId], references: [id], onDelete: Cascade)
+  categoria      CategoriaProfissional @relation(fields: [categoriaId], references: [id], onDelete: Cascade)
+
+  @@id([profissionalId, categoriaId])
+}
+
+model Cliente {
+  id           String        @id @default(uuid())
+  salaoId      String
+  nome         String
+  apelido      String?
+  telefone     String
+  email        String?
+  instagram    String?
+  cpf          String?
+  rg           String?
+  sexo         String?
+  dataNascimento DateTime?
+  endereco     String?
+  numero       String?
+  complemento  String?
+  bairro       String?
+  cep          String?
+  cidade       String?
+  estado       String?
+  totalGasto   Float         @default(0)
+  totalVisitas Int           @default(0)
+  lastVisit    DateTime?
+  cashbackSaldo Float         @default(0)
+  pontosSaldo   Int           @default(0)
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+  salao        Salao         @relation(fields: [salaoId], references: [id], onDelete: Cascade)
+  agendamentos Agendamento[]
+  pacotes      ClientePacote[]
+
+  @@unique([salaoId, telefone])
+}
+
+model ClientePacote {
+  id               String   @id @default(uuid())
+  clienteId        String
+  pacoteId         String
+  sessoesRestantes Int
+  dataCompra       DateTime @default(now())
+  cliente          Cliente  @relation(fields: [clienteId], references: [id], onDelete: Cascade)
+  pacote           Pacote   @relation(fields: [pacoteId], references: [id], onDelete: Cascade)
+}
+
+model Servico {
+  id               String                @id @default(uuid())
+  salaoId          String
+  nome             String
+  descricao        String?
+  duracaoMin       Int
+  preco            Float
+  custoProduto     Float                 @default(0)
+  ativo            Boolean               @default(true)
+  createdAt        DateTime              @default(now())
+  salao           Salao                 @relation(fields: [salaoId], references: [id], onDelete: Cascade)
+  profissionais    ProfissionalServico[]
+  consumos        ServicoProdutoConsumo[]
+  listaEspera     ListaEspera[]
+  agendamentos     Agendamento[]
+  pacotes          PacoteServico[]
+  itensAgendamento AgendamentoItem[]
+}
+
+model Produto {
+  id          String   @id @default(uuid())
+  salaoId     String
+  nome        String
+  descricao   String?
+  preco       Float
+  estoque     Int      @default(0)
+  ativo       Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  salao       Salao    @relation(fields: [salaoId], references: [id], onDelete: Cascade)
+  consumosServico ServicoProdutoConsumo[]
+  agendamentos AgendamentoProduto[]
+}
+
+model ServicoProdutoConsumo {
+  servicoId   String
+  produtoId   String
+  quantidade  Int      @default(1)
+  servico     Servico  @relation(fields: [servicoId], references: [id], onDelete: Cascade)
+  produto     Produto  @relation(fields: [produtoId], references: [id], onDelete: Cascade)
+
+  @@id([servicoId, produtoId])
+}
+
+model ProfissionalServico {
+  profissionalId  String
+  servicoId       String
+  comissaoPercent Float?
+  comissaoValor   Float?
+  profissional    Profissional @relation(fields: [profissionalId], references: [id], onDelete: Cascade)
+  servico         Servico      @relation(fields: [servicoId], references: [id], onDelete: Cascade)
+
+  @@id([profissionalId, servicoId])
+}
+
+model Pacote {
+  id           String          @id @default(uuid())
+  salaoId      String
+  nome         String
+  descricao    String?
+  preco        Float
+  duracaoMin   Int
+  ativo        Boolean         @default(true)
+  createdAt    DateTime        @default(now())
+  salao        Salao           @relation(fields: [salaoId], references: [id], onDelete: Cascade)
+  servicos     PacoteServico[]
+  agendamentos Agendamento[]
+  compras      ClientePacote[]
+}
+
+model PacoteServico {
+  pacoteId  String
+  servicoId String
+  pacote    Pacote  @relation(fields: [pacoteId], references: [id], onDelete: Cascade)
+  servico   Servico @relation(fields: [servicoId], references: [id], onDelete: Cascade)
+
+  @@id([pacoteId, servicoId])
+}
+
+model Horario {
+  id             String       @id @default(uuid())
+  profissionalId String
+  diaSemana      Int
+  inicioHora     String
+  fimHora        String
+  intervaloMin   Int          @default(30)
+  profissional   Profissional @relation(fields: [profissionalId], references: [id], onDelete: Cascade)
+}
+
+model Bloqueio {
+  id             String       @id @default(uuid())
+  profissionalId String
+  data           DateTime
+  inicioHora     String?
+  fimHora        String?
+  motivo         String?
+  profissional   Profissional @relation(fields: [profissionalId], references: [id], onDelete: Cascade)
+}
+
+model Conversa {
+  id          String     @id @default(uuid())
+  salaoId     String
+  telefone    String
+  nomeCliente String?
+  historico   Json       @default("[]")
+  atendimento String     @default("ia")
+  status      String     @default("aberta")
+  updatedAt   DateTime   @updatedAt
+  salao       Salao      @relation(fields: [salaoId], references: [id], onDelete: Cascade)
+  mensagens   Mensagem[]
+
+  @@unique([salaoId, telefone])
+}
+
+model Mensagem {
+  id         String   @id @default(uuid())
+  conversaId String
+  conteudo   String
+  direcao    String
+  origem     String   @default("ia")
+  createdAt  DateTime @default(now())
+  conversa   Conversa @relation(fields: [conversaId], references: [id], onDelete: Cascade)
+}
+
+model RespostaRapida {
+  id        String   @id @default(uuid())
+  salaoId   String
+  atalho    String
+  texto     String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  salao     Salao    @relation(fields: [salaoId], references: [id], onDelete: Cascade)
+
+  @@unique([salaoId, atalho])
+}
+
+model Agendamento {
+  id              String            @id @default(uuid())
+  salaoId         String
+  profissionalId  String
+  servicoId       String?
+  pacoteId        String?
+  clienteId       String?
+  clienteNome     String
+  clienteTelefone String
+  data            DateTime
+  inicioHora      String
+  fimHora         String
+  status          String            @default("confirmado")
+  statusPagamento String            @default("pendente")
+  formaPagamento  String?
+  comissaoValor   Float?
+  comissaoPaga    Boolean           @default(false)
+  estoqueConsumido Boolean          @default(false)
+  taxaOperadora   Float                 @default(0)
+  observacao      String?
+  avaliacao       Int?
+  comentario      String?
+  createdAt       DateTime          @default(now())
+  salao           Salao             @relation(fields: [salaoId], references: [id], onDelete: Cascade)
+  profissional    Profissional      @relation(fields: [profissionalId], references: [id], onDelete: Cascade)
+  servico         Servico?          @relation(fields: [servicoId], references: [id])
+  pacote          Pacote?           @relation(fields: [pacoteId], references: [id])
+  cliente         Cliente?          @relation(fields: [clienteId], references: [id])
+  itens           AgendamentoItem[]
+  produtos        AgendamentoProduto[]
+  fotos           AgendamentoFoto[]
+  pagamentos      AgendamentoPagamento[]
+  reagendadoDeId  String?
+  reagendados     Agendamento[]      @relation("AgendamentoReagendamento")
+  reagendadoDe    Agendamento?       @relation("AgendamentoReagendamento", fields: [reagendadoDeId], references: [id])
+}
+
+model AgendamentoPagamento {
+  id             String      @id @default(uuid())
+  agendamentoId  String
+  forma          String      
+  valor          Float
+  agendamento    Agendamento @relation(fields: [agendamentoId], references: [id], onDelete: Cascade)
+}
+
+model CaixaSessao {
+  id                    String   @id @default(uuid())
+  salaoId               String
+  abertoPorUserId       String
+  fechadoPorUserId      String?
+  turnoNome             String
+  observacaoAbertura    String?
+  observacaoFechamento  String?
+  recebidoDeNome        String?
+  entregueParaNome      String?
+  assinaturaFechamento  String?
+  status                String   @default("aberto")
+  fundoInicial          Float    @default(0)
+  dinheiroInformado     Float?
+  diferencaDinheiro     Float?
+  abertoEm              DateTime @default(now())
+  fechadoEm             DateTime?
+  salao                 Salao    @relation(fields: [salaoId], references: [id], onDelete: Cascade)
+  abertoPor             Usuario  @relation("CaixaAbertoPor", fields: [abertoPorUserId], references: [id], onDelete: Cascade)
+  fechadoPor            Usuario? @relation("CaixaFechadoPor", fields: [fechadoPorUserId], references: [id], onDelete: SetNull)
+  movimentos            CaixaMovimento[]
+}
+
+model CaixaMovimento {
+  id            String      @id @default(uuid())
+  caixaSessaoId String
+  tipo          String
+  valor         Float
+  descricao     String?
+  createdAt     DateTime    @default(now())
+  caixaSessao   CaixaSessao @relation(fields: [caixaSessaoId], references: [id], onDelete: Cascade)
+}
+
+model AuditLog {
+  id         String   @id @default(uuid())
+  salaoId    String
+  usuarioId  String?
+  acao       String
+  entidade   String
+  entidadeId String?
+  status     String   @default("success")
+  severity   String   @default("info")
+  mensagem   String?
+  contexto   Json?
+  ip         String?
+  userAgent  String?
+  createdAt  DateTime @default(now())
+  salao      Salao    @relation(fields: [salaoId], references: [id], onDelete: Cascade)
+  usuario    Usuario? @relation(fields: [usuarioId], references: [id], onDelete: SetNull)
+
+  @@index([salaoId, createdAt])
+  @@index([salaoId, status, severity, createdAt])
+}
+
+model PasswordResetToken {
+  id        String   @id @default(uuid())
+  usuarioId String
+  token     String   @unique
+  expiresAt DateTime
+  usedAt    DateTime?
+  createdAt DateTime @default(now())
+  usuario   Usuario   @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
+
+  @@index([usuarioId, expiresAt])
+}
+
+model AgendamentoFoto {
+  id            String      @id @default(uuid())
+  agendamentoId String
+  url           String
+  createdAt     DateTime    @default(now())
+  agendamento   Agendamento @relation(fields: [agendamentoId], references: [id], onDelete: Cascade)
+}
+
+model Despesa {
+  id          String   @id @default(uuid())
+  salaoId     String
+  descricao   String
+  valor       Float
+  categoria   String   @default("outros")
+  data        DateTime @default(now())
+  createdAt   DateTime @default(now())
+  salao       Salao    @relation(fields: [salaoId], references: [id], onDelete: Cascade)
+}
+
+model AgendamentoItem {
+  id            String      @id @default(uuid())
+  agendamentoId String
+  servicoId     String
+  nome          String
+  preco         Float
+  duracaoMin    Int
+  createdAt     DateTime    @default(now())
+  agendamento   Agendamento @relation(fields: [agendamentoId], references: [id], onDelete: Cascade)
+  servico       Servico     @relation(fields: [servicoId], references: [id])
+}
+
+model AgendamentoProduto {
+  id            String      @id @default(uuid())
+  agendamentoId String
+  produtoId     String
+  nome          String
+  preco         Float
+  quantidade    Int         @default(1)
+  createdAt     DateTime    @default(now())
+  agendamento   Agendamento @relation(fields: [agendamentoId], references: [id], onDelete: Cascade)
+  produto       Produto     @relation(fields: [produtoId], references: [id])
+}
+
+model ListaEspera {
+  id              String        @id @default(uuid())
+  salaoId         String
+  clienteNome     String
+  clienteTelefone String
+  servicoId       String?
+  profissionalId  String?
+  dataDesejada    DateTime?
+  periodo         String?
+  observacao      String?
+  status          String        @default("aberta")
+  createdAt       DateTime      @default(now())
+  salao           Salao         @relation(fields: [salaoId], references: [id], onDelete: Cascade)
+  servico         Servico?      @relation(fields: [servicoId], references: [id])
+  profissional    Profissional? @relation(fields: [profissionalId], references: [id])
+}
+
+model Invoice {
+  id                    String   @id @default(uuid())
+  salaoId               String
+  competencia           String
+  descricao             String?
+  valor                 Float
+  vencimento            DateTime
+  status                String   @default("aberta")
+  pixNomeRecebedor      String
+  pixCpfCnpjRecebedor   String
+  pixChave              String
+  pixCidadeRecebedor    String
+  pixDescricao          String?
+  pixPayload            String?
+  comprovanteUrl        String?
+  comprovanteNome       String?
+  comprovanteEnviadoEm  DateTime?
+  pagoEm                DateTime?
+  valorPago             Float?
+  observacoesInternas   String?
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
+  salao                 Salao    @relation(fields: [salaoId], references: [id], onDelete: Cascade)
+
+  @@index([salaoId, vencimento])
+  @@index([status, vencimento])
+}
+
+model SupportTicket {
+  id                    String          @id @default(uuid())
+  numero                Int             @default(autoincrement())
+  salaoId               String
+  assunto               String
+  categoria             String
+  prioridade            String          @default("normal")
+  descricao             String
+  status                String          @default("aberto")
+  responsavelNome       String?
+  ultimaInteracaoEm     DateTime        @default(now())
+  resolvidoEm           DateTime?
+  createdAt             DateTime        @default(now())
+  updatedAt             DateTime        @updatedAt
+  salao                 Salao           @relation(fields: [salaoId], references: [id], onDelete: Cascade)
+  mensagens             TicketMessage[]
+
+  @@index([salaoId, status, updatedAt])
+  @@index([numero])
+}
+
+model TicketMessage {
+  id              String         @id @default(uuid())
+  ticketId        String
+  autorTipo       String
+  autorNome       String
+  autorUsuarioId  String?
+  autorSuperAdminId String?
+  mensagem        String
+  anexos          String[]       @default([])
+  createdAt       DateTime       @default(now())
+  ticket          SupportTicket  @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+  autorSuperAdmin SuperAdmin?    @relation("TicketMensagemSuperAdmin", fields: [autorSuperAdminId], references: [id], onDelete: SetNull)
+
+  @@index([ticketId, createdAt])
+}

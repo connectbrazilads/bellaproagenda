@@ -1,0 +1,20 @@
+[Unit]
+Description=BellaPro Agenda Backend
+After=network.target postgresql.service
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=www-data
+Group=www-data
+WorkingDirectory=/var/www/bellapro/backend
+EnvironmentFile=/var/www/bellapro/backend/.env
+ExecStart=/usr/bin/node src/app.js
+Restart=always
+RestartSec=5
+TimeoutStopSec=20
+KillSignal=SIGINT
+SyslogIdentifier=bellapro-backend
+
+[Install]
+WantedBy=multi-user.target
