@@ -3,6 +3,7 @@ const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const { clearCookie, getCookieOptions, getCookieValue, validateStrongPassword } = require('../lib/security');
 const { enviarCredenciaisAcesso, enviarComunicado } = require('../services/emailService');
+const { getPlanPrices } = require('./operationsController');
 
 const SA_SECRET = process.env.SUPERADMIN_SECRET || `${process.env.JWT_SECRET}_sa`;
 const SUPERADMIN_COOKIE_NAME = 'athena_superadmin_session';
@@ -394,6 +395,7 @@ async function getMetricas(req, res) {
     totalClientes,
     novosEsseMes,
     trialExpirado,
+    billingSettings,
   ] = await Promise.all([
     prisma.salao.count(),
     prisma.salao.groupBy({ by: ['plano'], _count: { id: true } }),
@@ -402,9 +404,10 @@ async function getMetricas(req, res) {
     prisma.cliente.count(),
     prisma.salao.count({ where: { createdAt: { gte: inicioMes } } }),
     prisma.salao.count({ where: { planoStatus: 'trial', createdAt: { lte: quatorzeDiasAtras } } }),
+    prisma.billingSettings.findFirst({ orderBy: { createdAt: 'asc' } }),
   ]);
 
-  const mrrPorPlano = { basic: 99, pro: 199, enterprise: 499 };
+  const mrrPorPlano = getPlanPrices(billingSettings);
   const porPlanoMap = Object.fromEntries(saloesPorPlano.map((item) => [item.plano, item._count.id]));
   const mrr = Object.entries(porPlanoMap).reduce(
     (acc, [plano, count]) => acc + (mrrPorPlano[plano] || 0) * count,
@@ -419,6 +422,7 @@ async function getMetricas(req, res) {
     totalClientes,
     novosEsseMes,
     mrrEstimado: mrr,
+    planPrices: mrrPorPlano,
     trialExpirado,
   });
 }

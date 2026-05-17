@@ -90,6 +90,10 @@ export function saveInternalTeam(team) {
 }
 
 export function buildSuperAdminInsights(saloes = [], metricas = null) {
+  const planPrices = {
+    ...PLAN_PRICES,
+    ...(metricas?.planPrices || {}),
+  };
   const total = saloes.length;
   const active = saloes.filter((item) => item.ativo).length;
   const inadimplentes = saloes.filter((item) => item.planoStatus === 'inadimplente').length;
@@ -113,7 +117,7 @@ export function buildSuperAdminInsights(saloes = [], metricas = null) {
       ...salao,
       riskScore,
       health,
-      estimatedMRR: PLAN_PRICES[salao.plano] || 0,
+      estimatedMRR: planPrices[salao.plano] || 0,
       adoptionRate: Math.round(((salao.onboardingScore || 0) / 5) * 100),
     };
   });
@@ -126,7 +130,8 @@ export function buildSuperAdminInsights(saloes = [], metricas = null) {
     plan,
     label: PLAN_LABELS[plan],
     salons: saloes.filter((item) => item.plano === plan).length,
-    mrr: saloes.filter((item) => item.plano === plan).reduce((sum, item) => sum + (PLAN_PRICES[item.plano] || 0), 0),
+    price: planPrices[plan] || 0,
+    mrr: saloes.filter((item) => item.plano === plan).reduce((sum, item) => sum + (planPrices[item.plano] || 0), 0),
   }));
 
   return {

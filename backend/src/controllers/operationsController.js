@@ -2,6 +2,8 @@ const prisma = require('../lib/prisma');
 
 const INVOICE_OPEN_STATUSES = new Set(['aberta', 'comprovante_enviado']);
 const TICKET_FINAL_STATUSES = new Set(['resolvido', 'fechado']);
+const DEFAULT_PLAN_PRICES = { basic: 99, pro: 199, enterprise: 499 };
+const DEFAULT_BILLING_DUE_DAY = 10;
 
 function parseDate(value, fieldName) {
   const date = new Date(value);
@@ -53,12 +55,129 @@ function serializeTicket(ticket) {
   };
 }
 
+function clampDueDay(value) {
+  const dueDay = Number(value);
+  if (!Number.isInteger(dueDay)) return DEFAULT_BILLING_DUE_DAY;
+  return Math.max(1, Math.min(28, dueDay));
+}
+
+function getPlanPrices(settings) {
+  return {
+    basic: Number(settings?.basicPrice ?? DEFAULT_PLAN_PRICES.basic),
+    pro: Number(settings?.proPrice ?? DEFAULT_PLAN_PRICES.pro),
+    enterprise: Number(settings?.enterprisePrice ?? DEFAULT_PLAN_PRICES.enterprise),
+  };
+}
+
+function getCompetenciaLabel(date) {
+  const month = String(date.getUTCMonth() + 1).padStart(2, '0');
+  const year = date.getUTCFullYear();
+  return `${month}/${year}`;
+}
+
+function getDueDateForCycle(referenceDate, dueDay) {
+  const year = referenceDate.getUTCFullYear();
+  const month = referenceDate.getUTCMonth();
+  return new Date(Date.UTC(year, month, clampDueDay(dueDay), 12, 0, 0));
+}
+
+async function ensureAutomaticInvoices(referenceDate = new Date()) {
+  const settings = await prisma.billingSettings.findFirst({
+    orderBy: { createdAt: 'asc' },
+  });
+
+  if (!settings?.autoBillingEnabled) {
+    return { settings, created: [], skipped: [], competencia: getCompetenciaLabel(referenceDate) };
+  }
+
+  const competencia = getCompetenciaLabel(referenceDate);
+  const dueDate = getDueDateForCycle(referenceDate, settings.dueDay);
+  const planPrices = getPlanPrices(settings);
+  const saloes = await prisma.salao.findMany({
+    where: {
+      ativo: true,
+      planoStatus: { in: ['ativo', 'inadimplente'] },
+      plano: { in: ['basic', 'pro', 'enterprise'] },
+    },
+    select: { id: true, nome: true, plano: true },
+    orderBy: { createdAt: 'asc' },
+  });
+
+  const created = [];
+  const skipped = [];
+
+  for (const salao of saloes) {
+    const valor = Number(planPrices[salao.plano] || 0);
+    if (valor <= 0) {
+      skipped.push({ salaoId: salao.id, reason: 'plano_sem_valor' });
+      continue;
+    }
+
+    const existing = await prisma.invoice.findFirst({
+      where: {
+        salaoId: salao.id,
+        competencia,
+        status: { not: 'cancelada' },
+      },
+      select: { id: true },
+    });
+
+    if (existing) {
+      skipped.push({ salaoId: salao.id, reason: 'ja_existe' });
+      continue;
+    }
+
+    const invoiceData = {
+      salaoId: salao.id,
+      competencia,
+      descricao: `Plano BellaPro ${String(salao.plano).toUpperCase()} - ${competencia}`,
+      valor,
+      vencimento: dueDate,
+      status: 'aberta',
+      pixNomeRecebedor: settings.nomeRecebedor,
+      pixCpfCnpjRecebedor: settings.cpfCnpjRecebedor,
+      pixChave: settings.chavePix,
+      pixCidadeRecebedor: settings.cidadeRecebedor,
+      pixDescricao: settings.descricaoPadrao || null,
+      observacoesInternas: 'Fatura gerada automaticamente a partir do plano do salao.',
+    };
+
+    const invoice = await prisma.invoice.create({
+      data: {
+        ...invoiceData,
+        pixPayload: createPixPayload(settings, invoiceData),
+      },
+      include: {
+        salao: {
+          select: { id: true, nome: true, slug: true, plano: true, planoStatus: true },
+        },
+      },
+    });
+
+    created.push(serializeInvoice(invoice));
+  }
+
+  return { settings, created, skipped, competencia };
+}
+
 async function getBillingSettings(req, res) {
   const settings = await prisma.billingSettings.findFirst({
     orderBy: { createdAt: 'asc' },
   });
 
-  res.json(settings || null);
+  res.json(settings || {
+    nomeRecebedor: '',
+    cpfCnpjRecebedor: '',
+    chavePix: '',
+    cidadeRecebedor: '',
+    descricaoPadrao: '',
+    instrucoesPagamento: '',
+    basicPrice: DEFAULT_PLAN_PRICES.basic,
+    proPrice: DEFAULT_PLAN_PRICES.pro,
+    enterprisePrice: DEFAULT_PLAN_PRICES.enterprise,
+    dueDay: DEFAULT_BILLING_DUE_DAY,
+    autoBillingEnabled: true,
+  });
 }
 
 async function upsertBillingSettings(req, res) {
@@ -69,6 +188,11 @@ async function upsertBillingSettings(req, res) {
     cidadeRecebedor,
     descricaoPadrao,
     instrucoesPagamento,
+    basicPrice,
+    proPrice,
+    enterprisePrice,
+    dueDay,
+    autoBillingEnabled,
   } = req.body;
 
   if (!nomeRecebedor || !cpfCnpjRecebedor || !chavePix || !cidadeRecebedor) {
@@ -86,6 +210,11 @@ async function upsertBillingSettings(req, res) {
     cidadeRecebedor: String(cidadeRecebedor).trim(),
     descricaoPadrao: descricaoPadrao ? String(descricaoPadrao).trim() : null,
     instrucoesPagamento: instrucoesPagamento ? String(instrucoesPagamento).trim() : null,
+    basicPrice: Number(basicPrice ?? DEFAULT_PLAN_PRICES.basic),
+    proPrice: Number(proPrice ?? DEFAULT_PLAN_PRICES.pro),
+    enterprisePrice: Number(enterprisePrice ?? DEFAULT_PLAN_PRICES.enterprise),
+    dueDay: clampDueDay(dueDay),
+    autoBillingEnabled: autoBillingEnabled !== undefined ? Boolean(autoBillingEnabled) : true,
   };
 
   const settings = existing
@@ -95,7 +224,19 @@ async function upsertBillingSettings(req, res) {
   res.json(settings);
 }
 
+async function generateAutomaticInvoices(req, res) {
+  const result = await ensureAutomaticInvoices();
+  res.json({
+    ok: true,
+    competencia: result.competencia,
+    criadas: result.created.length,
+    ignoradas: result.skipped.length,
+    faturas: result.created,
+  });
+}
+
 async function listSuperAdminInvoices(req, res) {
+  await ensureAutomaticInvoices();
   const { salaoId, status } = req.query;
   const where = {
     ...(salaoId ? { salaoId: String(salaoId) } : {}),
@@ -215,12 +356,38 @@ async function updateInvoice(req, res) {
 }
 
 async function listAdminInvoices(req, res) {
+  await ensureAutomaticInvoices();
   const invoices = await prisma.invoice.findMany({
     where: { salaoId: req.user.salaoId },
     orderBy: [{ vencimento: 'desc' }, { createdAt: 'desc' }],
   });
 
   res.json(invoices.map(serializeInvoice));
+}
+
+async function getAdminInvoiceSummary(req, res) {
+  await ensureAutomaticInvoices();
+  const invoices = await prisma.invoice.findMany({
+    where: {
+      salaoId: req.user.salaoId,
+      status: { in: ['aberta', 'comprovante_enviado', 'paga', 'cancelada'] },
+    },
+    orderBy: [{ vencimento: 'asc' }, { createdAt: 'asc' }],
+  });
+
+  const serialized = invoices.map(serializeInvoice);
+  const abertas = serialized.filter((item) => ['aberta', 'comprovante_enviado'].includes(item.status)).length;
+  const vencidas = serialized.filter((item) => item.status === 'vencida').length;
+  const totalPendencias = serialized.filter((item) => ['aberta', 'comprovante_enviado', 'vencida'].includes(item.status)).length;
+  const proxima = serialized.find((item) => ['aberta', 'comprovante_enviado', 'vencida'].includes(item.status)) || null;
+
+  res.json({
+    abertas,
+    vencidas,
+    totalPendencias,
+    temPendencia: totalPendencias > 0,
+    proxima,
+  });
 }
 
 async function submitInvoiceProof(req, res) {
@@ -472,10 +639,12 @@ async function addAdminTicketMessage(req, res) {
 module.exports = {
   getBillingSettings,
   upsertBillingSettings,
+  generateAutomaticInvoices,
   listSuperAdminInvoices,
   createInvoice,
   updateInvoice,
   listAdminInvoices,
+  getAdminInvoiceSummary,
   submitInvoiceProof,
   listSuperAdminTickets,
   updateSuperAdminTicket,
@@ -483,4 +652,6 @@ module.exports = {
   listAdminTickets,
   createAdminTicket,
   addAdminTicketMessage,
+  ensureAutomaticInvoices,
+  getPlanPrices,
 };

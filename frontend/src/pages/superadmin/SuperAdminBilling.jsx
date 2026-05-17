@@ -1,8 +1,8 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import toast from 'react-hot-toast';
-import { CreditCard, Plus, Save } from 'lucide-react';
-import { saCreateFatura, saGetBillingSettings, saGetFaturas, saGetSaloes, saUpdateBillingSettings, saUpdateFatura } from '../../services/api';
-import { formatMoney, STATUS_LABELS } from './superAdminData';
+import { CreditCard, Plus, RefreshCcw, Save } from 'lucide-react';
+import { saCreateFatura, saGerarFaturasAutomaticas, saGetBillingSettings, saGetFaturas, saGetSaloes, saUpdateBillingSettings, saUpdateFatura } from '../../services/api';
+import { formatMoney, PLAN_LABELS, STATUS_LABELS } from './superAdminData';
 
 function invoiceTone(status) {
   if (status === 'paga') return 'bg-emerald-500/12 text-emerald-200';
@@ -16,6 +16,7 @@ export default function SuperAdminBilling() {
   const [loading, setLoading] = useState(true);
   const [savingSettings, setSavingSettings] = useState(false);
   const [creatingInvoice, setCreatingInvoice] = useState(false);
+  const [generatingInvoices, setGeneratingInvoices] = useState(false);
   const [updatingInvoiceId, setUpdatingInvoiceId] = useState('');
   const [settings, setSettings] = useState({
     nomeRecebedor: '',
@@ -24,6 +25,11 @@ export default function SuperAdminBilling() {
     cidadeRecebedor: '',
     descricaoPadrao: '',
     instrucoesPagamento: '',
+    basicPrice: 99,
+    proPrice: 199,
+    enterprisePrice: 499,
+    dueDay: 10,
+    autoBillingEnabled: true,
   });
   const [saloes, setSaloes] = useState([]);
   const [faturas, setFaturas] = useState([]);
@@ -52,6 +58,11 @@ export default function SuperAdminBilling() {
           cidadeRecebedor: settingsRes.data.cidadeRecebedor || '',
           descricaoPadrao: settingsRes.data.descricaoPadrao || '',
           instrucoesPagamento: settingsRes.data.instrucoesPagamento || '',
+          basicPrice: Number(settingsRes.data.basicPrice || 99),
+          proPrice: Number(settingsRes.data.proPrice || 199),
+          enterprisePrice: Number(settingsRes.data.enterprisePrice || 499),
+          dueDay: Number(settingsRes.data.dueDay || 10),
+          autoBillingEnabled: settingsRes.data.autoBillingEnabled !== false,
         });
       }
 
@@ -78,6 +89,16 @@ export default function SuperAdminBilling() {
     };
   }, [faturas]);
 
+  useEffect(() => {
+    const salao = saloes.find((item) => item.id === invoiceForm.salaoId);
+    if (!salao) return;
+    const suggestedValue = Number(settings?.[`${salao.plano}Price`] || 0);
+    setInvoiceForm((prev) => {
+      if (prev.valor && Number(prev.valor) > 0) return prev;
+      return { ...prev, valor: suggestedValue ? String(suggestedValue) : prev.valor };
+    });
+  }, [invoiceForm.salaoId, saloes, settings]);
+
   async function saveSettings(event) {
     event.preventDefault();
     setSavingSettings(true);
@@ -89,6 +110,19 @@ export default function SuperAdminBilling() {
       toast.error(error.response?.data?.error || 'Nao foi possivel salvar a configuracao PIX.');
     } finally {
       setSavingSettings(false);
+    }
+  }
+
+  async function gerarFaturasAutomaticas() {
+    setGeneratingInvoices(true);
+    try {
+      const response = await saGerarFaturasAutomaticas();
+      toast.success(`${response.data?.criadas || 0} fatura(s) geradas para o ciclo atual.`);
+      await load();
+    } catch (error) {
+      toast.error(error.response?.data?.error || 'Nao foi possivel gerar as faturas automaticas.');
+    } finally {
+      setGeneratingInvoices(false);
     }
   }
 
@@ -157,6 +191,19 @@ export default function SuperAdminBilling() {
           <Field label="Chave PIX" value={settings.chavePix} onChange={(value) => setSettings((prev) => ({ ...prev, chavePix: value }))} />
           <Field label="Cidade" value={settings.cidadeRecebedor} onChange={(value) => setSettings((prev) => ({ ...prev, cidadeRecebedor: value }))} />
           <Field label="Descricao padrao" value={settings.descricaoPadrao} onChange={(value) => setSettings((prev) => ({ ...prev, descricaoPadrao: value }))} />
+          <div className="grid gap-4 md:grid-cols-3">
+            <Field label={`Basic (${PLAN_LABELS.basic})`} type="number" value={settings.basicPrice} onChange={(value) => setSettings((prev) => ({ ...prev, basicPrice: value }))} />
+            <Field label={`Pro (${PLAN_LABELS.pro})`} type="number" value={settings.proPrice} onChange={(value) => setSettings((prev) => ({ ...prev, proPrice: value }))} />
+            <Field label={`Enterprise (${PLAN_LABELS.enterprise})`} type="number" value={settings.enterprisePrice} onChange={(value) => setSettings((prev) => ({ ...prev, enterprisePrice: value }))} />
+          </div>
+          <div className="grid gap-4 md:grid-cols-[160px_1fr]">
+            <Field label="Dia vencimento" type="number" value={settings.dueDay} onChange={(value) => setSettings((prev) => ({ ...prev, dueDay: value }))} />
+            <Toggle
+              label="Cobranca automatica mensal"
+              checked={settings.autoBillingEnabled}
+              onChange={(checked) => setSettings((prev) => ({ ...prev, autoBillingEnabled: checked }))}
+            />
+          </div>
           <div>
             <label className="mb-2 block text-[10px] font-black uppercase tracking-[0.18em] text-white/42">Instrucoes de pagamento</label>
             <textarea
@@ -166,10 +213,16 @@ export default function SuperAdminBilling() {
               className="w-full rounded-[1.25rem] border border-white/8 bg-[#332832] px-4 py-3 text-sm text-white outline-none"
             />
           </div>
-          <button type="submit" disabled={savingSettings} className="flex w-full items-center justify-center gap-2 rounded-[1.2rem] bg-white/[0.08] px-4 py-3 text-[10px] font-black uppercase tracking-[0.18em] text-white disabled:opacity-60">
-            <Save className="h-4 w-4" />
-            {savingSettings ? 'Salvando...' : 'Salvar PIX'}
-          </button>
+          <div className="grid gap-3 md:grid-cols-2">
+            <button type="submit" disabled={savingSettings} className="flex w-full items-center justify-center gap-2 rounded-[1.2rem] bg-white/[0.08] px-4 py-3 text-[10px] font-black uppercase tracking-[0.18em] text-white disabled:opacity-60">
+              <Save className="h-4 w-4" />
+              {savingSettings ? 'Salvando...' : 'Salvar billing'}
+            </button>
+            <button type="button" onClick={gerarFaturasAutomaticas} disabled={generatingInvoices} className="flex w-full items-center justify-center gap-2 rounded-[1.2rem] bg-[#de97a5]/12 px-4 py-3 text-[10px] font-black uppercase tracking-[0.18em] text-[#ffdbe2] disabled:opacity-60">
+              <RefreshCcw className="h-4 w-4" />
+              {generatingInvoices ? 'Gerando...' : 'Gerar ciclo atual'}
+            </button>
+          </div>
         </form>
 
         <form onSubmit={createInvoice} className="rounded-[2rem] border border-white/6 bg-[#231b22] p-6 space-y-4">
@@ -181,7 +234,7 @@ export default function SuperAdminBilling() {
             label="Salao"
             value={invoiceForm.salaoId}
             onChange={(value) => setInvoiceForm((prev) => ({ ...prev, salaoId: value }))}
-            options={saloes.map((salao) => ({ value: salao.id, label: salao.nome }))}
+            options={saloes.map((salao) => ({ value: salao.id, label: `${salao.nome} · ${PLAN_LABELS[salao.plano] || salao.plano}` }))}
           />
           <div className="grid gap-4 md:grid-cols-2">
             <Field label="Competencia" value={invoiceForm.competencia} onChange={(value) => setInvoiceForm((prev) => ({ ...prev, competencia: value }))} />
@@ -280,6 +333,21 @@ function Select({ label, value, onChange, options }) {
         ))}
       </select>
     </div>
+  );
+}
+
+function Toggle({ label, checked, onChange }) {
+  return (
+    <label className="flex h-full cursor-pointer items-center justify-between rounded-[1.25rem] border border-white/8 bg-[#332832] px-4 py-3 text-sm text-white">
+      <span className="text-[10px] font-black uppercase tracking-[0.18em] text-white/64">{label}</span>
+      <button
+        type="button"
+        onClick={() => onChange(!checked)}
+        className={`relative h-7 w-12 rounded-full transition ${checked ? 'bg-[#de97a5]' : 'bg-white/12'}`}
+      >
+        <span className={`absolute top-1 h-5 w-5 rounded-full bg-white transition ${checked ? 'left-6' : 'left-1'}`} />
+      </button>
+    </label>
   );
 }
 

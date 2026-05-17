@@ -89,6 +89,7 @@ router.post('/despesas', requirePermission('relatorio'), ctrl.createDespesa);
 router.delete('/despesas/:id', requirePermission('relatorio'), ctrl.deleteDespesa);
 
 router.get('/faturas', requirePermission('faturas'), ops.listAdminInvoices);
+router.get('/faturas/resumo', requirePermission('dashboard'), ops.getAdminInvoiceSummary);
 router.put('/faturas/:id/comprovante', requirePermission('faturas'), ops.submitInvoiceProof);
 
 router.get('/suporte', requirePermission('suporte'), ops.listAdminTickets);

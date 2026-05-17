@@ -19,9 +19,9 @@ import {
   Line, 
   ResponsiveContainer 
 } from 'recharts';
-import { getAgendamentos, getClientes, getProfissionais, dispararIAProativa, dispararLembretes, updateStatusAgendamento, getDashboardExecutivo } from '../../services/api';
+import { getAgendamentos, getClientes, getProfissionais, dispararIAProativa, dispararLembretes, updateStatusAgendamento, getDashboardExecutivo, getResumoFaturasSalao } from '../../services/api';
 import { cn, formatDateInput } from '../../lib/utils';
-import { Plus, UserPlus, ShoppingBag } from 'lucide-react';
+import { Plus, UserPlus, ShoppingBag, CreditCard, AlertTriangle } from 'lucide-react';
 
 export default function Dashboard() {
   const navigate = useNavigate();
@@ -38,16 +38,18 @@ export default function Dashboard() {
   });
   const [checkoutSuccess, setCheckoutSuccess] = useState(null);
   const [executivo, setExecutivo] = useState({ cards: {}, produtividade: [], faturamentoPorCategoria: [], alertas: [] });
+  const [billingResumo, setBillingResumo] = useState({ abertas: 0, vencidas: 0, totalPendencias: 0, temPendencia: false, proxima: null });
   const [loading, setLoading] = useState(true);
   const hojeStr = formatDateInput();
 
   const loadDashboard = async () => {
     try {
-      const [ra, rc, rp, re] = await Promise.all([
+      const [ra, rc, rp, re, rf] = await Promise.all([
         getAgendamentos({ data: hojeStr }),
         getClientes(),
         getProfissionais(),
-        getDashboardExecutivo()
+        getDashboardExecutivo(),
+        getResumoFaturasSalao().catch(() => ({ data: { abertas: 0, vencidas: 0, totalPendencias: 0, temPendencia: false, proxima: null } })),
       ]);
       
       const ags = ra.data?.agendamentos || [];
@@ -86,6 +88,7 @@ export default function Dashboard() {
         sparkline: sparkline.length ? sparkline : [{ val: 0 }]
       });
       setExecutivo(re.data || { cards: {}, produtividade: [], faturamentoPorCategoria: [], alertas: [] });
+      setBillingResumo(rf.data || { abertas: 0, vencidas: 0, totalPendencias: 0, temPendencia: false, proxima: null });
     } catch (e) {
       console.error(e);
     } finally {
@@ -177,6 +180,35 @@ export default function Dashboard() {
            </motion.button>
         </div>
       </header>
+
+      {billingResumo.temPendencia ? (
+        <div className="rounded-[2rem] border border-amber-500/20 bg-amber-500/10 px-5 py-5 sm:p-6">
+          <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+            <div className="flex items-start gap-4">
+              <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-amber-500 text-white shadow-lg shadow-amber-500/20">
+                {billingResumo.vencidas > 0 ? <AlertTriangle size={20} /> : <CreditCard size={20} />}
+              </div>
+              <div>
+                <p className="text-[10px] font-black uppercase tracking-[0.24em] text-amber-200">Financeiro SaaS</p>
+                <h3 className="mt-2 text-xl font-black text-white">
+                  {billingResumo.vencidas > 0 ? 'Existe fatura vencida aguardando pagamento.' : 'Existe fatura em aberto aguardando pagamento.'}
+                </h3>
+                <p className="mt-2 text-sm text-white/72">
+                  {billingResumo.totalPendencias} pendência(s) financeira(s).
+                  {billingResumo.proxima ? ` Competência ${billingResumo.proxima.competencia} · vence em ${new Date(billingResumo.proxima.vencimento).toLocaleDateString('pt-BR')}.` : ''}
+                </p>
+              </div>
+            </div>
+            <button
+              onClick={() => navigate('/admin/faturas')}
+              className="inline-flex items-center justify-center gap-2 rounded-[1.25rem] bg-white text-[#8b4f5c] px-5 py-3 text-[10px] font-black uppercase tracking-[0.2em] shadow-lg"
+            >
+              Ver faturas
+              <ChevronRight size={14} />
+            </button>
+          </div>
+        </div>
+      ) : null}
 
       {/* Se??o BellaPro */}
       <div className="grid grid-cols-1 lg:grid-cols-4 gap-4">

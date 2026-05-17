@@ -24,6 +24,11 @@ model BillingSettings {
   cidadeRecebedor    String
   descricaoPadrao    String?
   instrucoesPagamento String?
+  basicPrice         Float    @default(99)
+  proPrice           Float    @default(199)
+  enterprisePrice    Float    @default(499)
+  dueDay             Int      @default(10)
+  autoBillingEnabled Boolean  @default(true)
   createdAt          DateTime @default(now())
   updatedAt          DateTime @updatedAt
 }

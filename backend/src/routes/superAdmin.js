@@ -21,6 +21,7 @@ router.use(ctrl.authenticate);
 router.get('/metricas', ctrl.getMetricas);
 router.get('/billing/settings', ops.getBillingSettings);
 router.put('/billing/settings', ops.upsertBillingSettings);
+router.post('/billing/faturas/gerar', ops.generateAutomaticInvoices);
 router.get('/billing/faturas', ops.listSuperAdminInvoices);
 router.post('/billing/faturas', ops.createInvoice);
 router.put('/billing/faturas/:id', ops.updateInvoice);

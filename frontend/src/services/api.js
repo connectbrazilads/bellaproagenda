@@ -21,6 +21,7 @@ export const saEnviarCredenciais = (data) => api.post('/superadmin/credenciais/e
 export const saResetSenhaUsuario = (id, data) => api.put(`/superadmin/usuarios/${id}/reset-senha`, data);
 export const saGetBillingSettings = () => api.get('/superadmin/billing/settings');
 export const saUpdateBillingSettings = (data) => api.put('/superadmin/billing/settings', data);
+export const saGerarFaturasAutomaticas = () => api.post('/superadmin/billing/faturas/gerar');
 export const saGetFaturas = (params) => api.get('/superadmin/billing/faturas', { params });
 export const saCreateFatura = (data) => api.post('/superadmin/billing/faturas', data);
 export const saUpdateFatura = (id, data) => api.put(`/superadmin/billing/faturas/${id}`, data);
@@ -52,6 +53,7 @@ export const logoutSuperAdmin = () => api.post('/superadmin/logout');
 export const getAdminSalao = () => api.get('/admin/salao');
 export const updateAdminSalao = (data) => api.put('/admin/salao', data);
 export const getFaturasSalao = () => api.get('/admin/faturas');
+export const getResumoFaturasSalao = () => api.get('/admin/faturas/resumo');
 export const enviarComprovanteFatura = (id, data) => api.put(`/admin/faturas/${id}/comprovante`, data);
 export const getTicketsSalao = () => api.get('/admin/suporte');
 export const createTicketSalao = (data) => api.post('/admin/suporte', data);

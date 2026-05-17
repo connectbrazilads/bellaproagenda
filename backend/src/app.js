@@ -3,6 +3,7 @@ const express = require('express');
 const cors = require('cors');
 const path = require('path');
 const { iniciarLembretes } = require('./services/lembreteService');
+const { iniciarBillingAutomatico } = require('./services/billingService');
 const { criarSuperAdmin } = require('./controllers/superAdminController');
 const { authenticate } = require('./controllers/authController');
 const prisma = require('./lib/prisma');
@@ -123,6 +124,7 @@ async function iniciar() {
   app.listen(port, () => {
     console.log(`Backend rodando na porta ${port}`);
     iniciarLembretes();
+    iniciarBillingAutomatico();
   });
 }
 
