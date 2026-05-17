@@ -1,191 +1,79 @@
 # Segurança
 
-## Visão Geral
+## Visão geral
 
-A plataforma já possui controles relevantes de segurança operacional:
+A plataforma já passou por uma rodada importante de hardening para go-live.
 
-- autenticação baseada em JWT
-- isolamento por tenant
-- autorização por módulo e por ação
-- auditoria para ações sensíveis selecionadas
-- validação de força de senha
-- fluxo de recuperação de senha com token persistido
+## Controles atuais
 
-Ao mesmo tempo, a implementação atual ainda é a de um SaaS prático, e não de uma plataforma zero-trust. Este documento separa garantias atuais de oportunidades de endurecimento.
+### Sessão
 
-## Isolamento de Sessão
+- cookies `httpOnly` para admin e superadmin
+- expiração de sessão no backend
+- logout explícito no frontend
 
-### Isolamento por Tenant
+### Isolamento multi-tenant
 
-A principal fronteira de isolamento é `salaoId`.
+- escopo por `salaoId` nas entidades do salão
+- correções aplicadas em rotas críticas de inbox e usuários
 
-A maior parte das entidades de domínio é modelada como pertencente a um `Salao`, incluindo:
+### Autenticação e credenciais
 
-- usuários
-- profissionais
-- serviços
-- produtos
-- agendamentos
-- sessões de caixa
-- conversas
-- logs de auditoria
+- senha com `bcrypt`
+- validação de senha forte
+- criação obrigatória de superadmin por variável de ambiente
+- bloqueio de credenciais padrão
 
-### Isolamento por Usuário
+### Recuperação de senha
 
-O isolamento entre usuários é reforçado por:
+- token persistido com hash
+- não é mais armazenado em texto puro
 
-- identidade carregada no JWT
-- permissões por role
-- permissões de ação
-- filtros por `profissionalId` para logins de profissional
+### Webhook
 
-## Tratamento de Credenciais
+- protegido por `WEBHOOK_SECRET`
+- exige `?token=...`
 
-### Senhas
+### Upload
 
-- senhas de usuários são hashadas com `bcryptjs`
-- criação e reset exigem senha com complexidade mínima
-- tokens de reset são gerados aleatoriamente e persistidos no banco
+- rota autenticada
+- fluxo endurecido
 
-### JWTs
+### Rate limit e headers
 
-- emitidos em login e signup
-- carregam tenant, role e snapshots de permissão efetiva
-- expiram em 7 dias
-- são armazenados no `localStorage`
+- rate limit em auth e rotas mais sensíveis
+- headers básicos de segurança no Express
 
-Trade-off:
+## Riscos residuais
 
-- simplicidade operacional e APIs stateless
-- postura de segurança inferior à de `httpOnly` cookies em ambiente de navegador
+Os principais riscos atuais ainda são:
 
-### Credenciais de Terceiros
+- cron duplicado em deploy multi-instância
+- uploads locais no mesmo host da aplicação
+- segredos por tenant ainda persistidos no banco
+- ausência de uma esteira completa de observabilidade e alerting
 
-Credenciais de provedores ficam hoje no registro do `Salao`, por tenant, para integrações como:
+## Billing e segurança
 
-- Evolution API
-- Gemini API
+O módulo de billing introduz atenção especial para:
 
-Esse modelo dá flexibilidade operacional, mas exige proteção forte no banco e no painel administrativo.
+- criação idempotente de invoices por competência
+- validação de comprovante
+- separação entre emissão superadmin e visualização do salão
 
-## Estratégia de Persistência Local
+## Recomendação de produção
 
-As superfícies de persistência atuais são:
+- usar HTTPS obrigatório
+- restringir `CORS_ORIGINS`
+- definir segredos fortes
+- revisar `.env` real antes do deploy
+- monitorar `/health`
+- manter backup de banco e uploads
 
-- PostgreSQL para estado principal de negócio
-- filesystem local para uploads
-- `localStorage` para sessão e snapshots de permissão
+## Próximos hardenings recomendados
 
-Implicações de segurança:
-
-- uploads locais não devem ser tratados como object storage seguro e durável
-- `localStorage` aumenta impacto potencial de XSS
-- produção deve considerar secret storage mais robusto para chaves de integração
-
-## Considerações de Segurança no Navegador
-
-### Medidas Atuais
-
-- allow-list de origem em CORS
-- route guarding
-- logout automático por expiração de token
-
-### Riscos Atuais
-
-- JWT em `localStorage` aumenta blast radius em caso de XSS
-- não há CSP explícita visível nesta camada
-- a postura de CSRF não está documentada porque a autenticação é header-based, não cookie-based
-
-## Considerações sobre OAuth
-
-OAuth não está implementado atualmente.
-
-Se for incorporado para novos conectores ou canais, recomenda-se:
-
-- cofre de tokens por tenant
-- criptografia em repouso para refresh tokens
-- escopo mínimo por conector
-- rotação e revogação de tokens
-
-## Segurança da Sincronização com Nuvem
-
-A sincronização externa ocorre hoje principalmente por chamadas diretas para:
-
-- Evolution WhatsApp API
-- Gemini API
-- provedor de e-mail
-
-Recomendações operacionais:
-
-- adicionar retries com idempotência
-- evitar vazamento de segredos em logs
-- separar health de integração de health da plataforma
-- rastrear falhas de envio em storage durável ou fila
-
-## Auditoria e Accountability
-
-O subsistema de auditoria registra:
-
-- nome da ação
-- entidade e id da entidade
-- ator
-- status e severity
-- contexto opcional
-- IP de origem e user-agent
-
-Isso já fornece uma boa base para:
-
-- revisão forense
-- governança de acesso
-- accountability operacional
-
-Limitação atual:
-
-- apenas fluxos explicitamente instrumentados geram log de auditoria
-
-## Modelo de Ameaças
-
-### Ameaças Primárias
-
-1. acesso indevido entre tenants
-2. escalada de privilégio por ausência de check backend
-3. roubo de token por XSS ou navegador comprometido
-4. vazamento de credenciais de integrações
-5. abuso de canais de mensageria
-6. replay ou duplicação de ações operacionais
-7. duplicação de cron em deploy multi-instância
-
-### Ameaças Secundárias
-
-1. exposição de uploads locais
-2. baixa observabilidade sobre falhas de integração
-3. ausência de rate limiting mais forte em auth e agendamento público
-
-## Matriz de Controles
-
-```mermaid
-flowchart TD
-    A[Identidade] --> A1[Login por e-mail e senha]
-    A --> A2[Expiração de JWT]
-    B[Autorização] --> B1[Permissões de módulo]
-    B --> B2[Permissões de ação]
-    B --> B3[Escopo por profissional]
-    C[Governança] --> C1[Logs de auditoria]
-    C --> C2[Tokens de reset]
-    D[Segurança de Fronteira] --> D1[Allow-list de CORS]
-    D --> D2[Middleware de autenticação]
-    E[Proteção de Dados] --> E1[Hash de senha com bcrypt]
-    E --> E2[Estado persistido em banco]
-```
-
-## Prioridades de Hardening
-
-Próximos passos de maior valor:
-
-- migrar auth do navegador para estratégia com `httpOnly` cookies, se o produto comportar
-- adicionar rate limiting estruturado para login, reset de senha e booking público
-- criptografar ou isolar melhor segredos de integração
-- mover uploads para object storage gerenciado
-- adicionar CSP e headers de segurança mais fortes
-- ampliar cobertura de auditoria para todas as mutações sensíveis
-- adicionar proteção de idempotência em mensageria e financeiro
+- mover uploads para storage externo
+- criptografar segredos sensíveis por tenant
+- separar cron de lembretes e billing em worker dedicado
+- ampliar auditoria em fluxos financeiros
+- adicionar observabilidade de falhas de integração

@@ -1,5 +1,6 @@
 import React from 'react';
 import bellaproLogo from '../assets/brand/bellapro-logo-ui.png';
+import bellaproLogoDark from '../assets/brand/bellapro-logo-ui-dark.png';
 import { cn } from '../lib/utils';
 
 export default function BrandLogo({
@@ -15,7 +16,17 @@ export default function BrandLogo({
         src={bellaproLogo}
         alt="BellaPro Agenda"
         className={cn(
-          'block h-auto object-contain drop-shadow-[0_24px_40px_rgba(0,0,0,0.16)]',
+          'block h-auto object-contain drop-shadow-[0_24px_40px_rgba(0,0,0,0.16)] dark:hidden',
+          compact ? 'w-[164px] max-w-full' : 'w-[252px] max-w-full sm:w-[292px]',
+          stacked && !compact && 'w-[220px] sm:w-[268px]',
+          imageClassName
+        )}
+      />
+      <img
+        src={bellaproLogoDark}
+        alt="BellaPro Agenda"
+        className={cn(
+          'hidden h-auto object-contain drop-shadow-[0_24px_40px_rgba(0,0,0,0.16)] dark:block',
           compact ? 'w-[164px] max-w-full' : 'w-[252px] max-w-full sm:w-[292px]',
           stacked && !compact && 'w-[220px] sm:w-[268px]',
           imageClassName

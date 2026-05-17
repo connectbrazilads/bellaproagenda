@@ -1,244 +1,129 @@
 # Runtime
 
-## Visão Geral
+## Visão geral
 
-O runtime deste repositório é um runtime de aplicação em camadas, e não um executor genérico de agentes de longa duração. Ele é composto por:
+O runtime da BellaPro Agenda é composto por:
 
-- runtime de navegador para a SPA React
-- runtime HTTP request/response em Express
-- execução agendada em background via `node-cron`
-- runtime conversacional orientado a mensagens para fluxos WhatsApp + IA
+- SPA React no navegador
+- API Express request/response
+- jobs em background via `node-cron`
+- fluxo conversacional WhatsApp + IA
 
-Onde o pedido original cita heartbeat, reconnect logic e browser orchestration, a documentação abaixo descreve os equivalentes realmente implementados e deixa explícito o que ainda não existe.
+## Superfícies de runtime
 
-## Superfícies de Runtime
+### 1. Navegador
 
-### 1. Runtime do Navegador
+O navegador executa:
 
-O navegador é o shell principal para:
+- landing
+- booking público por `slug`
+- painel admin
+- painel superadmin
 
-- agendamento público
-- operação administrativa
-- operação super-admin
+Características atuais:
 
-Comportamentos centrais:
+- rotas lazy com `React.lazy`
+- sessão baseada em cookie `httpOnly`
+- Axios com `withCredentials`
+- proteção de rotas por sessão e permissão
+- estado local React para operação da interface
 
-- carregamento lazy de rotas com `React.lazy`
-- persistência de token em `localStorage`
-- injeção de token via interceptor Axios
-- navegação guiada por permissões
-- timers de expiração com logout automático
-- navegação mobile e orquestração de modais
+### 2. API
 
-### 2. Runtime da API
+O backend Express executa:
 
-O aplicativo Express é responsável por:
+- autenticação admin e superadmin
+- APIs públicas e privadas
+- billing SaaS
+- upload autenticado
+- webhook protegido por token
+- integrações externas
 
-- parsing de requisições e política de CORS
-- serving de uploads estáticos
-- rotas públicas e autenticadas
-- validações de domínio
-- leituras e escritas no banco
-- chamadas para integrações externas
-- geração de trilha de auditoria em ações selecionadas
+### 3. Jobs em background
 
-### 3. Runtime Agendado
+Hoje existem jobs em processo:
 
-A aplicação sobe o scheduler de lembretes no boot por meio de `iniciarLembretes()`. Isso cria um cron em processo.
+- lembretes automáticos
+- geração automática de faturas mensais
 
-Implicações atuais:
+Isso significa que:
 
-- trabalho agendado depende do ciclo de vida do processo da API
-- escalonamento horizontal duplicaria execução do cron se não houver coordenação
-- o modelo é simples de operar, mas ainda não está isolado em worker
+- os jobs sobem junto com a API
+- duas instâncias da API podem duplicar cron se não houver coordenação externa
 
-### 4. Runtime Conversacional
+### 4. Runtime conversacional
 
-O fluxo WhatsApp + Gemini é a parte mais próxima de um runtime de agente dentro do repositório.
+O fluxo WhatsApp + Gemini faz:
 
-Ele realiza:
+1. recebe mensagem via webhook
+2. resolve o salão
+3. carrega histórico
+4. chama o modelo com contexto e tools
+5. executa leituras/escritas de domínio
+6. persiste histórico
+7. responde no canal
 
-- ingestão de mensagem
-- resolução da configuração do salão
-- recuperação de histórico conversacional
-- chamada LLM com tools declaradas
-- execução iterativa das tools
-- síntese da resposta final
-- persistência do histórico atualizado
+## Sessão e autenticação
 
-## Equivalente ao Ciclo de Vida de Agente
+Estado atual:
 
-Não há supervisor genérico de agentes. O ciclo implementado hoje é um ciclo por mensagem.
+- admin usa cookie `athena_admin_session`
+- superadmin usa cookie `athena_superadmin_session`
+- cookies com `httpOnly`
+- frontend não depende mais de JWT persistido em `localStorage`
 
-```mermaid
-sequenceDiagram
-    participant W as Evento WhatsApp
-    participant API as Backend
-    participant DB as PostgreSQL
-    participant LLM as Gemini
+Isso reduz exposição em caso de XSS e deixa o fluxo mais adequado para produção.
 
-    W->>API: Nova mensagem do cliente
-    API->>DB: Carrega salão + histórico
-    API->>LLM: Inicia chat com contexto e tools
-    LLM-->>API: Chamada de função ou resposta direta
-    API->>DB: Consulta ou muta dados do domínio
-    API->>LLM: Retorna outputs das tools
-    LLM-->>API: Resposta final em linguagem natural
-    API->>DB: Persiste histórico reduzido
-    API-->>W: Resposta de saída
-```
+## Billing em runtime
 
-Etapas do ciclo:
+O billing agora participa do runtime de duas formas:
 
-1. resolver tenant e contexto do canal
-2. reidratar histórico persistido
-3. invocar Gemini com instruções e tools
-4. executar até um número limitado de rodadas de tool calling
-5. persistir histórico resultante
-6. devolver ou enviar a resposta
-
-## Sistema de Heartbeat
-
-Um mecanismo dedicado de heartbeat não está implementado hoje.
-
-O que existe no lugar:
-
-- endpoint de saúde em `/health`
-- timer de expiração de sessão no frontend
-- histórico de conversa em banco, permitindo requests stateless
-
-Melhorias futuras recomendadas:
-
-- heartbeat para workers e consumidores de webhook
-- telemetria de integrações além do simples status do WhatsApp
-
-## Lógica de Reconexão
-
-Não existe hoje um subsistema explícito de reconexão com websocket ou stream persistente.
+- configuração central no superadmin
+- geração automática de invoices por cron
 
 Comportamento atual:
 
-- o navegador depende do retry padrão de HTTP
-- usuários podem recarregar a SPA e retomar a sessão enquanto o token estiver válido
-- fluxos IA/WhatsApp se recuperam de restart porque o estado relevante está no PostgreSQL
+- os preços dos planos ficam em `BillingSettings`
+- o MRR estimado usa esses preços configurados
+- a API garante a criação do ciclo atual ao listar faturas, além do cron diário
 
-Limitações:
+## Persistência
 
-- não há fila offline no frontend
-- não há job orchestration durável para campanhas longas
-- não há política uniforme de retry para todas as integrações externas
+O estado canônico vive no PostgreSQL:
 
-## Persistência de Sessão
-
-### Sessões do Navegador
-
-As sessões de admin e super-admin ficam em `localStorage`:
-
-- `salao_token`
-- `salao_token_expires_at`
-- snapshot de permissões
-- role e vínculo com profissional
-- `sa_token` para super-admin
-
-Isso oferece reentrada rápida e proteção de rota sem session store no servidor.
-
-### Persistência de Domínio
-
-A continuidade operacional depende do armazenamento em banco de:
-
+- salões
+- usuários
+- profissionais
 - clientes
 - agendamentos
-- sessões de caixa
-- trilhas de auditoria
-- conversas e mensagens
-- tokens de redefinição de senha
+- caixa
+- auditoria
+- invoices
+- suporte
+- conversas
 
-### Persistência Conversacional
+Persistência adicional:
 
-O runtime WhatsApp/Gemini persiste o histórico em `Conversa.historico`, limitado a uma janela controlada. Isso permite:
+- uploads em filesystem local
 
-- continuidade entre mensagens
-- APIs stateless
-- reaproveitamento de contexto em interações futuras
+## Recuperação de falhas
 
-## Orquestração de Navegador
+Recupera bem hoje:
 
-Este repositório não orquestra browsers externos nem automação headless. O navegador aqui cumpre o papel tradicional de cliente SPA.
+- reinício da API
+- refresh de navegador
+- retomada de sessão ainda válida
+- continuidade de histórico conversacional
 
-A orquestração lado cliente inclui:
+Mais sensível hoje:
 
-- transição de rotas
-- filtragem de menu por permissão
-- gerenciamento de menu mobile e modais
-- acesso autenticado por token
-- progressão do funil público de agendamento
+- cron em multi-instância
+- uploads locais em ambiente efêmero
+- retries de integrações externas
 
-## Gestão de Estado em Runtime
+## Próxima evolução recomendada
 
-### Estado Cliente
-
-A maior parte do estado do frontend é React state local, com persistência apenas para autenticação e sessão.
-
-### Estado Servidor
-
-O estado canônico do sistema vive no PostgreSQL e é acessado via Prisma.
-
-### Estado de Integração
-
-O estado das integrações fica dividido entre:
-
-- configuração persistida em `Salao`
-- estado externo controlado pelo provedor
-- contexto transitório em memória durante uma request
-
-## Recuperação de Falhas
-
-### O Que Se Recupera Bem Hoje
-
-- refresh do navegador após falhas transitórias
-- restart da API, já que o estado crítico é persistido
-- continuidade do histórico conversacional após reinício
-- reentrada por token até a expiração
-
-### O Que Ainda É Mais Frágil
-
-- cron em processo quando há múltiplas instâncias
-- storage local em hosts efêmeros
-- retries de delivery para integrações externas
-- workloads de campanha sem fila
-
-## Modelo de Execução Local
-
-Em desenvolvimento local, a execução é direta:
-
-- backend em Node/Express
-- frontend em Vite
-- PostgreSQL acessado pelo Prisma
-- uploads hospedados em filesystem local
-
-Isso dá um ciclo de feedback curto, mas endurecimento de produção tende a beneficiar separação entre:
-
-- API
-- workers
-- storage
-- observabilidade
-
-## Domínios de Falha
-
-```mermaid
-flowchart TD
-    A[Falha no Navegador] --> B[Refresh / novo login]
-    C[Falha na API] --> D[Restart do processo]
-    E[Falha no Banco] --> F[Plataforma principal indisponível]
-    G[Falha na API WhatsApp] --> H[Mensageria degradada]
-    I[Falha na API Gemini] --> J[Assistência IA degradada]
-    K[Duplicação de Cron em múltiplas instâncias] --> L[Risco de lembretes duplicados]
-```
-
-## Próxima Evolução Recomendada
-
-- mover lembretes e campanhas para worker dedicado
-- introduzir fila com retry para mensageria externa
-- ampliar observabilidade de saúde de integrações
-- separar ingestão de webhook de execução de saída
-- adicionar idempotência em escritas e notificações sensíveis
+- separar cron de billing e lembretes em worker dedicado
+- mover uploads para object storage
+- adicionar observabilidade para jobs e integrações
+- colocar idempotência explícita em webhooks e financeiro

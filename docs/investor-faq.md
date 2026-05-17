@@ -2,7 +2,7 @@
 
 ## 1. O produto já é mais que um MVP?
 
-Sim. A base atual já cobre fluxos operacionais reais: agendamento, atendimento, checkout, caixa por turno, permissões, auditoria, estoque, comunicação e automação assistida. Isso coloca o sistema acima de um MVP de agenda simples.
+Sim. A base atual já cobre fluxos operacionais reais: agendamento, atendimento, checkout, caixa por turno, permissões, auditoria, estoque, comunicação, billing e automação assistida. Isso coloca o sistema acima de um MVP de agenda simples.
 
 ## 2. A arquitetura atual suporta crescimento inicial?
 
@@ -26,7 +26,7 @@ Os principais riscos são típicos de maturidade:
 
 - jobs rodando em processo
 - uploads em disco local
-- tokens no `localStorage`
+- billing e lembretes ainda no runtime principal da API
 - integrações sem fila e retry robustos
 - crescimento de controllers grandes
 
@@ -36,7 +36,7 @@ Não. Eles pedem evolução incremental. A arquitetura atual suporta um plano cl
 
 ## 8. O produto já tem sinais de defensibilidade?
 
-Sim. A defensibilidade vem mais da densidade operacional do que de novidade tecnológica isolada. O sistema já combina agenda, caixa, permissão, auditoria, mensageria e IA dentro do mesmo fluxo.
+Sim. A defensibilidade vem mais da densidade operacional do que de novidade tecnológica isolada. O sistema já combina agenda, caixa, permissão, auditoria, mensageria, billing e IA dentro do mesmo fluxo.
 
 ## 9. Onde a plataforma ainda precisa amadurecer mais?
 
@@ -44,7 +44,7 @@ Principalmente em:
 
 - observabilidade
 - worker e filas
-- segurança de sessão
+- resilência do billing automático
 - resiliência das integrações
 - organização de serviços internos conforme o volume crescer
 

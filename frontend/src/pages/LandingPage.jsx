@@ -10,7 +10,6 @@ import {
   CreditCard,
   Lock,
   MessageSquare,
-  ShieldCheck,
   Sparkles,
   Star,
   Users,
@@ -233,7 +232,7 @@ export default function LandingPage() {
                   </div>
                 </div>
 
-                <div className="mt-5 grid gap-4 lg:grid-cols-[1.08fr_0.92fr]">
+                <div className="mt-5 grid gap-4 xl:grid-cols-[1.08fr_0.92fr]">
                   <PanelCard eyebrow="Agenda do dia" title="Recepção com leitura rápida">
                     <div className="space-y-3">
                       <SoftRow icon={CalendarDays} label="09:00 - 10:20" value="Coloração + corte" />
@@ -465,9 +464,21 @@ function SoftRow({ icon: Icon, label, value }) {
 
 function MetricTile({ label, value, highlight = false }) {
   return (
-    <div className={cn('rounded-[1.2rem] border p-4', highlight ? 'border-[#e29ba834] bg-[#e29ba814]' : 'border-white/8 bg-white/[0.04]')}>
-      <p className="text-[10px] font-black uppercase tracking-[0.24em] text-white/40">{label}</p>
-      <p className={cn('mt-3 text-xl font-black tracking-tight', highlight ? 'text-[#f0bac0]' : 'text-white')}>{value}</p>
+    <div
+      className={cn(
+        'min-w-0 rounded-[1.2rem] border p-4 sm:p-5',
+        highlight ? 'border-[#e29ba834] bg-[#e29ba814]' : 'border-white/8 bg-white/[0.04]'
+      )}
+    >
+      <p className="text-[9px] font-black uppercase tracking-[0.22em] text-white/40 sm:text-[10px] sm:tracking-[0.24em]">{label}</p>
+      <p
+        className={cn(
+          'mt-3 whitespace-nowrap text-lg font-black leading-none tracking-tight sm:text-[1.75rem]',
+          highlight ? 'text-[#f0bac0]' : 'text-white'
+        )}
+      >
+        {value}
+      </p>
     </div>
   );
 }

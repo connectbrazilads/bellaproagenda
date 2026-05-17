@@ -1,112 +1,182 @@
-# Sistema de Agendamento - Salao de Beleza
+# BellaPro Agenda
 
-## Documentacao Tecnica
+Plataforma SaaS multi-tenant para operação de salões de beleza, com:
 
-A documentacao arquitetural e operacional do projeto esta em [docs/README.md](./docs/README.md).
+- landing e agendamento público por `slug`
+- painel administrativo do salão
+- painel superadmin da plataforma
+- WhatsApp + IA
+- billing SaaS com faturas via PIX
 
-Importante: a documentacao nao e atualizada automaticamente pelo sistema. Sempre que houver mudancas relevantes de arquitetura, fluxo, integracoes, seguranca ou posicionamento tecnico, revise a pasta `docs/`.
+## Documentação
 
-Materiais de manutencao:
+A documentação técnica e operacional está em [docs/README.md](./docs/README.md).
 
-- [docs/CONTRIBUTING.md](./docs/CONTRIBUTING.md)
-- [docs/checklist.md](./docs/checklist.md)
+Leituras principais:
 
-Arquivos principais:
+- [Arquitetura](./docs/architecture.md)
+- [Runtime](./docs/runtime.md)
+- [Segurança](./docs/security.md)
+- [Deploy em VPS](./docs/deploy-vps.md)
+- [Checklist](./docs/checklist.md)
 
-- [docs/architecture.md](./docs/architecture.md)
-- [docs/runtime.md](./docs/runtime.md)
-- [docs/deploy-vps.md](./docs/deploy-vps.md)
-- [docs/connectors.md](./docs/connectors.md)
-- [docs/capabilities.md](./docs/capabilities.md)
-- [docs/security.md](./docs/security.md)
-- [docs/scalability.md](./docs/scalability.md)
-- [docs/decisions/](./docs/decisions/)
+## Stack
+
+- Frontend: React + Vite + Tailwind
+- Backend: Node.js + Express
+- Banco: PostgreSQL + Prisma
+- Integrações: Evolution API, Gemini, Nodemailer
 
 ## Como rodar localmente
 
-### 1. Backend
+### Backend
 
 ```bash
 cd backend
 npm install
 cp .env.example .env
-# Edite o .env com:
-# DATABASE_URL
-# JWT_SECRET
-# WEBHOOK_SECRET
-# SUPERADMIN_EMAIL
-# SUPERADMIN_SENHA
-# APP_URL
-# CORS_ORIGINS
-# EMAIL_HOST / EMAIL_USER / EMAIL_PASS (se usar email)
 npx prisma db push
 node prisma/seed.js
 npm run dev
 ```
 
-Backend rodando em: http://localhost:3001
+Backend padrão: `http://localhost:3001`
 
-### 2. Frontend
+Variáveis obrigatórias no `backend/.env`:
+
+- `DATABASE_URL`
+- `JWT_SECRET`
+- `WEBHOOK_SECRET`
+- `SUPERADMIN_EMAIL`
+- `SUPERADMIN_SENHA`
+- `APP_URL`
+- `CORS_ORIGINS`
+
+Variáveis recomendadas:
+
+- `NODE_ENV=production` em deploy
+- `TRUST_PROXY=1` atrás de proxy reverso
+- `EMAIL_HOST`
+- `EMAIL_PORT`
+- `EMAIL_USER`
+- `EMAIL_PASS`
+- `EMAIL_FROM`
+
+### Frontend
 
 ```bash
 cd frontend
 npm install
 cp .env.example .env
-# Opcional, mas recomendado:
-# defina VITE_WEBHOOK_SECRET com o mesmo valor do WEBHOOK_SECRET do backend
 npm run dev
 ```
 
-Frontend rodando em: http://localhost:5173
+Frontend padrão: `http://localhost:5173`
 
----
+Variáveis do `frontend/.env`:
 
-## Acessos apos setup/seed
+- `VITE_API_URL`
+- `VITE_WEBHOOK_SECRET`
 
-- **Agendamento publico**: http://localhost:5173/
-- **Painel admin**: http://localhost:5173/admin
-  - Email: `admin@salao.com`
-  - Senha: `admin123`
-- **Super admin**: definido por `SUPERADMIN_EMAIL` e `SUPERADMIN_SENHA` no `backend/.env`
+## Acessos após seed
 
-Observacoes:
+- Painel admin: `http://localhost:5173/admin/login`
+  - `admin@salao.com`
+  - `admin123`
+- Superadmin:
+  - definido por `SUPERADMIN_EMAIL`
+  - definido por `SUPERADMIN_SENHA`
 
-- o backend nao inicia sem `WEBHOOK_SECRET`, `SUPERADMIN_EMAIL` e `SUPERADMIN_SENHA`
-- o webhook do WhatsApp agora deve usar a URL com token
-  `https://seu-dominio/api/webhook/whatsapp?token=SEU_WEBHOOK_SECRET`
+## Billing SaaS
 
----
+O sistema agora possui billing centralizado no superadmin:
+
+- configuração global de PIX
+- preços dos planos no superadmin
+- geração automática de faturas mensais por plano
+- painel de faturas para o salão
+- alerta no dashboard do salão quando houver cobrança pendente
+
+Observação importante:
+
+- a geração automática depende do schema mais recente
+- após atualizar o backend em produção, rode `npx prisma db push`
+
+## Segurança
+
+Estado atual de hardening relevante:
+
+- cookies `httpOnly` para sessão admin e superadmin
+- webhook protegido por `?token=WEBHOOK_SECRET`
+- superadmin obrigatório no boot, sem fallback inseguro
+- upload autenticado
+- rate limit nas rotas sensíveis
+- hash de token de reset de senha
+- isolamento por tenant em rotas críticas
+
+## Importação de clientes
+
+Hoje o sistema importa clientes por CSV na área de migração.
+
+Formato aceito:
+
+- `nome`
+- `apelido`
+- `telefone`
+- `email`
+- `instagram`
+- `cpf`
+- `rg`
+- `sexo`
+- `dataNascimento`
+- `endereco`
+- `numero`
+- `complemento`
+- `bairro`
+- `cep`
+- `cidade`
+- `estado`
+
+## Deploy
+
+### VPS tradicional
+
+Use:
+
+- [docs/deploy-vps.md](./docs/deploy-vps.md)
+
+### Easypanel
+
+Resumo prático:
+
+- backend com build path `/backend`
+- frontend com build path `/frontend`
+- `Dockerfile` em ambos
+- backend exposto na porta `3001`
+- frontend apontando para `VITE_API_URL`
+- depois do deploy, rodar `npx prisma db push` no backend
 
 ## Estrutura
 
 ```text
 backend/
-  src/
-    controllers/   # authController, publicController, adminController
-    routes/        # auth.js, public.js, admin.js
-    services/      # slotsService, whatsappService, lembreteService
-    lib/           # prisma singleton e seguranca
-    app.js
   prisma/
-    schema.prisma
-    seed.js
+  src/
+    controllers/
+    routes/
+    services/
+    lib/
 
 frontend/
   src/
+    assets/
+    components/
     pages/
-      Booking/     # Fluxo publico multi-step
-      admin/       # Dashboard, Agenda, Agendamentos, Profissionais, Servicos, Configuracoes
     services/
-      api.js       # Todos os endpoints
-    App.jsx
 
 docs/
-  README.md
   architecture.md
   runtime.md
-  connectors.md
-  capabilities.md
   security.md
-  scalability.md
-  decisions/
+  deploy-vps.md
 ```

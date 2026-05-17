@@ -1,8 +1,8 @@
-# Why Athena Wins
+# Why BellaPro Wins
 
 ## Visão
 
-Athena vence quando comparada a soluções mais simples porque não tenta resolver apenas agendamento. Ela resolve operação.
+BellaPro Agenda vence quando comparada a soluções mais simples porque não tenta resolver apenas agendamento. Ela resolve operação.
 
 ## 1. Mais Densa Que Uma Agenda Comum
 
@@ -12,7 +12,7 @@ Muitos concorrentes param em:
 - cadastro básico
 - lembretes simples
 
-Athena já combina:
+BellaPro Agenda já combina:
 
 - agenda
 - checkout no atendimento
@@ -30,7 +30,7 @@ Isso aumenta utilidade diária e custo de troca.
 
 Grande parte do mercado resolve interface, mas não governança.
 
-Athena já possui:
+BellaPro Agenda já possui:
 
 - permissão por módulo
 - permissão por ação
@@ -41,7 +41,7 @@ Isso é importante porque salões com equipe precisam de controle, não só conv
 
 ## 3. Financeiro Embutido na Operação
 
-Em vez de separar agenda e financeiro como mundos diferentes, Athena aproxima:
+Em vez de separar agenda e financeiro como mundos diferentes, BellaPro Agenda aproxima:
 
 - atendimento
 - pagamento
@@ -54,7 +54,7 @@ Esse desenho aproxima o sistema da rotina real da recepção e da gestão.
 
 ## 4. IA Como Extensão Operacional
 
-A camada de IA faz mais sentido quando está conectada a domínio, contexto e tools. Athena já caminha nessa direção.
+A camada de IA faz mais sentido quando está conectada a domínio, contexto e tools. BellaPro Agenda já caminha nessa direção.
 
 Isso significa que a IA tem potencial de evoluir de assistente de conversa para orquestradora de rotinas, sem precisar trocar a base do produto.
 
@@ -67,7 +67,7 @@ A stack atual não é exótica, e isso é uma vantagem:
 - simples de operar
 - forte o bastante para o estágio atual
 
-Athena não depende de complexidade técnica artificial para parecer sofisticada.
+BellaPro Agenda não depende de complexidade técnica artificial para parecer sofisticada.
 
 ## 6. Caminho Claro de Evolução
 
@@ -84,4 +84,4 @@ Isso reduz risco estratégico, porque o próximo passo é evolução planejada, 
 
 ## Leitura Final
 
-Athena vence quando o cliente valoriza operação real. Quanto mais o salão precisa de controle, equipe, caixa, governança e comunicação integrada, mais a proposta da Athena fica forte.
+BellaPro Agenda vence quando o cliente valoriza operação real. Quanto mais o salão precisa de controle, equipe, caixa, governança e comunicação integrada, mais a proposta da BellaPro Agenda fica forte.

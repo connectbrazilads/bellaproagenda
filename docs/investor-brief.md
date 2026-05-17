@@ -2,7 +2,7 @@
 
 ## 1. Product Thesis
 
-Athena is a vertical SaaS platform for salon operations. The product consolidates scheduling, front-desk workflows, team access control, service checkout, cash handling, customer communication, and AI-assisted interactions into a single operational surface.
+BellaPro Agenda is a vertical SaaS platform for salon operations. The product consolidates scheduling, front-desk workflows, team access control, service checkout, cash handling, customer communication, SaaS billing, and AI-assisted interactions into a single operational surface.
 
 The technical thesis is intentionally pragmatic:
 
@@ -80,7 +80,7 @@ The main technical risks are typical of an early but serious SaaS:
 
 - scheduled work still runs in-process
 - uploads still rely on local storage
-- session tokens live in browser local storage
+- billing automation still depends on a single API runtime
 - outbound integrations are not queue-backed yet
 - some controller layers are growing large
 
@@ -115,4 +115,4 @@ The highest-leverage technical plan remains:
 
 The platform’s strongest signal is not novelty. It is operational density plus credible technical foundations.
 
-Athena already behaves like a real operations system. The next phase is not reinvention; it is hardening, scaling, and selectively productizing the automation layer.
+BellaPro Agenda already behaves like a real operations system. The next phase is not reinvention; it is hardening, scaling, and selectively productizing the automation layer.

@@ -1,8 +1,8 @@
-# Athena One-Pager
+# BellaPro Agenda One-Pager
 
 ## O Que É
 
-Athena é uma plataforma SaaS para operação de salões de beleza, criada para consolidar agenda, atendimento, caixa, equipe, comunicação e automação em um único sistema.
+BellaPro Agenda é uma plataforma SaaS para operação de salões de beleza, criada para consolidar agenda, atendimento, caixa, equipe, comunicação, billing e automação em um único sistema.
 
 ## Problema
 
@@ -18,7 +18,7 @@ O resultado é operação fragmentada, pouca previsibilidade e baixa capacidade 
 
 ## Solução
 
-Athena unifica a operação real do salão em três superfícies:
+BellaPro Agenda unifica a operação real do salão em três superfícies:
 
 - agendamento público por `slug`
 - painel operacional da unidade
@@ -38,7 +38,7 @@ Dentro disso, o sistema já cobre:
 
 ## Diferencial
 
-Athena não é só agenda. É infraestrutura operacional para salão.
+BellaPro Agenda não é só agenda. É infraestrutura operacional para salão.
 
 Os diferenciais técnicos e de produto mais claros são:
 
@@ -81,4 +81,4 @@ O foco agora não é reinventar a base. É endurecer e escalar:
 
 ## Leitura Final
 
-Athena já se comporta como um sistema operacional de salão. O próximo ciclo é transformar essa base funcional em uma plataforma mais resiliente, observável e escalável.
+BellaPro Agenda já se comporta como um sistema operacional de salão. O próximo ciclo é transformar essa base funcional em uma plataforma mais resiliente, observável e escalável.

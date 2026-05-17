@@ -1,36 +1,57 @@
-# Salão de Beleza - Project Guidelines
+# BellaPro Agenda - Diretrizes do Projeto
 
-This document serves as the persistent memory and quality standard for the "Salão de Beleza" (Athena SaaS) project. All AI interactions MUST adhere to the standards and skills listed here.
+Este arquivo funciona como memória persistente e padrão de qualidade do projeto BellaPro Agenda.
 
-## 🛠 Tech Stack
-- **Frontend**: React (Vite), Tailwind CSS, Axios, Recharts, React Router.
-- **Backend**: Node.js (Express), Prisma (ORM), PostgreSQL.
-- **Integrations**: Evolution API (WhatsApp), Gemini AI (Google), Node-cron, Nodemailer.
-- **Architecture**: Multi-tenant SaaS with isolated schemas/data.
+## Stack
 
-## 🌟 Mandatory Skills (Standard of Excellence)
-To maintain the highest quality, the following skills must be active and followed:
+- Frontend: React, Vite, Tailwind, Axios, Recharts, React Router
+- Backend: Node.js, Express, Prisma, PostgreSQL
+- Integrações: Evolution API, Gemini, Nodemailer, node-cron
+- Modelo: SaaS multi-tenant com isolamento por `salaoId`
 
-1.  **frontend-design**: Every UI element must look premium, modern, and high-end. No generic designs.
-2.  **design-spells**: Use micro-interactions, smooth transitions, and "magic" details to wow the user.
-3.  **tailwind-patterns**: Strict adherence to Tailwind CSS best practices and design tokens.
-4.  **backend-architect**: Ensure scalable, secure, and well-structured multi-tenant code.
-5.  **senior-architect**: Oversee the entire system architecture for long-term maintainability.
-6.  **ai-product**: Every AI feature must be purposeful, fast, and high-value.
-7.  **ux-persuasion-engineer**: Design flows (especially Booking) that convert visitors into customers.
-8.  **senior-fullstack**: Maintain parity between frontend needs and backend capabilities.
-9.  **whatsapp-automation**: Expert handling of the Evolution API and notification logic.
+## Princípios obrigatórios
 
-## 🎨 UI/UX Principles
-- **Premium Aesthetic**: Use refined color palettes (Neutral White/Violet), elegant typography, and glassmorphism.
-- **Mobile First**: The booking flow MUST be perfect on mobile devices.
-- **Zero Friction**: Minimize clicks in the booking process.
+1. A experiência visual deve seguir a identidade BellaPro.
+2. O sistema precisa parecer premium, claro e operacional.
+3. Segurança multi-tenant é inegociável.
+4. O backend deve privilegiar isolamento, previsibilidade e rastreabilidade.
+5. O frontend deve privilegiar clareza, responsividade e baixa fricção.
+6. Toda automação de IA deve ter valor operacional real.
 
-## 💻 Coding Standards
-- **Clean Code**: Use descriptive names, small functions, and clear comments.
-- **Security**: Strict data isolation between tenants. Never leak salão A data to salão B.
-- **Performance**: Optimize database queries (Prisma) and minimize frontend bundle size.
-- **Error Handling**: Always provide user-friendly feedback for errors (toasts, empty states).
+## Padrão de UI
 
----
-*This file is managed by Antigravity AI. Do not remove or modify without instructions.*
+- identidade BellaPro, não Athena
+- tipografia elegante
+- paleta rose / blush / ink
+- mobile-first no booking
+- estados vazios, loaders e erros sempre tratados
+
+## Padrão de backend
+
+- nunca acessar dados sem escopo de tenant quando a entidade for multi-tenant
+- validar permissões no backend, não só no frontend
+- evitar credenciais padrão
+- preferir fluxos auditáveis
+- qualquer mudança em billing, auth, webhook ou upload deve considerar impacto de segurança
+
+## Áreas sensíveis
+
+- auth admin e superadmin
+- webhook WhatsApp
+- uploads
+- billing SaaS
+- geração automática de faturas
+- inbox e qualquer leitura cross-tenant
+
+## Documentação
+
+Sempre que houver mudança relevante em:
+
+- arquitetura
+- segurança
+- deploy
+- billing
+- branding
+- integrações
+
+também deve ser atualizada a documentação em `README.md` e `docs/`.

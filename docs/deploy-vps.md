@@ -2,36 +2,19 @@
 
 ## Topologia recomendada
 
-- `Nginx` servindo o frontend estatico
-- `Node.js` rodando o backend na porta `3001`
-- `PostgreSQL` local ou gerenciado
-- uma unica instancia do backend
+- frontend estático atrás de Nginx
+- backend Node.js na porta `3001`
+- PostgreSQL
+- uma única instância da API por padrão
 
-Importante:
+## Atenção
 
-- hoje os lembretes rodam dentro do proprio processo da API
-- nao suba duas instancias do backend sem isolar esse cron, ou voce pode duplicar lembretes
+Hoje estes jobs sobem junto com a API:
 
-## Estrutura sugerida
+- lembretes
+- billing automático
 
-```text
-/var/www/bellapro/
-  backend/
-  frontend/
-```
-
-## Pacotes base
-
-Exemplo Ubuntu 24.04:
-
-```bash
-sudo apt update
-sudo apt install -y nginx postgresql postgresql-contrib curl git
-curl -fsSL https://deb.nodesource.com/setup_22.x | sudo -E bash -
-sudo apt install -y nodejs
-node -v
-npm -v
-```
+Não suba múltiplas instâncias sem coordenar cron, ou você pode duplicar execuções.
 
 ## Backend
 
@@ -39,9 +22,10 @@ npm -v
 cd /var/www/bellapro/backend
 npm ci
 cp .env.example .env
+npx prisma db push
 ```
 
-Preencha obrigatoriamente:
+Variáveis obrigatórias:
 
 - `DATABASE_URL`
 - `NODE_ENV=production`
@@ -50,28 +34,16 @@ Preencha obrigatoriamente:
 - `WEBHOOK_SECRET`
 - `SUPERADMIN_EMAIL`
 - `SUPERADMIN_SENHA`
-- `APP_URL=https://app.seudominio.com`
-- `CORS_ORIGINS=app.seudominio.com,https://app.seudominio.com`
+- `APP_URL`
+- `CORS_ORIGINS`
 
-Opcional, mas recomendado:
+Variáveis recomendadas:
 
 - `EMAIL_HOST`
 - `EMAIL_PORT`
 - `EMAIL_USER`
 - `EMAIL_PASS`
 - `EMAIL_FROM`
-
-Depois:
-
-```bash
-npx prisma db push
-```
-
-Use o seed apenas se voce realmente quiser popular uma base nova com dados iniciais:
-
-```bash
-node prisma/seed.js
-```
 
 ## Frontend
 
@@ -82,69 +54,45 @@ cp .env.example .env
 npm run build
 ```
 
-Em producao, a API deve ser consumida pelo mesmo dominio em `/api`, entao `VITE_API_URL` pode ficar vazio.
+## Ponto importante depois das mudanças de billing
+
+Se estiver atualizando um ambiente já existente:
+
+```bash
+cd /var/www/bellapro/backend
+npx prisma db push
+```
+
+Isso é obrigatório para criar os novos campos de `BillingSettings`.
 
 ## systemd
 
-Copie o arquivo de servico:
+Use o arquivo:
 
-```bash
-sudo cp deploy/vps/bellapro-backend.service /etc/systemd/system/bellapro-backend.service
-sudo systemctl daemon-reload
-sudo systemctl enable bellapro-backend
-sudo systemctl start bellapro-backend
-sudo systemctl status bellapro-backend
-```
+- `deploy/vps/bellapro-backend.service`
 
 ## Nginx
 
-Copie e ajuste o dominio em `deploy/vps/bellapro-nginx.conf`:
+Use o arquivo:
 
-```bash
-sudo cp deploy/vps/bellapro-nginx.conf /etc/nginx/sites-available/bellapro
-sudo ln -s /etc/nginx/sites-available/bellapro /etc/nginx/sites-enabled/bellapro
-sudo nginx -t
-sudo systemctl reload nginx
-```
+- `deploy/vps/bellapro-nginx.conf`
 
-Depois disso, gere o SSL:
-
-```bash
-sudo apt install -y certbot python3-certbot-nginx
-sudo certbot --nginx -d app.seudominio.com
-```
-
-## Deploy recorrente
-
-O script base esta em `deploy/vps/release.sh`.
-
-Exemplo:
-
-```bash
-sudo bash deploy/vps/release.sh
-```
-
-Ele faz:
-
-1. `npm ci` no backend
-2. `prisma db push`
-3. `npm ci` e `build` no frontend
-4. restart do backend
-5. reload do nginx
-6. healthcheck local
-
-## Checklist final
+## Checklist pós-deploy
 
 - `/health` responde `200`
-- login admin funciona no dominio final
-- login super admin funciona
+- login admin funciona
+- login superadmin funciona
+- webhook responde com token
 - upload autenticado funciona
-- webhook responde com `?token=SEU_WEBHOOK_SECRET`
-- recuperacao de senha envia email real
-- DNS e SSL estao ativos
+- billing do superadmin abre
+- dashboard do salão mostra alerta se houver fatura pendente
 
-## Observacoes de producao
+## Easypanel
 
-- como o frontend usa cookies `httpOnly`, o SSL precisa estar configurado para fluxo completo de login em producao
-- se voce usar host externo para banco, libere firewall apenas para o necessario
-- o diretório de uploads continua local ao servidor; faca backup dele junto com o banco
+Se o deploy for no Easypanel:
+
+- backend com build path `/backend`
+- frontend com build path `/frontend`
+- `Dockerfile` em ambos
+- backend publicado para a porta `3001`
+- após deploy, rodar `npx prisma db push` no serviço backend

@@ -1,56 +1,48 @@
-# Checklist de Atualização de Documentação
+# Checklist de atualização de documentação
 
-Use este checklist sempre que uma entrega relevante for concluída.
+Use este checklist sempre que uma entrega importante for concluída.
 
-## Checklist
+## Revisar se mudou
 
-- houve mudança de arquitetura ou responsabilidade entre frontend, backend, banco ou integrações?
-- houve mudança de runtime, jobs, filas, workers ou automações?
-- houve mudança em autenticação, autorização, auditoria, sessão ou segurança?
-- houve mudança em módulos do produto ou fluxos principais?
-- houve nova integração externa ou mudança importante em uma integração existente?
-- houve mudança importante em riscos técnicos?
-- houve mudança importante no estágio de maturidade da plataforma?
-- houve mudança importante no posicionamento executivo/comercial da tecnologia?
+- arquitetura
+- runtime
+- segurança
+- billing
+- deploy
+- branding
+- integrações
+- permissões
+- onboarding operacional
 
-## Ações Recomendadas
+## Se sim
 
-Se a resposta for `sim` em qualquer item:
+- atualizar `README.md`
+- atualizar `docs/README.md`
+- revisar os documentos impactados
+- avaliar necessidade de ADR novo
 
-- revisar `docs/README.md`
-- atualizar os documentos impactados
-- avaliar se precisa novo ADR em `docs/decisions/`
+## Mudanças mais comuns
 
-## Documentos Mais Comuns por Tipo de Mudança
+### Segurança
 
-### Nova feature operacional
+- `docs/security.md`
+- `docs/runtime.md`
+- `docs/architecture.md`
 
-- `modules.md`
-- `architecture.md`
-- `executive-summary.md`
+### Billing
 
-### Nova integração
+- `README.md`
+- `docs/architecture.md`
+- `docs/runtime.md`
+- `docs/deploy-vps.md`
 
-- `connectors.md`
-- `architecture.md`
-- `security.md`
-- `scalability.md`
+### Deploy
 
-### Mudança de permissão ou segurança
+- `README.md`
+- `docs/deploy-vps.md`
 
-- `capabilities.md`
-- `security.md`
-- `risk-matrix.md`
+### Branding e UX
 
-### Mudança estrutural de backend/runtime
-
-- `runtime.md`
-- `architecture.md`
-- `scalability.md`
-- possivelmente um ADR novo
-
-### Mudança de direção técnica
-
-- `roadmap.md`
-- `executive-summary.md`
-- `investor-brief.md`
+- `README.md`
+- `CLAUDE.md`
+- materiais executivos se houver reposicionamento

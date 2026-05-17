@@ -6,7 +6,7 @@ O produto está organizado em módulos funcionais que combinam operação de sal
 
 ```mermaid
 flowchart TD
-    A[Plataforma Athena] --> B[Experiência Pública]
+    A[Plataforma BellaPro Agenda] --> B[Experiência Pública]
     A --> C[Painel Operacional]
     A --> D[Controle da Plataforma]
 
