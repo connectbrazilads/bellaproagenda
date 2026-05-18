@@ -1,5 +1,6 @@
 import React from 'react';
 import bellaproLogo from '../assets/brand/bellapro-logo-ui.png';
+import bellaproLogoDark from '../assets/brand/bellapro-logo-ui-dark.png';
 import { cn } from '../lib/utils';
 
 export default function BrandLogo({
@@ -10,68 +11,49 @@ export default function BrandLogo({
   subtitle,
   variant = 'auto',
 }) {
-  const isDarkBg = variant === 'darkBg';
-  const isLightBg = variant === 'lightBg';
+  const lightClasses =
+    variant === 'darkBg'
+      ? 'hidden'
+      : variant === 'lightBg'
+        ? 'block'
+        : 'block dark:hidden';
 
-  const bellaColor = isDarkBg ? 'text-[#fffaf9]' : isLightBg ? 'text-[#1f1920]' : 'text-[#1f1920] dark:text-[#fffaf9]';
-  const proColor = 'text-[#d98d9d]';
-  const agendaColor = isDarkBg ? 'text-[#d98d9d]' : isLightBg ? 'text-[#cf8897]' : 'text-[#cf8897] dark:text-[#d98d9d]';
+  const darkClasses =
+    variant === 'darkBg'
+      ? 'block'
+      : variant === 'lightBg'
+        ? 'hidden'
+        : 'hidden dark:block';
 
   return (
-    <div
-      className={cn(
-        'flex items-center',
-        stacked && 'flex-col items-center text-center',
-        className
-      )}
-    >
-      <div
+    <div className={cn('flex items-center', stacked && 'flex-col items-center text-center', className)}>
+      <img
+        src={bellaproLogo}
+        alt="BellaPro Agenda"
         className={cn(
-          'relative shrink-0 overflow-hidden',
-          compact ? 'h-[52px] w-[46px]' : 'h-[70px] w-[62px]',
-          stacked && !compact && 'mb-2 h-[78px] w-[68px]'
+          'h-auto object-contain drop-shadow-[0_24px_40px_rgba(0,0,0,0.16)]',
+          lightClasses,
+          compact ? 'w-[164px] max-w-full' : 'w-[252px] max-w-full sm:w-[292px]',
+          stacked && !compact && 'w-[220px] sm:w-[268px]',
+          imageClassName
         )}
-      >
-        <img
-          src={bellaproLogo}
-          alt=""
-          aria-hidden="true"
-          className={cn(
-            'absolute left-0 top-0 h-full max-w-none object-contain object-left drop-shadow-[0_20px_36px_rgba(0,0,0,0.18)]',
-            compact ? 'w-[158px]' : 'w-[210px]',
-            imageClassName
-          )}
-        />
-      </div>
-
-      <div className={cn('ml-3 flex flex-col', stacked && 'ml-0 items-center')}>
-        <div
-          className={cn(
-            'font-brand-display leading-none tracking-[-0.04em]',
-            compact ? 'text-[1rem] sm:text-[1.05rem]' : 'text-[2.1rem] sm:text-[2.45rem]',
-            stacked && !compact && 'text-[2rem] sm:text-[2.3rem]'
-          )}
-        >
-          <span className={bellaColor}>Bella</span>
-          <span className={cn('ml-1', proColor)}>Pro</span>
-        </div>
-
-        <div
-          className={cn(
-            'mt-1 font-semibold uppercase leading-none tracking-[0.42em]',
-            compact ? 'text-[0.72rem]' : 'text-[0.92rem]',
-            agendaColor
-          )}
-        >
-          Agenda
-        </div>
-
-        {subtitle ? (
-          <span className="mt-3 text-[0.68rem] font-semibold uppercase tracking-[0.48em] text-[#e6b1b9]">
-            {subtitle}
-          </span>
-        ) : null}
-      </div>
+      />
+      <img
+        src={bellaproLogoDark}
+        alt="BellaPro Agenda"
+        className={cn(
+          'h-auto object-contain drop-shadow-[0_24px_40px_rgba(0,0,0,0.16)]',
+          darkClasses,
+          compact ? 'w-[164px] max-w-full' : 'w-[252px] max-w-full sm:w-[292px]',
+          stacked && !compact && 'w-[220px] sm:w-[268px]',
+          imageClassName
+        )}
+      />
+      {subtitle ? (
+        <span className="mt-3 text-[0.68rem] font-semibold uppercase tracking-[0.48em] text-[#e6b1b9]">
+          {subtitle}
+        </span>
+      ) : null}
     </div>
   );
 }
