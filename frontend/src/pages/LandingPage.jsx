@@ -15,7 +15,7 @@ import {
   Users,
   Wallet,
 } from 'lucide-react';
-import BrandLogo from '../components/BrandLogo';
+import LandingBrandLogo from '../components/LandingBrandLogo';
 import { cn } from '../lib/utils';
 
 const reveal = {
@@ -145,7 +145,7 @@ export default function LandingPage() {
 
       <nav className="sticky top-0 z-50 border-b border-white/8 bg-[#18141bcc]/90 backdrop-blur-2xl">
         <div className="mx-auto flex max-w-7xl items-center justify-between gap-4 px-4 py-4 sm:px-6">
-          <BrandLogo compact variant="darkBg" />
+          <LandingBrandLogo />
 
           <div className="hidden items-center gap-8 text-[11px] font-black uppercase tracking-[0.24em] text-white/48 lg:flex">
             <button onClick={() => scrollToSection('beneficios')} className="transition hover:text-white">Benefícios</button>
@@ -474,10 +474,10 @@ function MetricTile({ label, value, highlight = false }) {
         highlight ? 'border-[#e29ba834] bg-[#e29ba814]' : 'border-white/8 bg-white/[0.04]'
       )}
     >
-      <p className="text-[9px] font-black uppercase tracking-[0.22em] text-white/40 sm:text-[10px] sm:tracking-[0.24em]">{label}</p>
-      <div className={cn('mt-3 font-black leading-none tracking-tight', highlight ? 'text-[#f0bac0]' : 'text-white')}>
-        {currency ? <span className="block text-lg sm:text-xl">{currency}</span> : null}
-        <span className={cn('block', currency ? 'mt-1 text-[1.75rem] sm:text-[2rem]' : 'text-xl sm:text-[1.75rem]')}>{amount}</span>
+      <p className="text-[9px] font-black uppercase tracking-[0.18em] text-white/40 sm:text-[10px] sm:tracking-[0.2em]">{label}</p>
+      <div className={cn('mt-3 font-black leading-[0.92] tracking-[-0.04em]', highlight ? 'text-[#f0bac0]' : 'text-white')}>
+        {currency ? <span className="block text-base sm:text-lg">{currency}</span> : null}
+        <span className={cn('block break-keep', currency ? 'mt-1 text-[1.45rem] sm:text-[1.7rem]' : 'text-lg sm:text-[1.45rem]')}>{amount}</span>
       </div>
     </div>
   );
