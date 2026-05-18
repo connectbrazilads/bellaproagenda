@@ -234,7 +234,7 @@ export default function LandingPage() {
                   </div>
                 </div>
 
-                <div className="mt-5 grid gap-4 2xl:grid-cols-[1.08fr_0.92fr]">
+                <div className="mt-5 grid gap-4 min-[1720px]:grid-cols-[1.08fr_0.92fr]">
                   <PanelCard eyebrow="Agenda do dia" title="Recepção com leitura rápida">
                     <div className="space-y-3">
                       <SoftRow icon={CalendarDays} label="09:00 - 10:20" value="Coloração + corte" />
@@ -252,7 +252,7 @@ export default function LandingPage() {
                     </div>
                   </PanelCard>
 
-                  <PanelCard eyebrow="Checkout vivo" title="Serviço e pagamento juntos" className="2xl:col-span-2">
+                  <PanelCard eyebrow="Checkout vivo" title="Serviço e pagamento juntos" className="min-[1720px]:col-span-2">
                     <div className="grid gap-4 sm:grid-cols-3">
                       <MiniFeature icon={Star} title="Cliente" text="Histórico e observações sem bagunçar a leitura visual." />
                       <MiniFeature icon={CreditCard} title="Pagamento" text="Checkout direto no fluxo do atendimento." />
