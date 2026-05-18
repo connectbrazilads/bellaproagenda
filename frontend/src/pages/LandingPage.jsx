@@ -145,7 +145,7 @@ export default function LandingPage() {
 
       <nav className="sticky top-0 z-50 border-b border-white/8 bg-[#18141bcc]/90 backdrop-blur-2xl">
         <div className="mx-auto flex max-w-7xl items-center justify-between gap-4 px-4 py-4 sm:px-6">
-          <BrandLogo compact />
+          <BrandLogo compact variant="darkBg" />
 
           <div className="hidden items-center gap-8 text-[11px] font-black uppercase tracking-[0.24em] text-white/48 lg:flex">
             <button onClick={() => scrollToSection('beneficios')} className="transition hover:text-white">Benefícios</button>
@@ -224,7 +224,9 @@ export default function LandingPage() {
                 <div className="flex flex-wrap items-center justify-between gap-4 border-b border-white/8 pb-5">
                   <div>
                     <p className="brand-kicker">Preview da experiência</p>
-                    <h2 className="mt-3 text-2xl font-black tracking-tight text-white">Recepção mais ágil, caixa mais claro, operação mais forte</h2>
+                    <h2 className="mt-3 max-w-3xl text-2xl font-black leading-tight tracking-tight text-white sm:text-[2rem]">
+                      Recepção mais ágil, caixa mais claro, operação mais forte
+                    </h2>
                   </div>
                   <div className="inline-flex items-center gap-2 rounded-full border border-[#e29ba834] bg-[#e29ba814] px-4 py-2 text-[10px] font-black uppercase tracking-[0.24em] text-[#f3bbc4]">
                     <BadgeCheck className="h-3.5 w-3.5" />
@@ -232,7 +234,7 @@ export default function LandingPage() {
                   </div>
                 </div>
 
-                <div className="mt-5 grid gap-4 xl:grid-cols-[1.08fr_0.92fr]">
+                <div className="mt-5 grid gap-4 2xl:grid-cols-[1.08fr_0.92fr]">
                   <PanelCard eyebrow="Agenda do dia" title="Recepção com leitura rápida">
                     <div className="space-y-3">
                       <SoftRow icon={CalendarDays} label="09:00 - 10:20" value="Coloração + corte" />
@@ -242,7 +244,7 @@ export default function LandingPage() {
                   </PanelCard>
 
                   <PanelCard eyebrow="Fechamento" title="Caixa mais confiável">
-                    <div className="grid grid-cols-2 gap-3">
+                    <div className="grid gap-3 sm:grid-cols-2">
                       <MetricTile label="Inicial" value="R$ 150" />
                       <MetricTile label="Esperado" value="R$ 1.280" />
                       <MetricTile label="Dinheiro" value="R$ 620" />
@@ -250,7 +252,7 @@ export default function LandingPage() {
                     </div>
                   </PanelCard>
 
-                  <PanelCard eyebrow="Checkout vivo" title="Serviço e pagamento juntos" className="lg:col-span-2">
+                  <PanelCard eyebrow="Checkout vivo" title="Serviço e pagamento juntos" className="2xl:col-span-2">
                     <div className="grid gap-4 sm:grid-cols-3">
                       <MiniFeature icon={Star} title="Cliente" text="Histórico e observações sem bagunçar a leitura visual." />
                       <MiniFeature icon={CreditCard} title="Pagamento" text="Checkout direto no fluxo do atendimento." />
@@ -463,6 +465,8 @@ function SoftRow({ icon: Icon, label, value }) {
 }
 
 function MetricTile({ label, value, highlight = false }) {
+  const [currency, amount] = value.startsWith('R$ ') ? ['R$', value.replace('R$ ', '')] : [null, value];
+
   return (
     <div
       className={cn(
@@ -471,14 +475,10 @@ function MetricTile({ label, value, highlight = false }) {
       )}
     >
       <p className="text-[9px] font-black uppercase tracking-[0.22em] text-white/40 sm:text-[10px] sm:tracking-[0.24em]">{label}</p>
-      <p
-        className={cn(
-          'mt-3 whitespace-nowrap text-lg font-black leading-none tracking-tight sm:text-[1.75rem]',
-          highlight ? 'text-[#f0bac0]' : 'text-white'
-        )}
-      >
-        {value}
-      </p>
+      <div className={cn('mt-3 font-black leading-none tracking-tight', highlight ? 'text-[#f0bac0]' : 'text-white')}>
+        {currency ? <span className="block text-lg sm:text-xl">{currency}</span> : null}
+        <span className={cn('block', currency ? 'mt-1 text-[1.75rem] sm:text-[2rem]' : 'text-xl sm:text-[1.75rem]')}>{amount}</span>
+      </div>
     </div>
   );
 }

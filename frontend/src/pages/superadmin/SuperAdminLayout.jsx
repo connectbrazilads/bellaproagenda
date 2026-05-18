@@ -33,7 +33,7 @@ export default function SuperAdminLayout() {
     <div className="brand-page-dark flex min-h-screen flex-col md:flex-row">
       <aside className="brand-panel-dark flex flex-col md:w-80 md:rounded-r-[2rem] md:border-r md:border-b-0 border-b border-white/5">
         <div className="border-b border-white/5 p-6">
-          <BrandLogo />
+          <BrandLogo variant="darkBg" />
           <p className="mt-4 text-[10px] font-extrabold uppercase tracking-[0.32em] text-[#efb1bb]">Cockpit SaaS</p>
         </div>
 

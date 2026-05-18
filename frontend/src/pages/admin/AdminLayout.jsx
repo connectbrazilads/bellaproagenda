@@ -279,7 +279,7 @@ export default function AdminLayout() {
                   <span className="font-brand-display text-2xl leading-none">B</span>
                 </div>
               ) : (
-                <BrandLogo compact />
+                <BrandLogo compact variant={dark ? 'darkBg' : 'lightBg'} />
               )}
             </div>
             <button
@@ -370,10 +370,7 @@ export default function AdminLayout() {
               <ChevronLeft size={20} />
             </button>
           )}
-          <div className="flex h-8 w-8 items-center justify-center rounded-lg border border-[#e7c4c8] bg-[linear-gradient(180deg,#fff8f7_0%,#f9e0dd_100%)] text-[#a45f69] shadow-[0_16px_32px_-20px_rgba(226,155,168,0.9)]">
-            <span className="font-brand-display text-xl leading-none">B</span>
-          </div>
-          <span className="font-brand-display text-xl tracking-tight">Bella<span className="text-[#d28595]">Pro</span></span>
+          <BrandLogo compact variant={dark ? 'darkBg' : 'lightBg'} imageClassName="w-[148px]" />
         </div>
         <div className="flex items-center gap-4">
           <button onClick={toggle} className="text-[#a98690]">{dark ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}</button>
@@ -410,7 +407,7 @@ export default function AdminLayout() {
               onClick={(e) => e.stopPropagation()}
             >
               <div className="mb-10 px-4">
-                 <BrandLogo />
+                 <BrandLogo variant={dark ? 'darkBg' : 'lightBg'} />
               </div>
               <nav className="space-y-8">
                 {visibleGroups.map((group) => (

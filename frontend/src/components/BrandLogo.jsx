@@ -9,14 +9,30 @@ export default function BrandLogo({
   className = '',
   imageClassName = '',
   subtitle,
+  variant = 'auto',
 }) {
+  const lightClasses =
+    variant === 'darkBg'
+      ? 'hidden'
+      : variant === 'lightBg'
+        ? 'block'
+        : 'block dark:hidden';
+
+  const darkClasses =
+    variant === 'darkBg'
+      ? 'block'
+      : variant === 'lightBg'
+        ? 'hidden'
+        : 'hidden dark:block';
+
   return (
     <div className={cn('flex items-center', stacked && 'flex-col items-center text-center', className)}>
       <img
         src={bellaproLogo}
         alt="BellaPro Agenda"
         className={cn(
-          'block h-auto object-contain drop-shadow-[0_24px_40px_rgba(0,0,0,0.16)] dark:hidden',
+          'h-auto object-contain drop-shadow-[0_24px_40px_rgba(0,0,0,0.16)]',
+          lightClasses,
           compact ? 'w-[164px] max-w-full' : 'w-[252px] max-w-full sm:w-[292px]',
           stacked && !compact && 'w-[220px] sm:w-[268px]',
           imageClassName
@@ -26,7 +42,8 @@ export default function BrandLogo({
         src={bellaproLogoDark}
         alt="BellaPro Agenda"
         className={cn(
-          'hidden h-auto object-contain drop-shadow-[0_24px_40px_rgba(0,0,0,0.16)] dark:block',
+          'h-auto object-contain drop-shadow-[0_24px_40px_rgba(0,0,0,0.16)]',
+          darkClasses,
           compact ? 'w-[164px] max-w-full' : 'w-[252px] max-w-full sm:w-[292px]',
           stacked && !compact && 'w-[220px] sm:w-[268px]',
           imageClassName
