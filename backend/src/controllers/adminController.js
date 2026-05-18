@@ -29,6 +29,12 @@ function professionalScopeFilter(req) {
   return isScopedProfessional(req) ? { profissionalId: req.user.profissionalId } : {};
 }
 
+function horaParaMinutos(hora) {
+  const [h, m] = String(hora || '').split(':').map(Number);
+  if (Number.isNaN(h) || Number.isNaN(m)) return null;
+  return h * 60 + m;
+}
+
 async function getAllowedServicoIds(req) {
   if (!isScopedProfessional(req)) return null;
 
@@ -701,12 +707,29 @@ async function getBloqueios(req, res) {
 async function createBloqueio(req, res) {
   const { data, inicioHora, fimHora, motivo } = req.body;
   const profissionalId = getScopedProfessionalId(req, req.body.profissionalId);
+  let inicioHoraNormalizado = typeof inicioHora === 'string' && inicioHora.trim() ? inicioHora.trim() : null;
+  let fimHoraNormalizado = typeof fimHora === 'string' && fimHora.trim() ? fimHora.trim() : null;
   
   const prof = await prisma.profissional.findFirst({ where: { id: profissionalId, salaoId: req.user.salaoId } });
   if (!prof) return res.status(403).json({ error: 'Proibido' });
 
+  if (!inicioHoraNormalizado && !fimHoraNormalizado) {
+    inicioHoraNormalizado = null;
+    fimHoraNormalizado = null;
+  } else if (!inicioHoraNormalizado || !fimHoraNormalizado) {
+    return res.status(400).json({ error: 'Informe inicio e fim ou deixe ambos vazios para bloquear o dia inteiro.' });
+  } else if (horaParaMinutos(fimHoraNormalizado) <= horaParaMinutos(inicioHoraNormalizado)) {
+    return res.status(400).json({ error: 'O horario final precisa ser maior que o horario inicial.' });
+  }
+
   const bloqueio = await prisma.bloqueio.create({
-    data: { profissionalId, data: new Date(data + 'T00:00:00'), inicioHora, fimHora, motivo },
+    data: {
+      profissionalId,
+      data: new Date(data + 'T00:00:00'),
+      inicioHora: inicioHoraNormalizado,
+      fimHora: fimHoraNormalizado,
+      motivo,
+    },
     include: { profissional: { select: { nome: true } } },
   });
   res.status(201).json(bloqueio);

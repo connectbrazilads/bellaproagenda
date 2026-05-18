@@ -1,19 +1,17 @@
 import React, { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { 
-  Lock, 
-  Trash2, 
-  Calendar, 
-  Clock, 
-  Plus, 
-  User,
-  ShieldAlert,
-  CalendarDays
-} from 'lucide-react';
+import { Lock, Trash2, Clock, Plus, ShieldAlert, CalendarDays } from 'lucide-react';
 import { getBloqueios, createBloqueio, deleteBloqueio, getProfissionais } from '../../services/api';
-import { cn } from '../../lib/utils';
 
-const DIAS = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
+const DIAS = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sab'];
+const FORM_INICIAL = {
+  profissionalId: '',
+  data: '',
+  tipo: 'dia_todo',
+  inicioHora: '',
+  fimHora: '',
+  motivo: '',
+};
 
 export default function Bloqueios() {
   const role = localStorage.getItem('salao_user_role');
@@ -23,13 +21,7 @@ export default function Bloqueios() {
   const [profissionais, setProfissionais] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
-  const [form, setForm] = useState({
-    profissionalId: myProfissionalId,
-    data: '',
-    inicioHora: '',
-    fimHora: '',
-    motivo: '',
-  });
+  const [form, setForm] = useState({ ...FORM_INICIAL, profissionalId: myProfissionalId });
   const [saving, setSaving] = useState(false);
 
   async function carregar() {
@@ -43,23 +35,39 @@ export default function Bloqueios() {
     }
   }
 
-  useEffect(() => { carregar(); }, []);
+  useEffect(() => {
+    carregar();
+  }, []);
 
   async function salvar(e) {
     e.preventDefault();
     if (!form.profissionalId || !form.data) return;
+
+    if (form.tipo === 'periodo') {
+      if (!form.inicioHora || !form.fimHora) {
+        alert('Informe inicio e fim para bloquear um periodo.');
+        return;
+      }
+      if (form.fimHora <= form.inicioHora) {
+        alert('O horario final precisa ser maior que o horario inicial.');
+        return;
+      }
+    }
+
     setSaving(true);
     try {
       await createBloqueio({
         profissionalId: isScopedProfessional ? myProfissionalId : form.profissionalId,
         data: form.data,
-        inicioHora: form.inicioHora || null,
-        fimHora: form.fimHora || null,
+        inicioHora: form.tipo === 'periodo' ? form.inicioHora : null,
+        fimHora: form.tipo === 'periodo' ? form.fimHora : null,
         motivo: form.motivo || null,
       });
-      setForm({ profissionalId: myProfissionalId, data: '', inicioHora: '', fimHora: '', motivo: '' });
+      setForm({ ...FORM_INICIAL, profissionalId: myProfissionalId });
       setShowForm(false);
       carregar();
+    } catch (err) {
+      alert(err.response?.data?.error || 'Nao foi possivel salvar o bloqueio.');
     } finally {
       setSaving(false);
     }
@@ -81,106 +89,164 @@ export default function Bloqueios() {
   }
 
   return (
-    <motion.div 
+    <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
-      className="max-w-4xl mx-auto space-y-12 pb-20"
+      className="mx-auto max-w-4xl space-y-12 pb-20"
     >
-      <header className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 md:p-8 border-b border-gray-100 dark:border-white/5 pb-10">
+      <header className="flex flex-col items-start justify-between gap-4 border-b border-gray-100 pb-10 md:flex-row md:items-center md:p-8 dark:border-white/5">
         <div>
-          <div className="flex items-center gap-3 mb-4">
-            <Lock className="w-4 h-4 text-orange-500 animate-pulse" />
-            <h2 className="text-[10px] font-black text-orange-500 uppercase tracking-[0.4em]">Restrições de Agenda</h2>
+          <div className="mb-4 flex items-center gap-3">
+            <Lock className="h-4 w-4 animate-pulse text-orange-500" />
+            <h2 className="text-[10px] font-black uppercase tracking-[0.4em] text-orange-500">Restricoes de Agenda</h2>
           </div>
-          <h1 className="text-2xl sm:text-4xl sm:text-6xl font-black text-gray-900 dark:text-white tracking-tighter leading-none mb-4">Seus <span className="text-orange-500">Bloqueios</span></h1>
-          <p className="text-gray-400 font-medium text-xl max-w-xl leading-relaxed">Gerencie horários indisponíveis e folgas da sua equipe com precisão.</p>
+          <h1 className="mb-4 text-2xl font-black leading-none tracking-tighter text-gray-900 sm:text-4xl sm:text-6xl dark:text-white">
+            Seus <span className="text-orange-500">Bloqueios</span>
+          </h1>
+          <p className="max-w-xl text-xl font-medium leading-relaxed text-gray-400">
+            Gerencie horarios indisponiveis e folgas da sua equipe com mais clareza.
+          </p>
         </div>
-        <motion.button 
+        <motion.button
           whileHover={{ scale: 1.05, y: -2 }}
           whileTap={{ scale: 0.95 }}
-          onClick={() => setShowForm(!showForm)}
-          className="bg-orange-500 text-gray-900 dark:text-white px-10 py-5 rounded-[2rem] font-black text-xs shadow-2xl shadow-orange-500/20 flex items-center gap-3 uppercase tracking-widest"
+          onClick={() => setShowForm((valorAtual) => !valorAtual)}
+          className="flex items-center gap-3 rounded-[2rem] bg-orange-500 px-10 py-5 text-xs font-black uppercase tracking-widest text-gray-900 shadow-2xl shadow-orange-500/20 dark:text-white"
         >
-          <Plus className="w-4 h-4" /> NOVO BLOQUEIO
+          <Plus className="h-4 w-4" /> NOVO BLOQUEIO
         </motion.button>
       </header>
 
       <AnimatePresence>
         {showForm && (
-          <motion.form 
+          <motion.form
             initial={{ opacity: 0, height: 0 }}
             animate={{ opacity: 1, height: 'auto' }}
             exit={{ opacity: 0, height: 0 }}
-            onSubmit={salvar} 
-            className="bg-white dark:bg-gray-900/40 backdrop-blur-3xl rounded-[2rem] border-2 border-orange-100 dark:border-orange-900/20 p-5 md:p-10 overflow-hidden shadow-2xl shadow-orange-500/5"
+            onSubmit={salvar}
+            className="overflow-hidden rounded-[2rem] border-2 border-orange-100 bg-white p-5 shadow-2xl shadow-orange-500/5 backdrop-blur-3xl md:p-10 dark:border-orange-900/20 dark:bg-gray-900/40"
           >
-            <h2 className="text-2xl font-black text-gray-900 dark:text-white mb-8 tracking-tighter">Bloquear Período</h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:p-6 mb-8">
+            <h2 className="mb-8 text-2xl font-black tracking-tighter text-gray-900 dark:text-white">Bloquear Agenda</h2>
+            <div className="mb-8 grid grid-cols-1 gap-4 sm:p-6 md:grid-cols-2">
               <div className="space-y-1">
-                <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-4">Profissional</label>
+                <label className="ml-4 text-[10px] font-black uppercase tracking-widest text-gray-400">Profissional</label>
                 {isScopedProfessional ? (
                   <input
-                    value={profissionais[0]?.nome || 'Seu perfil'}
+                    value={profissionais.find((p) => p.id === myProfissionalId)?.nome || 'Seu perfil'}
                     readOnly
-                    className="w-full bg-gray-100 dark:bg-white/10 border-2 border-transparent rounded-2xl px-6 py-4 font-black text-gray-900 dark:text-white outline-none"
+                    className="w-full rounded-2xl border-2 border-transparent bg-gray-100 px-6 py-4 font-black text-gray-900 outline-none dark:bg-white/10 dark:text-white"
                   />
                 ) : (
                   <select
                     value={form.profissionalId}
                     onChange={(e) => setForm({ ...form, profissionalId: e.target.value })}
-                    className="w-full bg-gray-50 dark:bg-white/5 border-2 border-transparent focus:border-orange-500 rounded-2xl px-6 py-4 font-black text-gray-900 dark:text-white outline-none appearance-none"
+                    className="w-full appearance-none rounded-2xl border-2 border-transparent bg-gray-50 px-6 py-4 font-black text-gray-900 outline-none focus:border-orange-500 dark:bg-white/5 dark:text-white"
                     required
                   >
-                    <option value="">Selecionar Artista...</option>
+                    <option value="">Selecionar profissional...</option>
                     {profissionais.map((p) => (
                       <option key={p.id} value={p.id}>{p.nome}</option>
                     ))}
                   </select>
                 )}
               </div>
+
               <div className="space-y-1">
-                <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-4">Data</label>
+                <label className="ml-4 text-[10px] font-black uppercase tracking-widest text-gray-400">Data</label>
                 <input
                   type="date"
                   value={form.data}
                   onChange={(e) => setForm({ ...form, data: e.target.value })}
-                  className="w-full bg-gray-50 dark:bg-white/5 border-2 border-transparent focus:border-orange-500 rounded-2xl px-6 py-4 font-black text-gray-900 dark:text-white outline-none"
+                  className="w-full rounded-2xl border-2 border-transparent bg-gray-50 px-6 py-4 font-black text-gray-900 outline-none focus:border-orange-500 dark:bg-white/5 dark:text-white"
                   required
                 />
               </div>
-              <div className="space-y-1">
-                <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-4">Início (vazio = dia todo)</label>
-                <input
-                  type="time"
-                  value={form.inicioHora}
-                  onChange={(e) => setForm({ ...form, inicioHora: e.target.value })}
-                  className="w-full bg-gray-50 dark:bg-white/5 border-2 border-transparent focus:border-orange-500 rounded-2xl px-6 py-4 font-black text-gray-900 dark:text-white outline-none"
-                />
+
+              <div className="space-y-3 md:col-span-2">
+                <label className="ml-4 text-[10px] font-black uppercase tracking-widest text-gray-400">Tipo de bloqueio</label>
+                <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                  <button
+                    type="button"
+                    onClick={() => setForm({ ...form, tipo: 'dia_todo', inicioHora: '', fimHora: '' })}
+                    className={`rounded-2xl border-2 px-5 py-4 text-left transition-all ${
+                      form.tipo === 'dia_todo'
+                        ? 'border-orange-500 bg-orange-50 text-gray-900 dark:bg-orange-500/10 dark:text-white'
+                        : 'border-gray-100 bg-gray-50 text-gray-500 dark:border-white/5 dark:bg-white/5 dark:text-white/66'
+                    }`}
+                  >
+                    <span className="block text-[11px] font-black uppercase tracking-widest">Dia inteiro</span>
+                    <span className="mt-1 block text-xs font-semibold opacity-70">
+                      Bloqueia toda a agenda do profissional nessa data.
+                    </span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => setForm({ ...form, tipo: 'periodo' })}
+                    className={`rounded-2xl border-2 px-5 py-4 text-left transition-all ${
+                      form.tipo === 'periodo'
+                        ? 'border-orange-500 bg-orange-50 text-gray-900 dark:bg-orange-500/10 dark:text-white'
+                        : 'border-gray-100 bg-gray-50 text-gray-500 dark:border-white/5 dark:bg-white/5 dark:text-white/66'
+                    }`}
+                  >
+                    <span className="block text-[11px] font-black uppercase tracking-widest">Periodo</span>
+                    <span className="mt-1 block text-xs font-semibold opacity-70">
+                      Bloqueia apenas um intervalo especifico de horario.
+                    </span>
+                  </button>
+                </div>
               </div>
-              <div className="space-y-1">
-                <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-4">Fim</label>
-                <input
-                  type="time"
-                  value={form.fimHora}
-                  onChange={(e) => setForm({ ...form, fimHora: e.target.value })}
-                  className="w-full bg-gray-50 dark:bg-white/5 border-2 border-transparent focus:border-orange-500 rounded-2xl px-6 py-4 font-black text-gray-900 dark:text-white outline-none"
-                />
-              </div>
-              <div className="md:col-span-2 space-y-1">
-                <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-4">Motivo / Observação</label>
+
+              {form.tipo === 'periodo' && (
+                <>
+                  <div className="space-y-1">
+                    <label className="ml-4 text-[10px] font-black uppercase tracking-widest text-gray-400">Inicio</label>
+                    <input
+                      type="time"
+                      value={form.inicioHora}
+                      onChange={(e) => setForm({ ...form, inicioHora: e.target.value })}
+                      className="w-full rounded-2xl border-2 border-transparent bg-gray-50 px-6 py-4 font-black text-gray-900 outline-none focus:border-orange-500 dark:bg-white/5 dark:text-white"
+                      required
+                    />
+                  </div>
+
+                  <div className="space-y-1">
+                    <label className="ml-4 text-[10px] font-black uppercase tracking-widest text-gray-400">Fim</label>
+                    <input
+                      type="time"
+                      value={form.fimHora}
+                      onChange={(e) => setForm({ ...form, fimHora: e.target.value })}
+                      className="w-full rounded-2xl border-2 border-transparent bg-gray-50 px-6 py-4 font-black text-gray-900 outline-none focus:border-orange-500 dark:bg-white/5 dark:text-white"
+                      required
+                    />
+                  </div>
+                </>
+              )}
+
+              <div className="space-y-1 md:col-span-2">
+                <label className="ml-4 text-[10px] font-black uppercase tracking-widest text-gray-400">Motivo / Observacao</label>
                 <input
                   value={form.motivo}
                   onChange={(e) => setForm({ ...form, motivo: e.target.value })}
-                  placeholder="Ex: Folga, Feriado, Consulta Médica..."
-                  className="w-full bg-gray-50 dark:bg-white/5 border-2 border-transparent focus:border-orange-500 rounded-2xl px-6 py-4 font-black text-gray-900 dark:text-white outline-none"
+                  placeholder="Ex: Folga, feriado, consulta medica..."
+                  className="w-full rounded-2xl border-2 border-transparent bg-gray-50 px-6 py-4 font-black text-gray-900 outline-none focus:border-orange-500 dark:bg-white/5 dark:text-white"
                 />
               </div>
             </div>
+
             <div className="flex gap-4">
-              <button type="button" onClick={() => setShowForm(false)} className="flex-1 py-5 rounded-2xl border-2 border-gray-100 dark:border-white/5 text-[10px] font-black uppercase tracking-widest text-gray-400 hover:bg-gray-50 transition-all">
+              <button
+                type="button"
+                onClick={() => setShowForm(false)}
+                className="flex-1 rounded-2xl border-2 border-gray-100 py-5 text-[10px] font-black uppercase tracking-widest text-gray-400 transition-all hover:bg-gray-50 dark:border-white/5"
+              >
                 Cancelar
               </button>
-              <button type="submit" disabled={saving} className="flex-1 py-5 bg-orange-500 text-gray-900 dark:text-white rounded-2xl font-black text-[10px] uppercase tracking-widest shadow-xl shadow-orange-500/20 hover:bg-orange-600 transition-all disabled:opacity-50">
+              <button
+                type="submit"
+                disabled={saving}
+                className="flex-1 rounded-2xl bg-orange-500 py-5 text-[10px] font-black uppercase tracking-widest text-gray-900 shadow-xl shadow-orange-500/20 transition-all hover:bg-orange-600 disabled:opacity-50 dark:text-white"
+              >
                 {saving ? 'PROCESSANDO...' : 'CONFIRMAR BLOQUEIO'}
               </button>
             </div>
@@ -191,53 +257,59 @@ export default function Bloqueios() {
       <div className="space-y-4">
         {loading ? (
           <div className="py-40 text-center">
-            <div className="inline-block w-12 h-12 border-4 border-orange-500 border-t-transparent rounded-full animate-spin"></div>
+            <div className="inline-block h-12 w-12 animate-spin rounded-full border-4 border-orange-500 border-t-transparent" />
           </div>
         ) : bloqueios.length === 0 ? (
-          <div className="bg-gray-50 dark:bg-white/5 rounded-[3rem] p-32 text-center border-2 border-dashed border-gray-100 dark:border-white/5">
-             <ShieldAlert className="w-16 h-16 text-gray-200 dark:text-gray-800 mx-auto mb-8" />
-             <p className="text-gray-300 dark:text-gray-700 font-black uppercase tracking-[0.3em] text-[10px]">Agenda 100% Livre de Bloqueios</p>
+          <div className="rounded-[3rem] border-2 border-dashed border-gray-100 bg-gray-50 p-32 text-center dark:border-white/5 dark:bg-white/5">
+            <ShieldAlert className="mx-auto mb-8 h-16 w-16 text-gray-200 dark:text-gray-800" />
+            <p className="text-[10px] font-black uppercase tracking-[0.3em] text-gray-300 dark:text-gray-700">
+              Agenda 100% livre de bloqueios
+            </p>
           </div>
         ) : (
           <div className="grid grid-cols-1 gap-4">
             <AnimatePresence>
               {bloqueios.map((b, idx) => (
-                <motion.div 
+                <motion.div
                   layout
                   initial={{ opacity: 0, x: -20 }}
                   animate={{ opacity: 1, x: 0 }}
                   transition={{ delay: idx * 0.05 }}
-                  key={b.id} 
-                  className="bg-white dark:bg-gray-900/40 backdrop-blur-3xl rounded-[2rem] border border-gray-100 dark:border-white/5 p-4 md:p-8 flex flex-col md:flex-row items-center justify-between gap-4 md:p-8 group hover:border-orange-200 dark:hover:border-orange-900/30 transition-all shadow-xl shadow-gray-100/30 dark:shadow-none"
+                  key={b.id}
+                  className="group flex flex-col items-center justify-between gap-4 rounded-[2rem] border border-gray-100 bg-white p-4 shadow-xl shadow-gray-100/30 backdrop-blur-3xl transition-all hover:border-orange-200 md:flex-row md:p-8 dark:border-white/5 dark:bg-gray-900/40 dark:shadow-none dark:hover:border-orange-900/30"
                 >
-                  <div className="flex items-center gap-4 md:p-8 w-full md:w-auto">
-                    <div className="w-20 h-20 bg-orange-50 dark:bg-orange-900/20 rounded-[1.5rem] flex items-center justify-center border border-orange-100 dark:border-orange-800/30">
-                      <Clock className="w-10 h-10 text-orange-500" />
+                  <div className="flex w-full items-center gap-4 md:w-auto md:p-8">
+                    <div className="flex h-20 w-20 items-center justify-center rounded-[1.5rem] border border-orange-100 bg-orange-50 dark:border-orange-800/30 dark:bg-orange-900/20">
+                      <Clock className="h-10 w-10 text-orange-500" />
                     </div>
                     <div>
-                      <h4 className="font-black text-2xl text-gray-900 dark:text-white uppercase tracking-tighter leading-none mb-2">{b.profissional?.nome}</h4>
+                      <h4 className="mb-2 text-2xl font-black uppercase leading-none tracking-tighter text-gray-900 dark:text-white">
+                        {b.profissional?.nome}
+                      </h4>
                       <div className="flex items-center gap-4">
-                        <p className="text-xs text-gray-500 font-bold flex items-center gap-2 uppercase tracking-tight">
+                        <p className="flex items-center gap-2 text-xs font-bold uppercase tracking-tight text-gray-500">
                           <CalendarDays size={14} className="text-orange-500" />
                           {formatarData(b.data)}
                         </p>
-                        <p className="text-xs text-gray-400 font-black uppercase tracking-widest">
-                          {b.inicioHora && b.fimHora ? `${b.inicioHora} — ${b.fimHora}` : 'Dia Inteiro'}
+                        <p className="text-xs font-black uppercase tracking-widest text-gray-400">
+                          {b.inicioHora && b.fimHora ? `${b.inicioHora} - ${b.fimHora}` : 'Dia inteiro'}
                         </p>
                       </div>
                     </div>
                   </div>
 
-                  <div className="flex items-center justify-between md:justify-end gap-5 md:p-10 w-full md:w-auto border-t md:border-t-0 border-gray-50 dark:border-white/5 pt-6 md:pt-0">
+                  <div className="flex w-full items-center justify-between gap-5 border-t border-gray-50 pt-6 md:w-auto md:justify-end md:border-t-0 md:pt-0 md:p-10 dark:border-white/5">
                     <div className="text-right">
-                       <p className="text-[9px] font-black text-gray-400 uppercase tracking-widest mb-1">Motivo</p>
-                       <p className="text-sm font-black text-gray-900 dark:text-white uppercase tracking-tight">{b.motivo || 'NÃNão especificado'}</p>
+                      <p className="mb-1 text-[9px] font-black uppercase tracking-widest text-gray-400">Motivo</p>
+                      <p className="text-sm font-black uppercase tracking-tight text-gray-900 dark:text-white">
+                        {b.motivo || 'Nao especificado'}
+                      </p>
                     </div>
-                    <motion.button 
+                    <motion.button
                       whileHover={{ scale: 1.1, rotate: 5 }}
                       whileTap={{ scale: 0.9 }}
                       onClick={() => excluir(b.id)}
-                      className="p-4 bg-orange-50 dark:bg-orange-500/10 text-orange-400 hover:text-red-500 rounded-2xl transition-all"
+                      className="rounded-2xl bg-orange-50 p-4 text-orange-400 transition-all hover:text-red-500 dark:bg-orange-500/10"
                     >
                       <Trash2 size={20} />
                     </motion.button>

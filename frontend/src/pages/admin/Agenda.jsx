@@ -1187,6 +1187,20 @@ export default function Agenda() {
     return { top, height };
   };
 
+  const getBloqueioRenderWindow = (bloqueio) => {
+    if (!bloqueio?.inicioHora || !bloqueio?.fimHora) {
+      return {
+        inicioHora: `${String(START_HOUR).padStart(2, '0')}:00`,
+        fimHora: `${String(END_HOUR + 1).padStart(2, '0')}:00`,
+      };
+    }
+
+    return {
+      inicioHora: bloqueio.inicioHora,
+      fimHora: bloqueio.fimHora,
+    };
+  };
+
   const hours = Array.from({ length: END_HOUR - START_HOUR + 1 }, (_, i) => START_HOUR + i);
   const profsDisplay = (profissionais || []).filter(p => profVisiveis[p.id]);
   const mobileColWidth = 142;
@@ -1215,6 +1229,23 @@ export default function Agenda() {
       });
       carregar();
     } catch (e) { alert('Erro ao bloquear'); }
+    setContextMenu(null);
+  }
+
+  async function handleBloquearDiaTodo() {
+    if (!contextMenu) return;
+    const motivo = prompt('Motivo do bloqueio do dia inteiro (opcional):');
+    if (motivo === null) return;
+    try {
+      await createBloqueio({
+        profissionalId: contextMenu.profId,
+        data: dataFiltro,
+        inicioHora: null,
+        fimHora: null,
+        motivo,
+      });
+      carregar();
+    } catch (e) { alert(e.response?.data?.error || 'Erro ao bloquear o dia inteiro'); }
     setContextMenu(null);
   }
 
@@ -1552,7 +1583,7 @@ export default function Agenda() {
                           </div>
                         ))}
                         {bloqueios.filter(b => b.profissionalId === p.id).map((b) => {
-                          const [inicioBloqueio, fimBloqueio] = [(b.inicioHora || '08:00'), (b.fimHora || '09:00')];
+                          const { inicioHora: inicioBloqueio, fimHora: fimBloqueio } = getBloqueioRenderWindow(b);
                           const [bh, bm] = inicioBloqueio.split(':').map(Number);
                           const [fh, fm] = fimBloqueio.split(':').map(Number);
                           const duracao = Math.max(((fh * 60 + fm) - (bh * 60 + bm)), 30);
@@ -1686,7 +1717,7 @@ export default function Agenda() {
                   ))}
 
                   {bloqueios.filter(b => b.profissionalId === p.id).map(b => {
-                    const [inicioBloqueio, fimBloqueio] = [(b.inicioHora || '08:00'), (b.fimHora || '09:00')];
+                    const { inicioHora: inicioBloqueio, fimHora: fimBloqueio } = getBloqueioRenderWindow(b);
                     const [bh, bm] = inicioBloqueio.split(':').map(Number);
                     const [fh, fm] = fimBloqueio.split(':').map(Number);
                     const duracao = Math.max(((fh * 60 + fm) - (bh * 60 + bm)), 30);
@@ -1793,6 +1824,12 @@ export default function Agenda() {
                 className="w-full text-left px-6 py-3 hover:bg-bellapro-blush hover:text-white transition-all flex items-center gap-3 text-[9px] font-black uppercase tracking-widest"
               >
                 <X size={14} /> Bloquear Horário
+              </button>
+              <button
+                onClick={handleBloquearDiaTodo}
+                className="w-full text-left px-6 py-3 hover:bg-slate-100 dark:hover:bg-white/10 transition-all flex items-center gap-3 text-[9px] font-black uppercase tracking-widest"
+              >
+                <CalendarDays size={14} /> Bloquear Dia Inteiro
               </button>
             </motion.div>
           </>

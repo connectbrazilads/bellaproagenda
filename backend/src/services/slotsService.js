@@ -88,7 +88,7 @@ async function getHorariosDisponiveis(profissionalId, identificador, dataStr, du
     }
 
     const bloqueado = bloqueios.some((b) => {
-      if (!b.inicioHora) return true;
+      if (!b.inicioHora || !b.fimHora) return true;
       return slotsColidem(slot, duracaoMin, b.inicioHora, b.fimHora);
     });
     if (bloqueado) return false;
