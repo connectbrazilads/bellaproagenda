@@ -47,17 +47,17 @@ const NAV_GROUPS = [
     ]
   },
   {
-    label: 'Gestão',
+    label: 'GestÃ£o',
     items: [
       { to: '/admin/clientes', label: 'Clientes', icon: Users, permission: 'clientes' },
       { to: '/admin/profissionais', label: 'Profissionais', icon: User, permission: 'profissionais' },
-      { to: '/admin/serviços', label: 'Serviços', icon: Scissors },
+      { to: '/admin/servicos', label: 'Serviços', icon: Scissors, permission: 'servicos' },
       { to: '/admin/pacotes', label: 'Pacotes', icon: Gift, permission: 'pacotes' },
       { to: '/admin/produtos', label: 'Estoque', icon: Package, permission: 'produtos' },
     ]
   },
   {
-    label: 'Inteligência',
+    label: 'InteligÃªncia',
     items: [
       { to: '/admin/base-conhecimento', label: 'Base IA', icon: Brain, permission: 'base_conhecimento' },
       { to: '/admin/fidelidade', label: 'Fidelidade', icon: Gem, permission: 'fidelidade' },
@@ -65,17 +65,17 @@ const NAV_GROUPS = [
     ]
   },
   {
-    label: 'Configurações',
+    label: 'ConfiguraÃ§Ãµes',
     items: [
       { to: '/admin/financeiro', label: 'Financeiro', icon: DollarSign, permission: 'financeiro' },
       { to: '/admin/faturas', label: 'Faturas', icon: FileText, permission: 'faturas' },
       { to: '/admin/suporte', label: 'Suporte', icon: LifeBuoy, permission: 'suporte' },
-      { to: '/admin/remuneracao', label: 'Remuneração', icon: ClipboardList },
-      { to: '/admin/relatorio', label: 'Análise', icon: TrendingUp },
+      { to: '/admin/remuneracao', label: 'RemuneraÃ§Ã£o', icon: ClipboardList },
+      { to: '/admin/relatorio', label: 'AnÃ¡lise', icon: TrendingUp },
       { to: '/admin/bloqueios', label: 'Bloqueios', icon: Ban, permission: 'bloqueios' },
       { to: '/admin/notificacoes', label: 'Mensagens', icon: Smartphone, permission: 'notificacoes' },
-      { to: '/admin/migracao', label: 'Migração', icon: Download },
-      { to: '/admin/configuracoes', label: 'Configurações', icon: Settings },
+      { to: '/admin/migracao', label: 'MigraÃ§Ã£o', icon: Download },
+      { to: '/admin/configuracoes', label: 'ConfiguraÃ§Ãµes', icon: Settings },
     ]
   }
 ];
@@ -86,7 +86,7 @@ const PATH_PERMISSIONS = {
   '/admin/inbox': 'inbox',
   '/admin/clientes': 'clientes',
   '/admin/profissionais': 'profissionais',
-  '/admin/serviços': 'serviços',
+  '/admin/servicos': 'servicos',
   '/admin/pacotes': 'pacotes',
   '/admin/produtos': 'produtos',
   '/admin/base-conhecimento': 'base_conhecimento',
@@ -183,19 +183,19 @@ export default function AdminLayout() {
     navigate('/admin/login');
   }
 
-  // Lógica de visibilidade por ROLE
+  // LÃ³gica de visibilidade por ROLE
   const filteredGroups = NAV_GROUPS.map(group => {
     const filteredItems = group.items.filter(item => {
-      // Regras de restrição
+      // Regras de restriÃ§Ã£o
       if (role === 'profissional') {
-        const allowed = ['Dashboard', 'Agenda', 'Remuneração'];
+        const allowed = ['Dashboard', 'Agenda', 'RemuneraÃ§Ã£o'];
         return allowed.includes(item.label);
       }
       if (role === 'recepcao') {
-        const forbidden = ['Financeiro', 'Análise', 'Configurações', 'Migração', 'Usuários'];
+        const forbidden = ['Financeiro', 'AnÃ¡lise', 'ConfiguraÃ§Ãµes', 'MigraÃ§Ã£o', 'UsuÃ¡rios'];
         return !forbidden.includes(item.label);
       }
-      return true; // gestor/admin vê tudo
+      return true; // gestor/admin vÃª tudo
     });
     return { ...group, items: filteredItems };
   }).filter(group => group.items.length > 0);
@@ -243,7 +243,7 @@ export default function AdminLayout() {
       "admin-panel flex min-h-screen md:h-screen font-sans overflow-x-hidden md:overflow-hidden",
       dark ? "bg-[#16151b] text-white" : "bg-[#faf7f6] text-slate-900"
     )} style={{ '--admin-mobile-header-height': '73px' }}>
-      {/* Sidebar — desktop */}
+      {/* Sidebar â€” desktop */}
       <aside className={cn(
         "hidden md:flex flex-col transition-all duration-500 ease-in-out relative group/sidebar",
         collapsed ? "w-24" : "w-72",
@@ -340,7 +340,7 @@ export default function AdminLayout() {
         <div className="p-4 sm:p-6 border-t border-gray-200 dark:border-white/5">
           <button
             onClick={logout}
-            title={collapsed ? "Encerrar Sessão" : ""}
+            title={collapsed ? "Encerrar SessÃ£o" : ""}
             className={cn(
               "w-full flex items-center transition-all rounded-2xl text-[10px] font-black uppercase tracking-[0.2em]",
               collapsed ? "justify-center p-4" : "gap-3 px-5 py-4",
@@ -348,12 +348,12 @@ export default function AdminLayout() {
             )}
           >
             <LogOut className="w-4 h-4 flex-shrink-0" />
-            {!collapsed && <span>Encerrar Sessão</span>}
+            {!collapsed && <span>Encerrar SessÃ£o</span>}
           </button>
         </div>
       </aside>
 
-      {/* Topbar — mobile */}
+      {/* Topbar â€” mobile */}
       <div className={cn(
         "md:hidden fixed top-0 left-0 right-0 z-[70] flex items-center justify-between px-6 py-4 border-b shadow-sm",
         dark ? "bg-[#17151bdd] backdrop-blur-xl border-gray-200 dark:border-white/5" : "bg-[#fffaf9e6] backdrop-blur-xl border-[#f0dfdc]"
@@ -445,7 +445,7 @@ export default function AdminLayout() {
                 }}
                 className="mt-10 flex items-center gap-4 px-5 py-4 text-[10px] font-black text-red-500 uppercase tracking-widest w-full"
               >
-                <LogOut className="w-4 h-4" /> Encerrar Sessão
+                <LogOut className="w-4 h-4" /> Encerrar SessÃ£o
               </button>
             </motion.div>
           </motion.div>

@@ -63,6 +63,7 @@ const DEFAULT_ROLE_PERMISSIONS = {
   profissional: [
     'dashboard',
     'agenda',
+    'servicos',
     'remuneracao',
   ],
 };
@@ -102,6 +103,9 @@ function getEffectivePermissions(role, permissions = []) {
   }
 
   const sanitized = sanitizePermissions(permissions);
+  if (role === 'profissional' && !sanitized.includes('servicos')) {
+    sanitized.push('servicos');
+  }
   if (sanitized.length > 0) {
     return sanitized;
   }
