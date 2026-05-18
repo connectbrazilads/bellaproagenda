@@ -97,6 +97,15 @@ function normalizePhone(value = '') {
   return value.replace(/\D/g, '');
 }
 
+function addMinutesToTime(horaStr, minutes = 60) {
+  const [hours, mins] = (horaStr || '00:00').split(':').map(Number);
+  const totalMinutes = ((Number.isNaN(hours) ? 0 : hours) * 60) + (Number.isNaN(mins) ? 0 : mins) + minutes;
+  const normalizedMinutes = ((totalMinutes % (24 * 60)) + (24 * 60)) % (24 * 60);
+  const nextHours = Math.floor(normalizedMinutes / 60);
+  const nextMinutes = normalizedMinutes % 60;
+  return `${String(nextHours).padStart(2, '0')}:${String(nextMinutes).padStart(2, '0')}`;
+}
+
 function calculateAgendamentoTotal(agendamento) {
   let total = Number(agendamento?.servico?.preco || agendamento?.pacote?.preco || 0);
   total += agendamento?.itens?.reduce((acc, item) => acc + Number(item.preco || 0), 0) || 0;
@@ -1093,6 +1102,129 @@ function ModalDetalhesAgendamento({ agendamento: initialAgendamento, onClose, on
   );
 }
 
+function ModalBloqueioPeriodo({ onClose, onSave, data, horaInicial, profissionalNome }) {
+  const [form, setForm] = useState({
+    inicioHora: horaInicial || '',
+    fimHora: addMinutesToTime(horaInicial, 60),
+    motivo: '',
+  });
+  const [saving, setSaving] = useState(false);
+
+  async function salvar(e) {
+    e.preventDefault();
+
+    if (!form.inicioHora || !form.fimHora) {
+      alert('Informe inicio e fim para bloquear um periodo.');
+      return;
+    }
+
+    if (form.fimHora <= form.inicioHora) {
+      alert('O horario final precisa ser maior que o horario inicial.');
+      return;
+    }
+
+    setSaving(true);
+    try {
+      await onSave({
+        inicioHora: form.inicioHora,
+        fimHora: form.fimHora,
+        motivo: form.motivo.trim(),
+      });
+    } catch (error) {
+      alert(error.message || 'Nao foi possivel salvar o bloqueio.');
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  return (
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      onClick={onClose}
+      className="fixed inset-0 z-[210] flex items-center justify-center bg-black/70 p-4 backdrop-blur-xl"
+    >
+      <motion.form
+        initial={{ scale: 0.94, y: 20, opacity: 0 }}
+        animate={{ scale: 1, y: 0, opacity: 1 }}
+        exit={{ scale: 0.94, y: 20, opacity: 0 }}
+        onClick={(e) => e.stopPropagation()}
+        onSubmit={salvar}
+        className="w-full max-w-md rounded-[2rem] border border-gray-200 bg-white p-6 shadow-[0_30px_80px_-20px_rgba(0,0,0,0.45)] dark:border-white/10 dark:bg-[#121214]"
+      >
+        <div className="mb-6 flex items-start justify-between gap-4">
+          <div>
+            <p className="text-[10px] font-black uppercase tracking-[0.28em] text-[#d48997]">Bloqueio por periodo</p>
+            <h3 className="mt-2 text-2xl font-black uppercase tracking-tight text-gray-900 dark:text-white">Definir intervalo</h3>
+            <p className="mt-2 text-sm font-semibold text-gray-500 dark:text-gray-300">
+              {profissionalNome} em {formatDateBR(data)}
+            </p>
+          </div>
+          <button
+            type="button"
+            onClick={onClose}
+            className="flex h-10 w-10 items-center justify-center rounded-full bg-gray-100 text-gray-500 transition-all hover:text-red-500 dark:bg-white/5 dark:text-white/70"
+          >
+            <X size={18} />
+          </button>
+        </div>
+
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+          <div className="space-y-1">
+            <label className="ml-3 text-[10px] font-black uppercase tracking-widest text-gray-400">Inicio</label>
+            <input
+              type="time"
+              value={form.inicioHora}
+              onChange={(e) => setForm((prev) => ({ ...prev, inicioHora: e.target.value }))}
+              className="w-full rounded-2xl border border-gray-200 bg-gray-50 px-5 py-4 font-black text-gray-900 outline-none transition-all focus:border-[#d48997] dark:border-white/10 dark:bg-white/5 dark:text-white"
+              required
+            />
+          </div>
+
+          <div className="space-y-1">
+            <label className="ml-3 text-[10px] font-black uppercase tracking-widest text-gray-400">Fim</label>
+            <input
+              type="time"
+              value={form.fimHora}
+              onChange={(e) => setForm((prev) => ({ ...prev, fimHora: e.target.value }))}
+              className="w-full rounded-2xl border border-gray-200 bg-gray-50 px-5 py-4 font-black text-gray-900 outline-none transition-all focus:border-[#d48997] dark:border-white/10 dark:bg-white/5 dark:text-white"
+              required
+            />
+          </div>
+
+          <div className="space-y-1 sm:col-span-2">
+            <label className="ml-3 text-[10px] font-black uppercase tracking-widest text-gray-400">Motivo</label>
+            <input
+              value={form.motivo}
+              onChange={(e) => setForm((prev) => ({ ...prev, motivo: e.target.value }))}
+              placeholder="Ex: Almoco, reuniao, atendimento externo..."
+              className="w-full rounded-2xl border border-gray-200 bg-gray-50 px-5 py-4 font-black text-gray-900 outline-none transition-all focus:border-[#d48997] dark:border-white/10 dark:bg-white/5 dark:text-white"
+            />
+          </div>
+        </div>
+
+        <div className="mt-6 flex gap-3">
+          <button
+            type="button"
+            onClick={onClose}
+            className="flex-1 rounded-2xl border border-gray-200 px-5 py-4 text-[10px] font-black uppercase tracking-[0.22em] text-gray-500 transition-all hover:bg-gray-50 dark:border-white/10 dark:text-white/70 dark:hover:bg-white/5"
+          >
+            Cancelar
+          </button>
+          <button
+            type="submit"
+            disabled={saving}
+            className="flex-1 rounded-2xl bg-[#d48997] px-5 py-4 text-[10px] font-black uppercase tracking-[0.22em] text-white shadow-lg shadow-[#d48997]/30 transition-all hover:bg-[#c77787] disabled:cursor-not-allowed disabled:opacity-60"
+          >
+            {saving ? 'Salvando...' : 'Confirmar bloqueio'}
+          </button>
+        </div>
+      </motion.form>
+    </motion.div>
+  );
+}
+
 export default function Agenda() {
   const location = useLocation();
   const [profissionais, setProfissionais] = useState([]);
@@ -1104,6 +1236,7 @@ export default function Agenda() {
   const [modalNovo, setModalNovo] = useState(false);
   const [prefillAgendaData, setPrefillAgendaData] = useState(null);
   const [modalDetalhes, setModalDetalhes] = useState(false);
+  const [modalBloqueioPeriodo, setModalBloqueioPeriodo] = useState(null);
   const [agendamentoSelecionado, setAgendamentoSelecionado] = useState(null);
   const [currentTime, setCurrentTime] = useState(new Date());
 
@@ -1224,12 +1357,29 @@ export default function Agenda() {
         profissionalId: contextMenu.profId,
         data: dataFiltro,
         inicioHora: contextMenu.hora,
-        fimHora: `${String(Number(contextMenu.hora.split(':')[0]) + 1).padStart(2, '0')}:00`,
+        fimHora: addMinutesToTime(contextMenu.hora, 60),
         motivo
       });
       carregar();
     } catch (e) { alert('Erro ao bloquear'); }
     setContextMenu(null);
+  }
+
+  async function handleBloquearPeriodo({ inicioHora, fimHora, motivo }) {
+    if (!modalBloqueioPeriodo) return;
+    try {
+      await createBloqueio({
+        profissionalId: modalBloqueioPeriodo.profId,
+        data: dataFiltro,
+        inicioHora,
+        fimHora,
+        motivo: motivo || null,
+      });
+      setModalBloqueioPeriodo(null);
+      carregar();
+    } catch (e) {
+      throw new Error(e.response?.data?.error || 'Erro ao bloquear periodo');
+    }
   }
 
   async function handleBloquearDiaTodo() {
@@ -1307,6 +1457,15 @@ export default function Agenda() {
             preHora={preFill.hora}
             preProf={preFill.profId}
             prefillData={prefillAgendaData}
+          />
+        )}
+        {modalBloqueioPeriodo && (
+          <ModalBloqueioPeriodo
+            data={dataFiltro}
+            horaInicial={modalBloqueioPeriodo.hora}
+            profissionalNome={profissionais.find((profissional) => profissional.id === modalBloqueioPeriodo.profId)?.nome || 'Profissional'}
+            onSave={handleBloquearPeriodo}
+            onClose={() => setModalBloqueioPeriodo(null)}
           />
         )}
         {modalDetalhes && agendamentoSelecionado && (
@@ -1824,6 +1983,18 @@ export default function Agenda() {
                 className="w-full text-left px-6 py-3 hover:bg-bellapro-blush hover:text-white transition-all flex items-center gap-3 text-[9px] font-black uppercase tracking-widest"
               >
                 <X size={14} /> Bloquear Horário
+              </button>
+              <button
+                onClick={() => {
+                  setModalBloqueioPeriodo({
+                    profId: contextMenu.profId,
+                    hora: contextMenu.hora,
+                  });
+                  setContextMenu(null);
+                }}
+                className="w-full text-left px-6 py-3 hover:bg-slate-100 dark:hover:bg-white/10 transition-all flex items-center gap-3 text-[9px] font-black uppercase tracking-widest"
+              >
+                <Clock size={14} /> Bloquear Periodo
               </button>
               <button
                 onClick={handleBloquearDiaTodo}
