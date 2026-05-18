@@ -410,8 +410,8 @@ export default function Profissionais() {
       </div>
 
       {modalOpen && (
-        <div className="fixed inset-0 z-[120] flex items-center justify-center bg-black/82 p-4 backdrop-blur-md">
-          <div className="flex max-h-[95vh] w-full max-w-6xl flex-col overflow-hidden rounded-[2.6rem] border border-gray-200 dark:border-white/5 bg-white dark:bg-[#1a171f] lg:flex-row">
+        <div className="fixed inset-0 z-[120] flex items-center justify-center overflow-y-auto overscroll-contain bg-black/82 p-3 backdrop-blur-md sm:p-4">
+          <div className="flex max-h-[calc(100dvh-1.5rem)] w-full max-w-6xl flex-col overflow-hidden rounded-[2.6rem] border border-gray-200 dark:border-white/5 bg-white dark:bg-[#1a171f] lg:flex-row">
             <aside className="w-full border-b border-gray-200 dark:border-white/5 bg-gray-50 dark:bg-[#16141a] p-4 sm:p-6 lg:w-80 lg:border-b-0 lg:border-r">
               <div className="mb-8 flex items-start justify-between gap-4">
                 <div>
@@ -454,7 +454,7 @@ export default function Profissionais() {
               </div>
             </aside>
 
-            <div className="min-h-0 flex-1 overflow-y-auto p-4 sm:p-6 md:p-8">
+            <div className="min-h-0 flex-1 overflow-y-auto p-4 custom-scrollbar sm:p-6 md:p-8">
               <form onSubmit={handleSubmit} className="space-y-8">
                 {activeTab === 'geral' && (
                   <div className="space-y-8">
@@ -611,7 +611,7 @@ export default function Profissionais() {
                   </div>
                 )}
 
-                <div className="sticky bottom-0 flex flex-col gap-3 border-t border-gray-200 dark:border-white/5 bg-white dark:bg-[#1a171f] pt-6 md:flex-row">
+                <div className="sticky bottom-0 flex flex-col gap-3 border-t border-gray-200 bg-white/95 pt-6 backdrop-blur dark:border-white/5 dark:bg-[#1a171f]/95 md:flex-row">
                   <button type="button" onClick={() => setModalOpen(false)} className="rounded-[1.4rem] border border-gray-200 dark:border-white/5 bg-white/[0.04] px-6 py-4 text-[10px] font-black uppercase tracking-[0.22em] text-gray-500 dark:text-white/66">
                     Descartar alteracoes
                   </button>
@@ -626,9 +626,9 @@ export default function Profissionais() {
       )}
 
       {scheduleModal && (
-        <div className="fixed inset-0 z-[120] flex items-center justify-center bg-black/82 p-4 backdrop-blur-md">
-          <div className="w-full max-w-3xl rounded-[2rem] border border-gray-200 dark:border-white/5 bg-white dark:bg-[#1a171f] p-4 sm:p-6 md:p-8">
-            <div className="mb-6 flex items-start justify-between gap-4">
+        <div className="fixed inset-0 z-[120] flex items-center justify-center overflow-y-auto overscroll-contain bg-black/82 p-3 backdrop-blur-md sm:p-4">
+          <div className="flex max-h-[calc(100dvh-1.5rem)] w-full max-w-3xl flex-col overflow-hidden rounded-[2rem] border border-gray-200 dark:border-white/5 bg-white dark:bg-[#1a171f]">
+            <div className="mb-0 flex shrink-0 items-start justify-between gap-4 border-b border-gray-200 px-4 py-4 dark:border-white/5 sm:px-6 sm:py-6 md:px-8">
               <div>
                 <p className="brand-kicker">Escala semanal</p>
                 <h3 className="mt-2 text-3xl font-brand-display text-gray-900 dark:text-white">{scheduleModal.nome}</h3>
@@ -638,7 +638,7 @@ export default function Profissionais() {
               </button>
             </div>
 
-            <div className="space-y-3">
+            <div className="min-h-0 flex-1 space-y-3 overflow-y-auto px-4 pb-4 pt-4 custom-scrollbar sm:px-6 sm:pb-6 sm:pt-6 md:px-8 md:pb-8">
               {DIAS.map((dia, index) => {
                 const horario = horarios.find((item) => item.diaSemana === index);
                 return (
@@ -669,7 +669,7 @@ export default function Profissionais() {
               })}
             </div>
 
-            <div className="mt-6 flex flex-col gap-3 md:flex-row">
+            <div className="sticky bottom-0 mt-0 flex shrink-0 flex-col gap-3 border-t border-gray-200 bg-white/95 px-4 py-4 backdrop-blur dark:border-white/5 dark:bg-[#1a171f]/95 sm:px-6 md:flex-row md:px-8">
               <button onClick={() => setScheduleModal(null)} className="rounded-[1.4rem] border border-gray-200 dark:border-white/5 bg-white/[0.04] px-6 py-4 text-[10px] font-black uppercase tracking-[0.22em] text-gray-500 dark:text-white/66">
                 Cancelar
               </button>

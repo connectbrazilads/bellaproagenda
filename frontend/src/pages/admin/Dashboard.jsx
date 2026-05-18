@@ -467,11 +467,11 @@ export default function Dashboard() {
       </div>
 
       {checkoutSuccess && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+        <div className="fixed inset-0 z-[100] flex items-center justify-center overflow-y-auto overscroll-contain p-3 bg-black/60 backdrop-blur-sm sm:p-4">
           <motion.div 
             initial={{ scale: 0.9, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
-            className="bg-white dark:bg-gray-900 rounded-[3rem] p-5 md:p-10 max-w-sm w-full text-center shadow-2xl"
+            className="max-h-[calc(100dvh-1.5rem)] w-full max-w-sm overflow-y-auto rounded-[3rem] bg-white p-5 text-center shadow-2xl custom-scrollbar dark:bg-gray-900 md:p-10"
           >
             <div className="w-20 h-20 bg-emerald-500 rounded-[2rem] flex items-center justify-center text-white mx-auto mb-6 shadow-lg shadow-emerald-500/20">
               <CheckCircle size={40} />

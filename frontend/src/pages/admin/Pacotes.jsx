@@ -228,7 +228,7 @@ export default function Pacotes() {
 
       <AnimatePresence>
         {modalOpen ? (
-          <div className="fixed inset-0 z-[210] flex items-center justify-center p-4 sm:p-6">
+          <div className="fixed inset-0 z-[210] flex items-center justify-center overflow-y-auto overscroll-contain p-3 sm:p-6">
             <motion.button
               type="button"
               initial={{ opacity: 0 }}
@@ -243,9 +243,9 @@ export default function Pacotes() {
               animate={{ opacity: 1, y: 0, scale: 1 }}
               exit={{ opacity: 0, y: 18, scale: 0.98 }}
               onSubmit={salvar}
-              className="relative z-10 w-full max-w-4xl rounded-[2rem] border border-gray-200 dark:border-white/5 bg-[rgba(28,23,31,0.98)] p-4 sm:p-6 shadow-[0_40px_120px_rgba(0,0,0,0.45)] lg:p-8"
+              className="relative z-10 flex max-h-[calc(100dvh-1.5rem)] w-full max-w-4xl flex-col overflow-hidden rounded-[2rem] border border-gray-200 dark:border-white/5 bg-[rgba(28,23,31,0.98)] shadow-[0_40px_120px_rgba(0,0,0,0.45)]"
             >
-              <div className="mb-8 flex flex-col gap-4 border-b border-gray-200 dark:border-white/5 pb-6 sm:flex-row sm:items-end sm:justify-between">
+              <div className="mb-0 flex shrink-0 flex-col gap-4 border-b border-gray-200 px-4 py-4 dark:border-white/5 sm:flex-row sm:items-end sm:justify-between sm:px-6 sm:py-6 lg:px-8">
                 <div>
                   <p className="text-[11px] font-semibold uppercase tracking-[0.3em] text-[#E29BA8]">
                     Estrutura comercial
@@ -259,7 +259,8 @@ export default function Pacotes() {
                 </div>
               </div>
 
-              <div className="grid gap-4 sm:p-6 lg:grid-cols-[minmax(0,1fr),320px]">
+              <div className="min-h-0 flex-1 overflow-y-auto px-4 pb-4 pt-4 custom-scrollbar sm:px-6 sm:pb-6 sm:pt-6 lg:px-8 lg:pb-8">
+                <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr),320px]">
                 <div className="space-y-5">
                   <label className="block space-y-3">
                     <span className="text-[11px] font-semibold uppercase tracking-[0.26em] text-[#c7adb4]">
@@ -328,7 +329,7 @@ export default function Pacotes() {
                   <p className="text-[11px] font-semibold uppercase tracking-[0.28em] text-[#E29BA8]">
                     Servicos do pacote
                   </p>
-                  <div className="mt-4 max-h-[320px] space-y-2 overflow-y-auto pr-1">
+                  <div className="mt-4 max-h-[320px] space-y-2 overflow-y-auto pr-1 custom-scrollbar">
                     {servicos.map((servico) => {
                       const active = form.servicosIds.includes(servico.id);
                       return (
@@ -374,9 +375,10 @@ export default function Pacotes() {
                     </div>
                   </div>
                 </div>
+                </div>
               </div>
 
-              <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:justify-end">
+              <div className="sticky bottom-0 mt-0 flex shrink-0 flex-col gap-3 border-t border-gray-200 bg-[rgba(28,23,31,0.98)] px-4 py-4 backdrop-blur dark:border-white/5 sm:px-6 sm:flex-row sm:justify-end lg:px-8">
                 <button
                   type="button"
                   onClick={() => setModalOpen(false)}

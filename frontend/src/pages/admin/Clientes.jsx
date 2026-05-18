@@ -311,7 +311,7 @@ export default function Clientes() {
 
       <AnimatePresence>
         {modalNovo ? (
-          <div className="fixed inset-0 z-[210] flex items-center justify-center p-4 sm:p-6">
+          <div className="fixed inset-0 z-[210] flex items-center justify-center overflow-y-auto overscroll-contain p-3 sm:p-6">
             <motion.button
               type="button"
               initial={{ opacity: 0 }}
@@ -326,7 +326,7 @@ export default function Clientes() {
               animate={{ opacity: 1, y: 0, scale: 1 }}
               exit={{ opacity: 0, y: 18, scale: 0.98 }}
               onSubmit={criarNovoCliente}
-              className="relative z-10 w-full max-w-2xl rounded-[2rem] border border-gray-200 dark:border-white/5 bg-[rgba(28,23,31,0.98)] p-4 sm:p-6 shadow-[0_40px_120px_rgba(0,0,0,0.45)] lg:p-8"
+              className="relative z-10 max-h-[calc(100dvh-1.5rem)] w-full max-w-2xl overflow-y-auto rounded-[2rem] border border-gray-200 dark:border-white/5 bg-[rgba(28,23,31,0.98)] p-4 shadow-[0_40px_120px_rgba(0,0,0,0.45)] custom-scrollbar sm:p-6 lg:p-8"
             >
               <button
                 type="button"
@@ -393,7 +393,7 @@ export default function Clientes() {
 
       <AnimatePresence>
         {modalCampanha ? (
-          <div className="fixed inset-0 z-[210] flex items-center justify-center p-4 sm:p-6">
+          <div className="fixed inset-0 z-[210] flex items-center justify-center overflow-y-auto overscroll-contain p-3 sm:p-6">
             <motion.button
               type="button"
               initial={{ opacity: 0 }}
@@ -407,7 +407,7 @@ export default function Clientes() {
               initial={{ opacity: 0, y: 18, scale: 0.98 }}
               animate={{ opacity: 1, y: 0, scale: 1 }}
               exit={{ opacity: 0, y: 18, scale: 0.98 }}
-              className="relative z-10 w-full max-w-2xl rounded-[2rem] border border-gray-200 dark:border-white/5 bg-[rgba(28,23,31,0.98)] p-4 sm:p-6 shadow-[0_40px_120px_rgba(0,0,0,0.45)] lg:p-8"
+              className="relative z-10 max-h-[calc(100dvh-1.5rem)] w-full max-w-2xl overflow-y-auto rounded-[2rem] border border-gray-200 dark:border-white/5 bg-[rgba(28,23,31,0.98)] p-4 shadow-[0_40px_120px_rgba(0,0,0,0.45)] custom-scrollbar sm:p-6 lg:p-8"
             >
               <button
                 type="button"

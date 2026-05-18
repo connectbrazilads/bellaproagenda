@@ -217,9 +217,9 @@ export default function Servicos() {
       </div>
 
       {modalOpen && (
-        <div className="fixed inset-0 z-[120] flex items-center justify-center bg-black/82 p-4 backdrop-blur-md">
-          <div className="w-full max-w-3xl rounded-[2rem] border border-gray-200 dark:border-white/5 bg-white dark:bg-[#1a171f] p-4 sm:p-6 shadow-[0_40px_90px_-40px_rgba(0,0,0,0.9)] md:p-8">
-            <div className="mb-8 flex items-start justify-between gap-4">
+        <div className="fixed inset-0 z-[120] flex items-center justify-center overflow-y-auto overscroll-contain bg-black/82 p-3 backdrop-blur-md sm:p-4">
+          <div className="flex max-h-[calc(100dvh-1.5rem)] w-full max-w-3xl flex-col overflow-hidden rounded-[2rem] border border-gray-200 bg-white shadow-[0_40px_90px_-40px_rgba(0,0,0,0.9)] dark:border-white/5 dark:bg-[#1a171f]">
+            <div className="mb-0 flex shrink-0 items-start justify-between gap-4 border-b border-gray-200 px-4 py-4 dark:border-white/5 sm:px-6 sm:py-6 md:px-8">
               <div>
                 <p className="brand-kicker">Precificação e estoque</p>
                 <h2 className="mt-2 text-2xl sm:text-4xl font-brand-display text-gray-900 dark:text-white">{editingId ? 'Editar' : 'Novo'} serviço</h2>
@@ -229,7 +229,8 @@ export default function Servicos() {
               </button>
             </div>
 
-            <form onSubmit={handleSubmit} className="space-y-8">
+            <form onSubmit={handleSubmit} className="flex min-h-0 flex-1 flex-col overflow-hidden">
+              <div className="min-h-0 flex-1 space-y-8 overflow-y-auto px-4 pb-4 pt-4 custom-scrollbar sm:px-6 sm:pb-6 sm:pt-6 md:px-8 md:pb-8">
               <div className="grid gap-4 sm:p-6 md:grid-cols-2">
                 <Field label="Nome do serviço" value={form.nome} onChange={(value) => setForm((prev) => ({ ...prev, nome: value }))} required />
                 <Field label="Preço de venda" type="number" value={form.preco} onChange={(value) => setForm((prev) => ({ ...prev, preco: value }))} required icon={<DollarSign size={14} />} />
@@ -300,11 +301,13 @@ export default function Servicos() {
                 </label>
               )}
 
-              <div className="flex flex-col gap-3 md:flex-row">
+              </div>
+
+              <div className="sticky bottom-0 flex shrink-0 flex-col gap-3 border-t border-gray-200 bg-white/95 px-4 py-4 backdrop-blur dark:border-white/5 dark:bg-[#1a171f]/95 sm:px-6 md:flex-row md:px-8">
                 <button type="button" onClick={() => setModalOpen(false)} className="rounded-[1.4rem] border border-gray-200 dark:border-white/5 bg-white/[0.04] px-6 py-4 text-[10px] font-black uppercase tracking-[0.22em] text-gray-500 dark:text-white/66">
                   Cancelar
                 </button>
-                <button type="submit" disabled={saving} className="flex-1 rounded-[1.5rem] bg-gradient-to-r from-[#E29BA8] to-[#d48997] text-[#111116] px-6 py-4 text-[10px] font-black uppercase tracking-[0.24em] text-white">
+                <button type="submit" disabled={saving} className="flex-1 rounded-[1.5rem] bg-gradient-to-r from-[#E29BA8] to-[#d48997] px-6 py-4 text-[10px] font-black uppercase tracking-[0.24em] text-white">
                   {saving ? 'Salvando...' : editingId ? 'Salvar serviço' : 'Criar serviço'}
                 </button>
               </div>

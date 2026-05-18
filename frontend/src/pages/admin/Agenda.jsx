@@ -286,13 +286,13 @@ function ModalNovoAgendamento({ onClose, onSave, preData, preHora, preProf, pref
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
-      className="fixed inset-0 bg-black/80 backdrop-blur-2xl z-[200] flex items-center justify-center p-4"
+      className="fixed inset-0 bg-black/80 backdrop-blur-2xl z-[200] flex items-center justify-center overflow-y-auto overscroll-contain p-3 sm:p-4"
     >
       <motion.div 
         initial={{ scale: 0.9, y: 40, opacity: 0 }}
         animate={{ scale: 1, y: 0, opacity: 1 }}
         exit={{ scale: 0.9, y: 40, opacity: 0 }}
-        className="bg-white dark:bg-[#0c0c0e] rounded-t-[2rem] md:rounded-[3rem] w-full max-w-2xl h-[95vh] md:h-auto md:max-h-[92dvh] overflow-y-auto modal-scrollbar p-4 sm:p-6 md:p-10 md:pr-6 xl:p-14 xl:pr-8 shadow-[0_50px_100px_-20px_rgba(0,0,0,0.6)] relative border border-gray-200 dark:border-white/5"
+        className="bg-white dark:bg-[#0c0c0e] rounded-t-[2rem] md:rounded-[3rem] w-full max-w-2xl h-[95dvh] md:h-auto md:max-h-[92dvh] overflow-y-auto modal-scrollbar p-4 sm:p-6 md:p-10 md:pr-6 xl:p-14 xl:pr-8 shadow-[0_50px_100px_-20px_rgba(0,0,0,0.6)] relative border border-gray-200 dark:border-white/5"
       >
         <div className="absolute top-0 left-0 w-full h-1.5 bg-gradient-to-r from-[#d48997] via-fuchsia-500 to-indigo-600" />
         
@@ -688,11 +688,11 @@ function ModalDetalhesAgendamento({ agendamento: initialAgendamento, onClose, on
   return (
     <motion.div 
       initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-      className="fixed inset-0 bg-black/90 backdrop-blur-3xl z-[200] flex items-center justify-center p-4"
+      className="fixed inset-0 bg-black/90 backdrop-blur-3xl z-[200] flex items-center justify-center overflow-y-auto overscroll-contain p-3 sm:p-4"
     >
       <motion.div 
         initial={{ scale: 0.95, y: 50, opacity: 0 }} animate={{ scale: 1, y: 0, opacity: 1 }} exit={{ scale: 0.95, y: 50, opacity: 0 }}
-        className="bg-white dark:bg-[#0c0c0e] rounded-t-[2rem] md:rounded-[3rem] xl:rounded-[4rem] w-full max-w-6xl h-[95vh] md:max-h-[92dvh] xl:h-[85vh] flex flex-col shadow-[0_60px_120px_-20px_rgba(0,0,0,0.7)] border border-gray-200 dark:border-white/5 overflow-y-auto md:overflow-hidden"
+        className="bg-white dark:bg-[#0c0c0e] rounded-t-[2rem] md:rounded-[3rem] xl:rounded-[4rem] w-full max-w-6xl h-[95dvh] md:max-h-[92dvh] xl:h-[85vh] flex flex-col shadow-[0_60px_120px_-20px_rgba(0,0,0,0.7)] border border-gray-200 dark:border-white/5 overflow-y-auto md:overflow-hidden"
       >
         <div className="px-5 py-5 md:px-12 md:py-10 border-b border-gray-100 dark:border-white/5 flex items-start md:items-center justify-between gap-4 bg-white dark:bg-[#0c0c0e]/80 backdrop-blur-3xl sticky top-0 z-10">
            <div className="flex items-start md:items-center gap-4 md:gap-4 sm:p-6 min-w-0">

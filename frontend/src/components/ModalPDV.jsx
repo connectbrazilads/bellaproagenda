@@ -90,7 +90,7 @@ export default function ModalPDV() {
   return (
     <AnimatePresence>
       {open && (
-        <div className="fixed inset-0 z-[140] flex items-center justify-center p-4">
+        <div className="fixed inset-0 z-[140] flex items-center justify-center overflow-y-auto overscroll-contain p-3 sm:p-4">
           <motion.div 
             initial={{ opacity: 0 }} 
             animate={{ opacity: 1 }} 
@@ -102,7 +102,7 @@ export default function ModalPDV() {
             initial={{ scale: 0.95, opacity: 0, y: 20 }}
             animate={{ scale: 1, opacity: 1, y: 0 }}
             exit={{ scale: 0.95, opacity: 0, y: 20 }}
-            className="relative w-full max-w-5xl bg-white dark:bg-gray-900 rounded-[2.5rem] shadow-2xl overflow-hidden flex flex-col md:flex-row max-h-[90vh]"
+            className="relative flex max-h-[calc(100dvh-1.5rem)] w-full max-w-5xl flex-col overflow-hidden rounded-[2.5rem] bg-white shadow-2xl dark:bg-gray-900 md:flex-row"
           >
             {/* Esquerda: Sele??o de Produtos */}
             <div className="w-full md:w-3/5 p-8 border-r border-gray-100 dark:border-white/5 flex flex-col">

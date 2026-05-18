@@ -245,7 +245,7 @@ export default function Produtos() {
 
       <AnimatePresence>
         {modalOpen ? (
-          <div className="fixed inset-0 z-[210] flex items-center justify-center p-4 sm:p-6">
+          <div className="fixed inset-0 z-[210] flex items-center justify-center overflow-y-auto overscroll-contain p-3 sm:p-6">
             <motion.button
               type="button"
               initial={{ opacity: 0 }}
@@ -260,16 +260,16 @@ export default function Produtos() {
               animate={{ opacity: 1, y: 0, scale: 1 }}
               exit={{ opacity: 0, y: 18, scale: 0.98 }}
               onSubmit={salvar}
-              className="relative z-10 w-full max-w-xl rounded-[2rem] border border-gray-200 dark:border-white/5 bg-[rgba(28,23,31,0.98)] p-4 sm:p-6 shadow-[0_40px_120px_rgba(0,0,0,0.45)] lg:p-8"
+              className="relative z-10 flex max-h-[calc(100dvh-1.5rem)] w-full max-w-xl flex-col overflow-hidden rounded-[2rem] border border-gray-200 dark:border-white/5 bg-[rgba(28,23,31,0.98)] shadow-[0_40px_120px_rgba(0,0,0,0.45)]"
             >
-              <div className="mb-8 border-b border-gray-200 dark:border-white/5 pb-6">
+              <div className="mb-0 shrink-0 border-b border-gray-200 px-4 py-4 dark:border-white/5 sm:px-6 sm:py-6 lg:px-8">
                 <p className="text-[11px] font-semibold uppercase tracking-[0.3em] text-[#E29BA8]">Catalogo interno</p>
                 <h2 className="mt-3 font-['Playfair_Display'] text-2xl sm:text-4xl text-[#faf7f6]">
                   {editing ? 'Editar produto' : 'Novo produto'}
                 </h2>
               </div>
 
-              <div className="space-y-5">
+              <div className="min-h-0 flex-1 space-y-5 overflow-y-auto px-4 pb-4 pt-4 custom-scrollbar sm:px-6 sm:pb-6 sm:pt-6 lg:px-8 lg:pb-8">
                 <label className="block">
                   <span className="mb-3 block text-[11px] font-semibold uppercase tracking-[0.26em] text-[#c7adb4]">
                     Nome do produto
@@ -333,7 +333,7 @@ export default function Produtos() {
                 </div>
               </div>
 
-              <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:justify-end">
+              <div className="sticky bottom-0 mt-0 flex shrink-0 flex-col gap-3 border-t border-gray-200 bg-[rgba(28,23,31,0.98)] px-4 py-4 backdrop-blur dark:border-white/5 sm:px-6 sm:flex-row sm:justify-end lg:px-8">
                 <button
                   type="button"
                   onClick={fecharModal}

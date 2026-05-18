@@ -703,12 +703,14 @@ export default function SuperAdminSaloes() {
 
 function ModalShell({ children, onClose, wide = false }) {
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/82 p-4 backdrop-blur-md">
-      <div className={`w-full rounded-[2rem] border border-white/8 bg-[#231b22] p-6 shadow-[0_40px_90px_-40px_rgba(0,0,0,0.9)] ${wide ? 'max-w-2xl' : 'max-w-xl'}`}>
-        <div className="mb-4 flex justify-end">
+    <div className="fixed inset-0 z-50 flex items-center justify-center overflow-y-auto overscroll-contain bg-black/82 p-3 backdrop-blur-md sm:p-4">
+      <div className={`flex max-h-[calc(100dvh-1.5rem)] w-full flex-col overflow-hidden rounded-[2rem] border border-white/8 bg-[#231b22] shadow-[0_40px_90px_-40px_rgba(0,0,0,0.9)] ${wide ? 'max-w-2xl' : 'max-w-xl'}`}>
+        <div className="mb-0 flex shrink-0 justify-end border-b border-white/8 px-6 py-4">
           <button onClick={onClose} className="text-sm text-white/46 transition hover:text-white">Fechar</button>
         </div>
-        {children}
+        <div className="min-h-0 flex-1 overflow-y-auto px-6 py-5 custom-scrollbar">
+          {children}
+        </div>
       </div>
     </div>
   );

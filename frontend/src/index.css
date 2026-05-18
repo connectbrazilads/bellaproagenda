@@ -493,6 +493,54 @@ h6,
 .dark .admin-panel ::-webkit-scrollbar-thumb { background: #47343f; border-radius: 3px; }
 .dark .admin-panel ::-webkit-scrollbar-thumb:hover { background: #5a434f; }
 
+.custom-scrollbar,
+.modal-scrollbar {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(216, 137, 153, 0.42) transparent;
+}
+
+.custom-scrollbar::-webkit-scrollbar,
+.modal-scrollbar::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-track,
+.modal-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb,
+.modal-scrollbar::-webkit-scrollbar-thumb {
+  background: rgba(216, 137, 153, 0.42);
+  border: 2px solid transparent;
+  border-radius: 999px;
+  background-clip: padding-box;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb:hover,
+.modal-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: rgba(194, 115, 127, 0.56);
+  border: 2px solid transparent;
+  border-radius: 999px;
+  background-clip: padding-box;
+}
+
+.dark .custom-scrollbar,
+.dark .modal-scrollbar {
+  scrollbar-color: rgba(247, 193, 182, 0.22) transparent;
+}
+
+.dark .custom-scrollbar::-webkit-scrollbar-thumb,
+.dark .modal-scrollbar::-webkit-scrollbar-thumb {
+  background: rgba(247, 193, 182, 0.22);
+}
+
+.dark .custom-scrollbar::-webkit-scrollbar-thumb:hover,
+.dark .modal-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: rgba(247, 193, 182, 0.34);
+}
+
 @keyframes pulse-slow {
   0%, 100% { transform: scale(1); opacity: 0.4; }
   50% { transform: scale(1.1); opacity: 0.6; }

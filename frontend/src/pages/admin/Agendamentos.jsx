@@ -265,8 +265,8 @@ export default function Agendamentos() {
 
       <AnimatePresence>
         {pagamentoModal && (
-          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-[130] flex items-center justify-center bg-black/80 p-4 backdrop-blur-md">
-            <motion.div initial={{ opacity: 0, scale: 0.96 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.96 }} className="w-full max-w-2xl rounded-[2.4rem] border border-gray-200 dark:border-white/5 bg-[#231b22] p-4 sm:p-6 shadow-[0_40px_90px_-40px_rgba(0,0,0,0.92)] md:p-8">
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-[130] flex items-center justify-center overflow-y-auto overscroll-contain bg-black/80 p-3 backdrop-blur-md sm:p-4">
+            <motion.div initial={{ opacity: 0, scale: 0.96 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.96 }} className="max-h-[calc(100dvh-1.5rem)] w-full max-w-2xl overflow-y-auto rounded-[2.4rem] border border-gray-200 bg-[#231b22] p-4 shadow-[0_40px_90px_-40px_rgba(0,0,0,0.92)] custom-scrollbar dark:border-white/5 sm:p-6 md:p-8">
               <div className="mb-6 flex items-start justify-between gap-4">
                 <div>
                   <p className="brand-kicker">Fechamento</p>

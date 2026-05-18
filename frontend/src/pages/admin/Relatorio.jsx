@@ -278,7 +278,7 @@ export default function Relatorio() {
       {/* Modal Despesa */}
       <AnimatePresence>
         {modalDespesa && (
-          <div className="fixed inset-0 z-[200] flex items-center justify-center p-4 sm:p-6">
+          <div className="fixed inset-0 z-[200] flex items-center justify-center overflow-y-auto overscroll-contain p-3 sm:p-6">
             <motion.div 
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
@@ -291,7 +291,7 @@ export default function Relatorio() {
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.9, y: 20 }}
               onSubmit={handleAddDespesa} 
-              className="relative bg-white dark:bg-gray-900 w-full max-w-md rounded-[3rem] shadow-2xl p-12"
+              className="relative max-h-[calc(100dvh-1.5rem)] w-full max-w-md overflow-y-auto rounded-[3rem] bg-white p-6 shadow-2xl custom-scrollbar dark:bg-gray-900 sm:p-10 md:p-12"
             >
               <h2 className="text-3xl font-black text-gray-900 dark:text-white tracking-tighter mb-8">Lançar Despesa</h2>
               <div className="space-y-6">
