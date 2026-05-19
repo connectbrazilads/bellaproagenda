@@ -1,4 +1,4 @@
-const axios = require('axios');
+const { sendEvolutionText } = require('./evolutionService');
 
 function formatarData(dataStr) {
   const [ano, mes, dia] = dataStr.split('-');
@@ -8,21 +8,8 @@ function formatarData(dataStr) {
 async function enviarMensagem(telefone, mensagem, salao = null) {
   if (!salao?.moduloWhatsapp) return;
 
-  const url = process.env.EVOLUTION_API_URL;
-  const key = process.env.EVOLUTION_API_KEY;
-  const instancia = salao?.slug;
-
-  if (!url || !key || !instancia) return;
-
-  const numero = telefone.replace(/\D/g, '');
-  const numeroFormatado = numero.startsWith('55') ? numero : `55${numero}`;
-
   try {
-    await axios.post(
-      `${url}/message/sendText/${instancia}`,
-      { number: numeroFormatado, text: mensagem },
-      { headers: { apikey: key } }
-    );
+    await sendEvolutionText(salao, telefone, mensagem);
   } catch (err) {
     console.error('WhatsApp erro:', err.message);
   }

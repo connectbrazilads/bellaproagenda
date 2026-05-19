@@ -1,7 +1,6 @@
 const prisma = require('../lib/prisma');
 const fs = require('fs');
 const path = require('path');
-const axios = require('axios');
 const bcrypt = require('bcryptjs');
 const { PrismaClient } = require('@prisma/client');
 const {
@@ -16,6 +15,15 @@ const {
 } = require('../lib/permissions');
 const { createAuditLog } = require('../lib/audit');
 const { validateStrongPassword } = require('../lib/security');
+const {
+  buildWebhookUrl,
+  connectEvolutionInstance,
+  disconnectEvolutionInstance,
+  getEvolutionStatus,
+  getGlobalEvolutionApiKey,
+  resolveEvolutionConfig,
+  sendEvolutionText,
+} = require('../services/evolutionService');
 const {
   listarNotificacoesSalao,
   marcarNotificacaoLida,
@@ -1872,7 +1880,9 @@ async function getAvaliacoes(req, res) {
 
 async function dispararLembretes(req, res) {
   const salao = await prisma.salao.findUnique({ where: { id: req.user.salaoId } });
-  if (!salao?.evolutionUrl) return res.status(400).json({ error: 'WhatsApp não configurado' });
+  if (!resolveEvolutionConfig(salao).configured) {
+    return res.status(400).json({ error: 'WhatsApp não configurado' });
+  }
 
   const agora = new Date();
   const hojeStr = agora.toISOString().split('T')[0];
@@ -1898,14 +1908,8 @@ async function dispararLembretes(req, res) {
     // Se falta entre 1 e 4 horas para o agendamento
     if (diffHoras > 0 && diffHoras <= 4) {
       const msg = `Olá ${ag.clienteNome}! Passando para lembrar do seu horário hoje às *${ag.inicioHora}* com ${ag.profissional.nome}. Te esperamos! ✂️`;
-      const num = ag.clienteTelefone.replace(/\D/g, '');
-      
       try {
-        await axios.post(
-          `${salao.evolutionUrl}/message/sendText/${salao.evolutionInstance}`,
-          { number: `55${num}`, text: msg },
-          { headers: evoHeaders(salao) }
-        );
+        await sendEvolutionText(salao, ag.clienteTelefone, msg);
         enviados++;
       } catch (e) { console.error('Erro lembrete:', e.message); }
     }
@@ -1918,7 +1922,9 @@ async function dispararLembretes(req, res) {
 
 async function dispararIAProativa(req, res) {
   const salao = await prisma.salao.findUnique({ where: { id: req.user.salaoId } });
-  if (!salao?.evolutionUrl) return res.status(400).json({ error: 'WhatsApp não configurado' });
+  if (!resolveEvolutionConfig(salao).configured) {
+    return res.status(400).json({ error: 'WhatsApp não configurado' });
+  }
 
   const hoje = new Date();
   const trintaDiasAtras = new Date();
@@ -1936,14 +1942,8 @@ async function dispararIAProativa(req, res) {
   for (const c of clientesAusentes) {
     const bookingUrl = buildPublicBookingUrl(salao, req);
     const msg = `Oi ${c.nome}! Notamos que faz um tempo que voce nao nos visita. Que tal renovar o visual essa semana? Veja nossos horarios: ${bookingUrl}`;
-    const num = c.telefone.replace(/\D/g, '');
-    
     try {
-      await axios.post(
-        `${salao.evolutionUrl}/message/sendText/${salao.evolutionInstance}`,
-        { number: `55${num}`, text: msg },
-        { headers: evoHeaders(salao) }
-      );
+      await sendEvolutionText(salao, c.telefone, msg);
       convitesEnviados++;
     } catch (e) {}
   }
@@ -2108,17 +2108,21 @@ async function getRelatorio(req, res) {
 
 // ─── WHATSAPP / EVOLUTION API ────────────────────────────────────────────────
 
-function evoHeaders(salao) {
-  return { apikey: salao.evolutionKey };
-}
-
 async function getWhatsappConfig(req, res) {
   const salao = await prisma.salao.findUnique({ where: { id: req.user.salaoId } });
+  const config = resolveEvolutionConfig(salao);
   res.json({
     evolutionUrl: salao?.evolutionUrl || '',
     evolutionInstance: salao?.evolutionInstance || '',
     hasEvolutionKey: !!salao?.evolutionKey,
     hasGeminiKey: !!salao?.geminiKey,
+    effectiveEvolutionUrl: config.baseUrl,
+    effectiveEvolutionInstance: config.instanceName,
+    usingGlobalApiUrl: config.usingGlobalApiUrl,
+    usingGlobalApiKey: config.usingGlobalApiKey,
+    usingGlobalInstance: config.usingGlobalInstance,
+    hasGlobalEvolutionKey: !!getGlobalEvolutionApiKey(),
+    webhookUrl: buildWebhookUrl(req),
   });
 }
 
@@ -2138,50 +2142,35 @@ async function updateWhatsappConfig(req, res) {
 
 async function getWhatsappStatus(req, res) {
   const salao = await prisma.salao.findUnique({ where: { id: req.user.salaoId } });
-  if (!salao?.evolutionUrl || !salao?.evolutionKey || !salao?.evolutionInstance) {
-    return res.json({ status: 'not_configured' });
-  }
-  try {
-    const r = await axios.get(
-      `${salao.evolutionUrl}/instance/connectionState/${salao.evolutionInstance}`,
-      { headers: evoHeaders(salao) }
-    );
-    const state = r.data?.instance?.state || r.data?.state || 'close';
-    res.json({ status: state });
-  } catch (err) {
-    res.json({ status: 'error', error: err.message });
-  }
+  const status = await getEvolutionStatus(salao, req);
+  res.json({
+    status: status.status,
+    error: status.error || null,
+    effectiveEvolutionUrl: status.config?.baseUrl || '',
+    effectiveEvolutionInstance: status.config?.instanceName || '',
+  });
 }
 
 async function connectWhatsapp(req, res) {
   const salao = await prisma.salao.findUnique({ where: { id: req.user.salaoId } });
-  if (!salao?.evolutionUrl || !salao?.evolutionKey || !salao?.evolutionInstance) {
-    return res.status(400).json({ error: 'Configure a Evolution API primeiro' });
-  }
   try {
-    const r = await axios.get(
-      `${salao.evolutionUrl}/instance/connect/${salao.evolutionInstance}`,
-      { headers: evoHeaders(salao) }
-    );
-    res.json(r.data);
+    const response = await connectEvolutionInstance(salao, req);
+    res.json(response);
   } catch (err) {
-    res.status(500).json({ error: err.response?.data?.message || err.message });
+    res.status(err.statusCode || 500).json({ error: err.response?.data?.message || err.response?.data?.error || err.message });
   }
 }
 
 async function disconnectWhatsapp(req, res) {
   const salao = await prisma.salao.findUnique({ where: { id: req.user.salaoId } });
-  if (!salao?.evolutionUrl || !salao?.evolutionKey || !salao?.evolutionInstance) {
-    return res.status(400).json({ error: 'Não configurado' });
+  if (!resolveEvolutionConfig(salao).configured) {
+    return res.status(400).json({ error: 'Nao configurado' });
   }
   try {
-    await axios.delete(
-      `${salao.evolutionUrl}/instance/logout/${salao.evolutionInstance}`,
-      { headers: evoHeaders(salao) }
-    );
+    await disconnectEvolutionInstance(salao);
     res.json({ ok: true });
   } catch (err) {
-    res.status(500).json({ error: err.response?.data?.message || err.message });
+    res.status(err.statusCode || 500).json({ error: err.response?.data?.message || err.response?.data?.error || err.message });
   }
 }
 
@@ -2193,19 +2182,14 @@ async function dispararCampanhaMassiva(req, res) {
     return res.status(400).json({ error: 'Dados inválidos' });
   }
 
-  if (!salao?.evolutionUrl || !salao?.evolutionKey || !salao?.evolutionInstance) {
+  if (!resolveEvolutionConfig(salao).configured) {
     return res.status(400).json({ error: 'WhatsApp não configurado' });
   }
 
   try {
     // Para simplificar, enviamos sequencialmente. Em produção seria melhor uma fila.
     for (const tel of telefones) {
-      const num = tel.replace(/\D/g, '');
-      await axios.post(
-        `${salao.evolutionUrl}/message/sendText/${salao.evolutionInstance}`,
-        { number: `55${num}`, text: mensagem },
-        { headers: evoHeaders(salao) }
-      );
+      await sendEvolutionText(salao, tel, mensagem);
     }
     res.json({ ok: true, sent: telefones.length });
   } catch (err) {

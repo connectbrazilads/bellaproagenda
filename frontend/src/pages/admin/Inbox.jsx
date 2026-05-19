@@ -13,7 +13,12 @@ import {
   CheckCheck,
   Sparkles,
   Calendar,
-  Plus
+  Plus,
+  Image as ImageIcon,
+  Mic,
+  Paperclip,
+  Film,
+  Download
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { getConversas, getMensagens, atualizarConversa, responderConversa, getRespostasRapidas } from '../../services/api';
@@ -30,6 +35,35 @@ function formatarHora(iso) {
   if (!iso) return '';
   const d = new Date(iso);
   return d.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+}
+
+function getMensagemMediaSrc(mensagem) {
+  const base64 = String(mensagem?.mediaBase64 || '').trim();
+  if (base64) {
+    return base64.startsWith('data:')
+      ? base64
+      : `data:${mensagem?.mimeType || 'application/octet-stream'};base64,${base64}`;
+  }
+
+  return String(mensagem?.mediaUrl || '').trim();
+}
+
+function getMensagemResumo(mensagem) {
+  if (!mensagem) return 'Iniciando diálogo...';
+
+  if (mensagem.tipo === 'imagem') return mensagem.conteudo || 'Imagem recebida';
+  if (mensagem.tipo === 'audio') return mensagem.conteudo || 'Audio recebido';
+  if (mensagem.tipo === 'anexo') return mensagem.conteudo || `Anexo${mensagem.nomeArquivo ? `: ${mensagem.nomeArquivo}` : ' recebido'}`;
+  if (mensagem.tipo === 'video') return mensagem.conteudo || 'Video recebido';
+
+  return mensagem.conteudo || 'Iniciando diálogo...';
+}
+
+function isDescricaoGenericaDeMidia(mensagem) {
+  if (!mensagem?.tipo || mensagem.tipo === 'texto') return false;
+
+  const conteudo = String(mensagem.conteudo || '').trim().toLowerCase();
+  return ['imagem recebida', 'audio recebido', 'video recebido', 'anexo recebido'].includes(conteudo);
 }
 
 export default function Inbox() {
@@ -263,7 +297,7 @@ export default function Inbox() {
                       <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest">{formatarHora(c.updatedAt)}</span>
                     </div>
                     <p className="text-xs text-gray-500 dark:text-gray-400 truncate leading-relaxed font-bold">
-                      {c.ultimaMensagem?.conteudo || 'Iniciando diálogo...'}
+                      {getMensagemResumo(c.ultimaMensagem)}
                     </p>
                     <div className="flex items-center gap-2 mt-2">
                        <div className="w-1 h-1 rounded-full bg-emerald-500" />
@@ -524,9 +558,106 @@ function ActionButton({ children, icon, onClick, tone }) {
   );
 }
 
+function MensagemMidia({ m, isClient }) {
+  const mediaSrc = getMensagemMediaSrc(m);
+  if (!mediaSrc && !m?.nomeArquivo) return null;
+
+  const mediaCardClass = cn(
+    "rounded-[1.25rem] border p-3 mb-3",
+    isClient
+      ? "bg-gray-50 border-gray-100 text-gray-700"
+      : "bg-white/10 border-white/20 text-white"
+  );
+
+  if (m.tipo === 'imagem') {
+    return (
+      <div className={mediaCardClass}>
+        <div className="flex items-center gap-2 mb-3 text-xs font-black uppercase tracking-[0.2em] opacity-80">
+          <ImageIcon size={14} />
+          Imagem
+        </div>
+        <img
+          src={mediaSrc}
+          alt={m.nomeArquivo || 'Imagem recebida'}
+          className="w-full max-h-80 object-cover rounded-[1rem]"
+        />
+      </div>
+    );
+  }
+
+  if (m.tipo === 'audio') {
+    return (
+      <div className={mediaCardClass}>
+        <div className="flex items-center gap-2 mb-3 text-xs font-black uppercase tracking-[0.2em] opacity-80">
+          <Mic size={14} />
+          Audio
+          {m.duracaoSeg ? <span>{Math.round(m.duracaoSeg)}s</span> : null}
+        </div>
+        {mediaSrc ? (
+          <audio controls src={mediaSrc} className="w-full" preload="metadata" />
+        ) : (
+          <p className="text-sm font-bold">Audio recebido sem preview disponível.</p>
+        )}
+      </div>
+    );
+  }
+
+  if (m.tipo === 'video') {
+    return (
+      <div className={mediaCardClass}>
+        <div className="flex items-center gap-2 mb-3 text-xs font-black uppercase tracking-[0.2em] opacity-80">
+          <Film size={14} />
+          Video
+        </div>
+        {mediaSrc ? (
+          <video controls src={mediaSrc} className="w-full max-h-80 rounded-[1rem]" preload="metadata" />
+        ) : (
+          <p className="text-sm font-bold">Video recebido sem preview disponível.</p>
+        )}
+      </div>
+    );
+  }
+
+  return (
+    <div className={mediaCardClass}>
+      <div className="flex items-center justify-between gap-3">
+        <div className="flex items-center gap-3 min-w-0">
+          <div
+            className={cn(
+              "w-10 h-10 rounded-2xl flex items-center justify-center shrink-0",
+              isClient ? "bg-white text-[#d48997]" : "bg-white/15 text-white"
+            )}
+          >
+            <Paperclip size={16} />
+          </div>
+          <div className="min-w-0">
+            <p className="text-xs font-black uppercase tracking-[0.2em] opacity-80">Anexo</p>
+            <p className="text-sm font-bold truncate">{m.nomeArquivo || 'Arquivo recebido'}</p>
+          </div>
+        </div>
+        {mediaSrc ? (
+          <a
+            href={mediaSrc}
+            target="_blank"
+            rel="noreferrer"
+            className={cn(
+              "inline-flex items-center gap-2 rounded-2xl px-3 py-2 text-[10px] font-black uppercase tracking-[0.2em] transition-colors",
+              isClient ? "bg-white text-[#d48997]" : "bg-white text-[#b96a79]"
+            )}
+          >
+            <Download size={14} />
+            Abrir
+          </a>
+        ) : null}
+      </div>
+    </div>
+  );
+}
+
 function MensagemBolha({ m }) {
   const isClient = m.direcao === 'entrada';
   const isIA = m.origem === 'ia';
+  const exibirTexto = Boolean(m.conteudo) && (!isDescricaoGenericaDeMidia(m) || !getMensagemMediaSrc(m));
   
   if (isIA && m.conteudo.startsWith('[RESUMO]')) {
     return (
@@ -575,7 +706,10 @@ function MensagemBolha({ m }) {
         ? "bg-white dark:bg-gray-900 border-gray-100 dark:border-white/5 rounded-tl-sm text-gray-800 dark:text-gray-100" 
         : "bg-gradient-to-br from-[#d48997] to-indigo-600 border-[#E29BA8] rounded-tr-sm text-white shadow-[#E29BA8]/20"
       )}>
-        <p className="text-sm font-bold whitespace-pre-wrap leading-relaxed break-words">{m.conteudo}</p>
+        {m.tipo && m.tipo !== 'texto' ? <MensagemMidia m={m} isClient={isClient} /> : null}
+        {exibirTexto ? (
+          <p className="text-sm font-bold whitespace-pre-wrap leading-relaxed break-words">{m.conteudo}</p>
+        ) : null}
         <div className={cn(
           "flex items-center gap-1 mt-2 opacity-40",
           isClient ? "justify-start" : "justify-end"

@@ -332,13 +332,19 @@ model Conversa {
 }
 
 model Mensagem {
-  id         String   @id @default(uuid())
-  conversaId String
-  conteudo   String
-  direcao    String
-  origem     String   @default("ia")
-  createdAt  DateTime @default(now())
-  conversa   Conversa @relation(fields: [conversaId], references: [id], onDelete: Cascade)
+  id          String   @id @default(uuid())
+  conversaId  String
+  conteudo    String
+  direcao     String
+  origem      String   @default("ia")
+  tipo        String   @default("texto")
+  mimeType    String?
+  mediaUrl    String?
+  mediaBase64 String?
+  nomeArquivo String?
+  duracaoSeg  Int?
+  createdAt   DateTime @default(now())
+  conversa    Conversa @relation(fields: [conversaId], references: [id], onDelete: Cascade)
 }
 
 model RespostaRapida {
