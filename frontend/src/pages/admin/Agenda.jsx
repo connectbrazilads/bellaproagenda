@@ -1856,35 +1856,35 @@ export default function Agenda() {
       </motion.div>
 
       <div className="flex-1 flex flex-col relative min-w-0">
-        {/* Se??o BellaPro */}
-        <div className="md:hidden px-3 py-3 border-b border-[#f0d6db] bg-[#fff7f8]/95 backdrop-blur-3xl sticky top-[var(--admin-mobile-header-height,73px)] z-50 shadow-sm space-y-3">
+        {/* Seção BellaPro */}
+        <div className="md:hidden px-3 py-3 border-b border-[#f0d6db] dark:border-white/5 bg-[#fff7f8]/95 dark:bg-[#16141a]/85 backdrop-blur-3xl sticky top-[var(--admin-mobile-header-height,73px)] z-50 shadow-sm space-y-3">
           <div className="flex items-center justify-between gap-3">
             <div className="flex items-center gap-3 min-w-0">
               <button
                 onClick={() => setSidebarOpen(!sidebarOpen)}
-                className="w-11 h-11 flex items-center justify-center rounded-2xl border border-[#ecd5d9] bg-white text-[#6f5560] shadow-sm"
+                className="w-11 h-11 flex items-center justify-center rounded-2xl border border-[#ecd5d9] dark:border-white/5 bg-white dark:bg-white/[0.04] text-[#6f5560] dark:text-white/80 shadow-sm"
               >
                 <Menu size={20} />
               </button>
-              <h2 className="truncate text-[15px] font-black text-[#20191f]">Agenda</h2>
+              <h2 className="truncate text-[15px] font-black text-[#20191f] dark:text-white">Agenda</h2>
             </div>
 
             <div className="flex items-center gap-1">
-              <button className="flex h-10 w-10 items-center justify-center rounded-2xl bg-white text-[#8c6b75] shadow-sm">
+              <button className="flex h-10 w-10 items-center justify-center rounded-2xl bg-white dark:bg-white/[0.04] text-[#8c6b75] dark:text-white/80 border border-[#ecd5d9] dark:border-white/5 shadow-sm">
                 <Share2 size={18} />
               </button>
               <button
                 onClick={() => window.dispatchEvent(new CustomEvent('admin:open-notifications'))}
-                className="flex h-10 w-10 items-center justify-center rounded-2xl bg-white text-[#8c6b75] shadow-sm"
+                className="flex h-10 w-10 items-center justify-center rounded-2xl bg-white dark:bg-white/[0.04] text-[#8c6b75] dark:text-white/80 border border-[#ecd5d9] dark:border-white/5 shadow-sm"
               >
                 <Bell size={18} />
               </button>
-              <button onClick={carregar} className="flex h-10 w-10 items-center justify-center rounded-2xl bg-white text-[#8c6b75] shadow-sm">
+              <button onClick={carregar} className="flex h-10 w-10 items-center justify-center rounded-2xl bg-white dark:bg-white/[0.04] text-[#8c6b75] dark:text-white/80 border border-[#ecd5d9] dark:border-white/5 shadow-sm">
                 <RefreshCw size={18} />
               </button>
               <div className="relative">
-                <select className="appearance-none h-11 rounded-2xl border border-[#ecd5d9] bg-white pl-4 pr-9 text-sm font-black text-[#20191f] outline-none shadow-sm">
-                  <option>Dia</option>
+                <select className="appearance-none h-11 rounded-2xl border border-[#ecd5d9] dark:border-white/5 bg-white dark:bg-white/[0.04] pl-4 pr-9 text-sm font-black text-[#20191f] dark:text-white outline-none shadow-sm">
+                  <option className="dark:bg-[#16141a]">Dia</option>
                 </select>
                 <ChevronRight size={14} className="absolute right-3 top-1/2 -translate-y-1/2 rotate-90 text-gray-400 pointer-events-none" />
               </div>
@@ -1892,8 +1892,8 @@ export default function Agenda() {
           </div>
 
           <div className="flex items-center justify-between gap-3">
-            <div className="flex items-center gap-1 rounded-2xl border border-[#3b3139] bg-[#2c232a] px-2 py-1.5 shadow-[0_10px_26px_-18px_rgba(32,25,31,0.9)]">
-              <button onClick={() => setDataFiltro(addDays(dataFiltro, -1))} className="w-9 h-9 flex items-center justify-center rounded-xl text-gray-500">
+            <div className="flex items-center gap-1 rounded-2xl border border-[#3b3139] dark:border-white/5 bg-[#2c232a] dark:bg-white/[0.04] px-2 py-1.5 shadow-[0_10px_26px_-18px_rgba(32,25,31,0.9)]">
+              <button onClick={() => setDataFiltro(addDays(dataFiltro, -1))} className="w-9 h-9 flex items-center justify-center rounded-xl text-gray-500 hover:text-white">
                 <ChevronLeft size={18} />
               </button>
               <div className="relative px-2">
@@ -1902,7 +1902,7 @@ export default function Agenda() {
                 </span>
                 <input type="date" value={dataFiltro} onChange={e => setDataFiltro(e.target.value)} className="absolute inset-0 opacity-0 cursor-pointer" aria-label="Selecionar data da agenda" />
               </div>
-              <button onClick={() => setDataFiltro(addDays(dataFiltro, 1))} className="w-9 h-9 flex items-center justify-center rounded-xl text-gray-300">
+              <button onClick={() => setDataFiltro(addDays(dataFiltro, 1))} className="w-9 h-9 flex items-center justify-center rounded-xl text-gray-300 hover:text-white">
                 <ChevronRight size={18} />
               </button>
               <button className="w-9 h-9 flex items-center justify-center rounded-xl text-gray-300">

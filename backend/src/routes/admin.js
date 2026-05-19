@@ -129,5 +129,6 @@ router.delete('/inbox/snippets/:id', requirePermission('inbox'), inbox.deleteRes
 router.get('/inbox/:id/mensagens', requirePermission('inbox'), inbox.getMensagens);
 router.put('/inbox/:id', requirePermission('inbox'), inbox.atualizarConversa);
 router.post('/inbox/:id/responder', requirePermission('inbox'), inbox.responderConversa);
+router.post('/inbox/:id/midia', requirePermission('inbox'), inbox.responderConversaMidia);
 
 module.exports = router;

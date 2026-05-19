@@ -1,6 +1,7 @@
 const prisma = require('../lib/prisma');
 const { processarMensagem } = require('../services/whatsappAgentService');
 const { enviarMensagem } = require('../services/whatsappService');
+const { fetchEvolutionProfilePictureUrl } = require('../services/evolutionService');
 const inboxEvents = require('../lib/events');
 
 function normalizeEvolutionEvent(value = '') {
@@ -91,6 +92,17 @@ function normalizePhoneDigits(value = '') {
   return String(value || '').replace(/\D/g, '');
 }
 
+function extractContactName(data = {}) {
+  return String(
+    data?.pushName
+    || data?.pushname
+    || data?.notifyName
+    || data?.senderName
+    || data?.verifiedBizName
+    || ''
+  ).trim();
+}
+
 function buildPhoneVariants(values) {
   const variants = new Set();
 
@@ -105,6 +117,34 @@ function buildPhoneVariants(values) {
   }
 
   return [...variants];
+}
+
+async function findNomeCliente(salaoId, telefone, data) {
+  const nomeContato = extractContactName(data);
+  if (nomeContato) return nomeContato;
+
+  const phoneCandidates = buildPhoneVariants([telefone]);
+  if (phoneCandidates.length) {
+    const cliente = await prisma.cliente.findFirst({
+      where: {
+        salaoId,
+        OR: phoneCandidates.map((candidate) => ({
+          telefone: { contains: candidate },
+        })),
+      },
+      select: { nome: true },
+    });
+
+    if (cliente?.nome) return cliente.nome;
+  }
+
+  const agendamento = await prisma.agendamento.findFirst({
+    where: { salaoId, clienteTelefone: { endsWith: telefone.slice(-9) } },
+    orderBy: { createdAt: 'desc' },
+    select: { clienteNome: true },
+  });
+
+  return agendamento?.clienteNome || null;
 }
 
 function extractSalaoLookupCandidates(body, data) {
@@ -192,26 +232,46 @@ async function handleWhatsapp(req, res) {
     let conversa = await prisma.conversa.findUnique({ where: { salaoId_telefone: { salaoId, telefone } } });
 
     if (!conversa) {
-      const agendamento = await prisma.agendamento.findFirst({
-        where: { salaoId, clienteTelefone: { endsWith: telefone.slice(-9) } },
-        orderBy: { createdAt: 'desc' },
-        select: { clienteNome: true },
-      });
+      const nomeCliente = await findNomeCliente(salaoId, telefone, data);
+      let avatarUrl = null;
+
+      try {
+        avatarUrl = await fetchEvolutionProfilePictureUrl(salao, telefone);
+      } catch {
+        avatarUrl = null;
+      }
 
       conversa = await prisma.conversa.create({
         data: {
           salaoId,
           telefone,
-          nomeCliente: agendamento?.clienteNome || null,
+          nomeCliente,
+          avatarUrl,
         },
       });
     } else {
+      const dataAtualizacao = {
+        updatedAt: new Date(),
+        status: 'aberta',
+      };
+
+      if (!conversa.nomeCliente) {
+        const nomeCliente = await findNomeCliente(salaoId, telefone, data);
+        if (nomeCliente) dataAtualizacao.nomeCliente = nomeCliente;
+      }
+
+      if (!conversa.avatarUrl) {
+        try {
+          const avatarUrl = await fetchEvolutionProfilePictureUrl(salao, telefone);
+          if (avatarUrl) dataAtualizacao.avatarUrl = avatarUrl;
+        } catch {
+          // segue sem avatar se a Evolution nao retornar imagem
+        }
+      }
+
       await prisma.conversa.update({
         where: { id: conversa.id },
-        data: {
-          updatedAt: new Date(),
-          status: 'aberta',
-        },
+        data: dataAtualizacao,
       });
     }
 

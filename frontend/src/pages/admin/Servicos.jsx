@@ -1,8 +1,9 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
-import { Boxes, Clock, DollarSign, Droplets, Edit3, Package, Plus, Scissors, Trash2, TrendingUp } from 'lucide-react';
+import { Boxes, Clock, DollarSign, Droplets, Edit3, Package, Plus, Scissors, Search, Trash2, TrendingUp } from 'lucide-react';
 import { createServico, deleteServico, getProdutos, getServicos, updateServico } from '../../services/api';
 import { cn, formatDurationLabel } from '../../lib/utils';
+import useElementWidth from '../../hooks/useElementWidth';
 
 const EMPTY = {
   nome: '',
@@ -15,12 +16,17 @@ const EMPTY = {
 };
 
 export default function Servicos() {
+  const pageRef = useRef(null);
   const [servicos, setServicos] = useState([]);
   const [produtosDisponiveis, setProdutosDisponiveis] = useState([]);
   const [modalOpen, setModalOpen] = useState(false);
   const [form, setForm] = useState(EMPTY);
   const [editingId, setEditingId] = useState(null);
   const [saving, setSaving] = useState(false);
+  const [search, setSearch] = useState('');
+  const pageWidth = useElementWidth(pageRef, typeof window !== 'undefined' ? window.innerWidth : 1440);
+  const isCompactPage = pageWidth < 1340;
+  const showThreeCards = pageWidth >= 1500;
 
   useEffect(() => {
     loadData();
@@ -118,48 +124,69 @@ export default function Servicos() {
     setForm((prev) => ({ ...prev, duracaoMin: Number(nextHoras) * 60 + Number(nextMinutos) }));
   }
 
+  const filteredServicos = servicos.filter((servico) => {
+    const term = search.trim().toLowerCase();
+    if (!term) return true;
+    return (
+      servico.nome?.toLowerCase().includes(term) ||
+      servico.descricao?.toLowerCase().includes(term)
+    );
+  });
+
   return (
-    <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} className="max-w-6xl mx-auto space-y-10 pb-20">
-      <header className="flex flex-col gap-5 border-b border-gray-200 dark:border-white/5 pb-8 md:flex-row md:items-end md:justify-between">
+    <motion.div ref={pageRef} initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} className="max-w-6xl mx-auto space-y-8 lg:space-y-10 pb-20">
+      <header className={cn('flex flex-col gap-5 border-b border-slate-200/50 dark:border-white/5 pb-8', !isCompactPage && 'md:flex-row md:items-end md:justify-between')}>
         <div>
           <div className="flex items-center gap-3">
             <span className="h-2 w-2 rounded-full bg-[#e29ba8]" />
-            <p className="brand-kicker">Portfólio de serviços</p>
+            <p className="brand-kicker text-[#efbac2]">Portfólio de serviços</p>
           </div>
-          <h1 className="mt-4 text-3xl sm:text-5xl font-brand-display text-gray-900 dark:text-white">
+          <h1 className="mt-4 text-3xl sm:text-5xl font-brand-display text-gray-900 dark:text-white leading-none">
             Catálogo <span className="brand-text-gradient">BellaPro</span>
           </h1>
-          <p className="mt-4 max-w-xl text-base text-gray-200 dark:text-white/58">
+          <p className="mt-4 max-w-xl text-base text-gray-400 dark:text-white/58">
             Estruture o menu do salão com preço, duração, margem e baixa automática de estoque.
           </p>
         </div>
 
-        <button onClick={openCreate} className="inline-flex items-center gap-3 rounded-[1.5rem] bg-gradient-to-r from-[#E29BA8] to-[#d48997] text-[#111116] px-6 py-4 text-[10px] font-black uppercase tracking-[0.24em] text-white">
-          <Plus size={16} />
+        <button onClick={openCreate} className="inline-flex items-center justify-center gap-3 rounded-[1.5rem] bg-gradient-to-r from-[#E29BA8] to-[#d48997] text-slate-950 px-6 py-4 text-[10px] font-black uppercase tracking-[0.24em] shadow-[0_16px_35px_-12px_rgba(222,151,165,0.65)] hover:shadow-[0_20px_45px_-12px_rgba(222,151,165,0.85)] transition-all duration-300 hover:scale-[1.02]">
+          <Plus size={16} strokeWidth={2.5} />
           Novo serviço
         </button>
       </header>
 
-      <div className="grid gap-4 sm:p-6 md:grid-cols-2 xl:grid-cols-3">
+      {/* Barra de Pesquisa */}
+      <div className="relative max-w-md">
+        <Search size={18} className="absolute left-5 top-1/2 -translate-y-1/2 text-gray-400 dark:text-white/30" />
+        <input
+          type="text"
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          placeholder="Pesquisar serviços..."
+          className="w-full rounded-[1.35rem] border border-slate-200/60 dark:border-white/5 bg-white/40 dark:bg-white/[0.04] px-5 py-4 pl-12 text-sm font-semibold text-gray-900 dark:text-white outline-none transition placeholder:text-gray-400 dark:placeholder:text-white/25 focus:border-[#e29ba8]/32 focus:bg-white/60 dark:focus:bg-white/[0.06] premium-focus-input"
+        />
+      </div>
+
+      <div className={cn('grid gap-6 sm:p-0 md:grid-cols-2', showThreeCards && 'xl:grid-cols-3')}>
         <AnimatePresence>
-          {servicos.map((servico) => (
+          {filteredServicos.map((servico) => (
             <motion.article
               key={servico.id}
               layout
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.96 }}
-              className="rounded-[2rem] border border-gray-200 dark:border-white/5 bg-white dark:bg-[#1a171f] p-4 sm:p-6 shadow-[0_34px_70px_-42px_rgba(0,0,0,0.9)]"
+              className="rounded-[2.2rem] border border-slate-200/60 dark:border-white/5 bg-white/80 dark:bg-[#18161d]/30 backdrop-blur-2xl p-5 sm:p-6 shadow-[0_20px_45px_-28px_rgba(140,107,117,0.12)] hover:border-[#e29ba8]/20 transition-all duration-300 group"
             >
               <div className="flex items-start justify-between gap-4">
-                <div className="flex h-16 w-16 items-center justify-center rounded-[1.5rem] bg-white dark:bg-[#1a171f] text-[#efbac2]">
-                  <Scissors size={26} />
+                <div className="flex h-16 w-16 items-center justify-center rounded-[1.5rem] bg-[#e29ba8]/10 text-[#d48997] border border-[#e29ba8]/20 transition-all group-hover:rotate-6">
+                  <Scissors size={24} strokeWidth={2.5} />
                 </div>
                 <div className="flex gap-2">
-                  <button onClick={() => openEdit(servico)} className="rounded-2xl border border-gray-200 dark:border-white/5 bg-white/[0.04] p-3 text-gray-500 dark:text-white/66 transition hover:text-gray-900 dark:text-white">
+                  <button onClick={() => openEdit(servico)} className="rounded-2xl border border-slate-200/50 dark:border-white/5 bg-white/50 dark:bg-white/[0.04] p-3 text-gray-500 dark:text-white/66 transition hover:text-gray-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-white/[0.08]">
                     <Edit3 size={16} />
                   </button>
-                  <button onClick={() => handleDelete(servico.id)} className="rounded-2xl border border-gray-200 dark:border-white/5 bg-white/[0.04] p-3 text-gray-500 dark:text-white/66 transition hover:text-red-200">
+                  <button onClick={() => handleDelete(servico.id)} className="rounded-2xl border border-slate-200/50 dark:border-white/5 bg-white/50 dark:bg-white/[0.04] p-3 text-gray-500 dark:text-white/66 transition hover:text-red-600 dark:hover:text-red-400 hover:bg-slate-100 dark:hover:bg-white/[0.08]">
                     <Trash2 size={16} />
                   </button>
                 </div>
@@ -167,14 +194,14 @@ export default function Servicos() {
 
               <div className="mt-5">
                 <div className="flex items-center gap-3">
-                  <h2 className="text-3xl font-brand-display text-gray-900 dark:text-white">{servico.nome}</h2>
+                  <h2 className="text-3xl font-brand-display text-gray-900 dark:text-white leading-none">{servico.nome}</h2>
                   {!servico.ativo && (
-                    <span className="rounded-full bg-white/8 px-3 py-2 text-[10px] font-black uppercase tracking-[0.16em] text-gray-200 dark:text-white/54">
+                    <span className="rounded-full border border-slate-200 dark:border-white/5 bg-slate-100 dark:bg-white/8 px-3 py-1.5 text-[9px] font-black uppercase tracking-[0.16em] text-gray-500 dark:text-white/54">
                       Inativo
                     </span>
                   )}
                 </div>
-                <p className="mt-3 text-sm leading-relaxed text-gray-200 dark:text-white/56">
+                <p className="mt-3 text-sm leading-relaxed text-gray-400 dark:text-white/56 min-h-[40px]">
                   {servico.descricao || 'Serviço ainda sem descrição detalhada.'}
                 </p>
               </div>
@@ -197,7 +224,7 @@ export default function Servicos() {
                   </div>
                   <div className="flex flex-wrap gap-2">
                     {servico.consumos.map((consumo) => (
-                      <span key={consumo.produtoId} className="rounded-full border border-gray-200 dark:border-white/5 bg-white/[0.05] px-3 py-2 text-[10px] font-black uppercase tracking-[0.16em] text-gray-600 dark:text-white/64">
+                      <span key={consumo.produtoId} className="rounded-full border border-slate-200/50 dark:border-white/5 bg-white/80 dark:bg-white/[0.05] px-3 py-2 text-[10px] font-black uppercase tracking-[0.16em] text-gray-600 dark:text-white/64 shadow-sm">
                         {consumo.quantidade}x {consumo.produto?.nome}
                       </span>
                     ))}
@@ -208,107 +235,109 @@ export default function Servicos() {
           ))}
         </AnimatePresence>
 
-        {servicos.length === 0 && (
-          <div className="col-span-full rounded-[2rem] border border-dashed border-gray-200 dark:border-white/5 bg-white/[0.03] px-6 py-20 text-center">
-            <Package size={44} className="mx-auto text-white/18" />
-            <p className="mt-5 text-[10px] font-black uppercase tracking-[0.24em] text-white/38">Nenhum serviço cadastrado ainda</p>
+        {filteredServicos.length === 0 && (
+          <div className="col-span-full rounded-[2.2rem] border border-dashed border-slate-300 dark:border-white/5 bg-white/40 dark:bg-white/[0.03] px-6 py-20 text-center">
+            <Package size={44} className="mx-auto text-gray-400 dark:text-white/18" />
+            <p className="mt-5 text-[10px] font-black uppercase tracking-[0.24em] text-gray-400 dark:text-white/38">Nenhum serviço encontrado</p>
           </div>
         )}
       </div>
 
       {modalOpen && (
-        <div className="fixed inset-0 z-[120] flex items-center justify-center overflow-y-auto overscroll-contain bg-black/82 p-3 backdrop-blur-md sm:p-4">
-          <div className="flex max-h-[calc(100dvh-1.5rem)] w-full max-w-3xl flex-col overflow-hidden rounded-[2rem] border border-gray-200 bg-white shadow-[0_40px_90px_-40px_rgba(0,0,0,0.9)] dark:border-white/5 dark:bg-[#1a171f]">
-            <div className="mb-0 flex shrink-0 items-start justify-between gap-4 border-b border-gray-200 px-4 py-4 dark:border-white/5 sm:px-6 sm:py-6 md:px-8">
+        <div className="fixed inset-0 z-[120] flex items-center justify-center overflow-y-auto overscroll-contain bg-black/70 p-3 backdrop-blur-md sm:p-4">
+          <div className="flex max-h-[calc(100dvh-1.5rem)] w-full max-w-3xl flex-col overflow-hidden rounded-[2.2rem] border border-slate-200/60 bg-white/95 shadow-[0_40px_90px_-40px_rgba(0,0,0,0.6)] dark:border-white/5 dark:bg-[#1a171f]/95 backdrop-blur-2xl">
+            <div className="mb-0 flex shrink-0 items-start justify-between gap-4 border-b border-slate-200/60 px-4 py-4 dark:border-white/5 sm:px-6 sm:py-6 md:px-8">
               <div>
-                <p className="brand-kicker">Precificação e estoque</p>
-                <h2 className="mt-2 text-2xl sm:text-4xl font-brand-display text-gray-900 dark:text-white">{editingId ? 'Editar' : 'Novo'} serviço</h2>
+                <p className="brand-kicker text-[#efbac2]">Precificação e estoque</p>
+                <h2 className="mt-2 text-2xl sm:text-4xl font-brand-display text-gray-900 dark:text-white leading-none">{editingId ? 'Editar' : 'Novo'} serviço</h2>
               </div>
-              <button onClick={() => setModalOpen(false)} className="rounded-2xl border border-gray-200 dark:border-white/5 bg-white/[0.04] px-4 py-3 text-[10px] font-black uppercase tracking-[0.18em] text-gray-600 dark:text-white/64">
+              <button onClick={() => setModalOpen(false)} className="rounded-2xl border border-slate-200/50 dark:border-white/5 bg-white/50 dark:bg-white/[0.04] px-4 py-3 text-[10px] font-black uppercase tracking-[0.18em] text-gray-600 dark:text-white/64 hover:text-gray-900 dark:hover:text-white">
                 Fechar
               </button>
             </div>
 
             <form onSubmit={handleSubmit} className="flex min-h-0 flex-1 flex-col overflow-hidden">
-              <div className="min-h-0 flex-1 space-y-8 overflow-y-auto px-4 pb-4 pt-4 custom-scrollbar sm:px-6 sm:pb-6 sm:pt-6 md:px-8 md:pb-8">
-              <div className="grid gap-4 sm:p-6 md:grid-cols-2">
-                <Field label="Nome do serviço" value={form.nome} onChange={(value) => setForm((prev) => ({ ...prev, nome: value }))} required />
-                <Field label="Preço de venda" type="number" value={form.preco} onChange={(value) => setForm((prev) => ({ ...prev, preco: value }))} required icon={<DollarSign size={14} />} />
-              </div>
-
-              <Field label="Descrição" value={form.descricao} onChange={(value) => setForm((prev) => ({ ...prev, descricao: value }))} />
-
-              <div className="grid gap-4 sm:p-6 md:grid-cols-2">
-                <DurationField hours={horas} minutes={minutos} onHoursChange={(value) => updateDuration(value, minutos)} onMinutesChange={(value) => updateDuration(horas, value)} />
-                <Field label="Custo dos insumos" type="number" value={form.custoProduto} onChange={(value) => setForm((prev) => ({ ...prev, custoProduto: value }))} icon={<TrendingUp size={14} />} />
-              </div>
-
-              <div className="rounded-[2rem] border border-gray-200 dark:border-white/5 bg-black/14 p-4 sm:p-6">
-                <div className="mb-5 flex items-center gap-3">
-                  <Boxes size={16} className="text-[#efbac2]" />
-                  <div>
-                    <p className="text-[10px] font-black uppercase tracking-[0.2em] text-[#efbac2]">Consumo de produtos</p>
-                    <p className="mt-1 text-sm text-gray-200 dark:text-white/52">Defina o que sai automaticamente do estoque quando o serviço for concluído.</p>
-                  </div>
+              <div className="min-h-0 flex-1 space-y-6 overflow-y-auto px-4 pb-4 pt-4 custom-scrollbar sm:px-6 sm:pb-6 sm:pt-6 md:px-8 md:pb-8">
+                <div className="grid gap-4 sm:p-0 md:grid-cols-2">
+                  <Field label="Nome do serviço" value={form.nome} onChange={(value) => setForm((prev) => ({ ...prev, nome: value }))} required />
+                  <Field label="Preço de venda" type="number" value={form.preco} onChange={(value) => setForm((prev) => ({ ...prev, preco: value }))} required icon={<DollarSign size={14} />} />
                 </div>
 
-                <div className="space-y-3">
-                  {produtosDisponiveis.map((produto) => {
-                    const selected = form.consumosProdutos.find((item) => item.produtoId === produto.id);
-                    return (
-                      <div key={produto.id} className={cn('rounded-[1.5rem] border p-4', selected ? 'border-[#e29ba8]/28 bg-[#e29ba8]/08' : 'border-gray-200 dark:border-white/5 bg-white/[0.03]')}>
-                        <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
-                          <button type="button" onClick={() => toggleProduto(produto.id)} className="text-left">
-                            <p className="text-sm font-semibold text-gray-900 dark:text-white">{produto.nome}</p>
-                            <p className="mt-1 text-xs text-white/42">Estoque atual: {produto.estoque}</p>
-                          </button>
+                <Field label="Descrição" value={form.descricao} onChange={(value) => setForm((prev) => ({ ...prev, descricao: value }))} placeholder="Descrição curta do serviço para o cliente" />
 
-                          <div className="flex items-center gap-3">
-                            {selected && (
-                              <input
-                                type="number"
-                                min="1"
-                                value={selected.quantidade}
-                                onChange={(event) => updateConsumo(produto.id, event.target.value)}
-                                className="w-24 rounded-[1rem] border border-gray-200 dark:border-white/5 bg-[#332832] px-3 py-2 text-sm text-white outline-none focus:border-[#e29ba8]/28"
-                              />
-                            )}
-                            <button
-                              type="button"
-                              onClick={() => toggleProduto(produto.id)}
-                              className={cn(
-                                'rounded-[1rem] px-4 py-3 text-[10px] font-black uppercase tracking-[0.18em]',
-                                selected ? 'bg-[#de97a5] text-white' : 'border border-gray-200 dark:border-white/5 bg-white/[0.04] text-white/72'
-                              )}
-                            >
-                              {selected ? 'Vinculado' : 'Usar'}
+                <div className="grid gap-4 sm:p-0 md:grid-cols-2">
+                  <DurationField hours={horas} minutes={minutos} onHoursChange={(value) => updateDuration(value, minutos)} onMinutesChange={(value) => updateDuration(horas, value)} />
+                  <Field label="Custo dos insumos" type="number" value={form.custoProduto} onChange={(value) => setForm((prev) => ({ ...prev, custoProduto: value }))} icon={<TrendingUp size={14} />} />
+                </div>
+
+                <div className="rounded-[2rem] border border-slate-200/60 dark:border-white/5 bg-white/40 dark:bg-black/14 p-4 sm:p-6 shadow-sm">
+                  <div className="mb-5 flex items-center gap-3">
+                    <Boxes size={16} className="text-[#efbac2]" />
+                    <div>
+                      <p className="text-[10px] font-black uppercase tracking-[0.2em] text-[#efbac2]">Consumo de produtos</p>
+                      <p className="mt-1 text-sm text-gray-500 dark:text-white/52">Defina o que sai automaticamente do estoque quando o serviço for concluído.</p>
+                    </div>
+                  </div>
+
+                  <div className="space-y-3 max-h-60 overflow-y-auto pr-2 custom-scrollbar">
+                    {produtosDisponiveis.map((produto) => {
+                      const selected = form.consumosProdutos.find((item) => item.produtoId === produto.id);
+                      return (
+                        <div key={produto.id} className={cn('rounded-[1.5rem] border p-4 transition-all', selected ? 'border-[#e29ba8]/28 bg-[#e29ba8]/08' : 'border-slate-200 dark:border-white/5 bg-white/30 dark:bg-white/[0.03]')}>
+                          <div className={cn('flex flex-col gap-3', !isCompactPage && 'md:flex-row md:items-center md:justify-between')}>
+                            <button type="button" onClick={() => toggleProduto(produto.id)} className="text-left outline-none">
+                              <p className="text-sm font-semibold text-gray-900 dark:text-white leading-tight">{produto.nome}</p>
+                              <p className="mt-1 text-xs text-gray-400 dark:text-white/42">Estoque atual: {produto.estoque}</p>
                             </button>
+
+                            <div className="flex items-center gap-3">
+                              {selected && (
+                                <input
+                                  type="number"
+                                  min="1"
+                                  value={selected.quantidade}
+                                  onChange={(event) => updateConsumo(produto.id, event.target.value)}
+                                  className="w-24 rounded-[1rem] border border-slate-200 dark:border-white/5 bg-white/70 dark:bg-[#332832] px-3 py-2 text-sm text-gray-900 dark:text-white outline-none focus:border-[#e29ba8]/28 premium-focus-input"
+                                />
+                              )}
+                              <button
+                                type="button"
+                                onClick={() => toggleProduto(produto.id)}
+                                className={cn(
+                                  'rounded-[1rem] px-4 py-3 text-[10px] font-black uppercase tracking-[0.18em] transition-all',
+                                  selected ? 'bg-[#de97a5] text-white' : 'border border-slate-200 dark:border-white/5 bg-white/40 dark:bg-white/[0.04] text-gray-600 dark:text-white/72 hover:text-gray-900 dark:hover:text-white'
+                                )}
+                              >
+                                {selected ? 'Vinculado' : 'Usar'}
+                              </button>
+                            </div>
                           </div>
                         </div>
-                      </div>
-                    );
-                  })}
-                </div>
-              </div>
-
-              {editingId && (
-                <label className="flex items-center gap-4 rounded-[1.6rem] border border-gray-200 dark:border-white/5 bg-white/[0.03] p-5">
-                  <input type="checkbox" checked={form.ativo} onChange={(event) => setForm((prev) => ({ ...prev, ativo: event.target.checked }))} className="h-4 w-4 accent-[#de97a5]" />
-                  <div>
-                    <p className="text-sm font-semibold text-gray-900 dark:text-white">Serviço ativo</p>
-                    <p className="mt-1 text-xs text-white/42">Desative sem excluir caso queira esconder do catálogo.</p>
+                      );
+                    })}
+                    {produtosDisponiveis.length === 0 && (
+                      <p className="text-xs text-gray-400 dark:text-white/30 text-center py-4">Nenhum produto cadastrado no estoque.</p>
+                    )}
                   </div>
-                </label>
-              )}
+                </div>
 
+                {editingId && (
+                  <label className="flex items-center gap-4 rounded-[1.6rem] border border-slate-200/60 dark:border-white/5 bg-white/30 dark:bg-white/[0.03] p-5 cursor-pointer select-none">
+                    <input type="checkbox" checked={form.ativo} onChange={(event) => setForm((prev) => ({ ...prev, ativo: event.target.checked }))} className="h-4 w-4 accent-[#de97a5]" />
+                    <div>
+                      <p className="text-sm font-semibold text-gray-900 dark:text-white">Serviço ativo</p>
+                      <p className="mt-1 text-xs text-gray-400 dark:text-white/42">Desative sem excluir caso queira esconder do catálogo.</p>
+                    </div>
+                  </label>
+                )}
               </div>
 
-              <div className="sticky bottom-0 flex shrink-0 flex-col gap-3 border-t border-gray-200 bg-white/95 px-4 py-4 backdrop-blur dark:border-white/5 dark:bg-[#1a171f]/95 sm:px-6 md:flex-row md:px-8">
-                <button type="button" onClick={() => setModalOpen(false)} className="rounded-[1.4rem] border border-gray-200 dark:border-white/5 bg-white/[0.04] px-6 py-4 text-[10px] font-black uppercase tracking-[0.22em] text-gray-500 dark:text-white/66">
+              <div className="sticky bottom-0 flex shrink-0 flex-col gap-3 border-t border-slate-200 bg-white/95 px-4 py-4 backdrop-blur dark:border-white/5 dark:bg-[#1a171f]/95 sm:px-6 md:flex-row md:px-8">
+                <button type="button" onClick={() => setModalOpen(false)} className="rounded-[1.4rem] border border-slate-200/50 dark:border-white/5 bg-white/30 dark:bg-white/[0.04] px-6 py-4 text-[10px] font-black uppercase tracking-[0.22em] text-gray-500 dark:text-white/66 hover:text-gray-900 dark:hover:text-white">
                   Cancelar
                 </button>
-                <button type="submit" disabled={saving} className="flex-1 rounded-[1.5rem] bg-gradient-to-r from-[#E29BA8] to-[#d48997] px-6 py-4 text-[10px] font-black uppercase tracking-[0.24em] text-white">
-                  {saving ? 'Salvando...' : editingId ? 'Salvar serviço' : 'Criar serviço'}
+                <button type="submit" disabled={saving} className="flex-1 inline-flex items-center justify-center gap-3 rounded-[1.4rem] bg-gradient-to-r from-[#E29BA8] to-[#d48997] text-slate-950 px-6 py-4 text-[10px] font-black uppercase tracking-[0.24em] shadow-[0_16px_35px_-12px_rgba(222,151,165,0.65)] transition-all duration-300 hover:scale-[1.02] disabled:opacity-55">
+                  {saving ? 'Processando...' : editingId ? 'Salvar serviço' : 'Criar serviço'}
                 </button>
               </div>
             </form>
@@ -319,18 +348,22 @@ export default function Servicos() {
   );
 }
 
-function Field({ label, value, onChange, type = 'text', icon, required = false }) {
+function Field({ label, value, onChange, type = 'text', placeholder, icon, required = false }) {
   return (
-    <div>
-      <label className="mb-2 block text-[10px] font-black uppercase tracking-[0.22em] text-white/42">{label}</label>
+    <div className="space-y-2">
+      <label className="block text-[10px] font-black uppercase tracking-[0.22em] text-gray-500 dark:text-white/42">{label}</label>
       <div className="relative">
-        {icon && <span className="absolute left-4 top-1/2 -translate-y-1/2 text-white/28">{icon}</span>}
+        {icon && <span className="absolute left-5 top-1/2 -translate-y-1/2 text-gray-400 dark:text-white/28">{icon}</span>}
         <input
           type={type}
           value={value}
           onChange={(event) => onChange(event.target.value)}
           required={required}
-          className={cn('w-full rounded-[1.25rem] border border-gray-200 dark:border-white/5 bg-[#332832] px-4 py-3 text-sm text-white outline-none placeholder:text-white/28 focus:border-[#e29ba8]/28', icon && 'pl-12')}
+          placeholder={placeholder}
+          className={cn(
+            'w-full rounded-[1.35rem] border border-slate-200 dark:border-white/5 bg-white/40 dark:bg-white/[0.04] px-5 py-4 text-sm font-semibold text-gray-900 dark:text-white outline-none transition placeholder:text-gray-400 dark:placeholder:text-white/25 focus:border-[#e29ba8]/32 focus:bg-white/60 dark:focus:bg-white/[0.06] premium-focus-input',
+            icon && 'pl-14'
+          )}
         />
       </div>
     </div>
@@ -339,19 +372,19 @@ function Field({ label, value, onChange, type = 'text', icon, required = false }
 
 function DurationField({ hours, minutes, onHoursChange, onMinutesChange }) {
   return (
-    <div>
-      <label className="mb-2 block text-[10px] font-black uppercase tracking-[0.22em] text-white/42">Duração</label>
-      <div className="grid grid-cols-2 gap-3 rounded-[1.4rem] border border-gray-200 dark:border-white/5 bg-[#332832] p-3">
-        <select value={hours} onChange={(event) => onHoursChange(event.target.value)} className="rounded-[1rem] border border-gray-200 dark:border-white/5 bg-white dark:bg-[#1a171f] px-4 py-3 text-sm text-white outline-none focus:border-[#e29ba8]/28">
+    <div className="space-y-2">
+      <label className="block text-[10px] font-black uppercase tracking-[0.22em] text-gray-500 dark:text-white/42">Duração</label>
+      <div className="grid grid-cols-2 gap-3 rounded-[1.35rem] border border-slate-200 dark:border-white/5 bg-white/40 dark:bg-white/[0.04] p-3">
+        <select value={hours} onChange={(event) => onHoursChange(event.target.value)} className="rounded-[1rem] border border-slate-200 dark:border-white/5 bg-white dark:bg-[#1a171f] px-4 py-3 text-sm text-gray-900 dark:text-white outline-none focus:border-[#e29ba8]/28 focus:bg-white/60 dark:focus:bg-[#1a171f] premium-focus-input">
           {Array.from({ length: 9 }, (_, index) => (
-            <option key={index} value={index}>
+            <option key={index} value={index} className="bg-white dark:bg-[#1a171f] text-gray-900 dark:text-white">
               {index}h
             </option>
           ))}
         </select>
-        <select value={minutes} onChange={(event) => onMinutesChange(event.target.value)} className="rounded-[1rem] border border-gray-200 dark:border-white/5 bg-white dark:bg-[#1a171f] px-4 py-3 text-sm text-white outline-none focus:border-[#e29ba8]/28">
+        <select value={minutes} onChange={(event) => onMinutesChange(event.target.value)} className="rounded-[1rem] border border-slate-200 dark:border-white/5 bg-white dark:bg-[#1a171f] px-4 py-3 text-sm text-gray-900 dark:text-white outline-none focus:border-[#e29ba8]/28 focus:bg-white/60 dark:focus:bg-[#1a171f] premium-focus-input">
           {[0, 15, 30, 45].map((value) => (
-            <option key={value} value={value}>
+            <option key={value} value={value} className="bg-white dark:bg-[#1a171f] text-gray-900 dark:text-white">
               {value}min
             </option>
           ))}
@@ -363,14 +396,14 @@ function DurationField({ hours, minutes, onHoursChange, onMinutesChange }) {
 
 function InfoPill({ icon, label, value, tone = 'rose' }) {
   return (
-    <div className={cn('rounded-[1.5rem] border px-4 py-4', tone === 'emerald' ? 'border-emerald-300/16 bg-emerald-400/08' : 'border-gray-200 dark:border-white/5 bg-black/14')}>
+    <div className={cn('rounded-[1.75rem] border px-5 py-5', tone === 'emerald' ? 'border-emerald-200/50 dark:border-emerald-500/10 bg-emerald-500/[0.02]' : 'border-slate-200/50 dark:border-white/5 bg-white/30 dark:bg-black/14')}>
       <div className="flex items-center gap-3">
-        <span className={cn('flex h-10 w-10 items-center justify-center rounded-xl', tone === 'emerald' ? 'bg-emerald-400/12 text-emerald-200' : 'bg-[#e29ba8]/10 text-[#efbac2]')}>
+        <span className={cn('flex h-11 w-11 items-center justify-center rounded-xl border', tone === 'emerald' ? 'bg-emerald-400/12 text-emerald-600 dark:text-emerald-200 border-emerald-400/20' : 'bg-[#e29ba8]/10 text-[#d48997] border-[#e29ba8]/20')}>
           {icon}
         </span>
         <div>
-          <p className="text-[10px] font-black uppercase tracking-[0.18em] text-gray-500 dark:text-white/40">{label}</p>
-          <p className="mt-1 text-sm font-semibold text-gray-900 dark:text-white">{value}</p>
+          <p className="text-[9px] font-black uppercase tracking-[0.2em] text-gray-500 dark:text-white/40">{label}</p>
+          <p className="mt-1 text-sm font-semibold text-gray-900 dark:text-white leading-none">{value}</p>
         </div>
       </div>
     </div>

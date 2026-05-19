@@ -321,6 +321,7 @@ model Conversa {
   salaoId     String
   telefone    String
   nomeCliente String?
+  avatarUrl   String?
   historico   Json       @default("[]")
   atendimento String     @default("ia")
   status      String     @default("aberta")

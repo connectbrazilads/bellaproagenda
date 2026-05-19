@@ -159,6 +159,7 @@ export const getConversas = (params) => api.get('/admin/inbox', { params });
 export const getMensagens = (id) => api.get(`/admin/inbox/${id}/mensagens`);
 export const atualizarConversa = (id, data) => api.put(`/admin/inbox/${id}`, data);
 export const responderConversa = (id, texto) => api.post(`/admin/inbox/${id}/responder`, { texto });
+export const responderConversaMidia = (id, data) => api.post(`/admin/inbox/${id}/midia`, data);
 
 export const getRespostasRapidas = () => api.get('/admin/inbox/snippets');
 export const createRespostaRapida = (data) => api.post('/admin/inbox/snippets', data);

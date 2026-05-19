@@ -286,15 +286,117 @@ async function sendEvolutionText(salao, number, text) {
   return { ok: true };
 }
 
+async function fetchEvolutionProfilePictureUrl(salao, number) {
+  const config = resolveEvolutionConfig(salao);
+  if (!config.configured) return '';
+
+  const normalizedNumber = normalizeWhatsappNumber(number);
+  const parseResponse = (response) => String(
+    response?.data?.profilePictureUrl
+    || response?.data?.picture
+    || response?.data?.url
+    || ''
+  ).trim();
+
+  try {
+    const response = await evolutionRequest(config, 'post', `/chat/fetchProfilePictureUrl/${config.instanceName}`, {
+      number: normalizedNumber,
+    });
+
+    return parseResponse(response);
+  } catch {
+    try {
+      const response = await evolutionRequest(
+        config,
+        'get',
+        `/chat/fetchProfilePictureUrl/${config.instanceName}?number=${encodeURIComponent(normalizedNumber)}`
+      );
+      return parseResponse(response);
+    } catch {
+      return '';
+    }
+  }
+}
+
+async function sendEvolutionMedia(
+  salao,
+  number,
+  {
+    media,
+    mediatype = 'document',
+    mimetype = 'application/octet-stream',
+    caption = '',
+    fileName = 'arquivo',
+  } = {}
+) {
+  const config = resolveEvolutionConfig(salao);
+  if (!config.configured) {
+    const error = new Error('WhatsApp nao configurado');
+    error.statusCode = 400;
+    throw error;
+  }
+
+  await evolutionRequest(config, 'post', `/message/sendMedia/${config.instanceName}`, {
+    number: normalizeWhatsappNumber(number),
+    mediatype,
+    mimetype,
+    caption: caption || fileName || 'Arquivo enviado',
+    media,
+    fileName,
+  });
+
+  return { ok: true };
+}
+
+async function sendEvolutionAudio(salao, number, audioInput) {
+  const config = resolveEvolutionConfig(salao);
+  if (!config.configured) {
+    const error = new Error('WhatsApp nao configurado');
+    error.statusCode = 400;
+    throw error;
+  }
+
+  const audio = typeof audioInput === 'string' ? audioInput : audioInput?.audio;
+  const mimetype = typeof audioInput === 'string' ? 'audio/webm' : audioInput?.mimetype || 'audio/webm';
+  const fileName = typeof audioInput === 'string' ? 'audio.webm' : audioInput?.fileName || 'audio.webm';
+
+  try {
+    await evolutionRequest(config, 'post', `/message/sendWhatsAppAudio/${config.instanceName}`, {
+      number: normalizeWhatsappNumber(number),
+      audio,
+      audioMessage: {
+        audio,
+      },
+      options: {
+        encoding: true,
+        presence: 'recording',
+      },
+    });
+  } catch {
+    await sendEvolutionMedia(salao, number, {
+      media: audio,
+      mediatype: 'audio',
+      mimetype,
+      fileName,
+      caption: fileName,
+    });
+  }
+
+  return { ok: true };
+}
+
 module.exports = {
   DEFAULT_WEBHOOK_EVENTS,
   buildWebhookUrl,
   connectEvolutionInstance,
   createEvolutionInstance,
   disconnectEvolutionInstance,
+  fetchEvolutionProfilePictureUrl,
   getEvolutionStatus,
   getGlobalEvolutionApiKey,
   normalizeWhatsappNumber,
   resolveEvolutionConfig,
+  sendEvolutionAudio,
+  sendEvolutionMedia,
   sendEvolutionText,
 };

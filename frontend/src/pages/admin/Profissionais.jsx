@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import {
   Activity,
@@ -35,6 +35,7 @@ import {
 } from '../../services/api';
 import { cn } from '../../lib/utils';
 import ImageUpload from '../../components/ImageUpload';
+import useElementWidth from '../../hooks/useElementWidth';
 
 const DIAS = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sab'];
 
@@ -76,6 +77,7 @@ const EMPTY_FORM = {
 };
 
 export default function Profissionais() {
+  const pageRef = useRef(null);
   const role = localStorage.getItem('salao_user_role');
   const myProfissionalId = localStorage.getItem('salao_user_pid') || '';
   const isScopedProfessional = role === 'profissional' && Boolean(myProfissionalId);
@@ -92,6 +94,11 @@ export default function Profissionais() {
   const [saving, setSaving] = useState(false);
   const [scheduleModal, setScheduleModal] = useState(null);
   const [horarios, setHorarios] = useState([]);
+  const pageWidth = useElementWidth(pageRef, typeof window !== 'undefined' ? window.innerWidth : 1440);
+  const isCompactPage = pageWidth < 1380;
+  const showSummaryCard = pageWidth >= 1480;
+  const showThreeCards = pageWidth >= 1520;
+  const useWideEditorLayout = pageWidth >= 1380;
 
   useEffect(() => {
     loadData();
@@ -272,13 +279,13 @@ export default function Profissionais() {
   }, [isScopedProfessional, myProfissionalId, profissionais]);
 
   return (
-    <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} className="max-w-7xl mx-auto space-y-10 pb-20">
+    <motion.div ref={pageRef} initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} className="max-w-7xl mx-auto space-y-8 lg:space-y-10 pb-20">
       <header className="flex flex-col gap-5 border-b border-gray-200 dark:border-white/5 pb-8">
         <div className="flex items-center gap-3">
           <span className="h-px w-12 bg-[#e29ba8]" />
           <p className="brand-kicker">Curadoria da equipe</p>
         </div>
-        <div className="flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
+        <div className={cn('flex flex-col gap-5', !isCompactPage && 'lg:flex-row lg:items-end lg:justify-between')}>
           <div>
             <h1 className="text-3xl sm:text-5xl font-brand-display text-gray-900 dark:text-white leading-none">
               Elite <span className="brand-text-gradient">Squad</span>
@@ -289,7 +296,7 @@ export default function Profissionais() {
           </div>
 
           <div className="flex flex-wrap items-center gap-4">
-            <div className="hidden rounded-[1.8rem] border border-gray-200 dark:border-white/5 bg-white/[0.03] px-6 py-4 xl:flex items-center gap-4 sm:p-6">
+            <div className={cn('rounded-[1.8rem] border border-gray-200 dark:border-white/5 bg-white/[0.03] px-6 py-4 items-center gap-4 sm:p-6', showSummaryCard ? 'flex' : 'hidden')}>
               <MiniMetric label="Ativos" value={visibleProfessionals.filter((item) => item.ativo).length} />
               <MiniMetric label="Serviços" value={servicosDisponiveis.length} highlight />
             </div>
@@ -315,7 +322,7 @@ export default function Profissionais() {
         </div>
       </header>
 
-      <div className="grid gap-4 sm:p-6 md:grid-cols-2 xl:grid-cols-3">
+      <div className={cn('grid gap-4 sm:p-6 md:grid-cols-2', showThreeCards && 'xl:grid-cols-3')}>
         <AnimatePresence mode="popLayout">
           {visibleProfessionals.map((profissional) => (
             <motion.article
@@ -411,7 +418,7 @@ export default function Profissionais() {
 
       {modalOpen && (
         <div className="fixed inset-0 z-[120] flex items-center justify-center overflow-y-auto overscroll-contain bg-black/82 p-3 backdrop-blur-md sm:p-4">
-          <div className="flex max-h-[calc(100dvh-1.5rem)] w-full max-w-6xl flex-col overflow-hidden rounded-[2.6rem] border border-gray-200 dark:border-white/5 bg-white dark:bg-[#1a171f] lg:flex-row">
+          <div className={cn('flex max-h-[calc(100dvh-1.5rem)] w-full max-w-6xl flex-col overflow-hidden rounded-[2.6rem] border border-gray-200 dark:border-white/5 bg-white dark:bg-[#1a171f]', useWideEditorLayout && 'lg:flex-row')}>
             <aside className="w-full border-b border-gray-200 dark:border-white/5 bg-gray-50 dark:bg-[#16141a] p-4 sm:p-6 lg:w-80 lg:border-b-0 lg:border-r">
               <div className="mb-8 flex items-start justify-between gap-4">
                 <div>
@@ -428,7 +435,7 @@ export default function Profissionais() {
                 </button>
               </div>
 
-              <div className="flex gap-2 overflow-x-auto pb-2 lg:block lg:space-y-2 lg:overflow-visible">
+              <div className={cn('flex gap-2 overflow-x-auto pb-2', useWideEditorLayout && 'lg:block lg:space-y-2 lg:overflow-visible')}>
                 {TABS.map((tab) => {
                   const Icon = tab.icon;
                   const active = activeTab === tab.id;
@@ -463,7 +470,7 @@ export default function Profissionais() {
                       <Field label="Biografia ou especialidade" value={form.bio} onChange={(value) => setForm((prev) => ({ ...prev, bio: value }))} />
                     </div>
 
-                    <div className="grid gap-4 sm:p-6 lg:grid-cols-[minmax(0,1fr)_320px]">
+                    <div className={cn('grid gap-4 sm:p-6', useWideEditorLayout && 'lg:grid-cols-[minmax(0,1fr)_320px]')}>
                       <div className="rounded-[2rem] border border-gray-200 dark:border-white/5 bg-white dark:bg-[#1a171f] p-4 sm:p-6">
                         <p className="text-[10px] font-black uppercase tracking-[0.22em] text-[#efbac2]">Categorias profissionais</p>
                         <h3 className="mt-3 text-3xl font-brand-display text-gray-900 dark:text-white">Defina como esta pessoa aparece no salão</h3>

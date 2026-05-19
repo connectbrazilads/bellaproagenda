@@ -37,6 +37,7 @@ import {
 import { Area, AreaChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
 import { cn, downloadCsv, formatDateInput, getStartOfMonthInput } from '../../lib/utils';
 import { getEffectiveActionPermissions, readStoredActionPermissions } from '../../lib/permissions';
+import useElementWidth from '../../hooks/useElementWidth';
 
 function formatMoney(value) {
   return Number(value || 0).toLocaleString('pt-BR', {
@@ -202,6 +203,7 @@ function printHtml(title, body) {
 }
 
 export default function Financeiro() {
+  const pageRef = useRef(null);
   const [data, setData] = useState(null);
   const [caixaAtual, setCaixaAtual] = useState(null);
   const [caixaHistorico, setCaixaHistorico] = useState([]);
@@ -230,6 +232,9 @@ export default function Financeiro() {
   const equipeDesktopRef = useRef(null);
   const equipeMobileRef = useRef(null);
   const hydratedLayoutKeyRef = useRef('');
+  const pageWidth = useElementWidth(pageRef, typeof window !== 'undefined' ? window.innerWidth : 1440);
+  const showDesktopLayout = pageWidth >= 1320;
+  const showWideDesktopLayout = pageWidth >= 1500;
 
   const userId = localStorage.getItem('salao_user_id') || '';
   const role = localStorage.getItem('salao_user_role') || 'gestor';
@@ -257,6 +262,12 @@ export default function Financeiro() {
     if (!mobileLayoutHydrated || hydratedLayoutKeyRef.current !== mobileLayoutStorageKey) return;
     localStorage.setItem(mobileLayoutStorageKey, JSON.stringify(mobileLayout));
   }, [mobileLayout, mobileLayoutHydrated, mobileLayoutStorageKey]);
+
+  useEffect(() => {
+    if (showDesktopLayout) {
+      setShowMobileLayoutEditor(false);
+    }
+  }, [showDesktopLayout]);
 
   useEffect(() => {
     carregar();
@@ -288,8 +299,7 @@ export default function Financeiro() {
   }
 
   function scrollToEquipe() {
-    const isMobile = window.innerWidth < 1024;
-    const target = isMobile ? equipeMobileRef.current : equipeDesktopRef.current;
+    const target = showDesktopLayout ? equipeDesktopRef.current : equipeMobileRef.current;
     target?.scrollIntoView({ behavior: 'smooth', block: 'start' });
   }
 
@@ -913,7 +923,7 @@ export default function Financeiro() {
   }
 
   return (
-    <div className="mx-auto flex max-w-7xl flex-col gap-8 pb-16">
+    <div ref={pageRef} className="mx-auto flex max-w-7xl flex-col gap-6 pb-16 lg:gap-8">
       <section className="flex flex-col gap-6 rounded-[34px] border border-white/8 bg-[rgba(28,23,31,0.92)] p-6 shadow-[0_30px_80px_rgba(0,0,0,0.32)] lg:flex-row lg:items-start lg:justify-between lg:p-8">
         <div className="max-w-3xl space-y-5">
           <div className="flex items-center gap-3 text-[11px] font-semibold uppercase tracking-[0.42em] text-[#e99ba8]">
@@ -934,7 +944,10 @@ export default function Financeiro() {
           <button
             type="button"
             onClick={() => setShowMobileLayoutEditor(true)}
-            className="inline-flex min-h-[52px] items-center justify-center gap-2 rounded-full border border-white/8 px-5 text-sm font-semibold uppercase tracking-[0.18em] text-[#c7adb4] transition hover:border-[rgba(233,155,168,0.18)] hover:text-[#faf7f6] lg:hidden"
+            className={cn(
+              'inline-flex min-h-[52px] items-center justify-center gap-2 rounded-full border border-white/8 px-5 text-sm font-semibold uppercase tracking-[0.18em] text-[#c7adb4] transition hover:border-[rgba(233,155,168,0.18)] hover:text-[#faf7f6]',
+              showDesktopLayout && 'hidden'
+            )}
           >
             <SlidersHorizontal className="h-4 w-4" />
             Personalizar
@@ -966,8 +979,8 @@ export default function Financeiro() {
         </div>
       </section>
 
-      {showMobileLayoutEditor ? (
-        <div className="fixed inset-0 z-50 flex items-end justify-center bg-[rgba(9,6,10,0.72)] px-3 py-6 lg:hidden">
+      {showMobileLayoutEditor && !showDesktopLayout ? (
+        <div className="fixed inset-0 z-50 flex items-end justify-center bg-[rgba(9,6,10,0.72)] px-3 py-6">
           <div className="max-h-[88vh] w-full max-w-xl overflow-hidden rounded-[32px] border border-white/10 bg-[rgba(28,23,31,0.98)] shadow-[0_30px_90px_rgba(0,0,0,0.45)]">
             <div className="flex items-start justify-between gap-4 border-b border-white/8 p-6">
               <div>
@@ -1059,7 +1072,8 @@ export default function Financeiro() {
         </div>
       ) : null}
 
-      <div className="space-y-4 lg:hidden">
+      {!showDesktopLayout ? (
+      <div className="space-y-4">
         {visibleMobileModules.length ? (
           visibleMobileModules.map((item) => <div key={item.id}>{renderMobileModule(item.id)}</div>)
         ) : (
@@ -1076,16 +1090,16 @@ export default function Financeiro() {
           </div>
         )}
       </div>
-
-      <div className="hidden lg:flex lg:flex-col lg:gap-8">
-      <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+      ) : (
+      <div className="flex flex-col gap-8">
+      <section className={cn('grid gap-4 md:grid-cols-2', showWideDesktopLayout ? 'xl:grid-cols-4' : 'xl:grid-cols-2')}>
         <StatCard label="Receita bruta" value={data?.totalBruto} icon={<DollarSign />} tone="rose" />
         <StatCard label="Comissoes" value={data?.totalComissoes} icon={<Users />} tone="gold" />
         <StatCard label="Despesas" value={data?.totalDespesas} icon={<TrendingDown />} tone="ink" />
         <StatCard label="Lucro liquido" value={data?.lucroLiquido} icon={<Wallet />} tone="green" />
       </section>
 
-      <section className="grid gap-6 xl:grid-cols-[minmax(0,1.25fr),420px]">
+      <section className={cn('grid gap-6', showWideDesktopLayout && 'xl:grid-cols-[minmax(0,1.25fr),420px]')}>
         <div className="rounded-[32px] border border-white/8 bg-[rgba(41,31,37,0.94)] p-6 shadow-[0_24px_60px_rgba(0,0,0,0.24)] lg:p-8">
           <div className="mb-8 flex items-center justify-between">
             <div>
@@ -1195,7 +1209,7 @@ export default function Financeiro() {
           </div>
         </div>
 
-        <div className="grid gap-3 md:grid-cols-3 xl:grid-cols-7">
+        <div className={cn('grid gap-3 md:grid-cols-3', showWideDesktopLayout ? 'xl:grid-cols-7' : 'xl:grid-cols-4')}>
           <MiniResumo label="Turnos" value={caixaRelatorioDiario?.consolidado?.totalTurnos} plain />
           <MiniResumo label="Recebido" value={caixaRelatorioDiario?.consolidado?.totalRecebido} />
           <MiniResumo label="Dinheiro" value={caixaRelatorioDiario?.consolidado?.totalDinheiro} />
@@ -1206,7 +1220,7 @@ export default function Financeiro() {
         </div>
       </section>
 
-      <section className="grid gap-6 xl:grid-cols-[minmax(0,1.1fr),minmax(0,0.9fr)]">
+      <section className={cn('grid gap-6', showWideDesktopLayout && 'xl:grid-cols-[minmax(0,1.1fr),minmax(0,0.9fr)]')}>
         <div className="rounded-[32px] border border-white/8 bg-[rgba(41,31,37,0.94)] p-6 shadow-[0_24px_60px_rgba(0,0,0,0.24)] lg:p-8">
           <div className="mb-8 flex items-center gap-3">
             <ShieldCheck className="h-5 w-5 text-[#f7c1b6]" />
@@ -1218,7 +1232,7 @@ export default function Financeiro() {
 
           {caixaAtual ? (
             <div className="space-y-6">
-              <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-6">
+              <div className={cn('grid gap-3 sm:grid-cols-2', showWideDesktopLayout ? 'xl:grid-cols-6' : 'xl:grid-cols-3')}>
                 <MiniResumo label="Fundo inicial" value={caixaAtual.fundoInicial} />
                 <MiniResumo label="Dinheiro" value={caixaAtual.resumo?.totalDinheiro} />
                 <MiniResumo label="Recebido" value={caixaAtual.resumo?.totalRecebido} />
@@ -1354,7 +1368,7 @@ export default function Financeiro() {
                     </span>
                   </div>
 
-                  <div className="mt-4 grid grid-cols-2 gap-3 xl:grid-cols-3">
+                  <div className={cn('mt-4 grid grid-cols-2 gap-3', showWideDesktopLayout && 'xl:grid-cols-3')}>
                     <MiniResumo label="Recebido" value={sessao.resumo?.totalRecebido} />
                     <MiniResumo label="Sangrias" value={getSangriasOperacionais(sessao.resumo)} />
                     <MiniResumo label="Adiant. prof." value={sessao.resumo?.totalAdiantamentosProfissionais} />
@@ -1446,6 +1460,7 @@ export default function Financeiro() {
         </div>
       </section>
       </div>
+      )}
     </div>
   );
 }

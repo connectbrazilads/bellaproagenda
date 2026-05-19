@@ -95,6 +95,19 @@ app.use(express.urlencoded({ limit: '50mb', extended: true }));
 
 app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
 
+function getPublicApiBaseUrl(req) {
+  const explicit = String(
+    process.env.BACKEND_PUBLIC_URL
+      || process.env.BACKEND_WEBHOOK_URL
+      || process.env.API_PUBLIC_URL
+      || process.env.API_URL
+      || ''
+  ).trim().replace(/\/+$/, '');
+
+  if (explicit) return explicit;
+  return `${req.protocol}://${req.get('host')}`;
+}
+
 app.post('/api/upload', authenticate, (req, res) => {
   upload.single('file')(req, res, (error) => {
     if (error) {
@@ -102,7 +115,7 @@ app.post('/api/upload', authenticate, (req, res) => {
     }
 
     if (!req.file) return res.status(400).json({ error: 'Nenhum arquivo enviado' });
-    const url = `${req.protocol}://${req.get('host')}/uploads/${req.file.filename}`;
+    const url = `${getPublicApiBaseUrl(req)}/uploads/${req.file.filename}`;
     return res.json({ url });
   });
 });

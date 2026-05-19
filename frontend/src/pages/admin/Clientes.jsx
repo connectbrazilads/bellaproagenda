@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import {
   Calendar,
@@ -20,6 +20,7 @@ import {
   getHistoricoCliente,
 } from '../../services/api';
 import { cn } from '../../lib/utils';
+import useElementWidth from '../../hooks/useElementWidth';
 
 const STATUS_MAP = {
   ativo: {
@@ -67,6 +68,7 @@ function initials(nome) {
 }
 
 export default function Clientes() {
+  const pageRef = useRef(null);
   const [busca, setBusca] = useState('');
   const [clientes, setClientes] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -81,6 +83,9 @@ export default function Clientes() {
     'Ola! Sentimos sua falta aqui na BellaPro. Que tal agendar um horario para esta semana? Use o cupom VOLTA10 para 10% de desconto.'
   );
   const [novoCliente, setNovoCliente] = useState(EMPTY_CLIENTE);
+  const pageWidth = useElementWidth(pageRef, typeof window !== 'undefined' ? window.innerWidth : 1440);
+  const isCompactPage = pageWidth < 1260;
+  const isTightPage = pageWidth < 980;
 
   async function carregarClientes() {
     setLoading(true);
@@ -163,8 +168,11 @@ export default function Clientes() {
   );
 
   return (
-    <div className="mx-auto flex max-w-7xl flex-col gap-4 md:p-8 pb-16">
-      <section className="flex flex-col gap-4 rounded-[2rem] border border-gray-200 bg-white/90 p-4 shadow-[0_24px_60px_rgba(0,0,0,0.12)] dark:border-white/5 dark:bg-[#16141a]/95 dark:shadow-[0_30px_80px_rgba(0,0,0,0.32)] sm:p-6 lg:flex-row lg:items-start lg:justify-between lg:p-8">
+    <div ref={pageRef} className="mx-auto flex max-w-7xl flex-col gap-4 pb-16 md:gap-5">
+      <section className={cn(
+        'flex flex-col gap-4 rounded-[2rem] border border-gray-200 bg-white/90 p-4 shadow-[0_24px_60px_rgba(0,0,0,0.12)] dark:border-white/5 dark:bg-[#16141a]/95 dark:shadow-[0_30px_80px_rgba(0,0,0,0.32)] sm:p-6 lg:p-8',
+        !isCompactPage && 'lg:flex-row lg:items-start lg:justify-between'
+      )}>
         <div className="max-w-3xl space-y-5">
           <div className="flex items-center gap-3 text-[11px] font-semibold uppercase tracking-[0.42em] text-[#E29BA8]">
             <Users className="h-4 w-4" />
@@ -202,7 +210,10 @@ export default function Clientes() {
 
       <form
         onSubmit={pesquisar}
-        className="flex flex-col gap-3 rounded-[2rem] border border-gray-200 dark:border-white/5 bg-white dark:bg-[#1a171f]/95 p-3 shadow-[0_24px_60px_rgba(0,0,0,0.24)] sm:flex-row"
+        className={cn(
+          'flex flex-col gap-3 rounded-[2rem] border border-gray-200 dark:border-white/5 bg-white dark:bg-[#1a171f]/95 p-3 shadow-[0_24px_60px_rgba(0,0,0,0.24)]',
+          !isTightPage && 'sm:flex-row'
+        )}
       >
         <div className="relative flex-1">
           <Search className="absolute left-5 top-1/2 h-5 w-5 -translate-y-1/2 text-[#806871]" />
@@ -241,7 +252,7 @@ export default function Clientes() {
           </p>
         </div>
       ) : (
-        <div className="grid gap-4 sm:p-6">
+        <div className="grid gap-4 sm:p-4 lg:gap-5">
           {clientes.map((cliente) => {
             const status = STATUS_MAP[cliente.status] || STATUS_MAP.sem_visita;
             const isExpanded = expandido === cliente.id || expandido === cliente.telefone;
@@ -258,7 +269,10 @@ export default function Clientes() {
                 <button
                   type="button"
                   onClick={() => setExpandido(isExpanded ? null : cliente.id || cliente.telefone)}
-                  className="flex w-full flex-col gap-4 sm:p-6 text-left lg:flex-row lg:items-center lg:justify-between"
+                  className={cn(
+                    'flex w-full flex-col gap-4 text-left',
+                    !isCompactPage && 'lg:flex-row lg:items-center lg:justify-between'
+                  )}
                 >
                   <div className="flex items-center gap-5">
                     <div className="relative">
@@ -289,16 +303,20 @@ export default function Clientes() {
                     </div>
                   </div>
 
-                  <div className="grid grid-cols-3 gap-4 border-t border-gray-200 dark:border-white/5 pt-5 lg:border-l lg:border-t-0 lg:pl-6 lg:pt-0">
-                    <div className="text-center">
+                  <div className={cn(
+                    'grid gap-4 border-t border-gray-200 pt-5 dark:border-white/5',
+                    isTightPage ? 'grid-cols-2' : 'grid-cols-3',
+                    !isCompactPage && 'lg:border-l lg:border-t-0 lg:pl-6 lg:pt-0'
+                  )}>
+                    <div className={cn(isTightPage ? 'text-left' : 'text-center')}>
                       <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-[#9f848d]">Visitas</p>
                       <p className="mt-2 text-2xl font-semibold text-[#2f2430] dark:text-[#faf7f6]">{cliente.totalVisitas || 0}</p>
                     </div>
-                    <div className="text-center">
+                    <div className={cn(isTightPage ? 'text-left' : 'text-center')}>
                       <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-[#9f848d]">LTV</p>
                       <p className="mt-2 text-2xl font-semibold text-[#f7c1b6]">{moeda(cliente.totalGasto)}</p>
                     </div>
-                    <div className="text-right">
+                    <div className={cn(isTightPage ? 'col-span-2 text-left' : 'text-right')}>
                       <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-[#E29BA8]">Ver perfil</p>
                     </div>
                   </div>
@@ -427,7 +445,7 @@ export default function Clientes() {
                   <span className="mb-3 block text-[11px] font-semibold uppercase tracking-[0.26em] text-[#8a7079] dark:text-[#c7adb4]">
                     Publico alvo
                   </span>
-                  <div className="grid gap-3 sm:grid-cols-3">
+                  <div className={cn('grid gap-3', !isTightPage && 'sm:grid-cols-3')}>
                     {['inativo', 'perdido', 'todos'].map((item) => (
                       <button
                         key={item}
@@ -529,7 +547,10 @@ export default function Clientes() {
                 </div>
               </div>
 
-              <div className="grid grid-cols-3 border-b border-gray-200 dark:border-white/5 bg-[rgba(255,255,255,0.02)]">
+              <div className={cn(
+                'grid border-b border-gray-200 bg-[rgba(255,255,255,0.02)] dark:border-white/5',
+                isTightPage ? 'grid-cols-1 sm:grid-cols-3' : 'grid-cols-3'
+              )}>
                 <div className="p-5 text-center">
                   <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-[#9f848d]">LTV</p>
                   <p className="mt-2 text-2xl font-semibold text-[#f7c1b6]">{moeda(clienteExpandido.totalGasto)}</p>

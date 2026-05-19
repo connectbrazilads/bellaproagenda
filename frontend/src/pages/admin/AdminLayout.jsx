@@ -136,6 +136,7 @@ function getAlertaAgendaDestino(alerta) {
 export default function AdminLayout() {
   const [menuOpen, setMenuOpen] = useState(false);
   const [collapsed, setCollapsed] = useState(false);
+  const [viewportWidth, setViewportWidth] = useState(() => (typeof window === 'undefined' ? 1440 : window.innerWidth));
   const [alertasOpen, setAlertasOpen] = useState(false);
   const [alertas, setAlertas] = useState([]);
   const [alertasUnread, setAlertasUnread] = useState(0);
@@ -153,6 +154,25 @@ export default function AdminLayout() {
   const userPermissions = getEffectivePermissions(role, readStoredPermissions());
   const userActionPermissions = getEffectiveActionPermissions(role, readStoredActionPermissions());
   const podeVerAlertas = ['agenda', 'dashboard', 'agendamentos'].some((permission) => userPermissions.includes(permission));
+  const shouldForceCollapse = viewportWidth < 1440;
+  const effectiveCollapsed = collapsed || shouldForceCollapse;
+  const canToggleSidebar = viewportWidth >= 1440;
+
+  useEffect(() => {
+    function handleResize() {
+      setViewportWidth(window.innerWidth);
+    }
+
+    handleResize();
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
+  useEffect(() => {
+    if (viewportWidth >= 1024) {
+      setMenuOpen(false);
+    }
+  }, [viewportWidth]);
 
   useEffect(() => {
     setMenuOpen(false);
@@ -363,16 +383,16 @@ export default function AdminLayout() {
   return (
     <div className={cn(
       "admin-panel flex min-h-screen md:h-screen font-sans overflow-x-hidden md:overflow-hidden",
-      dark ? "bg-[#16151b] text-white" : "bg-[#faf7f6] text-slate-900"
+      dark ? "bg-[#121116] text-white" : "bg-[#faf7f6] text-slate-900"
     )} style={{ '--admin-mobile-header-height': '73px' }}>
-      {/* Sidebar â€” desktop */}
+      {/* Sidebar — desktop */}
       <aside className={cn(
-        "hidden md:flex flex-col transition-all duration-500 ease-in-out relative group/sidebar",
-        collapsed ? "w-24" : "w-72",
-        dark ? "bg-slate-900/70 backdrop-blur-xl border-r border-gray-200 dark:border-white/5" : "bg-white/88 backdrop-blur-xl border-r border-slate-200/80 shadow-[0_24px_60px_-32px_rgba(15,23,42,0.22)]"
+        "hidden lg:flex flex-col transition-all duration-500 ease-in-out relative group/sidebar",
+        effectiveCollapsed ? "w-24" : "w-72",
+        dark ? "bg-slate-950/40 backdrop-blur-2xl border-r border-white/5" : "bg-white/70 backdrop-blur-2xl border-r border-[#edd7d4] shadow-[0_24px_60px_-32px_rgba(140,107,117,0.15)]"
       )}>
         {/* Toggle Button */}
-        <div className="absolute -right-4 top-24 z-50">
+        <div className={cn("absolute -right-4 top-24 z-50", !canToggleSidebar && "hidden")}>
           <button 
             onClick={() => setCollapsed(!collapsed)}
             className={cn(
@@ -382,10 +402,10 @@ export default function AdminLayout() {
                 : "bg-white border-slate-300 text-slate-500 hover:text-violet-700 hover:border-violet-300 shadow-xl shadow-slate-200/70",
               "scale-100 active:scale-90"
             )}
-            title={collapsed ? "Expandir Menu" : "Recolher Menu"}
+            title={effectiveCollapsed ? "Expandir Menu" : "Recolher Menu"}
           >
             <motion.div
-              animate={{ rotate: collapsed ? 180 : 0 }}
+              animate={{ rotate: effectiveCollapsed ? 180 : 0 }}
               transition={{ type: "spring", stiffness: 300, damping: 20 }}
             >
               <ChevronLeft size={16} />
@@ -393,10 +413,10 @@ export default function AdminLayout() {
           </button>
         </div>
 
-        <div className={cn("p-4 md:p-8", collapsed && "px-4 flex justify-center")}>
-          <div className={cn("flex items-center justify-between", collapsed ? "flex-col gap-4 sm:p-6" : "mb-2")}>
-            <div className={cn("flex items-center gap-3", collapsed && "flex-col")}>
-              {collapsed ? (
+        <div className={cn("p-4 md:p-6 xl:p-8", effectiveCollapsed && "px-4 flex justify-center")}>
+          <div className={cn("flex items-center justify-between", effectiveCollapsed ? "flex-col gap-4 sm:p-6" : "mb-2")}>
+            <div className={cn("flex items-center gap-3", effectiveCollapsed && "flex-col")}>
+              {effectiveCollapsed ? (
                 <div className="flex h-10 w-10 items-center justify-center rounded-xl border border-[#e7c4c8] bg-[linear-gradient(180deg,#fff8f7_0%,#f9e0dd_100%)] text-[#a45f69] shadow-[0_18px_38px_-22px_rgba(226,155,168,0.9)]">
                   <span className="font-brand-display text-2xl leading-none">B</span>
                 </div>
@@ -404,7 +424,7 @@ export default function AdminLayout() {
                 <BrandLogo compact variant={dark ? 'darkBg' : 'lightBg'} />
               )}
             </div>
-            <div className={cn("flex items-center gap-2", collapsed && "flex-col")}>
+            <div className={cn("flex items-center gap-2", effectiveCollapsed && "flex-col")}>
               {podeVerAlertas && (
                 <button
                   onClick={() => {
@@ -441,7 +461,7 @@ export default function AdminLayout() {
         <nav className="flex-1 px-4 space-y-8 overflow-y-auto custom-scrollbar pb-10">
           {visibleGroups.map((group) => (
             <div key={group.label} className="space-y-2">
-              {!collapsed && (
+              {!effectiveCollapsed && (
                 <h3 className="px-5 text-[9px] font-black uppercase tracking-[0.3em] text-gray-400/80 dark:text-gray-400/30">
                   {group.label}
                 </h3>
@@ -452,11 +472,11 @@ export default function AdminLayout() {
                     key={item.to}
                     to={item.to}
                     end={item.end}
-                    title={collapsed ? item.label : ""}
+                    title={effectiveCollapsed ? item.label : ""}
                     className={({ isActive }) =>
                       cn(
                         "flex items-center rounded-2xl transition-all duration-300 group relative",
-                        collapsed ? "justify-center p-4" : "gap-4 px-5 py-3",
+                        effectiveCollapsed ? "justify-center p-4" : "gap-4 px-5 py-3",
                         isActive
                             ? dark
                             ? "bg-gradient-to-r from-[#d68c99] to-[#b26a78] text-white shadow-xl shadow-[#d68c9955] translate-x-1"
@@ -469,7 +489,7 @@ export default function AdminLayout() {
                     }
                   >
                     <item.icon className={cn("w-4 h-4 flex-shrink-0", "transition-transform group-hover:scale-110")} />
-                    {!collapsed && (
+                    {!effectiveCollapsed && (
                       <span className="text-[10px] font-black uppercase tracking-widest whitespace-nowrap">
                         {item.label}
                       </span>
@@ -484,23 +504,23 @@ export default function AdminLayout() {
         <div className="p-4 sm:p-6 border-t border-gray-200 dark:border-white/5">
           <button
             onClick={logout}
-            title={collapsed ? "Encerrar Sessao" : ""}
+            title={effectiveCollapsed ? "Encerrar Sessao" : ""}
             className={cn(
               "w-full flex items-center transition-all rounded-2xl text-[10px] font-black uppercase tracking-[0.2em]",
-              collapsed ? "justify-center p-4" : "gap-3 px-5 py-4",
+              effectiveCollapsed ? "justify-center p-4" : "gap-3 px-5 py-4",
               dark ? "text-slate-500 hover:text-red-400 hover:bg-red-400/10" : "text-slate-600 hover:text-red-600 hover:bg-red-50"
             )}
           >
             <LogOut className="w-4 h-4 flex-shrink-0" />
-            {!collapsed && <span>Encerrar Sessao</span>}
+            {!effectiveCollapsed && <span>Encerrar Sessao</span>}
           </button>
         </div>
       </aside>
 
-      {/* Topbar â€” mobile */}
+      {/* Topbar — mobile */}
       <div className={cn(
-        "md:hidden fixed top-0 left-0 right-0 z-[70] flex items-center justify-between px-6 py-4 border-b shadow-sm",
-        dark ? "bg-[#17151bdd] backdrop-blur-xl border-gray-200 dark:border-white/5" : "bg-[#fffaf9e6] backdrop-blur-xl border-[#f0dfdc]"
+        "lg:hidden fixed top-0 left-0 right-0 z-[70] flex items-center justify-between px-4 py-4 sm:px-6 border-b",
+        dark ? "bg-[#16151bdd] backdrop-blur-xl border-white/5" : "bg-[#fffaf9d9] backdrop-blur-xl border-[#f0dfdc] shadow-[0_4px_30px_rgba(226,155,168,0.03)]"
       )}>
         <div className="flex items-center gap-3">
           {isSubPage && (
@@ -553,7 +573,7 @@ export default function AdminLayout() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="md:hidden fixed inset-0 bg-black/60 z-[75] backdrop-blur-sm" 
+            className="lg:hidden fixed inset-0 bg-black/60 z-[75] backdrop-blur-sm" 
             onClick={closeMobileMenu}
           >
             <motion.div 
@@ -563,7 +583,7 @@ export default function AdminLayout() {
               transition={{ type: "spring", damping: 25, stiffness: 200 }}
               className={cn(
                 "w-72 h-full shadow-2xl overflow-y-auto overscroll-contain px-4 py-8 z-[80]",
-                dark ? "bg-slate-900 border-r border-gray-200 dark:border-white/5" : "bg-white/95 backdrop-blur-xl border-r border-slate-200/80"
+                dark ? "bg-slate-950/95 backdrop-blur-2xl border-r border-white/5" : "bg-white/95 backdrop-blur-2xl border-r border-[#edd7d4]"
               )} 
               onClick={(e) => e.stopPropagation()}
             >
@@ -738,7 +758,7 @@ export default function AdminLayout() {
 
       <main className="flex-1 min-h-0 flex flex-col overflow-hidden relative">
         <div
-          className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden px-4 pb-8 pt-[calc(var(--admin-mobile-header-height,73px)+1rem)] md:px-6 md:pb-10 md:pt-8 xl:px-12 xl:pb-12 xl:pt-12 custom-scrollbar"
+          className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden px-4 pb-8 pt-[calc(var(--admin-mobile-header-height,73px)+1rem)] md:px-5 md:pb-10 md:pt-6 lg:px-6 lg:pt-7 xl:px-8 xl:pb-12 xl:pt-8 2xl:px-10 2xl:pt-10 custom-scrollbar"
         >
           <Outlet />
         </div>

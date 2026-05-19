@@ -37,6 +37,7 @@ import {
 import ImageUpload from '../../components/ImageUpload';
 import SnippetsConfig from '../../components/SnippetsConfig';
 import { cn } from '../../lib/utils';
+import useElementWidth from '../../hooks/useElementWidth';
 import {
   ACTION_PERMISSION_LABELS,
   DEFAULT_ROLE_ACTION_PERMISSIONS,
@@ -119,20 +120,24 @@ const INITIAL_USER = {
 };
 
 export default function Configuracoes() {
+  const pageRef = useRef(null);
   const [activeTab, setActiveTab] = useState('salao');
+  const pageWidth = useElementWidth(pageRef, typeof window !== 'undefined' ? window.innerWidth : 1440);
+  const showRail = pageWidth >= 1320;
 
   return (
     <motion.div
+      ref={pageRef}
       initial={{ opacity: 0, y: 16 }}
       animate={{ opacity: 1, y: 0 }}
-      className="max-w-7xl mx-auto space-y-10 pb-20"
+      className="max-w-7xl mx-auto space-y-8 lg:space-y-10 pb-20"
     >
       <header className="flex flex-col gap-5 border-b border-gray-200 dark:border-white/5 pb-8">
         <div className="flex items-center gap-3">
           <span className="h-2 w-2 rounded-full bg-[#e29ba8]" />
           <p className="brand-kicker">Centro de comando</p>
         </div>
-        <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
+        <div className={cn('flex flex-col gap-4', showRail && 'lg:flex-row lg:items-end lg:justify-between')}>
           <div>
             <h1 className="text-3xl sm:text-5xl font-brand-display text-gray-900 dark:text-white leading-none">
               Configurações <span className="brand-text-gradient">BellaPro</span>
@@ -144,38 +149,41 @@ export default function Configuracoes() {
         </div>
       </header>
 
-      <div className="grid gap-4 md:p-8 lg:grid-cols-[280px_minmax(0,1fr)]">
-        <aside className="space-y-3">
-          {TABS.map((tab) => {
-            const Icon = tab.icon;
-            const active = activeTab === tab.id;
-            return (
-              <button
-                key={tab.id}
-                type="button"
-                onClick={() => setActiveTab(tab.id)}
-                className={cn(
-                  'flex w-full items-center justify-between rounded-[1.8rem] border px-5 py-4 text-left transition-all',
-                  active
-                    ? 'border-[#e29ba8]/40 bg-[#2f242d] text-white shadow-[0_22px_50px_-28px_rgba(226,155,168,0.55)]'
-                    : 'border-gray-200 dark:border-white/5 bg-white/[0.03] text-white/68 hover:border-[#e29ba8]/20 hover:bg-white/[0.045]'
-                )}
-              >
-                <div className="flex items-center gap-4">
-                  <span
-                    className={cn(
-                      'flex h-11 w-11 items-center justify-center rounded-2xl',
-                      active ? 'bg-[#e29ba8] text-[#1a1a1f]' : 'bg-white/[0.06] text-[#efbcc4]'
-                    )}
-                  >
-                    <Icon size={18} />
-                  </span>
-                  <span className="text-[11px] font-black uppercase tracking-[0.24em]">{tab.label}</span>
-                </div>
-                <ChevronRight size={16} className={active ? 'text-[#efb9c2]' : 'text-gray-400 dark:text-white/24'} />
-              </button>
-            );
-          })}
+      <div className={cn('grid gap-4 md:p-8', showRail && 'lg:grid-cols-[280px_minmax(0,1fr)]')}>
+        <aside className={cn(showRail ? 'space-y-3' : 'overflow-x-auto custom-scrollbar pb-2')}>
+          <div className={cn(showRail ? 'space-y-3' : 'flex min-w-max gap-3')}>
+            {TABS.map((tab) => {
+              const Icon = tab.icon;
+              const active = activeTab === tab.id;
+              return (
+                <button
+                  key={tab.id}
+                  type="button"
+                  onClick={() => setActiveTab(tab.id)}
+                  className={cn(
+                    'flex items-center justify-between rounded-[1.8rem] border px-5 py-4 text-left transition-all',
+                    showRail ? 'w-full' : 'min-w-[220px] flex-shrink-0',
+                    active
+                      ? 'border-[#e29ba8]/40 bg-[#2f242d] text-white shadow-[0_22px_50px_-28px_rgba(226,155,168,0.55)]'
+                      : 'border-gray-200 dark:border-white/5 bg-white/[0.03] text-white/68 hover:border-[#e29ba8]/20 hover:bg-white/[0.045]'
+                  )}
+                >
+                  <div className="flex items-center gap-4">
+                    <span
+                      className={cn(
+                        'flex h-11 w-11 items-center justify-center rounded-2xl',
+                        active ? 'bg-[#e29ba8] text-[#1a1a1f]' : 'bg-white/[0.06] text-[#efbcc4]'
+                      )}
+                    >
+                      <Icon size={18} />
+                    </span>
+                    <span className="text-[11px] font-black uppercase tracking-[0.24em]">{tab.label}</span>
+                  </div>
+                  <ChevronRight size={16} className={active ? 'text-[#efb9c2]' : 'text-gray-400 dark:text-white/24'} />
+                </button>
+              );
+            })}
+          </div>
         </aside>
 
         <main>
@@ -726,7 +734,7 @@ function SecaoUsuarios() {
       </SectionCard>
 
       <SectionCard title="Usuários ativos" icon={<Users size={18} />}>
-        <div className="overflow-hidden rounded-[2rem] border border-gray-200 dark:border-white/5">
+        <div className="overflow-x-auto rounded-[2rem] border border-gray-200 dark:border-white/5 custom-scrollbar">
           <table className="w-full text-left">
             <thead className="bg-white/[0.04]">
               <tr>
@@ -924,12 +932,12 @@ function SecaoSeguranca() {
 
 function SectionCard({ title, icon, children }) {
   return (
-    <div className="rounded-[2.6rem] border border-gray-200 dark:border-white/5 bg-white dark:bg-[#1a171f] p-4 md:p-8 shadow-[0_34px_80px_-40px_rgba(0,0,0,0.85)] md:p-10">
+    <div className="rounded-[2.6rem] border border-slate-200/50 dark:border-white/5 bg-white/80 dark:bg-[#18161d]/30 backdrop-blur-2xl p-4 md:p-8 shadow-[0_24px_50px_-32px_rgba(140,107,117,0.15)] dark:shadow-none md:p-10">
       <div className="mb-8 flex items-center gap-4">
-        <div className="flex h-14 w-14 items-center justify-center rounded-[1.4rem] bg-white dark:bg-[#1a171f] text-[#efbac2]">
+        <div className="flex h-14 w-14 items-center justify-center rounded-[1.4rem] bg-white/90 dark:bg-white/[0.04] border border-slate-200/40 dark:border-white/5 text-[#efbac2] shadow-sm">
           {icon}
         </div>
-        <h2 className="text-3xl font-brand-display text-gray-900 dark:text-white">{title}</h2>
+        <h2 className="text-3xl font-brand-display text-gray-900 dark:text-white leading-none">{title}</h2>
       </div>
       {children}
     </div>
@@ -941,19 +949,19 @@ function Field({ label, value, onChange, type = 'text', placeholder, icon, helpe
     <div className="space-y-3">
       <label className="text-[10px] font-black uppercase tracking-[0.24em] text-gray-500 dark:text-white/44">{label}</label>
       <div className="relative">
-        {icon && <span className="absolute left-5 top-1/2 -translate-y-1/2 text-white/30">{icon}</span>}
+        {icon && <span className="absolute left-5 top-1/2 -translate-y-1/2 text-gray-400 dark:text-white/30">{icon}</span>}
         <input
           type={type}
           value={value || ''}
           onChange={(event) => onChange(event.target.value)}
           placeholder={placeholder}
           className={cn(
-            'w-full rounded-[1.35rem] border border-gray-200 dark:border-white/5 bg-[#3a2c35] px-5 py-4 text-sm font-semibold text-white outline-none transition placeholder:text-white/25 focus:border-[#e29ba8]/32 focus:bg-[#3f303a]',
+            'w-full rounded-[1.35rem] border border-gray-200 dark:border-white/5 bg-white/40 dark:bg-white/[0.04] px-5 py-4 text-sm font-semibold text-gray-900 dark:text-white outline-none transition placeholder:text-gray-400 dark:placeholder:text-white/25 focus:border-[#e29ba8]/32 focus:bg-white/60 dark:focus:bg-white/[0.06] premium-focus-input',
             icon && 'pl-14'
           )}
         />
       </div>
-      {helper ? <p className="text-xs text-white/42">{helper}</p> : null}
+      {helper ? <p className="text-xs text-gray-400 dark:text-white/42">{helper}</p> : null}
     </div>
   );
 }
@@ -965,10 +973,10 @@ function SelectField({ label, value, onChange, options }) {
       <select
         value={value}
         onChange={(event) => onChange(event.target.value)}
-        className="w-full rounded-[1.35rem] border border-gray-200 dark:border-white/5 bg-[#3a2c35] px-5 py-4 text-sm font-semibold text-white outline-none transition focus:border-[#e29ba8]/32"
+        className="w-full rounded-[1.35rem] border border-gray-200 dark:border-white/5 bg-white/40 dark:bg-white/[0.04] px-5 py-4 text-sm font-semibold text-gray-900 dark:text-white outline-none transition focus:border-[#e29ba8]/32 focus:bg-white/60 dark:focus:bg-[#1a171f] premium-focus-input"
       >
         {options.map((option) => (
-          <option key={option.value} value={option.value}>
+          <option key={option.value} value={option.value} className="bg-white dark:bg-[#18161d] text-gray-900 dark:text-white">
             {option.label}
           </option>
         ))}
@@ -981,8 +989,8 @@ function ColorField({ label, value, onChange }) {
   return (
     <div className="space-y-3">
       <label className="text-[10px] font-black uppercase tracking-[0.24em] text-gray-500 dark:text-white/44">{label}</label>
-      <div className="flex items-center gap-4 rounded-[1.35rem] border border-gray-200 dark:border-white/5 bg-[#3a2c35] px-4 py-3">
-        <input type="color" value={value} onChange={(event) => onChange(event.target.value)} className="h-12 w-14 rounded-xl bg-transparent" />
+      <div className="flex items-center gap-4 rounded-[1.35rem] border border-gray-200 dark:border-white/5 bg-white/40 dark:bg-white/[0.04] px-4 py-3">
+        <input type="color" value={value} onChange={(event) => onChange(event.target.value)} className="h-12 w-14 rounded-xl bg-transparent border-0 cursor-pointer" />
         <span className="font-mono text-sm font-semibold uppercase tracking-[0.18em] text-gray-900 dark:text-white">{value}</span>
       </div>
     </div>
@@ -993,7 +1001,7 @@ function PermissionGrid({ title, items, activeItems, onToggle, getLabel, activeC
   return (
     <div className="space-y-4">
       <p className="text-[10px] font-black uppercase tracking-[0.24em] text-gray-500 dark:text-white/44">{title}</p>
-      <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
+      <div className="grid gap-3 sm:grid-cols-2 2xl:grid-cols-3">
         {items.map((item) => {
           const active = activeItems.includes(item);
           return (
@@ -1002,10 +1010,10 @@ function PermissionGrid({ title, items, activeItems, onToggle, getLabel, activeC
               type="button"
               onClick={() => onToggle(item)}
               className={cn(
-                'rounded-[1.25rem] border px-4 py-4 text-left text-[10px] font-black uppercase tracking-[0.16em] transition',
+                'rounded-[1.25rem] border px-4 py-4 text-left text-[10px] font-black uppercase tracking-[0.16em] transition-all duration-200',
                 active
                   ? activeClassName
-                  : 'border-white/7 bg-white/[0.035] text-gray-200 dark:text-white/54 hover:border-[#e29ba8]/20 hover:text-white/72'
+                  : 'border-slate-200/50 dark:border-white/7 bg-white/30 dark:bg-white/[0.035] text-gray-600 dark:text-white/54 hover:border-[#e29ba8]/20 hover:text-gray-900 dark:hover:text-white'
               )}
             >
               {getLabel(item)}
@@ -1025,8 +1033,8 @@ function InlineMessage({ text }) {
       className={cn(
         'inline-flex items-center gap-2 rounded-[1.2rem] border px-4 py-3 text-[10px] font-black uppercase tracking-[0.18em]',
         success
-          ? 'border-emerald-300/22 bg-emerald-400/10 text-emerald-200'
-          : 'border-red-300/18 bg-red-400/10 text-red-200'
+          ? 'border-emerald-300/22 bg-emerald-400/10 text-emerald-600 dark:text-emerald-200'
+          : 'border-red-300/18 bg-red-400/10 text-red-600 dark:text-red-200'
       )}
     >
       {success ? <Check size={14} /> : <AlertCircle size={14} />}
@@ -1041,7 +1049,7 @@ function PrimaryButton({ loading, label, type = 'button', onClick }) {
       type={type}
       onClick={onClick}
       disabled={loading}
-      className="inline-flex items-center justify-center gap-3 rounded-[1.4rem] bg-gradient-to-r from-[#E29BA8] to-[#d48997] text-[#111116] px-6 py-4 text-[10px] font-black uppercase tracking-[0.24em] text-white shadow-[0_24px_60px_-28px_rgba(222,151,165,0.95)] transition hover:brightness-105 disabled:opacity-55"
+      className="inline-flex items-center justify-center gap-3 rounded-[1.4rem] bg-gradient-to-r from-[#E29BA8] to-[#d48997] text-slate-950 px-6 py-4 text-[10px] font-black uppercase tracking-[0.24em] shadow-[0_16px_35px_-12px_rgba(222,151,165,0.65)] hover:shadow-[0_20px_45px_-12px_rgba(222,151,165,0.85)] transition-all duration-300 hover:scale-[1.02] disabled:opacity-55"
     >
       {loading ? <RefreshCw size={15} className="animate-spin" /> : <Save size={15} />}
       {loading ? 'Processando...' : label}

@@ -44,7 +44,7 @@ export default function LoginPage() {
       });
       navigate('/admin');
     } catch (error) {
-      setErro(error.response?.data?.error || 'Nao foi possivel entrar. Verifique seus dados.');
+      setErro(error.response?.data?.error || 'Não foi possível entrar. Verifique seus dados.');
     } finally {
       setLoading(false);
     }
@@ -61,9 +61,9 @@ export default function LoginPage() {
     setMsg('');
     try {
       await requestPasswordReset({ email: email.trim().toLowerCase() });
-      setMsg('Se o e-mail existir, enviamos um link de recuperacao.');
+      setMsg('Se o e-mail existir, enviamos um link de recuperação.');
     } catch (error) {
-      setErro(error.response?.data?.error || 'Nao foi possivel solicitar a recuperacao.');
+      setErro(error.response?.data?.error || 'Não foi possível solicitar a recuperação.');
     } finally {
       setLoadingReset(false);
     }
@@ -72,7 +72,7 @@ export default function LoginPage() {
   async function handleResetPassword(e) {
     e.preventDefault();
     if (novaSenha !== confirmarNovaSenha) {
-      setErro('A confirmacao da nova senha nao confere.');
+      setErro('A confirmação da nova senha não confere.');
       return;
     }
 
@@ -81,12 +81,12 @@ export default function LoginPage() {
     setMsg('');
     try {
       await resetPassword({ token: resetToken, novaSenha });
-      setMsg('Senha redefinida com sucesso. Agora voce pode entrar.');
+      setMsg('Senha redefinida com sucesso. Agora você pode entrar.');
       setNovaSenha('');
       setConfirmarNovaSenha('');
       setSearchParams({});
     } catch (error) {
-      setErro(error.response?.data?.error || 'Nao foi possivel redefinir a senha.');
+      setErro(error.response?.data?.error || 'Não foi possível redefinir a senha.');
     } finally {
       setLoading(false);
     }
@@ -105,13 +105,13 @@ export default function LoginPage() {
             <div className="max-w-xl space-y-6">
               <BrandLogo className="mb-10" />
               <div>
-                <p className="brand-kicker text-[#f0bac0]">Painel do salao</p>
+                <p className="brand-kicker text-[#f0bac0]">Painel do salão</p>
                 <h1 className="mt-4 font-brand-display text-2xl sm:text-4xl sm:text-6xl leading-[0.94] tracking-[-0.06em] text-gray-900 dark:text-white">
-                  Elegancia na marca.
-                  <span className="brand-text-gradient block">Clareza na operacao.</span>
+                  Elegância na marca.
+                  <span className="brand-text-gradient block">Clareza na operação.</span>
                 </h1>
                 <p className="mt-6 max-w-lg text-lg leading-relaxed text-white/62">
-                  A BellaPro Agenda entra com visual premium, rotina organizada e uma experiencia mais refinada para recepcao, gestao e atendimento.
+                  A BellaPro Agenda entra com visual premium, rotina organizada e uma experiência mais refinada para recepção, gestão e atendimento.
                 </p>
               </div>
 
@@ -121,7 +121,7 @@ export default function LoginPage() {
                   <p className="mt-3 text-sm leading-relaxed text-gray-600 dark:text-white/70">Agenda, clientes, equipe e financeiro em uma mesma linguagem visual.</p>
                 </div>
                 <div className="brand-card-dark rounded-[1.8rem] p-5">
-                  <p className="brand-kicker text-[#efb1bb]">Presenca</p>
+                  <p className="brand-kicker text-[#efb1bb]">Presença</p>
                   <p className="mt-3 text-sm leading-relaxed text-gray-600 dark:text-white/70">Um ambiente mais sofisticado e coerente com o posicionamento da marca.</p>
                 </div>
               </div>
@@ -139,20 +139,20 @@ export default function LoginPage() {
             </div>
 
             <div className="mb-8">
-              <p className="brand-kicker text-[#efb1bb]">{isResetMode ? 'Recuperacao de acesso' : 'Acesso administrativo'}</p>
+              <p className="brand-kicker text-[#efb1bb]">{isResetMode ? 'Recuperação de acesso' : 'Acesso administrativo'}</p>
               <h2 className="mt-3 font-brand-display text-2xl sm:text-4xl tracking-[-0.05em] text-gray-900 dark:text-white">
                 {isResetMode ? 'Redefina sua senha' : 'Entre no painel BellaPro'}
               </h2>
               <p className="mt-3 text-sm leading-relaxed text-gray-200 dark:text-white/56">
                 {isResetMode
-                  ? 'Crie uma nova senha forte para retomar o acesso com seguranca.'
-                  : 'Use seu login do salao para acessar agenda, operacao e configuracoes.'}
+                  ? 'Crie uma nova senha forte para retomar o acesso com segurança.'
+                  : 'Use seu login do salão para acessar agenda, operação e configurações.'}
               </p>
             </div>
 
             <form onSubmit={isResetMode ? handleResetPassword : handleSubmit} className="space-y-5">
               <InputField
-                label="Email"
+                label="E-mail"
                 icon={Mail}
                 type="email"
                 value={email}
@@ -253,7 +253,7 @@ function InputField({ label, icon: Icon, type, value, onChange, placeholder, req
           required={required}
           disabled={disabled}
           placeholder={placeholder}
-          className="brand-input-dark w-full rounded-[1.35rem] px-5 py-4 pl-12 text-sm font-medium"
+          className="brand-input-dark w-full rounded-[1.35rem] px-5 py-4 pl-12 text-sm font-medium focus:border-[#e29ba8]/32 focus:bg-white/[0.06] premium-focus-input"
         />
       </div>
     </div>

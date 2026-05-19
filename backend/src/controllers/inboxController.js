@@ -1,5 +1,10 @@
 const prisma = require('../lib/prisma');
 const { enviarMensagem } = require('../services/whatsappService');
+const {
+  fetchEvolutionProfilePictureUrl,
+  sendEvolutionAudio,
+  sendEvolutionMedia,
+} = require('../services/evolutionService');
 const inboxEvents = require('../lib/events');
 
 async function getScopedConversa(salaoId, id) {
@@ -9,6 +14,54 @@ async function getScopedConversa(salaoId, id) {
       salaoId,
     },
   });
+}
+
+function inferOutgoingMediaType(mimeType = '', nomeArquivo = '') {
+  const mime = String(mimeType || '').toLowerCase();
+  const fileName = String(nomeArquivo || '').toLowerCase();
+
+  if (mime.startsWith('audio/') || /\.(mp3|wav|ogg|opus|m4a|aac|webm)$/i.test(fileName)) {
+    return { tipoMensagem: 'audio', tipoEvolution: 'audio' };
+  }
+
+  if (mime.startsWith('image/')) {
+    return { tipoMensagem: 'imagem', tipoEvolution: 'image' };
+  }
+
+  if (mime.startsWith('video/')) {
+    return { tipoMensagem: 'video', tipoEvolution: 'video' };
+  }
+
+  return { tipoMensagem: 'anexo', tipoEvolution: 'document' };
+}
+
+function buildOutgoingMediaLabel(tipoMensagem, legenda, nomeArquivo) {
+  const texto = String(legenda || '').trim();
+  if (texto) return texto;
+
+  if (tipoMensagem === 'imagem') return nomeArquivo ? `Imagem: ${nomeArquivo}` : 'Imagem enviada';
+  if (tipoMensagem === 'audio') return nomeArquivo ? `Audio: ${nomeArquivo}` : 'Audio enviado';
+  if (tipoMensagem === 'video') return nomeArquivo ? `Video: ${nomeArquivo}` : 'Video enviado';
+  return nomeArquivo ? `Anexo: ${nomeArquivo}` : 'Arquivo enviado';
+}
+
+async function hydrateConversaAvatar(conversa, salao) {
+  if (!conversa?.telefone) return conversa?.avatarUrl || null;
+  if (conversa?.avatarUrl) return conversa.avatarUrl;
+
+  try {
+    const avatarUrl = await fetchEvolutionProfilePictureUrl(salao, conversa.telefone);
+    if (!avatarUrl) return null;
+
+    await prisma.conversa.update({
+      where: { id: conversa.id },
+      data: { avatarUrl },
+    });
+
+    return avatarUrl;
+  } catch {
+    return null;
+  }
 }
 
 async function getConversas(req, res) {
@@ -31,17 +84,30 @@ async function getConversas(req, res) {
     },
   });
 
-  res.json(
-    conversas.map((conversa) => ({
+  const salao = await prisma.salao.findUnique({
+    where: { id: req.user.salaoId },
+    select: {
+      slug: true,
+      evolutionUrl: true,
+      evolutionKey: true,
+      evolutionInstance: true,
+    },
+  });
+
+  const payload = await Promise.all(
+    conversas.map(async (conversa) => ({
       id: conversa.id,
       telefone: conversa.telefone,
       nomeCliente: conversa.nomeCliente,
+      avatarUrl: await hydrateConversaAvatar(conversa, salao),
       atendimento: conversa.atendimento,
       status: conversa.status,
       updatedAt: conversa.updatedAt,
       ultimaMensagem: conversa.mensagens[0] || null,
     }))
   );
+
+  res.json(payload);
 }
 
 async function getMensagens(req, res) {
@@ -119,6 +185,77 @@ async function responderConversa(req, res) {
   res.json({ ok: true });
 }
 
+async function responderConversaMidia(req, res) {
+  const { id } = req.params;
+  const { mediaUrl, mimeType, nomeArquivo, legenda } = req.body || {};
+
+  if (!String(mediaUrl || '').trim()) {
+    return res.status(400).json({ error: 'Arquivo obrigatorio' });
+  }
+
+  const conversa = await getScopedConversa(req.user.salaoId, id);
+  if (!conversa) return res.status(404).json({ error: 'Conversa nao encontrada' });
+
+  const salao = await prisma.salao.findUnique({
+    where: { id: req.user.salaoId },
+    select: {
+      slug: true,
+      moduloWhatsapp: true,
+      moduloIA: true,
+      nome: true,
+      evolutionUrl: true,
+      evolutionKey: true,
+      evolutionInstance: true,
+    },
+  });
+
+  if (!salao?.moduloWhatsapp) return res.status(403).json({ error: 'Modulo WhatsApp inativo' });
+
+  const { tipoMensagem, tipoEvolution } = inferOutgoingMediaType(mimeType, nomeArquivo);
+  const conteudo = buildOutgoingMediaLabel(tipoMensagem, legenda, nomeArquivo);
+
+  if (tipoEvolution === 'audio') {
+    await sendEvolutionAudio(salao, conversa.telefone, {
+      audio: mediaUrl,
+      mimetype: mimeType || 'audio/webm',
+      fileName: nomeArquivo || 'audio.webm',
+    });
+  } else {
+    await sendEvolutionMedia(salao, conversa.telefone, {
+      media: mediaUrl,
+      mediatype: tipoEvolution,
+      mimetype: mimeType || 'application/octet-stream',
+      caption: legenda || nomeArquivo || 'Arquivo enviado',
+      fileName: nomeArquivo || 'arquivo',
+    });
+  }
+
+  const novaMensagem = await prisma.mensagem.create({
+    data: {
+      conversaId: id,
+      conteudo,
+      direcao: 'saida',
+      origem: 'admin',
+      tipo: tipoMensagem,
+      mimeType: mimeType || null,
+      mediaUrl: mediaUrl || null,
+      nomeArquivo: nomeArquivo || null,
+    },
+  });
+
+  await prisma.conversa.update({
+    where: { id },
+    data: {
+      updatedAt: new Date(),
+      status: 'aberta',
+    },
+  });
+
+  inboxEvents.emit('nova_mensagem', { salaoId: req.user.salaoId, conversaId: id, mensagem: novaMensagem });
+
+  res.json({ ok: true, mensagem: novaMensagem });
+}
+
 async function streamEvents(req, res) {
   const salaoId = req.user.salaoId;
 
@@ -187,6 +324,7 @@ module.exports = {
   getMensagens,
   atualizarConversa,
   responderConversa,
+  responderConversaMidia,
   streamEvents,
   getRespostasRapidas,
   createRespostaRapida,

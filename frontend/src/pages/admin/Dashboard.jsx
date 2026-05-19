@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { 
@@ -22,8 +22,10 @@ import {
 import { getAgendamentos, getClientes, getProfissionais, dispararIAProativa, dispararLembretes, updateStatusAgendamento, getDashboardExecutivo, getResumoFaturasSalao } from '../../services/api';
 import { cn, formatDateInput } from '../../lib/utils';
 import { Plus, UserPlus, ShoppingBag, CreditCard, AlertTriangle } from 'lucide-react';
+import useElementWidth from '../../hooks/useElementWidth';
 
 export default function Dashboard() {
+  const pageRef = useRef(null);
   const navigate = useNavigate();
   const [stats, setStats] = useState({ 
     hoje: [], 
@@ -41,6 +43,11 @@ export default function Dashboard() {
   const [billingResumo, setBillingResumo] = useState({ abertas: 0, vencidas: 0, totalPendencias: 0, temPendencia: false, proxima: null });
   const [loading, setLoading] = useState(true);
   const hojeStr = formatDateInput();
+  const pageWidth = useElementWidth(pageRef, typeof window !== 'undefined' ? window.innerWidth : 1440);
+  const isCompactPage = pageWidth < 1380;
+  const showWideStatusGrid = pageWidth >= 1480;
+  const showThreePanelLayout = pageWidth >= 1420;
+  const showDualInsights = pageWidth >= 1280;
 
   const loadDashboard = async () => {
     try {
@@ -139,11 +146,15 @@ export default function Dashboard() {
 
   return (
     <motion.div 
+      ref={pageRef}
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
-      className="max-w-7xl mx-auto space-y-12 pb-20"
+      className="max-w-7xl mx-auto space-y-8 lg:space-y-10 xl:space-y-12 pb-20"
     >
-      <header className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4 sm:p-6 border-b border-gray-100 dark:border-white/5 pb-8">
+      <header className={cn(
+        'flex flex-col justify-between items-start gap-4 sm:p-6 border-b border-gray-100 dark:border-white/5 pb-8',
+        !isCompactPage && 'lg:flex-row lg:items-center'
+      )}>
         <div>
           <div className="flex items-center gap-3 mb-4">
             <div className="flex -space-x-2">
@@ -211,8 +222,8 @@ export default function Dashboard() {
       ) : null}
 
       {/* Se??o BellaPro */}
-      <div className="grid grid-cols-1 lg:grid-cols-4 gap-4">
-        <div className="lg:col-span-1 bg-white dark:bg-gray-900/40 backdrop-blur-3xl p-4 sm:p-6 rounded-[2rem] border border-gray-100 dark:border-white/5 flex flex-col justify-center gap-1">
+      <div className={cn('grid gap-4', showWideStatusGrid ? 'lg:grid-cols-4' : 'md:grid-cols-2')}>
+        <div className={cn('bg-white dark:bg-gray-900/40 backdrop-blur-3xl p-4 sm:p-6 rounded-[2rem] border border-gray-100 dark:border-white/5 flex flex-col justify-center gap-1', showWideStatusGrid && 'lg:col-span-1')}>
           <p className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em]">Monitor de Piso</p>
           <h3 className="text-2xl font-black text-gray-900 dark:text-white tracking-tighter">Status em Tempo Real</h3>
         </div>
@@ -245,14 +256,14 @@ export default function Dashboard() {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 sm:p-6">
+      <div className={cn('grid gap-4 sm:p-6', showWideStatusGrid ? 'grid-cols-1 md:grid-cols-2 lg:grid-cols-4' : 'grid-cols-1 md:grid-cols-2')}>
         <StatCard label="Agendamentos Hoje" value={stats.hoje.length} icon={<Calendar />} color="purple" sparkline={stats.sparkline} />
         <StatCard label="Concluídos" value={stats.concluidos} icon={<CheckCircle />} color="emerald" />
         <StatCard label="Faturamento Hoje" value={`R$ ${Number(stats.faturamentoHoje || 0).toFixed(0)}`} icon={<DollarSign />} color="blue" sparkline={stats.sparkline} />
         <StatCard label="Clientes na Base" value={stats.totalClientes} icon={<Users />} color="orange" sparkline={stats.sparkline} />
       </div>
 
-      <div className="grid grid-cols-2 xl:grid-cols-5 gap-4">
+      <div className={cn('grid gap-4', showWideStatusGrid ? 'grid-cols-2 xl:grid-cols-5' : 'grid-cols-2 lg:grid-cols-3')}>
         <MiniExecCard label="Ticket médio" value={`R$ ${Number(executivo.cards?.ticketMedio || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`} />
         <MiniExecCard label="Cancelados" value={executivo.cards?.cancelados || 0} tone="rose" />
         <MiniExecCard label="No-show" value={executivo.cards?.noShows || 0} tone="amber" />
@@ -260,8 +271,8 @@ export default function Dashboard() {
         <MiniExecCard label="Baixo estoque" value={executivo.cards?.baixoEstoque || 0} tone="blue" />
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-5 md:p-10">
-        <div className="lg:col-span-2 space-y-6">
+      <div className={cn('grid grid-cols-1 gap-5 md:p-10', showThreePanelLayout ? 'lg:grid-cols-3' : 'xl:grid-cols-[minmax(0,1fr)_360px]')}>
+        <div className={cn('space-y-6', showThreePanelLayout && 'lg:col-span-2')}>
           <div className="flex items-center justify-between">
             <h2 className="text-sm font-black text-gray-400 uppercase tracking-[0.3em]">Próximos do Dia</h2>
             <button onClick={() => navigate('/admin/agenda')} className="text-[10px] font-black text-[#d48997] uppercase tracking-widest flex items-center gap-1 hover:gap-2 transition-all">
@@ -409,7 +420,7 @@ export default function Dashboard() {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 xl:grid-cols-2 gap-4 sm:p-6">
+      <div className={cn('grid grid-cols-1 gap-4 sm:p-6', showDualInsights && 'xl:grid-cols-2')}>
         <div className="bg-white dark:bg-gray-900/40 backdrop-blur-3xl rounded-[2rem] p-4 md:p-8 border border-gray-100 dark:border-white/5 shadow-xl">
           <div className="flex items-center justify-between mb-6">
             <h3 className="text-lg font-black text-gray-900 dark:text-white tracking-tight">Produtividade por profissional</h3>
@@ -521,20 +532,20 @@ export default function Dashboard() {
 
 function StatCard({ label, value, icon, color, trend, sparkline }) {
   const colors = {
-    purple: "bg-[#E29BA8]/5 text-[#d48997] border-[#E29BA8]/10",
-    emerald: "bg-emerald-50 text-emerald-600 border-emerald-100",
-    blue: "bg-blue-50 text-blue-600 border-blue-100",
-    orange: "bg-orange-50 text-orange-600 border-orange-100",
+    purple: "bg-[#e29ba8]/10 text-[#d48997] border-[#e29ba8]/20",
+    emerald: "bg-[#10b981]/10 text-[#10b981] border-[#10b981]/20",
+    blue: "bg-[#3b82f6]/10 text-[#3b82f6] border-[#3b82f6]/20",
+    orange: "bg-[#f97316]/10 text-[#f97316] border-[#f97316]/20",
   };
 
   return (
     <motion.div 
-      whileHover={{ y: -5, scale: 1.01 }}
-      className="bg-white dark:bg-gray-900/40 backdrop-blur-2xl p-4 sm:p-6 md:p-8 xl:p-10 rounded-[2rem] md:rounded-[2rem] xl:rounded-[3rem] shadow-2xl shadow-gray-200/20 dark:shadow-none border border-gray-100 dark:border-white/5 relative overflow-hidden group"
+      whileHover={{ y: -6, scale: 1.02 }}
+      className="bg-white/80 dark:bg-[#1a1820]/30 backdrop-blur-2xl p-6 md:p-8 xl:p-10 rounded-[2.2rem] shadow-[0_20px_48px_-24px_rgba(140,107,117,0.12)] dark:shadow-none border border-slate-200/60 dark:border-white/5 relative overflow-hidden group transition-all duration-300 hover:border-[#e29ba8]/30 dark:hover:border-[#e29ba8]/20"
     >
        <div className="flex justify-between items-start mb-8">
-          <div className={cn("w-14 h-14 md:w-16 md:h-16 rounded-[1.25rem] md:rounded-[1.5rem] flex items-center justify-center text-3xl border shadow-inner transition-all group-hover:rotate-6", colors[color])}>
-            {React.cloneElement(icon, { size: 28, strokeWidth: 2.5 })}
+          <div className={cn("w-14 h-14 md:w-16 md:h-16 rounded-2xl flex items-center justify-center text-3xl border shadow-inner transition-all group-hover:rotate-6", colors[color])}>
+            {React.cloneElement(icon, { size: 24, strokeWidth: 2.5 })}
           </div>
           {trend && (
             <span className="flex items-center gap-1 text-[10px] font-black text-emerald-500 bg-emerald-500/10 px-4 py-2 rounded-full border border-emerald-500/20">
@@ -543,20 +554,20 @@ function StatCard({ label, value, icon, color, trend, sparkline }) {
           )}
        </div>
 
-       <div className="space-y-1 mb-10">
+       <div className="space-y-1 mb-8">
           <p className="text-3xl md:text-4xl font-black text-gray-900 dark:text-white tracking-tighter leading-none break-words">{value}</p>
-          <p className="text-[10px] font-black text-gray-400 uppercase tracking-[0.4em] mt-3">{label}</p>
+          <p className="text-[9px] font-black text-gray-400 dark:text-white/40 uppercase tracking-[0.4em] mt-3">{label}</p>
        </div>
 
-       <div className="h-16 w-full -mb-2">
+       <div className="h-16 w-full -mb-2 opacity-80 group-hover:opacity-100 transition-opacity">
           <ResponsiveContainer width="100%" height="100%">
              <LineChart data={sparkline?.length ? sparkline : [{ val: 0 }]}>
                 <Line 
-                  type="monotone" 
-                  dataKey="val" 
-                  stroke={color === 'purple' ? '#9333ea' : color === 'emerald' ? '#10b981' : color === 'blue' ? '#2563eb' : '#f97316'} 
-                  strokeWidth={4} 
-                  dot={false} 
+                   type="monotone" 
+                   dataKey="val" 
+                   stroke={color === 'purple' ? '#d48997' : color === 'emerald' ? '#10b981' : color === 'blue' ? '#3b82f6' : '#f97316'} 
+                   strokeWidth={4} 
+                   dot={false} 
                 />
              </LineChart>
           </ResponsiveContainer>
@@ -567,16 +578,16 @@ function StatCard({ label, value, icon, color, trend, sparkline }) {
 
 function MiniExecCard({ label, value, tone = 'default' }) {
   const tones = {
-    default: 'border-gray-100 dark:border-white/5 text-gray-900 dark:text-white',
-    rose: 'border-rose-100 dark:border-rose-500/20 text-rose-600 dark:text-rose-300',
-    amber: 'border-amber-100 dark:border-amber-500/20 text-amber-600 dark:text-amber-300',
-    emerald: 'border-emerald-100 dark:border-emerald-500/20 text-emerald-600 dark:text-emerald-300',
-    blue: 'border-blue-100 dark:border-blue-500/20 text-blue-600 dark:text-blue-300',
+    default: 'border-slate-200/60 dark:border-white/5 text-gray-900 dark:text-white',
+    rose: 'border-rose-200/50 dark:border-rose-500/20 text-rose-600 dark:text-rose-300 bg-rose-500/[0.02]',
+    amber: 'border-amber-200/50 dark:border-amber-500/20 text-amber-600 dark:text-amber-300 bg-amber-500/[0.02]',
+    emerald: 'border-emerald-200/50 dark:border-emerald-500/20 text-emerald-600 dark:text-emerald-300 bg-emerald-500/[0.02]',
+    blue: 'border-blue-200/50 dark:border-blue-500/20 text-blue-600 dark:text-blue-300 bg-blue-500/[0.02]',
   };
 
   return (
-    <div className={`rounded-[1.75rem] border bg-white dark:bg-gray-900/40 px-5 py-5 shadow-lg ${tones[tone]}`}>
-      <p className="text-[9px] font-black uppercase tracking-[0.22em] text-gray-400">{label}</p>
+    <div className={`rounded-[1.75rem] border bg-white/70 dark:bg-[#1a1820]/30 backdrop-blur-xl px-5 py-5 shadow-sm transition-all duration-300 hover:border-[#e29ba8]/20 ${tones[tone]}`}>
+      <p className="text-[9px] font-black uppercase tracking-[0.22em] text-gray-400 dark:text-white/40">{label}</p>
       <p className="mt-2 text-xl font-black tracking-tighter">{value}</p>
     </div>
   );
