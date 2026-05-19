@@ -148,6 +148,9 @@ function ModalNovoAgendamento({ onClose, onSave, preData, preHora, preProf, pref
   const [agendamentosCliente, setAgendamentosCliente] = useState([]);
   const [loadingDuplicidade, setLoadingDuplicidade] = useState(false);
   const [abaResumo, setAbaResumo] = useState('dados');
+  const [buscaServico, setBuscaServico] = useState('');
+  const [buscaPacote, setBuscaPacote] = useState('');
+  const [buscaProfissional, setBuscaProfissional] = useState('');
 
   useEffect(() => {
     if (!prefillData) return;
@@ -198,6 +201,24 @@ function ModalNovoAgendamento({ onClose, onSave, preData, preHora, preProf, pref
       (pacote.servicos || []).every((item) => servicoIdsDoProfissionalSelecionado.has(item.servicoId))
     );
   }, [pacotes, form.profissionalId, servicoIdsDoProfissionalSelecionado]);
+
+  const servicosDisponiveisFiltrados = useMemo(() => {
+    const termo = buscaServico.trim().toLowerCase();
+    if (!termo) return servicosDisponiveis;
+    return servicosDisponiveis.filter((servico) => String(servico.nome || '').toLowerCase().includes(termo));
+  }, [servicosDisponiveis, buscaServico]);
+
+  const pacotesDisponiveisFiltrados = useMemo(() => {
+    const termo = buscaPacote.trim().toLowerCase();
+    if (!termo) return pacotesDisponiveis;
+    return pacotesDisponiveis.filter((pacote) => String(pacote.nome || '').toLowerCase().includes(termo));
+  }, [pacotesDisponiveis, buscaPacote]);
+
+  const profissionaisCompativeisFiltrados = useMemo(() => {
+    const termo = buscaProfissional.trim().toLowerCase();
+    if (!termo) return profissionaisCompativeis;
+    return profissionaisCompativeis.filter((profissional) => String(profissional.nome || '').toLowerCase().includes(termo));
+  }, [profissionaisCompativeis, buscaProfissional]);
 
   useEffect(() => {
     if (!form.profissionalId) return;
@@ -311,7 +332,7 @@ function ModalNovoAgendamento({ onClose, onSave, preData, preHora, preProf, pref
         
         <button 
           onClick={onClose} 
-          className="absolute top-4 sm:p-6 right-6 md:top-5 md:p-10 md:right-10 w-12 h-12 flex items-center justify-center rounded-full bg-gray-100 dark:bg-white/5 text-gray-400 hover:text-red-500 transition-all hover:rotate-90 hover:scale-110 active:scale-95"
+          className="absolute top-4 right-6 flex h-12 w-12 items-center justify-center rounded-full border border-gray-200 bg-white text-[#3b2a35] shadow-sm transition-all hover:scale-105 hover:text-red-500 active:scale-95 dark:border-white/10 dark:bg-white/10 dark:text-white md:top-5 md:right-10"
         >
           <X size={24} />
         </button>
@@ -378,7 +399,7 @@ function ModalNovoAgendamento({ onClose, onSave, preData, preHora, preProf, pref
                       <div>
                         <p className="text-sm font-black text-gray-900 dark:text-white uppercase">{ag.profissional?.nome}</p>
                         <p className="text-[10px] font-black text-bellapro-blush uppercase tracking-[0.2em] mt-1">
-                          {ag.inicioHora} â��¢ {getAgendamentoTitulo(ag)}
+                          {ag.inicioHora} - {getAgendamentoTitulo(ag)}
                         </p>
                       </div>
                       <p className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em]">
@@ -468,23 +489,41 @@ function ModalNovoAgendamento({ onClose, onSave, preData, preHora, preProf, pref
           </div>
 
           <div className="grid grid-cols-1 gap-4 md:p-8">
-            {isPacote ? (
+{isPacote ? (
               <div className="space-y-3">
-                <label className="text-[9px] font-black uppercase tracking-[0.4em] text-gray-500 ml-6">Cat?logo de Pacotes</label>
+                <label className="text-[9px] font-black uppercase tracking-[0.4em] text-gray-500 ml-6">Catalogo de Pacotes</label>
+                <div className="relative">
+                  <Search size={16} className="absolute left-5 top-1/2 -translate-y-1/2 text-gray-400" />
+                  <input
+                    value={buscaPacote}
+                    onChange={(e) => setBuscaPacote(e.target.value)}
+                    placeholder="Escreva para buscar um pacote"
+                    className="w-full rounded-[1.75rem] border border-gray-200 bg-white py-4 pl-12 pr-4 text-sm font-bold text-gray-700 outline-none dark:border-white/10 dark:bg-white/5 dark:text-white"
+                  />
+                </div>
                 <select 
                   value={form.pacoteId} 
                   onChange={e => setForm({...form, pacoteId: e.target.value, servicoIds: []})} 
                   className="w-full bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/5 rounded-[2rem] px-8 py-5 outline-none text-gray-900 dark:text-white font-black text-sm appearance-none cursor-pointer"
                 >
                   <option value="" className="dark:bg-gray-900">Escolha o combo...</option>
-                  {pacotes.map((p) => <option key={p.id} value={p.id} className="dark:bg-gray-900">{p.nome} · R$ {p.preco}</option>)}
+                  {pacotesDisponiveisFiltrados.map((p) => <option key={p.id} value={p.id} className="dark:bg-gray-900">{p.nome} - R$ {p.preco}</option>)}
                 </select>
               </div>
             ) : (
               <div className="space-y-4">
-                <label className="text-[9px] font-black uppercase tracking-[0.4em] text-gray-500 ml-6">Sele??o Multi-Servico</label>
+                <label className="text-[9px] font-black uppercase tracking-[0.4em] text-gray-500 ml-6">Selecao Multi-Servico</label>
+                <div className="relative">
+                  <Search size={16} className="absolute left-5 top-1/2 -translate-y-1/2 text-gray-400" />
+                  <input
+                    value={buscaServico}
+                    onChange={(e) => setBuscaServico(e.target.value)}
+                    placeholder="Escreva para buscar um servico"
+                    className="w-full rounded-[1.75rem] border border-gray-200 bg-white py-4 pl-12 pr-4 text-sm font-bold text-gray-700 outline-none dark:border-white/10 dark:bg-white/5 dark:text-white"
+                  />
+                </div>
                 <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-3 md:gap-4 p-4 md:p-6 bg-gray-100 dark:bg-white/5 rounded-[2rem] md:rounded-[2rem] border border-gray-200 dark:border-white/5 max-h-56 overflow-y-auto custom-scrollbar shadow-inner">
-                  {servicosDisponiveis.map((s) => (
+                  {servicosDisponiveisFiltrados.map((s) => (
                     <button
                       key={s.id}
                       type="button"
@@ -499,19 +538,33 @@ function ModalNovoAgendamento({ onClose, onSave, preData, preHora, preProf, pref
                       {form.servicoIds.includes(s.id) && <Check size={10} className="absolute top-2 right-2" />}
                     </button>
                   ))}
+                  {servicosDisponiveisFiltrados.length === 0 && (
+                    <p className="col-span-full rounded-2xl border border-dashed border-gray-300 px-4 py-6 text-center text-sm font-bold text-gray-500 dark:border-white/10 dark:text-gray-400">
+                      Nenhum servico encontrado nessa busca.
+                    </p>
+                  )}
                 </div>
               </div>
             )}
             
             <div className="space-y-3">
-              <label className="text-[9px] font-black uppercase tracking-[0.4em] text-gray-500 ml-6">Artista Respons?vel</label>
+              <label className="text-[9px] font-black uppercase tracking-[0.4em] text-gray-500 ml-6">Artista Responsavel</label>
+              <div className="relative">
+                <Search size={16} className="absolute left-5 top-1/2 -translate-y-1/2 text-gray-400" />
+                <input
+                  value={buscaProfissional}
+                  onChange={(e) => setBuscaProfissional(e.target.value)}
+                  placeholder="Escreva para buscar o profissional"
+                  className="w-full rounded-[1.75rem] border border-gray-200 bg-white py-4 pl-12 pr-4 text-sm font-bold text-gray-700 outline-none dark:border-white/10 dark:bg-white/5 dark:text-white"
+                />
+              </div>
               <select 
                 value={form.profissionalId} 
                 onChange={e => setForm({...form, profissionalId: e.target.value})} 
                 className="w-full bg-gray-50 dark:bg-white/5 border border-gray-100 dark:border-white/5 rounded-[2rem] px-8 py-5 outline-none text-gray-900 dark:text-white font-black text-sm appearance-none cursor-pointer"
               >
                 <option value="" className="dark:bg-gray-900">Selecione o profissional...</option>
-                {profissionaisCompativeis.map(p => <option key={p.id} value={p.id} className="dark:bg-gray-900">{p.nome}</option>)}
+                {profissionaisCompativeisFiltrados.map(p => <option key={p.id} value={p.id} className="dark:bg-gray-900">{p.nome}</option>)}
               </select>
               {(form.servicoIds.length > 0 || form.pacoteId) && profissionaisCompativeis.length === 0 && (
                 <p className="text-xs font-bold text-bellapro-blush ml-6">
@@ -539,7 +592,7 @@ function ModalNovoAgendamento({ onClose, onSave, preData, preHora, preProf, pref
               </div>
             </div>
             <div className="space-y-3">
-              <label className="text-[9px] font-black uppercase tracking-[0.4em] text-gray-500 ml-6">Horário</label>
+              <label className="text-[9px] font-black uppercase tracking-[0.4em] text-gray-500 ml-6">Horario</label>
               <div className="relative">
                 <Clock size={16} className="absolute left-8 top-1/2 -translate-y-1/2 text-[#E29BA8]" />
                 <select 
@@ -574,7 +627,7 @@ function ModalNovoAgendamento({ onClose, onSave, preData, preHora, preProf, pref
             
             {form.recorrente && (
               <div className="space-y-3">
-                <label className="text-[9px] font-black uppercase tracking-[0.4em] text-gray-500 ml-6">N?mero de Semanas</label>
+                <label className="text-[9px] font-black uppercase tracking-[0.4em] text-gray-500 ml-6">Numero de Semanas</label>
                 <select 
                   value={form.semanas}
                   onChange={e => setForm({...form, semanas: Number(e.target.value)})}
@@ -983,11 +1036,11 @@ function ModalDetalhesAgendamento({ agendamento: initialAgendamento, onClose, on
                         
                         const msg = encodeURIComponent(
                           `*REENVIO DE COMPROVANTE*\n\n` +
-                          `Ol?, *${agendamento.clienteNome}*!\n` +
+                          `Ola, *${agendamento.clienteNome}*!\n` +
                           `Segue o seu comprovante de atendimento.\n\n` +
                           `*Detalhes:*\n${itensStr}\n` +
                           `*Valor Total:* R$ ${total.toFixed(2)}\n\n` +
-                          `Agradecemos a prefer?ncia! â�¨`
+                          `Agradecemos a preferencia!`
                         );
                         window.open(`https://wa.me/55${agendamento.clienteTelefone.replace(/\D/g,'')}?text=${msg}`, '_blank');
                       }}
@@ -1175,11 +1228,11 @@ function ModalDetalhesAgendamento({ agendamento: initialAgendamento, onClose, on
                               
                               const msg = encodeURIComponent(
                                 `*COMPROVANTE DE ATENDIMENTO*\n\n` +
-                                `Ol?, *${agendamento.clienteNome}*!\n` +
+                                `Ola, *${agendamento.clienteNome}*!\n` +
                                 `Seu atendimento foi finalizado com sucesso.\n\n` +
                                 `*Detalhes:*\n${itens}\n` +
                                 `*Valor Total:* R$ ${total.toFixed(2)}\n\n` +
-                                `Agradecemos a prefer?ncia! â�¨`
+                                `Agradecemos a preferencia!`
                               );
                               window.open(`https://wa.me/55${agendamento.clienteTelefone.replace(/\D/g,'')}?text=${msg}`, '_blank');
                             }}
@@ -1204,7 +1257,7 @@ function ModalDetalhesAgendamento({ agendamento: initialAgendamento, onClose, on
                            </div>
                            <div>
                              <h3 className="text-2xl sm:text-4xl font-black text-gray-900 dark:text-white tracking-tighter uppercase leading-none">Checkout Final</h3>
-                             <p className="text-gray-500 text-sm font-medium mt-3">Finalize a experiencia do cliente e lance os valores nao fluxo financeiro BellaPro.</p>
+                             <p className="text-gray-500 text-sm font-medium mt-3">Finalize a experiencia do cliente e lance os valores no fluxo financeiro BellaPro.</p>
                            </div>
                         </div>
 
@@ -2032,7 +2085,7 @@ export default function Agenda() {
                     {/* Se??o BellaPro */}
                     <div className="flex-1 min-w-0">
                       <p className={`text-sm font-black uppercase tracking-tight truncate ${config.text} dark:text-white`}>{a.clienteNome}</p>
-                      <p className="text-[10px] font-bold text-gray-500 truncate mt-0.5">{getAgendamentoTitulo(a)} â��¢ {a.profissional?.nome}</p>
+                      <p className="text-[10px] font-bold text-gray-500 truncate mt-0.5">{getAgendamentoTitulo(a)} • {a.profissional?.nome}</p>
                       <div className="flex items-center gap-2 mt-1.5">
                         <span className={`text-[9px] font-black uppercase tracking-widest px-2 py-0.5 rounded-lg ${config.bg} ${config.text} border ${config.border}`}>
                           <StatusIcon size={8} className="inline mr-1" />{config.label || a.status}
@@ -2043,7 +2096,7 @@ export default function Agenda() {
                           </span>
                         )}
                         <span className={`text-[9px] font-black uppercase tracking-widest ${isPago ? 'text-[#E29BA8]' : 'text-bellapro-blush'}`}>
-                          {isPago ? 'â��S Pago' : `R$ ${total.toFixed(2)}`}
+                          {isPago ? 'Pago' : `R$ ${total.toFixed(2)}`}
                         </span>
                       </div>
                     </div>
@@ -2219,7 +2272,7 @@ export default function Agenda() {
                 onClick={handleBloquear}
                 className="w-full text-left px-6 py-3 hover:bg-bellapro-blush hover:text-white transition-all flex items-center gap-3 text-[9px] font-black uppercase tracking-widest"
               >
-                <X size={14} /> Bloquear Horário
+                <X size={14} /> Bloquear Horario
               </button>
               <button
                 onClick={() => {

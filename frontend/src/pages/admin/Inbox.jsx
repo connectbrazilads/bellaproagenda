@@ -24,6 +24,8 @@ import { useNavigate } from 'react-router-dom';
 import { getConversas, getMensagens, atualizarConversa, responderConversa, getRespostasRapidas } from '../../services/api';
 import { cn } from '../../lib/utils';
 
+const API_BASE_URL = import.meta.env.VITE_API_URL?.trim() || '/api';
+
 const FILTROS = [
   { label: 'Chats', icon: <MessageSquare size={14} />, params: { status: 'aberta' } },
   { label: 'IA', icon: <Bot size={14} />, params: { atendimento: 'ia', status: 'aberta' } },
@@ -49,14 +51,14 @@ function getMensagemMediaSrc(mensagem) {
 }
 
 function getMensagemResumo(mensagem) {
-  if (!mensagem) return 'Iniciando diálogo...';
+  if (!mensagem) return 'Iniciando conversa...';
 
   if (mensagem.tipo === 'imagem') return mensagem.conteudo || 'Imagem recebida';
   if (mensagem.tipo === 'audio') return mensagem.conteudo || 'Audio recebido';
   if (mensagem.tipo === 'anexo') return mensagem.conteudo || `Anexo${mensagem.nomeArquivo ? `: ${mensagem.nomeArquivo}` : ' recebido'}`;
   if (mensagem.tipo === 'video') return mensagem.conteudo || 'Video recebido';
 
-  return mensagem.conteudo || 'Iniciando diálogo...';
+  return mensagem.conteudo || 'Iniciando conversa...';
 }
 
 function isDescricaoGenericaDeMidia(mensagem) {
@@ -64,6 +66,12 @@ function isDescricaoGenericaDeMidia(mensagem) {
 
   const conteudo = String(mensagem.conteudo || '').trim().toLowerCase();
   return ['imagem recebida', 'audio recebido', 'video recebido', 'anexo recebido'].includes(conteudo);
+}
+
+function buildInboxStreamUrl() {
+  const token = String(localStorage.getItem('salao_admin_token') || '').trim();
+  if (!token) return `${API_BASE_URL}/admin/inbox/stream`;
+  return `${API_BASE_URL}/admin/inbox/stream?token=${encodeURIComponent(token)}`;
 }
 
 export default function Inbox() {
@@ -86,57 +94,72 @@ export default function Inbox() {
   const chatRef = useRef(null);
   const inputRef = useRef(null);
 
-  const carregarConversas = useCallback(async () => {
-    setLoadingConversas(true);
+  const carregarConversas = useCallback(async ({ silent = false } = {}) => {
+    if (!silent) setLoadingConversas(true);
     setErro('');
     try {
       const r = await getConversas(FILTROS[filtro].params);
       setConversas(r.data);
     } catch {
-      setErro('Não foi possível carregar as conversas agora.');
+      setErro('Nao foi possivel carregar as conversas agora.');
     } finally {
-      setLoadingConversas(false);
+      if (!silent) setLoadingConversas(false);
     }
   }, [filtro]);
 
-  const carregarMensagens = useCallback(async () => {
+  const carregarMensagens = useCallback(async ({ silent = false } = {}) => {
     if (!selecionada) return;
-    setLoadingMensagens(true);
+    if (!silent) setLoadingMensagens(true);
     try {
       const r = await getMensagens(selecionada.id);
       setMensagens(r.data);
     } catch {
-      setErro('Não foi possível carregar as mensagens desta conversa.');
+      setErro('Nao foi possivel carregar as mensagens desta conversa.');
     } finally {
-      setLoadingMensagens(false);
+      if (!silent) setLoadingMensagens(false);
     }
   }, [selecionada]);
+
+  const refreshInbox = useCallback(async () => {
+    await carregarConversas({ silent: true });
+    if (selecionada) {
+      await carregarMensagens({ silent: true });
+    }
+  }, [carregarConversas, carregarMensagens, selecionada]);
 
   useEffect(() => {
     carregarConversas();
     getRespostasRapidas().then(r => setSnippets(r.data || [])).catch(() => {});
+  }, [carregarConversas]);
 
-    const evtSource = new EventSource('/api/admin/inbox/stream', { withCredentials: true });
-    
+  useEffect(() => {
+    const evtSource = new EventSource(buildInboxStreamUrl(), { withCredentials: true });
+
     evtSource.onmessage = (event) => {
       try {
         const data = JSON.parse(event.data);
         if (data.type === 'update') {
-          carregarConversas();
-          setSelecionada(prev => {
-            if (prev) {
-              getMensagens(prev.id).then(r => setMensagens(r.data));
-            }
-            return prev;
-          });
+          refreshInbox();
         }
-      } catch (e) {
-        // ignore JSON parse error for ping
+      } catch {
+        // Ignore ping payloads.
       }
     };
 
+    evtSource.onerror = () => {
+      refreshInbox();
+    };
+
     return () => evtSource.close();
-  }, []);
+  }, [refreshInbox]);
+
+  useEffect(() => {
+    const intervalId = window.setInterval(() => {
+      refreshInbox();
+    }, 4000);
+
+    return () => window.clearInterval(intervalId);
+  }, [refreshInbox]);
 
   useEffect(() => {
     if (!selecionada) return;
@@ -186,7 +209,7 @@ export default function Inbox() {
       await responderConversa(selecionada.id, texto.trim());
       setTexto('');
       if (inputRef.current) inputRef.current.style.height = 'auto';
-      await carregarMensagens();
+      await refreshInbox();
     } catch { /* silent */ } finally {
       setEnviando(false);
     }
@@ -201,18 +224,18 @@ export default function Inbox() {
     <motion.div 
       initial={{ opacity: 0, scale: 0.98 }}
       animate={{ opacity: 1, scale: 1 }}
-      className="flex min-h-[70vh] lg:h-[calc(100dvh-9rem)] lg:max-h-[calc(100dvh-7rem)] bg-white dark:bg-gray-900/40 backdrop-blur-3xl rounded-[2rem] lg:rounded-[3rem] shadow-3xl border border-gray-100 dark:border-white/5 overflow-hidden"
+      className="flex min-h-[70vh] lg:h-[calc(100dvh-9rem)] lg:max-h-[calc(100dvh-7rem)] overflow-hidden rounded-[2rem] lg:rounded-[2.5rem] border border-gray-200 dark:border-white/5 bg-[#fffaf9] dark:bg-[#17151b] shadow-[0_28px_70px_-36px_rgba(0,0,0,0.38)]"
     >
       
       {/* ── Sidebar: Lista de Conversas ── */}
       <aside className={cn(
-        "w-full lg:w-80 xl:w-96 min-h-0 flex flex-col border-r border-gray-100 dark:border-white/5 bg-gray-50/30 dark:bg-white/5",
+        "w-full lg:w-80 xl:w-96 min-h-0 flex flex-col border-r border-gray-200 dark:border-white/5 bg-white/80 dark:bg-[#1d1a22]",
         mobileChat ? "hidden lg:flex" : "flex"
       )}>
-        <div className="p-4 md:p-8 space-y-8 flex-shrink-0">
+        <div className="p-4 md:p-6 space-y-6 flex-shrink-0">
           <div className="flex items-center justify-between gap-4">
-            <h1 className="text-3xl font-black text-gray-900 dark:text-white tracking-tighter">Inbox <span className="text-[#d48997]">Pro</span></h1>
-            <div className="w-10 h-10 rounded-2xl bg-[#d48997]/10 flex items-center justify-center text-[#d48997] shadow-inner">
+            <h1 className="text-2xl font-black tracking-tight text-[#2f2430] dark:text-white">Inbox</h1>
+            <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-[#d48997]/10 text-[#d48997] shadow-inner">
               <span className="text-xs font-black">{conversas.length}</span>
             </div>
           </div>
@@ -226,10 +249,10 @@ export default function Inbox() {
             <Search className="absolute left-5 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 group-focus-within:text-[#d48997] transition-colors" />
             <input 
               type="text" 
-              placeholder="Buscar por nome ou fone..."
+              placeholder="Escreva para buscar nome ou telefone"
               value={search}
               onChange={e => setSearch(e.target.value)}
-              className="w-full bg-white dark:bg-gray-950/50 border border-gray-100 dark:border-white/10 rounded-2xl px-6 py-4 pl-14 text-sm font-bold outline-none focus:ring-4 focus:ring-[#E29BA8]/5 transition-all shadow-sm placeholder:text-gray-300 dark:placeholder:text-gray-800"
+              className="w-full rounded-2xl border border-gray-200 bg-white px-6 py-4 pl-14 text-sm font-bold text-[#3b2a35] outline-none transition-all shadow-sm placeholder:text-[#9f848d] focus:ring-4 focus:ring-[#E29BA8]/5 dark:border-white/10 dark:bg-gray-950/50 dark:text-white dark:placeholder:text-gray-500"
             />
           </div>
 
@@ -261,7 +284,7 @@ export default function Inbox() {
                 className="py-20 text-center space-y-4 opacity-40"
               >
                 <Archive size={48} className="mx-auto text-gray-400" />
-                <p className="text-[10px] font-black uppercase tracking-widest text-gray-400">Silênão não Inbox</p>
+                <p className="text-[10px] font-black uppercase tracking-widest text-gray-400">Nenhuma conversa por aqui</p>
               </motion.div>
             ) : (
               filteredConversas.map(c => (
@@ -272,10 +295,10 @@ export default function Inbox() {
                   key={c.id}
                   onClick={() => { setSelecionada(c); setMobileChat(true); setMensagens([]); }}
                   className={cn(
-                    "w-full text-left p-4 rounded-[2rem] transition-all flex gap-4 group border",
+                    "w-full text-left p-4 rounded-[1.75rem] transition-all flex gap-4 group border",
                     selecionada?.id === c.id 
-                    ? "bg-white dark:bg-gray-800 shadow-2xl border-[#E29BA8]/30 ring-2 ring-[#d48997]/10" 
-                    : "bg-transparent border-transparent hover:bg-white/60 dark:hover:bg-white/5"
+                    ? "bg-white dark:bg-[#25212b] shadow-lg border-[#E29BA8]/30" 
+                    : "bg-transparent border-transparent hover:bg-white/70 dark:hover:bg-white/5"
                   )}
                 >
                   <div className="relative flex-shrink-0">
@@ -313,28 +336,23 @@ export default function Inbox() {
 
       {/* ── Main: Chat Hub ── */}
       <main className={cn(
-        "flex-1 min-w-0 min-h-0 flex flex-col relative bg-gray-50/50 dark:bg-gray-950/20 backdrop-blur-3xl",
+        "flex-1 min-w-0 min-h-0 flex flex-col relative bg-[#fcf7f5] dark:bg-[#151319]",
         !mobileChat && !selecionada ? "hidden md:flex" : "flex"
       )}>
         {!selecionada ? (
-          <div className="flex-1 flex flex-col items-center justify-center text-center p-4 md:p-8 space-y-8">
-            <div className="relative">
-              <div className="w-32 h-32 bg-white dark:bg-gray-900 rounded-[3rem] flex items-center justify-center text-2xl sm:text-4xl sm:text-6xl shadow-3xl shadow-[#E29BA8]/10 border border-gray-100 dark:border-white/5">
-                <Sparkles className="text-[#d48997] animate-pulse" size={48} />
-              </div>
-              <div className="absolute -bottom-2 -right-2 w-10 h-10 bg-emerald-500 rounded-2xl flex items-center justify-center text-white shadow-xl animate-bounce">
-                <MessageSquare size={20} />
-              </div>
+          <div className="flex-1 flex flex-col items-center justify-center text-center p-4 md:p-8 space-y-6">
+            <div className="flex h-24 w-24 items-center justify-center rounded-[2rem] border border-gray-200 dark:border-white/5 bg-white dark:bg-[#211d24] text-[#d48997] shadow-sm">
+              <MessageSquare size={40} />
             </div>
             <div>
-              <h3 className="font-black text-gray-900 dark:text-white text-3xl tracking-tighter">Central de <span className="text-[#d48997]">Interações</span></h3>
-              <p className="text-gray-400 font-medium mt-3 max-w-sm mx-auto leading-relaxed">Selecione uma alma digital para iniciar a orquestração do atendimento.</p>
+              <h3 className="text-3xl font-black tracking-tight text-gray-900 dark:text-white">Selecione uma conversa</h3>
+              <p className="mx-auto mt-3 max-w-sm leading-relaxed text-gray-500 dark:text-gray-400">As mensagens novas aparecem aqui assim que entrarem no inbox.</p>
             </div>
           </div>
         ) : (
           <>
             {/* Chat Header */}
-            <header className="min-h-24 flex-shrink-0 bg-white/80 dark:bg-gray-900/80 backdrop-blur-2xl border-b border-gray-100 dark:border-white/5 px-4 py-4 md:px-10 flex flex-col gap-4 md:flex-row md:items-center md:justify-between z-10 shadow-sm">
+            <header className="z-10 flex min-h-24 flex-shrink-0 flex-col gap-4 border-b border-gray-200 dark:border-white/5 bg-white/90 dark:bg-[#1a1720] px-4 py-4 shadow-sm backdrop-blur-2xl md:flex-row md:items-center md:justify-between md:px-8">
               <div className="flex items-center gap-4 md:gap-5 min-w-0">
                 <button onClick={() => setMobileChat(false)} className="md:hidden p-3 bg-gray-50 rounded-xl">
                   <ChevronLeft size={20} />
@@ -350,7 +368,7 @@ export default function Inbox() {
                     </span>
                     <div className="w-px h-3 bg-gray-200 dark:bg-white/10" />
                     <span className="text-[10px] font-black uppercase tracking-widest text-gray-400">
-                      {selecionada.atendimento === 'humano' ? 'Atenção humano' : 'IA conduzindo'}
+                      {selecionada.atendimento === 'humano' ? 'Em atendimento humano' : 'IA ativa'}
                     </span>
                   </div>
                 </div>
@@ -362,14 +380,14 @@ export default function Inbox() {
                   whileTap={{ scale: 0.95 }}
                   onClick={selecionada.atendimento === 'ia' ? assumir : soltarIA}
                   className={cn(
-                    "flex-1 md:flex-none px-4 md:px-8 py-4 rounded-[1.5rem] text-[10px] font-black uppercase tracking-widest transition-all shadow-2xl flex items-center justify-center gap-3",
+                    "flex-1 md:flex-none px-4 md:px-8 py-4 rounded-[1.5rem] text-[10px] font-black uppercase tracking-widest transition-all shadow-sm flex items-center justify-center gap-3",
                     selecionada.atendimento === 'ia' 
-                    ? "bg-[#d48997] text-white shadow-[#E29BA8]/20" 
-                    : "bg-emerald-600 text-white shadow-emerald-500/20"
+                    ? "bg-[#d48997] text-white" 
+                    : "bg-emerald-600 text-white"
                   )}
                 >
                   {selecionada.atendimento === 'ia' ? <Zap size={14} className="text-yellow-400 fill-yellow-400" /> : <Bot size={14} />}
-                  {selecionada.atendimento === 'ia' ? 'ASSUMIR CONTROLE' : 'LIBERAR IA'}
+                  {selecionada.atendimento === 'ia' ? 'ASSUMIR ATENDIMENTO' : 'RETORNAR PARA IA'}
                 </motion.button>
                 <div className="hidden md:block w-px h-10 bg-gray-100 dark:bg-white/5" />
                 <button 
@@ -384,11 +402,11 @@ export default function Inbox() {
             {/* Messages Canvas */}
             <div 
               ref={chatRef}
-              className="flex-1 min-h-0 overflow-y-auto px-4 py-6 md:px-10 md:py-10 space-y-8 custom-scrollbar relative bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] bg-fixed"
+              className="flex-1 min-h-0 overflow-y-auto px-4 py-6 md:px-10 md:py-10 space-y-8 custom-scrollbar relative bg-[radial-gradient(circle_at_top,_rgba(212,137,151,0.08),_transparent_28%),linear-gradient(180deg,_rgba(255,255,255,0.86),_rgba(249,243,240,0.96))] dark:bg-[radial-gradient(circle_at_top,_rgba(212,137,151,0.08),_transparent_28%),linear-gradient(180deg,_rgba(25,23,30,0.96),_rgba(20,18,24,0.98))]"
             >
               <div className="flex justify-center mb-12">
                 <div className="bg-white/60 dark:bg-gray-900/60 backdrop-blur-md px-6 py-2 rounded-full text-[10px] font-black text-gray-400 dark:text-gray-500 uppercase tracking-[0.3em] border border-gray-100 dark:border-white/5 shadow-sm">
-                  Diálogo iniciado em {new Date(selecionada.createdAt).toLocaleDateString()}
+                  Conversa iniciada em {new Date(selecionada.createdAt).toLocaleDateString('pt-BR')}
                 </div>
               </div>
 
@@ -407,13 +425,13 @@ export default function Inbox() {
               >
                 <div className="hidden md:flex items-center gap-2 px-3 py-3 text-[10px] font-black uppercase tracking-[0.2em] text-gray-400">
                   <MessageSquare size={16} />
-                  Resposta rápida
+                  Resposta rapida
                 </div>
                 <div className="relative flex-1">
                   {showSnippets && snippets.length > 0 && (
                     <div className="absolute bottom-full mb-2 left-0 w-full max-w-sm bg-white dark:bg-gray-900 border border-gray-200 dark:border-white/10 rounded-2xl shadow-2xl overflow-hidden z-50">
                       <div className="bg-gray-50 dark:bg-white/5 px-4 py-2 text-[10px] font-black uppercase tracking-widest text-gray-500 border-b border-gray-100 dark:border-white/5">
-                        Snippets Automáticos
+                        Respostas rapidas
                       </div>
                       <div className="max-h-48 overflow-y-auto">
                         {snippets.filter(s => s.atalho.toLowerCase().includes(texto.substring(1).toLowerCase())).map(snippet => (
@@ -463,8 +481,8 @@ export default function Inbox() {
                         enviar();
                       }
                     }}
-                    placeholder="Redigir resposta estratégica..."
-                    className="w-full bg-transparent border-none outline-none py-3 text-sm font-bold text-gray-700 dark:text-gray-200 resize-none max-h-48 placeholder:text-gray-300 dark:placeholder:text-gray-800"
+                    placeholder="Escreva uma mensagem..."
+                    className="w-full bg-transparent border-none outline-none py-3 text-sm font-bold text-gray-700 dark:text-gray-200 resize-none max-h-48 placeholder:text-[#9f848d] dark:placeholder:text-gray-500"
                   />
                 </div>
                 <motion.button 
@@ -494,11 +512,11 @@ export default function Inbox() {
              <div>
                <p className="text-[10px] font-black text-gray-400 uppercase tracking-[0.3em]">Contexto</p>
                <h4 className="mt-2 text-lg font-black text-gray-900 dark:text-white tracking-tight break-words">{selecionada.nomeCliente || 'Cliente sem nome'}</h4>
-               <p className="text-sm text-gray-500 mt-1 break-all">{selecionada.telefone || 'Telefone não informado'}</p>
+               <p className="text-sm text-gray-500 mt-1 break-all">{selecionada.telefone || 'Telefone nao informado'}</p>
              </div>
              <div className="grid grid-cols-2 gap-3">
                <SideInfo icon={<Calendar />} label="Criada em" value={new Date(selecionada.createdAt).toLocaleDateString('pt-BR')} />
-               <SideInfo icon={<Clock />} label="Última ação" value={formatarHora(selecionada.updatedAt) || '--:--'} />
+               <SideInfo icon={<Clock />} label="Ultima acao" value={formatarHora(selecionada.updatedAt) || '--:--'} />
                <SideInfo icon={<Bot />} label="Modo" value={selecionada.atendimento === 'humano' ? 'Humano' : 'IA'} />
                <SideInfo icon={<Archive />} label="Status" value={selecionada.status === 'fechada' ? 'Arquivada' : 'Aberta'} />
              </div>
@@ -669,7 +687,7 @@ function MensagemBolha({ m }) {
         <div className="max-w-[80%] bg-[#d48997]/5 dark:bg-[#8c4a57]/10 border border-[#E29BA8]/10 dark:border-purple-800/30 rounded-[2rem] p-4 md:p-8 space-y-4 relative overflow-hidden group hover:border-[#E29BA8] transition-all">
           <div className="flex items-center gap-3 text-[#d48997]">
             <Sparkles className="animate-pulse" size={20} />
-            <span className="text-[10px] font-black uppercase tracking-[0.3em]">IA Strategy Summary</span>
+            <span className="text-[10px] font-black uppercase tracking-[0.3em]">Resumo da IA</span>
           </div>
           <p className="text-sm text-gray-600 dark:text-gray-300 leading-relaxed font-bold italic">
             "{m.conteudo.replace('[RESUMO]', '').trim()}"
@@ -694,17 +712,17 @@ function MensagemBolha({ m }) {
         isClient ? "flex-row" : "flex-row-reverse"
       )}>
         <span className="text-[9px] font-black text-gray-400 uppercase tracking-widest opacity-0 group-hover:opacity-100 transition-opacity">
-          {isClient ? 'Contact' : isIA ? 'System Intelligence' : 'Operator'}
+          {isClient ? 'Cliente' : isIA ? 'IA' : 'Atendente'}
         </span>
         <div className="w-1 h-1 rounded-full bg-gray-200 dark:bg-white/10" />
         <span className="text-[9px] text-gray-400 font-black tracking-tighter">{formatarHora(m.createdAt)}</span>
       </div>
       
       <div className={cn(
-        "px-6 py-4 rounded-[1.8rem] shadow-xl border relative max-w-[80%] transition-all hover:scale-[1.01]",
+        "px-6 py-4 rounded-[1.8rem] shadow-sm border relative max-w-[80%] transition-all hover:scale-[1.01]",
         isClient 
         ? "bg-white dark:bg-gray-900 border-gray-100 dark:border-white/5 rounded-tl-sm text-gray-800 dark:text-gray-100" 
-        : "bg-gradient-to-br from-[#d48997] to-indigo-600 border-[#E29BA8] rounded-tr-sm text-white shadow-[#E29BA8]/20"
+        : "bg-[#dcf8e8] dark:bg-[#2c5a44] border-[#c7e9d6] dark:border-[#376a51] rounded-tr-sm text-[#123524] dark:text-white"
       )}>
         {m.tipo && m.tipo !== 'texto' ? <MensagemMidia m={m} isClient={isClient} /> : null}
         {exibirTexto ? (
@@ -714,7 +732,7 @@ function MensagemBolha({ m }) {
           "flex items-center gap-1 mt-2 opacity-40",
           isClient ? "justify-start" : "justify-end"
         )}>
-          {!isClient && <CheckCheck size={12} className="text-gray-900 dark:text-white" />}
+          {!isClient && <CheckCheck size={12} className="text-[#0f5132] dark:text-white" />}
         </div>
         
         {/* Tail decoration */}
@@ -724,7 +742,7 @@ function MensagemBolha({ m }) {
         )}>
            <div className={cn(
              "w-4 h-4 rotate-45 transform origin-top shadow-sm",
-             isClient ? "bg-white dark:bg-gray-900 -translate-x-2" : "bg-indigo-600 translate-x-2"
+             isClient ? "bg-white dark:bg-gray-900 -translate-x-2" : "bg-[#dcf8e8] dark:bg-[#2c5a44] translate-x-2"
            )} />
         </div>
       </div>

@@ -208,7 +208,10 @@ async function handleWhatsapp(req, res) {
     } else {
       await prisma.conversa.update({
         where: { id: conversa.id },
-        data: { updatedAt: new Date() },
+        data: {
+          updatedAt: new Date(),
+          status: 'aberta',
+        },
       });
     }
 

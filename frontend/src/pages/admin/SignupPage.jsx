@@ -34,6 +34,7 @@ export default function SignupPage() {
       const response = await signup(form);
       localStorage.setItem('salao_data', JSON.stringify(response.data.salao));
       setAdminSession({
+        token: response.data.token,
         expiresAt: response.data.expiresAt,
         userId: response.data.user?.id || '',
         role: response.data.user?.role || 'admin',

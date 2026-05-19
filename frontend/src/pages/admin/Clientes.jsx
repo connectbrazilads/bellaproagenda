@@ -164,17 +164,17 @@ export default function Clientes() {
 
   return (
     <div className="mx-auto flex max-w-7xl flex-col gap-4 md:p-8 pb-16">
-      <section className="flex flex-col gap-4 sm:p-6 rounded-[2rem] border border-gray-200 dark:border-white/5 bg-gray-50 dark:bg-[#16141a]/95 p-4 sm:p-6 shadow-[0_30px_80px_rgba(0,0,0,0.32)] lg:flex-row lg:items-start lg:justify-between lg:p-8">
+      <section className="flex flex-col gap-4 rounded-[2rem] border border-gray-200 bg-white/90 p-4 shadow-[0_24px_60px_rgba(0,0,0,0.12)] dark:border-white/5 dark:bg-[#16141a]/95 dark:shadow-[0_30px_80px_rgba(0,0,0,0.32)] sm:p-6 lg:flex-row lg:items-start lg:justify-between lg:p-8">
         <div className="max-w-3xl space-y-5">
           <div className="flex items-center gap-3 text-[11px] font-semibold uppercase tracking-[0.42em] text-[#E29BA8]">
             <Users className="h-4 w-4" />
             CRM BellaPro
           </div>
           <div className="space-y-4">
-            <h1 className="font-['Playfair_Display'] text-2xl sm:text-4xl leading-none text-[#faf7f6] sm:text-5xl">
+            <h1 className="font-['Playfair_Display'] text-2xl leading-none text-[#2f2430] dark:text-[#faf7f6] sm:text-4xl sm:text-5xl">
               Base de <span className="text-[#E29BA8]">Clientes</span>
             </h1>
-            <p className="max-w-2xl text-lg leading-8 text-[#c7adb4]">
+            <p className="max-w-2xl text-lg leading-8 text-[#7f6570] dark:text-[#c7adb4]">
               Organize relacionamento, historico e oportunidades com uma leitura mais elegante da sua carteira.
             </p>
           </div>
@@ -184,7 +184,7 @@ export default function Clientes() {
           <button
             type="button"
             onClick={() => setModalNovo(true)}
-            className="inline-flex min-h-[52px] items-center justify-center gap-3 rounded-full border border-gray-200 dark:border-white/5 bg-[rgba(255,255,255,0.04)] px-7 text-sm font-semibold uppercase tracking-[0.22em] text-[#faf7f6] transition hover:border-[rgba(233,155,168,0.18)]"
+            className="inline-flex min-h-[52px] items-center justify-center gap-3 rounded-full border border-gray-200 bg-white px-7 text-sm font-semibold uppercase tracking-[0.22em] text-[#3b2a35] shadow-sm transition hover:border-[rgba(233,155,168,0.18)] dark:border-white/5 dark:bg-[rgba(255,255,255,0.04)] dark:text-[#faf7f6]"
           >
             <Plus className="h-4 w-4 text-[#f7c1b6]" />
             Novo registro
@@ -210,13 +210,13 @@ export default function Clientes() {
             value={busca}
             onChange={(event) => setBusca(event.target.value)}
             placeholder="Busque por nome ou telefone..."
-            className="h-14 w-full rounded-[22px] bg-transparent pl-14 pr-4 text-base text-[#faf7f6] outline-none placeholder:text-[#806871]"
+            className="h-14 w-full rounded-[22px] bg-transparent pl-14 pr-4 text-base text-[#3b2a35] outline-none placeholder:text-[#9a7f88] dark:text-[#faf7f6] dark:placeholder:text-[#806871]"
           />
         </div>
         <button
           type="submit"
           disabled={loading}
-          className="inline-flex min-h-[52px] items-center justify-center rounded-full bg-[rgba(233,155,168,0.14)] px-7 text-sm font-semibold uppercase tracking-[0.22em] text-[#f7c1b6] transition hover:bg-[rgba(233,155,168,0.2)] disabled:opacity-60"
+          className="inline-flex min-h-[52px] items-center justify-center rounded-full bg-[rgba(233,155,168,0.14)] px-7 text-sm font-semibold uppercase tracking-[0.22em] text-[#b96a79] transition hover:bg-[rgba(233,155,168,0.2)] disabled:opacity-60 dark:text-[#f7c1b6]"
         >
           {loading ? 'Sincronizando...' : 'Localizar'}
         </button>
@@ -233,10 +233,10 @@ export default function Clientes() {
           <div className="h-12 w-12 animate-spin rounded-full border-4 border-[rgba(233,155,168,0.22)] border-t-[#e99ba8]" />
         </div>
       ) : clientes.length === 0 ? (
-        <div className="rounded-[2rem] border border-dashed border-[rgba(233,155,168,0.16)] bg-[rgba(41,31,37,0.82)] px-8 py-16 text-center">
+        <div className="rounded-[2rem] border border-dashed border-[rgba(233,155,168,0.16)] bg-white/90 px-8 py-16 text-center dark:bg-[rgba(41,31,37,0.82)]">
           <Users className="mx-auto h-14 w-14 text-[#806871]" />
-          <h2 className="mt-6 font-['Playfair_Display'] text-3xl text-[#faf7f6]">Base vazia</h2>
-          <p className="mx-auto mt-3 max-w-xl text-sm leading-7 text-[#c7adb4]">
+          <h2 className="mt-6 font-['Playfair_Display'] text-3xl text-[#2f2430] dark:text-[#faf7f6]">Base vazia</h2>
+          <p className="mx-auto mt-3 max-w-xl text-sm leading-7 text-[#7f6570] dark:text-[#c7adb4]">
             Cadastre o primeiro cliente ou importe sua base para iniciar o relacionamento no sistema.
           </p>
         </div>
@@ -262,19 +262,19 @@ export default function Clientes() {
                 >
                   <div className="flex items-center gap-5">
                     <div className="relative">
-                      <div className="flex h-20 w-20 items-center justify-center rounded-[26px] bg-[rgba(20,16,22,0.55)] text-3xl font-semibold text-[#faf7f6]">
+                      <div className="flex h-20 w-20 items-center justify-center rounded-[26px] bg-[#3b2a35]/14 text-3xl font-semibold text-[#3b2a35] dark:bg-[rgba(20,16,22,0.55)] dark:text-[#faf7f6]">
                         {initials(cliente.nome)}
                       </div>
                       <span className={cn('absolute -right-1 -top-1 h-5 w-5 rounded-full border-2 border-[#2b2228]', status.dot)} />
                     </div>
                     <div>
                       <div className="flex flex-wrap items-center gap-3">
-                        <h3 className="font-['Playfair_Display'] text-3xl text-[#faf7f6]">{cliente.nome}</h3>
+                        <h3 className="font-['Playfair_Display'] text-3xl text-[#2f2430] dark:text-[#faf7f6]">{cliente.nome}</h3>
                         <span className={cn('rounded-full border px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.16em]', status.chip)}>
                           {status.label}
                         </span>
                       </div>
-                      <div className="mt-3 flex flex-wrap gap-4 text-sm text-[#c7adb4]">
+                      <div className="mt-3 flex flex-wrap gap-4 text-sm text-[#7f6570] dark:text-[#c7adb4]">
                         <span className="inline-flex items-center gap-2">
                           <Phone className="h-4 w-4 text-[#f7c1b6]" />
                           {cliente.telefone || 'Sem telefone'}
@@ -292,7 +292,7 @@ export default function Clientes() {
                   <div className="grid grid-cols-3 gap-4 border-t border-gray-200 dark:border-white/5 pt-5 lg:border-l lg:border-t-0 lg:pl-6 lg:pt-0">
                     <div className="text-center">
                       <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-[#9f848d]">Visitas</p>
-                      <p className="mt-2 text-2xl font-semibold text-[#faf7f6]">{cliente.totalVisitas || 0}</p>
+                      <p className="mt-2 text-2xl font-semibold text-[#2f2430] dark:text-[#faf7f6]">{cliente.totalVisitas || 0}</p>
                     </div>
                     <div className="text-center">
                       <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-[#9f848d]">LTV</p>
@@ -326,19 +326,19 @@ export default function Clientes() {
               animate={{ opacity: 1, y: 0, scale: 1 }}
               exit={{ opacity: 0, y: 18, scale: 0.98 }}
               onSubmit={criarNovoCliente}
-              className="relative z-10 max-h-[calc(100dvh-1.5rem)] w-full max-w-2xl overflow-y-auto rounded-[2rem] border border-gray-200 dark:border-white/5 bg-[rgba(28,23,31,0.98)] p-4 shadow-[0_40px_120px_rgba(0,0,0,0.45)] custom-scrollbar sm:p-6 lg:p-8"
+              className="relative z-10 max-h-[calc(100dvh-1.5rem)] w-full max-w-2xl overflow-y-auto rounded-[2rem] border border-gray-200 bg-white/95 p-4 shadow-[0_40px_120px_rgba(0,0,0,0.18)] custom-scrollbar dark:border-white/5 dark:bg-[rgba(28,23,31,0.98)] dark:shadow-[0_40px_120px_rgba(0,0,0,0.45)] sm:p-6 lg:p-8"
             >
               <button
                 type="button"
                 onClick={() => setModalNovo(false)}
-                className="absolute right-5 top-5 rounded-full border border-gray-200 dark:border-white/5 p-2 text-[#c7adb4] transition hover:text-[#faf7f6]"
+                className="absolute right-5 top-5 rounded-full border border-gray-200 p-2 text-[#8a7079] transition hover:text-[#3b2a35] dark:border-white/5 dark:text-[#c7adb4] dark:hover:text-[#faf7f6]"
               >
                 <X className="h-4 w-4" />
               </button>
 
               <div className="mb-8 border-b border-gray-200 dark:border-white/5 pb-6">
                 <p className="text-[11px] font-semibold uppercase tracking-[0.3em] text-[#E29BA8]">Cadastro rapido</p>
-                <h2 className="mt-3 font-['Playfair_Display'] text-2xl sm:text-4xl text-[#faf7f6]">Novo cliente</h2>
+                <h2 className="mt-3 font-['Playfair_Display'] text-2xl text-[#2f2430] dark:text-[#faf7f6] sm:text-4xl">Novo cliente</h2>
               </div>
 
               <div className="grid gap-5 sm:grid-cols-2">
@@ -351,7 +351,7 @@ export default function Clientes() {
                   ['endereco', 'Endereco', 'text', false],
                 ].map(([field, label, type, required]) => (
                   <label key={field} className={field === 'endereco' ? 'sm:col-span-2' : ''}>
-                    <span className="mb-3 block text-[11px] font-semibold uppercase tracking-[0.26em] text-[#c7adb4]">
+                    <span className="mb-3 block text-[11px] font-semibold uppercase tracking-[0.26em] text-[#8a7079] dark:text-[#c7adb4]">
                       {label}
                     </span>
                     <input
@@ -364,7 +364,7 @@ export default function Clientes() {
                           [field]: event.target.value,
                         }))
                       }
-                      className="h-14 w-full rounded-[20px] border border-gray-200 dark:border-white/5 bg-[rgba(20,16,22,0.66)] px-5 text-base text-[#faf7f6] outline-none placeholder:text-[#806871] focus:border-[rgba(233,155,168,0.28)]"
+                      className="h-14 w-full rounded-[20px] border border-gray-200 bg-white px-5 text-base text-[#2f2430] outline-none placeholder:text-[#9a7f88] focus:border-[rgba(233,155,168,0.28)] dark:border-white/5 dark:bg-[rgba(20,16,22,0.66)] dark:text-[#faf7f6] dark:placeholder:text-[#806871]"
                     />
                   </label>
                 ))}
@@ -374,7 +374,7 @@ export default function Clientes() {
                 <button
                   type="button"
                   onClick={() => setModalNovo(false)}
-                  className="inline-flex min-h-[52px] items-center justify-center rounded-full border border-gray-200 dark:border-white/5 px-7 text-sm font-semibold uppercase tracking-[0.22em] text-[#c7adb4] transition hover:border-[rgba(233,155,168,0.18)] hover:text-[#faf7f6]"
+                  className="inline-flex min-h-[52px] items-center justify-center rounded-full border border-gray-200 px-7 text-sm font-semibold uppercase tracking-[0.22em] text-[#8a7079] transition hover:border-[rgba(233,155,168,0.18)] hover:text-[#3b2a35] dark:border-white/5 dark:text-[#c7adb4] dark:hover:text-[#faf7f6]"
                 >
                   Cancelar
                 </button>
@@ -407,24 +407,24 @@ export default function Clientes() {
               initial={{ opacity: 0, y: 18, scale: 0.98 }}
               animate={{ opacity: 1, y: 0, scale: 1 }}
               exit={{ opacity: 0, y: 18, scale: 0.98 }}
-              className="relative z-10 max-h-[calc(100dvh-1.5rem)] w-full max-w-2xl overflow-y-auto rounded-[2rem] border border-gray-200 dark:border-white/5 bg-[rgba(28,23,31,0.98)] p-4 shadow-[0_40px_120px_rgba(0,0,0,0.45)] custom-scrollbar sm:p-6 lg:p-8"
+              className="relative z-10 max-h-[calc(100dvh-1.5rem)] w-full max-w-2xl overflow-y-auto rounded-[2rem] border border-gray-200 bg-white/95 p-4 shadow-[0_40px_120px_rgba(0,0,0,0.18)] custom-scrollbar dark:border-white/5 dark:bg-[rgba(28,23,31,0.98)] dark:shadow-[0_40px_120px_rgba(0,0,0,0.45)] sm:p-6 lg:p-8"
             >
               <button
                 type="button"
                 onClick={() => setModalCampanha(false)}
-                className="absolute right-5 top-5 rounded-full border border-gray-200 dark:border-white/5 p-2 text-[#c7adb4] transition hover:text-[#faf7f6]"
+                className="absolute right-5 top-5 rounded-full border border-gray-200 p-2 text-[#8a7079] transition hover:text-[#3b2a35] dark:border-white/5 dark:text-[#c7adb4] dark:hover:text-[#faf7f6]"
               >
                 <X className="h-4 w-4" />
               </button>
 
               <div className="mb-8 border-b border-gray-200 dark:border-white/5 pb-6">
                 <p className="text-[11px] font-semibold uppercase tracking-[0.3em] text-[#E29BA8]">Campanha ativa</p>
-                <h2 className="mt-3 font-['Playfair_Display'] text-2xl sm:text-4xl text-[#faf7f6]">Nova campanha</h2>
+                <h2 className="mt-3 font-['Playfair_Display'] text-2xl text-[#2f2430] dark:text-[#faf7f6] sm:text-4xl">Nova campanha</h2>
               </div>
 
               <div className="space-y-6">
                 <div>
-                  <span className="mb-3 block text-[11px] font-semibold uppercase tracking-[0.26em] text-[#c7adb4]">
+                  <span className="mb-3 block text-[11px] font-semibold uppercase tracking-[0.26em] text-[#8a7079] dark:text-[#c7adb4]">
                     Publico alvo
                   </span>
                   <div className="grid gap-3 sm:grid-cols-3">
@@ -437,7 +437,7 @@ export default function Clientes() {
                           'rounded-[18px] border px-4 py-3 text-[11px] font-semibold uppercase tracking-[0.18em] transition',
                           segmento === item
                             ? 'border-[rgba(233,155,168,0.28)] bg-[rgba(233,155,168,0.14)] text-[#f7c1b6]'
-                            : 'border-gray-200 dark:border-white/5 bg-[rgba(255,255,255,0.03)] text-[#c7adb4]'
+                            : 'border-gray-200 bg-[#f8efef] text-[#7f6570] dark:border-white/5 dark:bg-[rgba(255,255,255,0.03)] dark:text-[#c7adb4]'
                         )}
                       >
                         {item === 'inativo' ? 'Inativos' : item === 'perdido' ? 'Perdidos' : 'Todos'}
@@ -447,14 +447,14 @@ export default function Clientes() {
                 </div>
 
                 <label className="block">
-                  <span className="mb-3 block text-[11px] font-semibold uppercase tracking-[0.26em] text-[#c7adb4]">
+                  <span className="mb-3 block text-[11px] font-semibold uppercase tracking-[0.26em] text-[#8a7079] dark:text-[#c7adb4]">
                     Mensagem
                   </span>
                   <textarea
                     value={msgCampanha}
                     onChange={(event) => setMsgCampanha(event.target.value)}
                     rows={6}
-                    className="w-full rounded-[24px] border border-gray-200 dark:border-white/5 bg-[rgba(20,16,22,0.66)] px-5 py-4 text-base leading-7 text-[#faf7f6] outline-none placeholder:text-[#806871] focus:border-[rgba(233,155,168,0.28)]"
+                    className="w-full rounded-[24px] border border-gray-200 bg-white px-5 py-4 text-base leading-7 text-[#2f2430] outline-none placeholder:text-[#9a7f88] focus:border-[rgba(233,155,168,0.28)] dark:border-white/5 dark:bg-[rgba(20,16,22,0.66)] dark:text-[#faf7f6] dark:placeholder:text-[#806871]"
                   />
                 </label>
 
@@ -462,7 +462,7 @@ export default function Clientes() {
                   <button
                     type="button"
                     onClick={() => setModalCampanha(false)}
-                    className="inline-flex min-h-[52px] items-center justify-center rounded-full border border-gray-200 dark:border-white/5 px-7 text-sm font-semibold uppercase tracking-[0.22em] text-[#c7adb4] transition hover:border-[rgba(233,155,168,0.18)] hover:text-[#faf7f6]"
+                    className="inline-flex min-h-[52px] items-center justify-center rounded-full border border-gray-200 px-7 text-sm font-semibold uppercase tracking-[0.22em] text-[#8a7079] transition hover:border-[rgba(233,155,168,0.18)] hover:text-[#3b2a35] dark:border-white/5 dark:text-[#c7adb4] dark:hover:text-[#faf7f6]"
                   >
                     Cancelar
                   </button>
@@ -498,23 +498,23 @@ export default function Clientes() {
               animate={{ x: 0 }}
               exit={{ x: '100%' }}
               transition={{ type: 'spring', stiffness: 220, damping: 28 }}
-              className="relative z-10 h-full w-full max-w-2xl overflow-y-auto border-l border-gray-200 dark:border-white/5 bg-[rgba(28,23,31,0.98)] shadow-[0_40px_120px_rgba(0,0,0,0.45)]"
+              className="relative z-10 h-full w-full max-w-2xl overflow-y-auto border-l border-gray-200 bg-white/95 shadow-[0_40px_120px_rgba(0,0,0,0.18)] dark:border-white/5 dark:bg-[rgba(28,23,31,0.98)] dark:shadow-[0_40px_120px_rgba(0,0,0,0.45)]"
             >
               <button
                 type="button"
                 onClick={() => setExpandido(null)}
-                className="absolute right-5 top-5 rounded-full border border-gray-200 dark:border-white/5 p-2 text-[#c7adb4] transition hover:text-[#faf7f6]"
+                className="absolute right-5 top-5 rounded-full border border-gray-200 p-2 text-[#8a7079] transition hover:text-[#3b2a35] dark:border-white/5 dark:text-[#c7adb4] dark:hover:text-[#faf7f6]"
               >
                 <X className="h-4 w-4" />
               </button>
 
               <div className="border-b border-gray-200 dark:border-white/5 p-4 md:p-8">
-                <div className="mx-auto flex h-28 w-28 items-center justify-center rounded-full bg-[rgba(20,16,22,0.55)] text-3xl sm:text-5xl font-semibold text-[#faf7f6]">
+                <div className="mx-auto flex h-28 w-28 items-center justify-center rounded-full bg-[#3b2a35]/14 text-3xl sm:text-5xl font-semibold text-[#3b2a35] dark:bg-[rgba(20,16,22,0.55)] dark:text-[#faf7f6]">
                   {initials(clienteExpandido.nome)}
                 </div>
                 <div className="mt-6 text-center">
-                  <h2 className="font-['Playfair_Display'] text-2xl sm:text-4xl text-[#faf7f6]">{clienteExpandido.nome}</h2>
-                  <div className="mt-4 flex flex-wrap items-center justify-center gap-4 text-sm text-[#c7adb4]">
+                  <h2 className="font-['Playfair_Display'] text-2xl text-[#2f2430] dark:text-[#faf7f6] sm:text-4xl">{clienteExpandido.nome}</h2>
+                  <div className="mt-4 flex flex-wrap items-center justify-center gap-4 text-sm text-[#7f6570] dark:text-[#c7adb4]">
                     <span className="inline-flex items-center gap-2">
                       <Phone className="h-4 w-4 text-[#f7c1b6]" />
                       {clienteExpandido.telefone || 'Sem telefone'}
@@ -536,7 +536,7 @@ export default function Clientes() {
                 </div>
                 <div className="p-5 text-center">
                   <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-[#9f848d]">Visitas</p>
-                  <p className="mt-2 text-2xl font-semibold text-[#faf7f6]">{clienteExpandido.totalVisitas || 0}</p>
+                  <p className="mt-2 text-2xl font-semibold text-[#2f2430] dark:text-[#faf7f6]">{clienteExpandido.totalVisitas || 0}</p>
                 </div>
                 <div className="p-5 text-center">
                   <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-[#9f848d]">Fidelidade</p>
@@ -555,7 +555,7 @@ export default function Clientes() {
                   <div className="grid gap-4 sm:grid-cols-2">
                     <div className="rounded-[24px] border border-gray-200 dark:border-white/5 bg-[rgba(255,255,255,0.03)] p-5">
                       <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-[#9f848d]">Ultima visita</p>
-                      <p className="mt-2 text-sm text-[#faf7f6]">
+                      <p className="mt-2 text-sm text-[#2f2430] dark:text-[#faf7f6]">
                         {clienteExpandido.lastVisit
                           ? new Date(clienteExpandido.lastVisit).toLocaleDateString()
                           : 'Nunca'}
@@ -563,7 +563,7 @@ export default function Clientes() {
                     </div>
                     <div className="rounded-[24px] border border-gray-200 dark:border-white/5 bg-[rgba(255,255,255,0.03)] p-5">
                       <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-[#9f848d]">Aniversario</p>
-                      <p className="mt-2 text-sm text-[#faf7f6]">
+                      <p className="mt-2 text-sm text-[#2f2430] dark:text-[#faf7f6]">
                         {clienteExpandido.dataNascimento
                           ? new Date(clienteExpandido.dataNascimento).toLocaleDateString()
                           : 'Nao informado'}
@@ -571,7 +571,7 @@ export default function Clientes() {
                     </div>
                     <div className="rounded-[24px] border border-gray-200 dark:border-white/5 bg-[rgba(255,255,255,0.03)] p-5 sm:col-span-2">
                       <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-[#9f848d]">Endereco</p>
-                      <p className="mt-2 text-sm text-[#faf7f6]">
+                      <p className="mt-2 text-sm text-[#2f2430] dark:text-[#faf7f6]">
                         {clienteExpandido.endereco || 'Sem endereco cadastrado'}
                       </p>
                     </div>
@@ -603,7 +603,7 @@ export default function Clientes() {
                               </span>
                             </div>
                             <div className="min-w-0 flex-1">
-                              <p className="truncate text-sm font-semibold text-[#faf7f6]">
+                              <p className="truncate text-sm font-semibold text-[#2f2430] dark:text-[#faf7f6]">
                                 {agendamento.servico?.nome || agendamento.pacote?.nome || 'Servico'}
                               </p>
                               <p className="mt-1 text-[11px] uppercase tracking-[0.18em] text-[#9f848d]">
@@ -611,7 +611,7 @@ export default function Clientes() {
                               </p>
                             </div>
                             <div className="shrink-0 text-right">
-                              <p className="text-sm font-semibold text-[#faf7f6]">
+                              <p className="text-sm font-semibold text-[#2f2430] dark:text-[#faf7f6]">
                                 {moeda(agendamento.servico?.preco || agendamento.pacote?.preco || 0)}
                               </p>
                             </div>

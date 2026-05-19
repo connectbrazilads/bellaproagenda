@@ -34,6 +34,7 @@ export default function LoginPage() {
       };
 
       setAdminSession({
+        token: res.data.token,
         expiresAt: res.data.expiresAt,
         userId: user.id || '',
         role: user.role || '',
@@ -71,7 +72,7 @@ export default function LoginPage() {
   async function handleResetPassword(e) {
     e.preventDefault();
     if (novaSenha !== confirmarNovaSenha) {
-      setErro('A confirmacao da nova senha não confere.');
+      setErro('A confirmacao da nova senha nao confere.');
       return;
     }
 
@@ -104,10 +105,10 @@ export default function LoginPage() {
             <div className="max-w-xl space-y-6">
               <BrandLogo className="mb-10" />
               <div>
-                <p className="brand-kicker text-[#f0bac0]">Painel do s?o</p>
+                <p className="brand-kicker text-[#f0bac0]">Painel do salao</p>
                 <h1 className="mt-4 font-brand-display text-2xl sm:text-4xl sm:text-6xl leading-[0.94] tracking-[-0.06em] text-gray-900 dark:text-white">
                   Elegancia na marca.
-                  <span className="brand-text-gradient block">Clareza na opera??o.</span>
+                  <span className="brand-text-gradient block">Clareza na operacao.</span>
                 </h1>
                 <p className="mt-6 max-w-lg text-lg leading-relaxed text-white/62">
                   A BellaPro Agenda entra com visual premium, rotina organizada e uma experiencia mais refinada para recepcao, gestao e atendimento.
@@ -140,12 +141,12 @@ export default function LoginPage() {
             <div className="mb-8">
               <p className="brand-kicker text-[#efb1bb]">{isResetMode ? 'Recuperacao de acesso' : 'Acesso administrativo'}</p>
               <h2 className="mt-3 font-brand-display text-2xl sm:text-4xl tracking-[-0.05em] text-gray-900 dark:text-white">
-                {isResetMode ? 'Redefina sua senha' : 'Entre não painel BellaPro'}
+                {isResetMode ? 'Redefina sua senha' : 'Entre no painel BellaPro'}
               </h2>
               <p className="mt-3 text-sm leading-relaxed text-gray-200 dark:text-white/56">
                 {isResetMode
                   ? 'Crie uma nova senha forte para retomar o acesso com seguranca.'
-                  : 'Use seu login do s?o para acessar agenda, opera??o e configuracoes.'}
+                  : 'Use seu login do salao para acessar agenda, operacao e configuracoes.'}
               </p>
             </div>
 
@@ -215,7 +216,7 @@ export default function LoginPage() {
               >
                 {loading ? 'Processando...' : (
                   <>
-                    {isResetMode ? 'Redefinir senha' : 'Entrar não sistema'}
+                    {isResetMode ? 'Redefinir senha' : 'Entrar no sistema'}
                     <ArrowRight className="h-4 w-4" />
                   </>
                 )}
