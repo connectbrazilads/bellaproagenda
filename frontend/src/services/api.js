@@ -119,6 +119,7 @@ export const removeProdutoAgendamento = (id, itemId) => api.delete(`/admin/agend
 export const getRelatorio = (params) => api.get('/admin/relatorio', { params });
 export const getFinanceiro = (params) => api.get('/admin/financeiro', { params });
 export const getDashboardExecutivo = (params) => api.get('/admin/dashboard-executivo', { params });
+export const getCaixaStatusPagamento = () => api.get('/admin/caixa/status-pagamento');
 export const getCaixaAtual = () => api.get('/admin/caixa/atual');
 export const getCaixaSessoes = () => api.get('/admin/caixa/sessoes');
 export const getCaixaRelatorioDiario = (params) => api.get('/admin/caixa/relatorio-diario', { params });
@@ -131,6 +132,7 @@ export const dispararIAProativa = () => api.post('/admin/ia-proativa');
 export const dispararLembretes = () => api.post('/admin/lembretes');
 export const dispararCampanha = (data) => api.post('/admin/campanha', data);
 export const getRelatorioRemuneracao = (params) => api.get('/admin/relatorio/remuneracao', { params });
+export const createLancamentoRemuneracao = (data) => api.post('/admin/relatorio/remuneracao/lancamentos', data);
 export const updateComissaoPaga = (data) => api.put('/admin/relatorio/remuneracao/pago', data);
 
 // ADMIN DESPESAS

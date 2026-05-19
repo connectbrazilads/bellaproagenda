@@ -18,6 +18,7 @@ import {
 import {
   deleteAgendamento,
   getAgendamentos,
+  getCaixaStatusPagamento,
   updatePagamentoAgendamento,
   updateStatusAgendamento,
 } from '../../services/api';
@@ -47,10 +48,15 @@ export default function Agendamentos() {
   const [pagamentos, setPagamentos] = useState([{ forma: 'PIX', valor: '' }]);
   const [taxaOperadora, setTaxaOperadora] = useState('0');
   const [valorRecebido, setValorRecebido] = useState('');
+  const [caixaPagamentoStatus, setCaixaPagamentoStatus] = useState({ aberto: true, mensagem: '' });
 
   useEffect(() => {
     loadAgendamentos();
   }, [filtroData, filtroStatus]);
+
+  useEffect(() => {
+    loadCaixaPagamentoStatus();
+  }, []);
 
   async function loadAgendamentos() {
     setLoading(true);
@@ -62,6 +68,21 @@ export default function Agendamentos() {
       setAgendamentos(response.data?.agendamentos || []);
     } finally {
       setLoading(false);
+    }
+  }
+
+  async function loadCaixaPagamentoStatus() {
+    try {
+      const response = await getCaixaStatusPagamento();
+      setCaixaPagamentoStatus({
+        aberto: !!response.data?.aberto,
+        mensagem: response.data?.mensagem || '',
+      });
+    } catch (error) {
+      setCaixaPagamentoStatus({
+        aberto: true,
+        mensagem: '',
+      });
     }
   }
 
@@ -100,6 +121,7 @@ export default function Agendamentos() {
 
   function openPagamento(agendamento) {
     const total = calcTotal(agendamento);
+    loadCaixaPagamentoStatus();
     setPagamentoModal(agendamento);
     setPagamentos([{ forma: 'PIX', valor: total.toFixed(2) }]);
     setTaxaOperadora('0');
@@ -120,18 +142,26 @@ export default function Agendamentos() {
 
   async function confirmPagamento() {
     if (!pagamentoModal) return;
+    if (!caixaPagamentoStatus.aberto) {
+      window.alert(caixaPagamentoStatus.mensagem || 'Abra o caixa antes de registrar pagamentos.');
+      return;
+    }
 
-    await updatePagamentoAgendamento(pagamentoModal.id, {
-      pagamentos: pagamentos.map((item) => ({
-        forma: item.forma,
-        valor: Number(item.valor || 0),
-      })),
-      taxaOperadora: Number(taxaOperadora || 0),
-      valorRecebido: Number(valorRecebido || 0),
-    });
+    try {
+      await updatePagamentoAgendamento(pagamentoModal.id, {
+        pagamentos: pagamentos.map((item) => ({
+          forma: item.forma,
+          valor: Number(item.valor || 0),
+        })),
+        taxaOperadora: Number(taxaOperadora || 0),
+        valorRecebido: Number(valorRecebido || 0),
+      });
 
-    setPagamentoModal(null);
-    await loadAgendamentos();
+      setPagamentoModal(null);
+      await loadAgendamentos();
+    } catch (error) {
+      window.alert(error.response?.data?.error || 'Nao foi possivel registrar o pagamento.');
+    }
   }
 
   const totalDevido = pagamentoModal ? calcTotal(pagamentoModal) : 0;
@@ -191,6 +221,12 @@ export default function Agendamentos() {
       </div>
 
       <div className="space-y-4">
+        {!caixaPagamentoStatus.aberto && (
+          <div className="rounded-[1.5rem] border border-amber-300/20 bg-amber-400/10 px-5 py-4 text-sm text-amber-100">
+            {caixaPagamentoStatus.mensagem || 'Abra o caixa antes de registrar pagamentos.'}
+          </div>
+        )}
+
         {loading && <div className="rounded-[2rem] border border-gray-200 dark:border-white/5 bg-[#231b22] px-6 py-10 text-center text-white/46">Carregando agendamentos...</div>}
 
         {!loading && filtrados.length === 0 && (
@@ -254,7 +290,12 @@ export default function Agendamentos() {
                     <ActionButton variant="secondary" onClick={() => handleStatus(agendamento.id, 'cancelado')} label="Cancelar" />
                   )}
                   {agendamento.status !== 'cancelado' && (
-                    <ActionButton variant="secondary" onClick={() => openPagamento(agendamento)} label="Pagamento" />
+                    <ActionButton
+                      variant="secondary"
+                      onClick={() => openPagamento(agendamento)}
+                      label="Pagamento"
+                      disabled={!caixaPagamentoStatus.aberto}
+                    />
                   )}
                   <ActionButton variant="danger" onClick={() => handleDelete(agendamento.id)} label="Excluir" icon={<Trash2 size={13} />} />
                 </div>
@@ -332,7 +373,7 @@ export default function Agendamentos() {
 
               <div className="mt-6 flex flex-col gap-3 md:flex-row">
                 <ActionButton variant="secondary" onClick={() => setPagamentoModal(null)} label="Cancelar" />
-                <ActionButton onClick={confirmPagamento} label="Confirmar pagamento" />
+                <ActionButton onClick={confirmPagamento} label="Confirmar pagamento" disabled={!caixaPagamentoStatus.aberto} />
               </div>
             </motion.div>
           </motion.div>
@@ -353,7 +394,7 @@ function ResumoItem({ label, value, highlight = false }) {
   );
 }
 
-function ActionButton({ onClick, label, variant = 'primary', icon }) {
+function ActionButton({ onClick, label, variant = 'primary', icon, disabled = false }) {
   const variants = {
     primary: 'bg-gradient-to-r from-[#E29BA8] to-[#d48997] text-[#111116] text-white',
     secondary: 'border border-gray-200 dark:border-white/5 bg-white/[0.04] text-gray-600 dark:text-white/74',
@@ -361,7 +402,15 @@ function ActionButton({ onClick, label, variant = 'primary', icon }) {
   };
 
   return (
-    <button onClick={onClick} className={cn('inline-flex items-center justify-center gap-2 rounded-[1.1rem] px-4 py-3 text-[10px] font-black uppercase tracking-[0.18em]', variants[variant])}>
+    <button
+      onClick={onClick}
+      disabled={disabled}
+      className={cn(
+        'inline-flex items-center justify-center gap-2 rounded-[1.1rem] px-4 py-3 text-[10px] font-black uppercase tracking-[0.18em]',
+        variants[variant],
+        disabled && 'cursor-not-allowed opacity-45'
+      )}
+    >
       {icon}
       {label}
     </button>

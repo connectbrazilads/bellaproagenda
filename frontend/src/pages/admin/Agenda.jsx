@@ -43,7 +43,7 @@ import {
   getProfissionais, getAgendamentos, getServicos, getPacotes, getProdutos,
   criarAgendamentoAdmin, updateStatusAgendamento, deleteAgendamento, 
   buscarClientes, addItemAgendamento, removeItemAgendamento, addProdutoAgendamento, removeProdutoAgendamento, updatePagamentoAgendamento,
-  createBloqueio, getListaEspera, createListaEspera, deleteListaEspera, reagendarAgendamento
+  createBloqueio, getListaEspera, createListaEspera, deleteListaEspera, reagendarAgendamento, getCaixaStatusPagamento
 } from '../../services/api';
 import { addDays, cn, formatDateBR, formatDateInput, formatDurationLabel } from '../../lib/utils';
 
@@ -618,10 +618,24 @@ function ModalDetalhesAgendamento({ agendamento: initialAgendamento, onClose, on
   const [tab, setTab] = useState('comanda');
   const [pagamentoForma, setPagamentoForma] = useState('');
   const [pagamentoTaxa, setPagamentoTaxa] = useState('0');
+  const [caixaPagamentoStatus, setCaixaPagamentoStatus] = useState({ aberto: true, mensagem: '' });
+
+  async function refreshCaixaPagamentoStatus() {
+    try {
+      const response = await getCaixaStatusPagamento();
+      setCaixaPagamentoStatus({
+        aberto: !!response.data?.aberto,
+        mensagem: response.data?.mensagem || '',
+      });
+    } catch (error) {
+      setCaixaPagamentoStatus({ aberto: true, mensagem: '' });
+    }
+  }
 
   useEffect(() => {
     getServicos().then(r => setServicos(r?.data || []));
     getProdutos().then(r => setProdutos(r?.data || []));
+    refreshCaixaPagamentoStatus();
   }, []);
 
   useEffect(() => {
@@ -669,6 +683,11 @@ function ModalDetalhesAgendamento({ agendamento: initialAgendamento, onClose, on
   }
 
   async function handleCheckout(forma) {
+    if (!caixaPagamentoStatus.aberto) {
+      alert(caixaPagamentoStatus.mensagem || 'Abra o caixa antes de registrar pagamentos.');
+      return;
+    }
+
     setLoading(true);
     try {
       const total = calculateTotal();
@@ -682,7 +701,7 @@ function ModalDetalhesAgendamento({ agendamento: initialAgendamento, onClose, on
       }
       setConcluidoSucesso(true);
     } catch (e) {
-      alert('Erro ao processar checkout');
+      alert(e.response?.data?.error || 'Erro ao processar checkout');
     } finally {
       setLoading(false);
     }
@@ -915,7 +934,10 @@ function ModalDetalhesAgendamento({ agendamento: initialAgendamento, onClose, on
                   </div>
                 ) : (
                   <button 
-                    onClick={() => setTab('pagamento')} 
+                    onClick={() => {
+                      refreshCaixaPagamentoStatus();
+                      setTab('pagamento');
+                    }} 
                     className={cn(
                       "flex-1 py-5 rounded-[2rem] text-[10px] font-black uppercase tracking-[0.2em] transition-all duration-500 flex items-center justify-center gap-3",
                       tab === 'pagamento' ? "bg-white dark:bg-[#d48997] shadow-2xl text-[#d48997] dark:text-white" : "text-gray-400"
@@ -1032,6 +1054,12 @@ function ModalDetalhesAgendamento({ agendamento: initialAgendamento, onClose, on
                         </div>
 
                         <div className="max-w-2xl mx-auto space-y-6">
+                           {!caixaPagamentoStatus.aberto && (
+                             <div className="rounded-[2rem] border border-amber-300/30 bg-amber-400/10 px-5 py-4 text-sm font-semibold text-amber-100">
+                               {caixaPagamentoStatus.mensagem || 'Abra o caixa antes de registrar pagamentos.'}
+                             </div>
+                           )}
+
                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                              {[
                                { label: 'PIX', forma: 'PIX', icon: Smartphone, color: 'text-[#E29BA8]' },
@@ -1081,12 +1109,12 @@ function ModalDetalhesAgendamento({ agendamento: initialAgendamento, onClose, on
                                <p className="text-2xl font-black text-gray-900 dark:text-white">{Number(calculateTotal()).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</p>
                              </div>
 
-                             <button
-                               type="button"
-                               onClick={() => handleCheckout(pagamentoForma)}
-                               disabled={!pagamentoForma || loading || agendamento.statusPagamento === 'pago'}
-                               className="w-full rounded-[2rem] bg-[#E29BA8] hover:bg-[#d48997] disabled:opacity-40 disabled:cursor-not-allowed text-white py-6 font-black uppercase tracking-[0.2em] text-xs shadow-xl shadow-[#E29BA8]/20 transition-all flex items-center justify-center gap-3 mt-4"
-                             >
+                              <button
+                                type="button"
+                                onClick={() => handleCheckout(pagamentoForma)}
+                                disabled={!pagamentoForma || loading || agendamento.statusPagamento === 'pago' || !caixaPagamentoStatus.aberto}
+                                className="w-full rounded-[2rem] bg-[#E29BA8] hover:bg-[#d48997] disabled:opacity-40 disabled:cursor-not-allowed text-white py-6 font-black uppercase tracking-[0.2em] text-xs shadow-xl shadow-[#E29BA8]/20 transition-all flex items-center justify-center gap-3 mt-4"
+                              >
                                <CheckCircle2 size={18} /> {agendamento.statusPagamento === 'pago' ? 'JÒ¡ pago' : 'Finalizar cobranÒ§a'}
                              </button>
                            </div>

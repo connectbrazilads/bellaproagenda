@@ -72,6 +72,7 @@ router.get('/relatorio', requirePermission('relatorio'), ctrl.getRelatorio);
 router.get('/financeiro', requirePermission('financeiro'), ctrl.getFinanceiro);
 router.get('/dashboard-executivo', requirePermission('dashboard'), ctrl.getDashboardExecutivo);
 router.get('/fechamento-diario', requirePermission('financeiro'), requireActionPermission('relatorio.fechamento_diario.ver'), ctrl.getFechamentoDiario);
+router.get('/caixa/status-pagamento', requireAnyPermission(['agenda', 'agendamentos', 'produtos', 'financeiro']), ctrl.getCaixaStatusPagamento);
 router.get('/caixa/atual', requirePermission('financeiro'), ctrl.getCaixaAtual);
 router.get('/caixa/sessoes', requirePermission('financeiro'), ctrl.getCaixaSessoes);
 router.get('/caixa/relatorio-diario', requirePermission('financeiro'), ctrl.getCaixaRelatorioDiario);
@@ -109,6 +110,7 @@ router.get('/auditoria', requirePermission('configuracoes'), requireActionPermis
 router.get('/backup/export', requirePermission('configuracoes'), requireActionPermission('seguranca.backup.exportar'), ctrl.exportBackup);
 
 router.get('/relatorio/remuneracao', requirePermission('remuneracao'), ctrl.getRelatorioRemuneracao);
+router.post('/relatorio/remuneracao/lancamentos', requirePermission('remuneracao'), ctrl.createLancamentoRemuneracao);
 router.put('/relatorio/remuneracao/pago', requirePermission('remuneracao'), ctrl.updateComissaoPaga);
 
 router.put('/senha', requirePermission('configuracoes'), ctrl.updateSenha);

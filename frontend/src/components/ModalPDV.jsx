@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, ShoppingBag, Plus, Minus, Search, CreditCard, Banknote, Smartphone, CheckCircle } from 'lucide-react';
-import { getProdutos, criarVendaPDV } from '../services/api';
+import { getProdutos, criarVendaPDV, getCaixaStatusPagamento } from '../services/api';
 import { cn } from '../lib/utils';
 
 export default function ModalPDV() {
@@ -14,11 +14,13 @@ export default function ModalPDV() {
   const [formaPagamento, setFormaPagamento] = useState('pix');
   const [loading, setLoading] = useState(false);
   const [sucesso, setSucesso] = useState(false);
+  const [caixaPagamentoStatus, setCaixaPagamentoStatus] = useState({ aberto: true, mensagem: '' });
 
   useEffect(() => {
     const handleOpen = () => {
       setOpen(true);
       loadProdutos();
+      loadCaixaPagamentoStatus();
     };
     window.addEventListener('open-pdv', handleOpen);
     return () => window.removeEventListener('open-pdv', handleOpen);
@@ -30,6 +32,21 @@ export default function ModalPDV() {
       setProdutos(res.data.filter(p => p.ativo && p.estoque > 0));
     } catch (e) {
       console.error(e);
+    }
+  }
+
+  async function loadCaixaPagamentoStatus() {
+    try {
+      const response = await getCaixaStatusPagamento();
+      setCaixaPagamentoStatus({
+        aberto: !!response.data?.aberto,
+        mensagem: response.data?.mensagem || '',
+      });
+    } catch (error) {
+      setCaixaPagamentoStatus({
+        aberto: true,
+        mensagem: '',
+      });
     }
   }
 
@@ -66,6 +83,7 @@ export default function ModalPDV() {
 
   const handleFinalizar = async () => {
     if (carrinho.length === 0) return alert('Adicione produtos ao carrinho.');
+    if (!caixaPagamentoStatus.aberto) return alert(caixaPagamentoStatus.mensagem || 'Abra o caixa antes de registrar pagamentos.');
     setLoading(true);
     try {
       await criarVendaPDV({
@@ -189,6 +207,12 @@ export default function ModalPDV() {
               </div>
 
               <div className="space-y-4 pt-4 border-t border-gray-200 dark:border-white/10 mt-auto">
+                {!caixaPagamentoStatus.aberto && (
+                  <div className="rounded-2xl border border-amber-300/30 bg-amber-400/10 px-4 py-3 text-sm font-semibold text-amber-100">
+                    {caixaPagamentoStatus.mensagem || 'Abra o caixa antes de registrar pagamentos.'}
+                  </div>
+                )}
+
                 <div>
                   <input 
                     type="text" 
@@ -243,7 +267,7 @@ export default function ModalPDV() {
                 ) : (
                   <button 
                     onClick={handleFinalizar}
-                    disabled={loading || carrinho.length === 0}
+                    disabled={loading || carrinho.length === 0 || !caixaPagamentoStatus.aberto}
                     className="w-full py-4 bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 text-white rounded-2xl font-black text-sm uppercase tracking-widest shadow-xl shadow-emerald-500/20 transition-all active:scale-[0.98] disabled:opacity-50 disabled:pointer-events-none"
                   >
                     {loading ? 'Processando...' : 'Finalizar Venda'}

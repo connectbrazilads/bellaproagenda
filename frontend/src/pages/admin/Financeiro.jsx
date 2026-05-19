@@ -44,6 +44,21 @@ function formatPlain(value) {
   return Number(value || 0).toLocaleString('pt-BR');
 }
 
+function getAdiantamentosProfissionais(total) {
+  return Number(total?.totalAdiantamentosProfissionais || 0);
+}
+
+function getSangriasOperacionais(total) {
+  return Math.max(0, Number(total?.totalSangrias || 0) - getAdiantamentosProfissionais(total));
+}
+
+function getMovimentoTipoLabel(tipo) {
+  if (tipo === 'adiantamento_profissional') return 'Adiantamento profissional';
+  if (tipo === 'suprimento') return 'Suprimento';
+  if (tipo === 'sangria') return 'Sangria';
+  return tipo;
+}
+
 function StatCard({ label, value, icon, tone = 'rose', plain = false }) {
   const tones = {
     rose: 'bg-[rgba(233,155,168,0.12)] text-[#f7c1b6]',
@@ -261,13 +276,15 @@ export default function Financeiro() {
   }
 
   function imprimirFechamento(sessao) {
+    const totalSangriasOperacionais = getSangriasOperacionais(sessao?.resumo);
+    const totalAdiantamentosProfissionais = getAdiantamentosProfissionais(sessao?.resumo);
     const formas = Object.entries(sessao?.resumo?.porForma || {})
       .map(([forma, valor]) => `<tr><td>${forma}</td><td style="text-align:right">${formatMoney(valor)}</td></tr>`)
       .join('');
     const movimentos = (sessao?.movimentos || [])
       .map(
         (movimento) =>
-          `<tr><td>${movimento.tipo}</td><td>${movimento.descricao || '-'}</td><td style="text-align:right">${formatMoney(
+          `<tr><td>${getMovimentoTipoLabel(movimento.tipo)}</td><td>${movimento.descricao || '-'}</td><td style="text-align:right">${formatMoney(
             movimento.valor
           )}</td><td>${new Date(movimento.createdAt).toLocaleString('pt-BR')}</td></tr>`
       )
@@ -287,7 +304,8 @@ export default function Financeiro() {
       <p><strong>Fundo inicial:</strong> ${formatMoney(sessao.fundoInicial)}</p>
       <p><strong>Receita do turno:</strong> ${formatMoney(sessao.resumo?.totalRecebido)}</p>
       <p><strong>Recebido em dinheiro:</strong> ${formatMoney(sessao.resumo?.totalDinheiro)}</p>
-      <p><strong>Sangrias:</strong> ${formatMoney(sessao.resumo?.totalSangrias)}</p>
+      <p><strong>Sangrias:</strong> ${formatMoney(totalSangriasOperacionais)}</p>
+      <p><strong>Adiantamentos a profissionais:</strong> ${formatMoney(totalAdiantamentosProfissionais)}</p>
       <p><strong>Suprimentos:</strong> ${formatMoney(sessao.resumo?.totalSuprimentos)}</p>
       <p><strong>Dinheiro esperado:</strong> ${formatMoney(sessao.dinheiroEsperado)}</p>
       <p><strong>Dinheiro contado:</strong> ${formatMoney(sessao.dinheiroInformado)}</p>
@@ -304,6 +322,7 @@ export default function Financeiro() {
   }
 
   function imprimirRelatorioDiario() {
+    const consolidado = caixaRelatorioDiario?.consolidado;
     const sessoes = (caixaRelatorioDiario?.sessoes || [])
       .map(
         (sessao) => `
@@ -332,12 +351,13 @@ export default function Financeiro() {
       <h1>Relatorio Diario de Caixa</h1>
       <p><strong>Data:</strong> ${new Date(`${caixaRelatorioDiario?.data || dataRelatorioCaixa}T12:00:00`).toLocaleDateString('pt-BR')}</p>
       <div class="grid">
-        <div class="card"><div class="label">Turnos</div><div class="value">${caixaRelatorioDiario?.consolidado?.totalTurnos || 0}</div></div>
-        <div class="card"><div class="label">Recebido</div><div class="value">${formatMoney(caixaRelatorioDiario?.consolidado?.totalRecebido)}</div></div>
-        <div class="card"><div class="label">Dinheiro</div><div class="value">${formatMoney(caixaRelatorioDiario?.consolidado?.totalDinheiro)}</div></div>
-        <div class="card"><div class="label">Sangrias</div><div class="value">${formatMoney(caixaRelatorioDiario?.consolidado?.totalSangrias)}</div></div>
-        <div class="card"><div class="label">Suprimentos</div><div class="value">${formatMoney(caixaRelatorioDiario?.consolidado?.totalSuprimentos)}</div></div>
-        <div class="card"><div class="label">Diferenca</div><div class="value">${formatMoney(caixaRelatorioDiario?.consolidado?.totalDiferenca)}</div></div>
+        <div class="card"><div class="label">Turnos</div><div class="value">${consolidado?.totalTurnos || 0}</div></div>
+        <div class="card"><div class="label">Recebido</div><div class="value">${formatMoney(consolidado?.totalRecebido)}</div></div>
+        <div class="card"><div class="label">Dinheiro</div><div class="value">${formatMoney(consolidado?.totalDinheiro)}</div></div>
+        <div class="card"><div class="label">Sangrias</div><div class="value">${formatMoney(getSangriasOperacionais(consolidado))}</div></div>
+        <div class="card"><div class="label">Adiant. profissionais</div><div class="value">${formatMoney(getAdiantamentosProfissionais(consolidado))}</div></div>
+        <div class="card"><div class="label">Suprimentos</div><div class="value">${formatMoney(consolidado?.totalSuprimentos)}</div></div>
+        <div class="card"><div class="label">Diferenca</div><div class="value">${formatMoney(consolidado?.totalDiferenca)}</div></div>
       </div>
       <h2>Formas de pagamento</h2>
       <table>
@@ -561,11 +581,12 @@ export default function Financeiro() {
           </div>
         </div>
 
-        <div className="grid gap-3 md:grid-cols-3 xl:grid-cols-6">
+        <div className="grid gap-3 md:grid-cols-3 xl:grid-cols-7">
           <MiniResumo label="Turnos" value={caixaRelatorioDiario?.consolidado?.totalTurnos} plain />
           <MiniResumo label="Recebido" value={caixaRelatorioDiario?.consolidado?.totalRecebido} />
           <MiniResumo label="Dinheiro" value={caixaRelatorioDiario?.consolidado?.totalDinheiro} />
-          <MiniResumo label="Sangrias" value={caixaRelatorioDiario?.consolidado?.totalSangrias} />
+          <MiniResumo label="Sangrias" value={getSangriasOperacionais(caixaRelatorioDiario?.consolidado)} />
+          <MiniResumo label="Adiant. prof." value={caixaRelatorioDiario?.consolidado?.totalAdiantamentosProfissionais} />
           <MiniResumo label="Suprimentos" value={caixaRelatorioDiario?.consolidado?.totalSuprimentos} />
           <MiniResumo label="Diferenca" value={caixaRelatorioDiario?.consolidado?.totalDiferenca} highlight />
         </div>
@@ -583,10 +604,12 @@ export default function Financeiro() {
 
           {caixaAtual ? (
             <div className="space-y-6">
-              <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+              <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-6">
                 <MiniResumo label="Fundo inicial" value={caixaAtual.fundoInicial} />
                 <MiniResumo label="Dinheiro" value={caixaAtual.resumo?.totalDinheiro} />
                 <MiniResumo label="Recebido" value={caixaAtual.resumo?.totalRecebido} />
+                <MiniResumo label="Sangrias" value={getSangriasOperacionais(caixaAtual.resumo)} />
+                <MiniResumo label="Adiant. prof." value={caixaAtual.resumo?.totalAdiantamentosProfissionais} />
                 <MiniResumo label="Esperado" value={dinheiroEsperadoAtual} highlight />
               </div>
 
@@ -717,8 +740,10 @@ export default function Financeiro() {
                     </span>
                   </div>
 
-                  <div className="mt-4 grid grid-cols-2 gap-3">
+                  <div className="mt-4 grid grid-cols-2 gap-3 xl:grid-cols-3">
                     <MiniResumo label="Recebido" value={sessao.resumo?.totalRecebido} />
+                    <MiniResumo label="Sangrias" value={getSangriasOperacionais(sessao.resumo)} />
+                    <MiniResumo label="Adiant. prof." value={sessao.resumo?.totalAdiantamentosProfissionais} />
                     <MiniResumo label="Esperado" value={sessao.dinheiroEsperado} />
                     <MiniResumo label="Contado" value={sessao.dinheiroInformado} />
                     <MiniResumo label="Diferenca" value={sessao.diferencaDinheiro} highlight />

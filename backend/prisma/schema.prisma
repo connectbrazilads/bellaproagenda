@@ -86,6 +86,7 @@ model Salao {
   conversas          Conversa[]
   respostasRapidas   RespostaRapida[]
   caixas             CaixaSessao[]
+  lancamentosProfissional ProfissionalLancamento[]
   auditLogs     AuditLog[]
   invoices      Invoice[]
   supportTickets SupportTicket[]
@@ -147,6 +148,7 @@ model Profissional {
   categorias      ProfissionalCategoria[]
   listaEspera     ListaEspera[]
   agendamentos    Agendamento[]
+  lancamentosFinanceiros ProfissionalLancamento[]
   usuario         Usuario?              @relation("UsuarioProfissional")
 }
 
@@ -415,6 +417,7 @@ model CaixaSessao {
   abertoPor             Usuario  @relation("CaixaAbertoPor", fields: [abertoPorUserId], references: [id], onDelete: Cascade)
   fechadoPor            Usuario? @relation("CaixaFechadoPor", fields: [fechadoPorUserId], references: [id], onDelete: SetNull)
   movimentos            CaixaMovimento[]
+  lancamentosProfissional ProfissionalLancamento[]
 }
 
 model CaixaMovimento {
@@ -425,6 +428,28 @@ model CaixaMovimento {
   descricao     String?
   createdAt     DateTime    @default(now())
   caixaSessao   CaixaSessao @relation(fields: [caixaSessaoId], references: [id], onDelete: Cascade)
+}
+
+model ProfissionalLancamento {
+  id              String        @id @default(uuid())
+  salaoId         String
+  profissionalId  String
+  caixaSessaoId   String?
+  tipo            String
+  origem          String?
+  valor           Float
+  valorCompensado Float         @default(0)
+  descricao       String?
+  data            DateTime      @default(now())
+  compensadoEm    DateTime?
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+  salao           Salao         @relation(fields: [salaoId], references: [id], onDelete: Cascade)
+  profissional    Profissional  @relation(fields: [profissionalId], references: [id], onDelete: Cascade)
+  caixaSessao     CaixaSessao?  @relation(fields: [caixaSessaoId], references: [id], onDelete: SetNull)
+
+  @@index([salaoId, profissionalId, data])
+  @@index([profissionalId, compensadoEm])
 }
 
 model AuditLog {

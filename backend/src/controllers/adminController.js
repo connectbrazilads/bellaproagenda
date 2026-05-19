@@ -29,6 +29,21 @@ function professionalScopeFilter(req) {
   return isScopedProfessional(req) ? { profissionalId: req.user.profissionalId } : {};
 }
 
+async function getCaixaAberto(salaoId) {
+  return prisma.caixaSessao.findFirst({
+    where: {
+      salaoId,
+      status: 'aberto',
+    },
+    orderBy: { abertoEm: 'desc' },
+    select: {
+      id: true,
+      turnoNome: true,
+      abertoEm: true,
+    },
+  });
+}
+
 function horaParaMinutos(hora) {
   const [h, m] = String(hora || '').split(':').map(Number);
   if (Number.isNaN(h) || Number.isNaN(m)) return null;
@@ -110,6 +125,7 @@ async function buildCaixaResumo({ salaoId, inicio, fim, profissionalId }) {
   let totalDinheiro = 0;
   let totalSangrias = 0;
   let totalSuprimentos = 0;
+  let totalAdiantamentosProfissionais = 0;
 
   agendamentos.forEach((ag) => {
     ag.pagamentos.forEach((pagamento) => {
@@ -127,6 +143,10 @@ async function buildCaixaResumo({ salaoId, inicio, fim, profissionalId }) {
     sessao.movimentos.forEach((movimento) => {
       if (movimento.createdAt < inicio || movimento.createdAt > fim) return;
       if (movimento.tipo === 'sangria') totalSangrias += Number(movimento.valor || 0);
+      if (movimento.tipo === 'adiantamento_profissional') {
+        totalSangrias += Number(movimento.valor || 0);
+        totalAdiantamentosProfissionais += Number(movimento.valor || 0);
+      }
       if (movimento.tipo === 'suprimento') totalSuprimentos += Number(movimento.valor || 0);
     });
   });
@@ -137,6 +157,7 @@ async function buildCaixaResumo({ salaoId, inicio, fim, profissionalId }) {
     totalDespesas: despesas.reduce((sum, despesa) => sum + Number(despesa.valor || 0), 0),
     totalSangrias,
     totalSuprimentos,
+    totalAdiantamentosProfissionais,
     qtdLancamentos: agendamentos.length,
     porForma,
   };
@@ -147,6 +168,10 @@ function calcularTotalAgendamento(agendamento) {
   const precoItens = agendamento?.itens?.reduce((sum, item) => sum + Number(item.preco || 0), 0) || 0;
   const precoProdutos = agendamento?.produtos?.reduce((sum, item) => sum + (Number(item.preco || 0) * Number(item.quantidade || 0)), 0) || 0;
   return precoBase + precoItens + precoProdutos;
+}
+
+function calcularSaldoLancamento(lancamento) {
+  return Math.max(0, Number(lancamento?.valor || 0) - Number(lancamento?.valorCompensado || 0));
 }
 
 async function aplicarConsumoEstoqueDoServico(agendamento) {
@@ -1333,6 +1358,11 @@ async function criarVendaPDV(req, res) {
   }
 
   // Prioriza profissional marcado como caixa; se não houver, cria um automaticamente
+  const caixaAberto = await getCaixaAberto(req.user.salaoId);
+  if (!caixaAberto) {
+    return res.status(400).json({ error: 'Abra o caixa antes de registrar pagamentos ou vendas.' });
+  }
+
   let prof = await prisma.profissional.findFirst({ where: { salaoId, caixa: true } });
   if (!prof) {
     // Cria um profissional "Caixa" dedicado que não recebe comissão
@@ -1405,14 +1435,23 @@ async function updatePagamentoAgendamento(req, res) {
   const { id } = req.params;
   const { pagamentos, taxaOperadora } = req.body;
   const salaoId = req.user.salaoId;
+  const pagamentosLista = Array.isArray(pagamentos) ? pagamentos : [];
+  const totalPagoSolicitado = pagamentosLista.reduce((sum, pagamento) => sum + Number(pagamento?.valor || 0), 0);
 
   // Segurança: verificar que o agendamento pertence ao salão
   const agExiste = await getScopedAgendamento(req, id);
   if (!agExiste) return res.status(404).json({ error: 'Agendamento não encontrado' });
 
+  if (totalPagoSolicitado > 0) {
+    const caixaAberto = await getCaixaAberto(req.user.salaoId);
+    if (!caixaAberto) {
+      return res.status(400).json({ error: 'Abra o caixa antes de registrar pagamentos ou vendas.' });
+    }
+  }
+
   await prisma.agendamentoPagamento.deleteMany({ where: { agendamentoId: id } });
 
-  await Promise.all(pagamentos.map(p => 
+  await Promise.all(pagamentosLista.map(p => 
     prisma.agendamentoPagamento.create({
       data: { agendamentoId: id, forma: p.forma, valor: p.valor }
     })
@@ -1427,7 +1466,7 @@ async function updatePagamentoAgendamento(req, res) {
                      ag.itens.reduce((s,i) => s + i.preco, 0) + 
                      ag.produtos.reduce((s,p) => s + (p.preco * p.quantidade), 0);
   
-  const totalPago = pagamentos.reduce((s,p) => s + p.valor, 0);
+  const totalPago = pagamentosLista.reduce((s,p) => s + Number(p.valor || 0), 0);
   const taxa = parseFloat(taxaOperadora) || 0;
   // Valor líquido = total pago menos taxa da maquininha
   const totalLiquido = totalPago - taxa;
@@ -2201,6 +2240,15 @@ async function getCaixaAtual(req, res) {
   res.json({ ...sessao, resumo });
 }
 
+async function getCaixaStatusPagamento(req, res) {
+  const sessao = await getCaixaAberto(req.user.salaoId);
+  res.json({
+    aberto: !!sessao,
+    sessao,
+    mensagem: sessao ? null : 'Abra o caixa antes de registrar pagamentos ou vendas.',
+  });
+}
+
 async function abrirCaixa(req, res) {
   const { turnoNome, fundoInicial, observacaoAbertura, recebidoDeNome } = req.body;
 
@@ -2956,51 +3004,295 @@ async function getDashboardExecutivo(req, res) {
 
 async function getRelatorioRemuneracao(req, res) {
   const { inicio, fim, profissionalId } = req.query;
+  const inicioPeriodo = inicio ? new Date(`${inicio}T00:00:00`) : new Date(new Date().setDate(new Date().getDate() - 30));
+  const fimPeriodo = fim ? new Date(`${fim}T23:59:59`) : new Date();
   const where = {
     salaoId: req.user.salaoId,
     status: 'concluido',
     ...professionalScopeFilter(req),
     data: {
-      gte: inicio ? new Date(inicio) : new Date(new Date().setDate(new Date().getDate() - 30)),
-      lte: fim ? new Date(fim) : new Date()
+      gte: inicioPeriodo,
+      lte: fimPeriodo
     }
   };
 
   if (!isScopedProfessional(req) && profissionalId) where.profissionalId = profissionalId;
 
-  const agendamentos = await prisma.agendamento.findMany({
-    where,
-    include: {
-      cliente: true,
-      profissional: true,
-      servico: true,
-      itens: { include: { servico: true } },
-      produtos: true,
+  const lancamentosWhere = {
+    salaoId: req.user.salaoId,
+    ...(isScopedProfessional(req)
+      ? { profissionalId: req.user.profissionalId }
+      : (profissionalId ? { profissionalId } : {})),
+    data: { lte: fimPeriodo },
+  };
+
+  const [agendamentos, lancamentosRaw] = await Promise.all([
+    prisma.agendamento.findMany({
+      where,
+      include: {
+        cliente: true,
+        profissional: true,
+        servico: true,
+        itens: { include: { servico: true } },
+        produtos: true,
+      },
+      orderBy: { data: 'desc' }
+    }),
+    prisma.profissionalLancamento.findMany({
+      where: lancamentosWhere,
+      include: {
+        profissional: true,
+        caixaSessao: {
+          select: { id: true, turnoNome: true, abertoEm: true },
+        },
+      },
+      orderBy: [{ data: 'desc' }, { createdAt: 'desc' }],
+    }),
+  ]);
+
+  const lancamentos = lancamentosRaw
+    .map((lancamento) => ({
+      ...lancamento,
+      saldoAberto: calcularSaldoLancamento(lancamento),
+    }))
+    .filter((lancamento) => {
+      const dataLancamento = new Date(lancamento.data);
+      return dataLancamento >= inicioPeriodo || Number(lancamento.saldoAberto || 0) > 0;
+    });
+
+  res.json({ agendamentos, lancamentos });
+}
+
+async function createLancamentoRemuneracao(req, res) {
+  if (isScopedProfessional(req)) {
+    return res.status(403).json({ error: 'Somente a administracao pode registrar vales e descontos.' });
+  }
+
+  const { profissionalId, tipo, origem, valor, descricao, data } = req.body;
+  const tipoNormalizado = String(tipo || '').trim().toLowerCase();
+  let origemNormalizada = origem ? String(origem).trim().toLowerCase() : null;
+  const valorNumerico = Number(valor || 0);
+
+  if (!profissionalId) {
+    return res.status(400).json({ error: 'Selecione um profissional.' });
+  }
+
+  if (!['adiantamento', 'desconto'].includes(tipoNormalizado)) {
+    return res.status(400).json({ error: 'Tipo de lancamento invalido.' });
+  }
+
+  if (valorNumerico <= 0) {
+    return res.status(400).json({ error: 'Informe um valor maior que zero.' });
+  }
+
+  if (tipoNormalizado === 'adiantamento' && !['caixa', 'conta'].includes(origemNormalizada || '')) {
+    return res.status(400).json({ error: 'Informe se o valor saiu do caixa ou da conta.' });
+  }
+
+  if (tipoNormalizado === 'desconto') {
+    origemNormalizada = null;
+  }
+
+  const profissional = await prisma.profissional.findFirst({
+    where: {
+      id: profissionalId,
+      salaoId: req.user.salaoId,
     },
-    orderBy: { data: 'desc' }
+    select: { id: true, nome: true },
   });
 
-  res.json(agendamentos);
+  if (!profissional) {
+    return res.status(404).json({ error: 'Profissional nao encontrado.' });
+  }
+
+  let caixaSessaoId = null;
+  if (tipoNormalizado === 'adiantamento' && origemNormalizada === 'caixa') {
+    const caixaAberto = await getCaixaAberto(req.user.salaoId);
+    if (!caixaAberto) {
+      return res.status(400).json({ error: 'Abra o caixa antes de registrar um adiantamento saindo do caixa.' });
+    }
+    caixaSessaoId = caixaAberto.id;
+  }
+
+  const dataLancamento = data ? new Date(`${data}T12:00:00`) : new Date();
+  const descricaoNormalizada = String(descricao || '').trim() || null;
+
+  const lancamento = await prisma.$transaction(async (tx) => {
+    const criado = await tx.profissionalLancamento.create({
+      data: {
+        salaoId: req.user.salaoId,
+        profissionalId: profissional.id,
+        caixaSessaoId,
+        tipo: tipoNormalizado,
+        origem: origemNormalizada,
+        valor: valorNumerico,
+        descricao: descricaoNormalizada,
+        data: dataLancamento,
+      },
+      include: {
+        profissional: true,
+        caixaSessao: {
+          select: { id: true, turnoNome: true, abertoEm: true },
+        },
+      },
+    });
+
+    if (caixaSessaoId) {
+      await tx.caixaMovimento.create({
+        data: {
+          caixaSessaoId,
+          tipo: 'adiantamento_profissional',
+          valor: valorNumerico,
+          descricao: descricaoNormalizada || `Adiantamento para ${profissional.nome}`,
+        },
+      });
+    }
+
+    return criado;
+  });
+
+  await createAuditLog({
+    salaoId: req.user.salaoId,
+    usuarioId: req.user.id,
+    acao: 'remuneracao.lancamento.criar',
+    entidade: 'profissional_lancamento',
+    entidadeId: lancamento.id,
+    mensagem: 'Vale, adiantamento ou desconto registrado',
+    contexto: {
+      profissionalId: profissional.id,
+      tipo: tipoNormalizado,
+      origem: origemNormalizada,
+      valor: valorNumerico,
+      caixaSessaoId,
+    },
+    req,
+  });
+
+  res.status(201).json({
+    ...lancamento,
+    saldoAberto: calcularSaldoLancamento(lancamento),
+  });
 }
 
 async function updateComissaoPaga(req, res) {
-  const { ids, paga } = req.body;
+  const { ids, paga, profissionalId } = req.body;
   const salaoId = req.user.salaoId;
 
   if (!Array.isArray(ids)) {
     return res.status(400).json({ error: 'Lista de IDs inválida' });
   }
 
-  await prisma.agendamento.updateMany({
+  if (paga === false) {
+    await prisma.agendamento.updateMany({
+      where: {
+        id: { in: ids },
+        salaoId,
+        ...professionalScopeFilter(req)
+      },
+      data: { comissaoPaga: false }
+    });
+
+    return res.json({ ok: true });
+  }
+
+  const agendamentos = await prisma.agendamento.findMany({
     where: {
       id: { in: ids },
       salaoId,
-      ...professionalScopeFilter(req)
+      ...professionalScopeFilter(req),
+      ...(isScopedProfessional(req) ? {} : (profissionalId ? { profissionalId } : {})),
     },
-    data: { comissaoPaga: paga ?? true }
+    select: {
+      id: true,
+      profissionalId: true,
+      comissaoValor: true,
+      comissaoPaga: true,
+    },
   });
 
-  res.json({ ok: true });
+  if (!agendamentos.length) {
+    return res.status(404).json({ error: 'Nenhuma comissao encontrada para liquidacao.' });
+  }
+
+  const profissionaisIds = [...new Set(agendamentos.map((item) => item.profissionalId).filter(Boolean))];
+  if (profissionaisIds.length !== 1) {
+    return res.status(400).json({ error: 'Selecione agendamentos de um unico profissional por vez.' });
+  }
+
+  const profissionalIdAlvo = profissionaisIds[0];
+  const agendamentosPendentes = agendamentos.filter((item) => !item.comissaoPaga);
+  const totalComissao = agendamentosPendentes.reduce((sum, item) => sum + Number(item.comissaoValor || 0), 0);
+  const agora = new Date();
+
+  const lancamentosAbertos = await prisma.profissionalLancamento.findMany({
+    where: {
+      salaoId,
+      profissionalId: profissionalIdAlvo,
+    },
+    orderBy: [{ data: 'asc' }, { createdAt: 'asc' }],
+  });
+
+  let saldoParaCompensar = totalComissao;
+  let totalCompensado = 0;
+  const operacoesLancamentos = [];
+
+  for (const lancamento of lancamentosAbertos) {
+    const saldoAberto = calcularSaldoLancamento(lancamento);
+    if (saldoAberto <= 0 || saldoParaCompensar <= 0) continue;
+
+    const valorCompensar = Math.min(saldoAberto, saldoParaCompensar);
+    totalCompensado += valorCompensar;
+    saldoParaCompensar -= valorCompensar;
+
+    const novoValorCompensado = Number(lancamento.valorCompensado || 0) + valorCompensar;
+    const totalmenteCompensado = (Number(lancamento.valor || 0) - novoValorCompensado) <= 0.0001;
+
+    operacoesLancamentos.push(
+      prisma.profissionalLancamento.update({
+        where: { id: lancamento.id },
+        data: {
+          valorCompensado: novoValorCompensado,
+          compensadoEm: totalmenteCompensado ? agora : lancamento.compensadoEm,
+        },
+      })
+    );
+  }
+
+  await prisma.$transaction([
+    prisma.agendamento.updateMany({
+      where: {
+        id: { in: agendamentosPendentes.map((item) => item.id) },
+        salaoId,
+        ...professionalScopeFilter(req)
+      },
+      data: { comissaoPaga: true }
+    }),
+    ...operacoesLancamentos,
+  ]);
+
+  await createAuditLog({
+    salaoId,
+    usuarioId: req.user.id,
+    acao: 'remuneracao.liquidar',
+    entidade: 'profissional',
+    entidadeId: profissionalIdAlvo,
+    mensagem: 'Repasse de comissao liquidado com compensacao de vales e descontos',
+    contexto: {
+      ids: agendamentosPendentes.map((item) => item.id),
+      totalComissao,
+      totalCompensado,
+      valorLiquidoRepasse: totalComissao - totalCompensado,
+    },
+    req,
+  });
+
+  res.json({
+    ok: true,
+    profissionalId: profissionalIdAlvo,
+    totalComissao,
+    totalCompensado,
+    valorLiquidoRepasse: totalComissao - totalCompensado,
+  });
 }
 
 module.exports = {
@@ -3030,6 +3322,7 @@ module.exports = {
   getFinanceiro,
   getDashboardExecutivo,
   getCaixaAtual,
+  getCaixaStatusPagamento,
   abrirCaixa,
   fecharCaixa,
   getCaixaSessoes,
@@ -3043,6 +3336,7 @@ module.exports = {
   updateSenha,
   getUsuarios, createUsuario, updateUsuario, deleteUsuario,
   getRelatorioRemuneracao,
+  createLancamentoRemuneracao,
   updateComissaoPaga,
   criarVendaPDV
 };
