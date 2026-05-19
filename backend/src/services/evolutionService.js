@@ -35,7 +35,8 @@ function resolveEvolutionConfig(salao) {
 
 function getBackendBaseUrl(req) {
   const explicit = trimSlash(
-    process.env.BACKEND_PUBLIC_URL
+    process.env.BACKEND_WEBHOOK_URL
+      || process.env.BACKEND_PUBLIC_URL
       || process.env.API_PUBLIC_URL
       || process.env.API_URL
       || ''

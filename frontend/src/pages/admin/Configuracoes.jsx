@@ -8,7 +8,6 @@ import {
   Copy,
   Globe,
   Image as ImageIcon,
-  Key,
   Lock,
   Palette,
   RefreshCw,
@@ -31,11 +30,9 @@ import {
   getAuditoria,
   getProfissionais,
   getUsuarios,
-  getWhatsappConfig,
   getWhatsappStatus,
   updateAdminSalao,
   updateSenha,
-  updateWhatsappConfig,
 } from '../../services/api';
 import ImageUpload from '../../components/ImageUpload';
 import SnippetsConfig from '../../components/SnippetsConfig';
@@ -97,8 +94,6 @@ const AVAILABLE_ACTIONS = [
   'seguranca.backup.exportar',
 ];
 
-const MASKED_SECRET = '••••••••';
-
 const INITIAL_SALAO = {
   nome: '',
   telefone: '',
@@ -111,13 +106,6 @@ const INITIAL_SALAO = {
   corPrimaria: '#e29ba8',
   corSecundaria: '#3b2a35',
   tema: 'dark',
-};
-
-const INITIAL_WHATSAPP = {
-  evolutionUrl: '',
-  evolutionInstance: '',
-  evolutionKey: '',
-  geminiKey: '',
 };
 
 const INITIAL_USER = {
@@ -427,20 +415,8 @@ function SecaoBranding() {
 }
 
 function SecaoWhatsapp() {
-  const [config, setConfig] = useState(INITIAL_WHATSAPP);
   const [status, setStatus] = useState('not_configured');
-  const [hasSecrets, setHasSecrets] = useState({ evolutionKey: false, geminiKey: false });
-  const [resolvedConfig, setResolvedConfig] = useState({
-    effectiveEvolutionUrl: '',
-    effectiveEvolutionInstance: '',
-    usingGlobalApiUrl: false,
-    usingGlobalApiKey: false,
-    usingGlobalInstance: false,
-    hasGlobalEvolutionKey: false,
-    webhookUrl: '',
-  });
   const [qr, setQr] = useState('');
-  const [saving, setSaving] = useState(false);
   const [connecting, setConnecting] = useState(false);
   const [disconnecting, setDisconnecting] = useState(false);
   const [message, setMessage] = useState('');
@@ -455,28 +431,8 @@ function SecaoWhatsapp() {
 
   async function loadData() {
     try {
-      const [salaoRes, configRes] = await Promise.all([getAdminSalao(), getWhatsappConfig()]);
+      const salaoRes = await getAdminSalao();
       setSalao(salaoRes.data);
-      if (configRes.data) {
-        setConfig((prev) => ({
-          ...prev,
-          evolutionUrl: configRes.data.evolutionUrl || '',
-          evolutionInstance: configRes.data.evolutionInstance || '',
-        }));
-        setHasSecrets({
-          evolutionKey: !!configRes.data.hasEvolutionKey,
-          geminiKey: !!configRes.data.hasGeminiKey,
-        });
-        setResolvedConfig({
-          effectiveEvolutionUrl: configRes.data.effectiveEvolutionUrl || '',
-          effectiveEvolutionInstance: configRes.data.effectiveEvolutionInstance || '',
-          usingGlobalApiUrl: !!configRes.data.usingGlobalApiUrl,
-          usingGlobalApiKey: !!configRes.data.usingGlobalApiKey,
-          usingGlobalInstance: !!configRes.data.usingGlobalInstance,
-          hasGlobalEvolutionKey: !!configRes.data.hasGlobalEvolutionKey,
-          webhookUrl: configRes.data.webhookUrl || '',
-        });
-      }
       if (salaoRes.data?.moduloWhatsapp) {
         await loadStatus();
       }
@@ -543,25 +499,10 @@ function SecaoWhatsapp() {
     }
   }
 
-  async function handleSaveConfig(event) {
-    event.preventDefault();
-    setSaving(true);
-    setMessage('');
-    try {
-      await updateWhatsappConfig(config);
-      setMessage('Configuracao da Evolution atualizada.');
-      await loadData();
-    } catch (error) {
-      setMessage(error.response?.data?.error || 'Nao foi possivel salvar a configuracao da Evolution.');
-    } finally {
-      setSaving(false);
-    }
-  }
-
   const statusBadge = useMemo(() => {
     const map = {
-      not_configured: { label: 'Não configurado', className: 'bg-white/6 text-gray-600 dark:text-white/60' },
-      not_created: { label: 'Instancia pendente', className: 'bg-amber-500/18 text-amber-200' },
+      not_configured: { label: 'Aguardando ativacao', className: 'bg-white/6 text-gray-600 dark:text-white/60' },
+      not_created: { label: 'Pronto para conectar', className: 'bg-amber-500/18 text-amber-200' },
       open: { label: 'Conectado', className: 'bg-emerald-500/16 text-emerald-300' },
       connecting: { label: 'Aguardando leitura', className: 'bg-amber-500/18 text-amber-200' },
       close: { label: 'Desconectado', className: 'bg-red-500/14 text-red-200' },
@@ -585,56 +526,14 @@ function SecaoWhatsapp() {
 
       {salao?.moduloWhatsapp && (
         <>
-          <form onSubmit={handleSaveConfig} className="mb-8 space-y-6 rounded-[2rem] border border-gray-200 dark:border-white/5 bg-white/[0.03] p-4 sm:p-6">
-            <div className="grid gap-4 md:grid-cols-2">
-              <Field
-                label="URL da Evolution"
-                value={config.evolutionUrl}
-                onChange={(value) => setConfig((prev) => ({ ...prev, evolutionUrl: value }))}
-                placeholder={resolvedConfig.effectiveEvolutionUrl || 'https://sua-evolution.com'}
-                icon={<Globe size={15} />}
-                helper={resolvedConfig.usingGlobalApiUrl ? 'Vazio = usa a URL global do servidor.' : ''}
-              />
-              <Field
-                label="Nome da instancia"
-                value={config.evolutionInstance}
-                onChange={(value) => setConfig((prev) => ({ ...prev, evolutionInstance: value }))}
-                placeholder={resolvedConfig.effectiveEvolutionInstance || 'slug-do-salao'}
-                icon={<Smartphone size={15} />}
-                helper={resolvedConfig.usingGlobalInstance ? 'Vazio = usa o slug do salao ou a instancia global.' : ''}
-              />
-            </div>
-
-            <div className="grid gap-4 md:grid-cols-2">
-              <Field
-                label="Chave da Evolution"
-                value={config.evolutionKey}
-                onChange={(value) => setConfig((prev) => ({ ...prev, evolutionKey: value }))}
-                placeholder={hasSecrets.evolutionKey ? MASKED_SECRET : resolvedConfig.hasGlobalEvolutionKey ? 'Usando chave global do servidor' : 'Cole a chave da Evolution'}
-                icon={<Key size={15} />}
-                helper={resolvedConfig.usingGlobalApiKey ? 'Vazio = usa a chave global do servidor.' : ''}
-              />
-              <Field
-                label="Webhook do inbox"
-                value={resolvedConfig.webhookUrl}
-                onChange={() => {}}
-                placeholder="Webhook do inbox"
-                icon={<MessageSquare size={15} />}
-                helper="Esse webhook recebe as mensagens da Evolution e alimenta o inbox."
-              />
-            </div>
-
-            <div className="flex flex-wrap items-center gap-3">
-              <PrimaryButton type="submit" loading={saving} label="Salvar Evolution" />
-              <button
-                type="button"
-                onClick={() => resolvedConfig.webhookUrl && navigator.clipboard?.writeText(resolvedConfig.webhookUrl)}
-                className="rounded-[1.3rem] border border-[#e29ba8]/20 bg-white/[0.04] px-5 py-3 text-[10px] font-black uppercase tracking-[0.22em] text-white/78 transition hover:border-[#e29ba8]/32"
-              >
-                Copiar webhook
-              </button>
-            </div>
-          </form>
+          <div className="mb-8 rounded-[2rem] border border-gray-200 dark:border-white/5 bg-white/[0.03] p-4 sm:p-6">
+            <p className="text-[10px] font-black uppercase tracking-[0.24em] text-[#efbac2]">Conexao simplificada</p>
+            <h3 className="mt-3 text-xl font-brand-display text-white">Conecte seu WhatsApp em poucos segundos</h3>
+            <p className="mt-3 max-w-2xl text-sm leading-7 text-white/70">
+              Para usar o inbox e as automacoes, basta clicar em <strong className="text-white">Conectar WhatsApp</strong> e ler o QR Code com o aparelho da unidade.
+              Toda a configuracao tecnica da integracao ja fica sob nossa gestao e nao precisa ser preenchida por voce.
+            </p>
+          </div>
 
           <div className="mb-8 flex flex-col gap-4 rounded-[2rem] border border-gray-200 dark:border-white/5 bg-white/[0.03] p-4 sm:p-6 md:flex-row md:items-center md:justify-between">
             <div>
