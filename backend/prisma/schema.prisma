@@ -49,6 +49,7 @@ model Salao {
   telefone          String?
   endereco          String?
   whatsapp          String?
+  whatsappAgendamentos String?
   evolutionUrl      String?
   evolutionKey      String?
   evolutionInstance String?
@@ -87,6 +88,7 @@ model Salao {
   respostasRapidas   RespostaRapida[]
   caixas             CaixaSessao[]
   lancamentosProfissional ProfissionalLancamento[]
+  notificacoesAgendamento SalaoNotificacao[]
   auditLogs     AuditLog[]
   invoices      Invoice[]
   supportTickets SupportTicket[]
@@ -370,6 +372,7 @@ model Agendamento {
   comissaoPaga    Boolean           @default(false)
   estoqueConsumido Boolean          @default(false)
   taxaOperadora   Float                 @default(0)
+  origem          String            @default("admin")
   observacao      String?
   avaliacao       Int?
   comentario      String?
@@ -386,6 +389,8 @@ model Agendamento {
   reagendadoDeId  String?
   reagendados     Agendamento[]      @relation("AgendamentoReagendamento")
   reagendadoDe    Agendamento?       @relation("AgendamentoReagendamento", fields: [reagendadoDeId], references: [id])
+
+  @@index([salaoId, origem, createdAt])
 }
 
 model AgendamentoPagamento {
@@ -450,6 +455,22 @@ model ProfissionalLancamento {
 
   @@index([salaoId, profissionalId, data])
   @@index([profissionalId, compensadoEm])
+}
+
+model SalaoNotificacao {
+  id            String   @id @default(uuid())
+  salaoId       String
+  tipo          String
+  titulo        String
+  mensagem      String
+  agendamentoId String?
+  contexto      Json?
+  lidaPorUserIds String[] @default([])
+  createdAt     DateTime @default(now())
+  salao         Salao    @relation(fields: [salaoId], references: [id], onDelete: Cascade)
+
+  @@index([salaoId, createdAt])
+  @@index([salaoId, tipo, createdAt])
 }
 
 model AuditLog {

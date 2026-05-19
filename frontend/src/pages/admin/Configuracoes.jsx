@@ -104,6 +104,7 @@ const INITIAL_SALAO = {
   telefone: '',
   endereco: '',
   whatsapp: '',
+  whatsappAgendamentos: '',
   logoUrl: '',
   bannerUrl: '',
   bannerTexto: '',
@@ -291,6 +292,15 @@ function SecaoSalao() {
           onChange={(value) => setSalao((prev) => ({ ...prev, whatsapp: value }))}
           placeholder="Ex: 5511999999999"
           icon={<Zap size={15} />}
+        />
+
+        <Field
+          label="WhatsApp para alertas de agendamento"
+          value={salao.whatsappAgendamentos}
+          onChange={(value) => setSalao((prev) => ({ ...prev, whatsappAgendamentos: value }))}
+          placeholder="Ex: 5511999999999"
+          helper="Se ficar vazio, o sistema usa o WhatsApp Business principal."
+          icon={<MessageSquare size={15} />}
         />
 
         <div className="rounded-[2rem] border border-dashed border-[#e29ba8]/16 bg-black/15 p-4 sm:p-6">
@@ -935,7 +945,7 @@ function SectionCard({ title, icon, children }) {
   );
 }
 
-function Field({ label, value, onChange, type = 'text', placeholder, icon }) {
+function Field({ label, value, onChange, type = 'text', placeholder, icon, helper }) {
   return (
     <div className="space-y-3">
       <label className="text-[10px] font-black uppercase tracking-[0.24em] text-gray-500 dark:text-white/44">{label}</label>
@@ -952,6 +962,7 @@ function Field({ label, value, onChange, type = 'text', placeholder, icon }) {
           )}
         />
       </div>
+      {helper ? <p className="text-xs text-white/42">{helper}</p> : null}
     </div>
   );
 }

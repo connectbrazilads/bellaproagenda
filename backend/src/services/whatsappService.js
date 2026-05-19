@@ -56,7 +56,8 @@ async function notificarClienteAgendamento({ clienteNome, clienteTelefone, servi
 }
 
 async function notificarSalaoNovoAgendamento({ salao, clienteNome, clienteTelefone, servico, profissional, data, hora }) {
-  if (!salao?.whatsapp) return;
+  const destino = salao?.whatsappAgendamentos || salao?.whatsapp;
+  if (!destino) return;
 
   const msg =
     `🗓️ *Novo agendamento!*\n\n` +
@@ -66,7 +67,7 @@ async function notificarSalaoNovoAgendamento({ salao, clienteNome, clienteTelefo
     `👩‍💼 *Profissional:* ${profissional}\n` +
     `📅 *Data:* ${formatarData(data)} às ${hora}`;
 
-  await enviarMensagem(salao.whatsapp, msg, salao);
+  await enviarMensagem(destino, msg, salao);
 }
 
 async function enviarLembrete({ clienteNome, clienteTelefone, servico, profissional, data, hora, salao }) {

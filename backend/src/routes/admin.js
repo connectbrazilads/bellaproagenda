@@ -40,7 +40,11 @@ router.post('/bloqueios', requirePermission('bloqueios'), ctrl.createBloqueio);
 router.delete('/bloqueios/:id', requirePermission('bloqueios'), ctrl.deleteBloqueio);
 
 router.get('/agendamentos', requireAnyPermission(['agenda', 'dashboard', 'agendamentos']), ctrl.getAgendamentos);
+router.get('/alertas-agendamento', requireAnyPermission(['agenda', 'dashboard', 'agendamentos']), ctrl.getAlertasAgendamento);
+router.post('/alertas-agendamento/lidas', requireAnyPermission(['agenda', 'dashboard', 'agendamentos']), ctrl.markTodosAlertasAgendamentoLidos);
+router.post('/alertas-agendamento/:id/lida', requireAnyPermission(['agenda', 'dashboard', 'agendamentos']), ctrl.markAlertaAgendamentoLido);
 router.post('/agendamentos', requirePermission('agenda'), requireActionPermission('agenda.criar'), ctrl.criarAgendamentoAdmin);
+router.put('/agendamentos/:id/observacao', requirePermission('agenda'), requireActionPermission('agenda.editar'), ctrl.updateObservacaoAgendamento);
 router.put('/agendamentos/:id/status', requirePermission('agenda'), requireActionPermission('agenda.editar'), ctrl.updateStatusAgendamento);
 router.post('/agendamentos/:id/reagendar', requirePermission('agenda'), requireActionPermission('agenda.editar'), ctrl.reagendarAgendamento);
 router.put('/agendamentos/:id/pagamento', requirePermission('agenda'), requireActionPermission('agenda.pagamento'), ctrl.updatePagamentoAgendamento);

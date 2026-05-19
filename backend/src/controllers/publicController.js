@@ -1,6 +1,7 @@
 const prisma = require('../lib/prisma');
 const { getHorariosDisponiveis } = require('../services/slotsService');
 const { notificarClienteAgendamento, notificarSalaoNovoAgendamento } = require('../services/whatsappService');
+const { criarNotificacaoSalao } = require('../services/notificationCenterService');
 const {
   getServicoIdsDoPacote,
   profissionalAtendeTodosServicos,
@@ -8,6 +9,12 @@ const {
 
 async function findSalao(slug) {
   return await prisma.salao.findUnique({ where: { slug } });
+}
+
+function formatarDataNotificacao(dataStr) {
+  const [ano, mes, dia] = String(dataStr || '').split('-');
+  if (!ano || !mes || !dia) return String(dataStr || '');
+  return `${dia}/${mes}/${ano}`;
 }
 
 async function getSalao(req, res) {
@@ -413,6 +420,7 @@ async function criarAgendamento(req, res) {
         data: new Date(data + 'T00:00:00'),
         inicioHora: hora,
         fimHora,
+        origem: 'online',
         observacao,
         itens: { create: itensData }
       },
@@ -420,6 +428,22 @@ async function criarAgendamento(req, res) {
     });
 
     // Notificações (em background)
+    criarNotificacaoSalao({
+      salaoId: salao.id,
+      tipo: 'agendamento_online_novo',
+      titulo: 'Novo agendamento online',
+      mensagem: `${clienteNome} agendou ${nomeItem} com ${agendamento.profissional.nome} em ${formatarDataNotificacao(data)} as ${hora}.`,
+      agendamentoId: agendamento.id,
+      contexto: {
+        clienteNome,
+        clienteTelefone,
+        servico: nomeItem,
+        profissional: agendamento.profissional.nome,
+        data,
+        hora,
+      },
+    }).catch((e) => console.error('Erro notificacao interna:', e.message));
+
     notificarClienteAgendamento({
       clienteNome,
       clienteTelefone,

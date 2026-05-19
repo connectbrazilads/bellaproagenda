@@ -89,8 +89,12 @@ export const deleteBloqueio = (id) => api.delete(`/admin/bloqueios/${id}`);
 
 // ADMIN AGENDAMENTOS
 export const getAgendamentos = (params) => api.get('/admin/agendamentos', { params });
+export const getAlertasAgendamento = (params) => api.get('/admin/alertas-agendamento', { params });
+export const markAlertaAgendamentoLido = (id) => api.post(`/admin/alertas-agendamento/${id}/lida`);
+export const markTodosAlertasAgendamentoLidos = () => api.post('/admin/alertas-agendamento/lidas');
 export const criarAgendamentoAdmin = (data) => api.post('/admin/agendamentos', data);
 export const updateStatusAgendamento = (id, status) => api.put(`/admin/agendamentos/${id}/status`, { status });
+export const updateObservacaoAgendamento = (id, observacao) => api.put(`/admin/agendamentos/${id}/observacao`, { observacao });
 export const reagendarAgendamento = (id, data) => api.post(`/admin/agendamentos/${id}/reagendar`, data);
 export const updatePagamentoAgendamento = (id, data) => api.put(`/admin/agendamentos/${id}/pagamento`, data);
 export const deleteAgendamento = (id) => api.delete(`/admin/agendamentos/${id}`);

@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { Outlet, NavLink, useNavigate, useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
@@ -6,6 +6,7 @@ import {
   Calendar, 
   ClipboardList, 
   MessageSquare, 
+  Bell,
   Brain, 
   User, 
   Scissors, 
@@ -27,15 +28,17 @@ import {
   X,
   TrendingUp,
   ChevronLeft,
-  ChevronRight
+  ChevronRight,
+  CheckCheck
 } from 'lucide-react';
 import { useTheme } from '../../context/ThemeContext';
 import { cn } from '../../lib/utils';
 import { getEffectivePermissions, getEffectiveActionPermissions, readStoredPermissions, readStoredActionPermissions } from '../../lib/permissions';
 import ModalPDV from '../../components/ModalPDV';
 import { clearAdminSession } from '../../lib/session';
-import { logoutAdmin } from '../../services/api';
+import { getAlertasAgendamento, logoutAdmin, markAlertaAgendamentoLido, markTodosAlertasAgendamentoLidos } from '../../services/api';
 import BrandLogo from '../../components/BrandLogo';
+import toast from 'react-hot-toast';
 
 const NAV_GROUPS = [
   {
@@ -103,28 +106,64 @@ const PATH_PERMISSIONS = {
   '/admin/configuracoes': 'configuracoes',
 };
 
+function formatAlertaData(value) {
+  if (!value) return '';
+
+  try {
+    return new Intl.DateTimeFormat('pt-BR', {
+      day: '2-digit',
+      month: '2-digit',
+      hour: '2-digit',
+      minute: '2-digit',
+    }).format(new Date(value));
+  } catch {
+    return '';
+  }
+}
+
+function getAlertaAgendaDestino(alerta) {
+  const data = alerta?.contexto?.data;
+  const agendamentoId = alerta?.agendamentoId;
+  const params = new URLSearchParams();
+
+  if (data) params.set('data', String(data));
+  if (agendamentoId) params.set('agendamento', String(agendamentoId));
+
+  const query = params.toString();
+  return `/admin/agenda${query ? `?${query}` : ''}`;
+}
+
 export default function AdminLayout() {
   const [menuOpen, setMenuOpen] = useState(false);
   const [collapsed, setCollapsed] = useState(false);
+  const [alertasOpen, setAlertasOpen] = useState(false);
+  const [alertas, setAlertas] = useState([]);
+  const [alertasUnread, setAlertasUnread] = useState(0);
+  const [loadingAlertas, setLoadingAlertas] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
   const { dark, toggle } = useTheme();
   const isSubPage = location.pathname !== '/admin' && location.pathname !== '/admin/';
+  const knownAlertasRef = useRef(new Set());
+  const alertasHydratedRef = useRef(false);
 
   const role = localStorage.getItem('salao_user_role') || 'gestor';
   const pid = localStorage.getItem('salao_user_pid');
+  const userId = localStorage.getItem('salao_user_id') || '';
   const userPermissions = getEffectivePermissions(role, readStoredPermissions());
   const userActionPermissions = getEffectiveActionPermissions(role, readStoredActionPermissions());
+  const podeVerAlertas = ['agenda', 'dashboard', 'agendamentos'].some((permission) => userPermissions.includes(permission));
 
   useEffect(() => {
     setMenuOpen(false);
+    setAlertasOpen(false);
   }, [location.pathname, location.search, location.hash]);
 
   useEffect(() => {
     const previousOverflow = document.body.style.overflow;
     const previousTouchAction = document.body.style.touchAction;
 
-    if (menuOpen) {
+    if (menuOpen || alertasOpen) {
       document.body.style.overflow = 'hidden';
       document.body.style.touchAction = 'none';
     }
@@ -133,20 +172,43 @@ export default function AdminLayout() {
       document.body.style.overflow = previousOverflow;
       document.body.style.touchAction = previousTouchAction;
     };
-  }, [menuOpen]);
+  }, [menuOpen, alertasOpen]);
 
   useEffect(() => {
-    if (!menuOpen) return undefined;
+    if (!menuOpen && !alertasOpen) return undefined;
 
     function handleKeyDown(event) {
       if (event.key === 'Escape') {
         setMenuOpen(false);
+        setAlertasOpen(false);
       }
     }
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [menuOpen]);
+  }, [menuOpen, alertasOpen]);
+
+  useEffect(() => {
+    if (!podeVerAlertas) return undefined;
+
+    carregarAlertas();
+    const intervalId = window.setInterval(() => {
+      carregarAlertas({ silent: true });
+    }, 20000);
+
+    return () => window.clearInterval(intervalId);
+  }, [podeVerAlertas]);
+
+  useEffect(() => {
+    function handleOpenAlertasEvent() {
+      if (!podeVerAlertas) return;
+      setAlertasOpen(true);
+      carregarAlertas({ silent: true });
+    }
+
+    window.addEventListener('admin:open-notifications', handleOpenAlertasEvent);
+    return () => window.removeEventListener('admin:open-notifications', handleOpenAlertasEvent);
+  }, [podeVerAlertas]);
 
   function closeMobileMenu() {
     setMenuOpen(false);
@@ -170,6 +232,66 @@ export default function AdminLayout() {
     }
 
     return location.pathname === item.to || location.pathname.startsWith(`${item.to}/`);
+  }
+
+  async function carregarAlertas({ silent = false } = {}) {
+    if (!podeVerAlertas) return;
+
+    if (!silent) setLoadingAlertas(true);
+    try {
+      const response = await getAlertasAgendamento({ limit: 40 });
+      const items = response.data?.items || [];
+      const unreadCount = Number(response.data?.unreadCount || 0);
+
+      setAlertas(items);
+      setAlertasUnread(unreadCount);
+
+      const novosIds = items
+        .filter((item) => !knownAlertasRef.current.has(item.id))
+        .map((item) => item.id);
+
+      if (alertasHydratedRef.current && novosIds.length > 0) {
+        items
+          .filter((item) => novosIds.includes(item.id))
+          .slice(0, 3)
+          .forEach((item) => toast.success(item.titulo || 'Novo agendamento recebido.'));
+      }
+
+      knownAlertasRef.current = new Set(items.map((item) => item.id));
+      alertasHydratedRef.current = true;
+    } catch {
+      if (!silent) {
+        toast.error('Nao foi possivel carregar as notificacoes.');
+      }
+    } finally {
+      if (!silent) setLoadingAlertas(false);
+    }
+  }
+
+  async function handleOpenAlerta(alerta) {
+    if (!alerta) return;
+
+    const jaLida = Array.isArray(alerta.lidaPorUserIds) && alerta.lidaPorUserIds.includes(userId);
+    if (!jaLida) {
+      try {
+        await markAlertaAgendamentoLido(alerta.id);
+      } catch {
+        // Keep navigation resilient even if read state fails.
+      }
+    }
+
+    setAlertasOpen(false);
+    navigate(getAlertaAgendaDestino(alerta));
+    carregarAlertas({ silent: true });
+  }
+
+  async function handleMarcarTodasLidas() {
+    try {
+      await markTodosAlertasAgendamentoLidos();
+      carregarAlertas({ silent: true });
+    } catch {
+      toast.error('Nao foi possivel marcar as notificacoes como lidas.');
+    }
   }
 
   async function logout() {
@@ -282,15 +404,37 @@ export default function AdminLayout() {
                 <BrandLogo compact variant={dark ? 'darkBg' : 'lightBg'} />
               )}
             </div>
-            <button
-              onClick={toggle}
-              className={cn(
-                "p-2 rounded-xl transition-all hover:scale-110 active:scale-90",
-                dark ? "bg-white/5 text-[#d6b6bc] hover:text-white" : "bg-[#fff2f1] text-[#8c6b75] hover:text-[#c2737f]"
+            <div className={cn("flex items-center gap-2", collapsed && "flex-col")}>
+              {podeVerAlertas && (
+                <button
+                  onClick={() => {
+                    setAlertasOpen(true);
+                    carregarAlertas({ silent: true });
+                  }}
+                  className={cn(
+                    "relative p-2 rounded-xl transition-all hover:scale-110 active:scale-90",
+                    dark ? "bg-white/5 text-[#d6b6bc] hover:text-white" : "bg-[#fff2f1] text-[#8c6b75] hover:text-[#c2737f]"
+                  )}
+                  title="Central de notificacoes"
+                >
+                  <Bell className="w-4 h-4" />
+                  {alertasUnread > 0 && (
+                    <span className="absolute -right-1 -top-1 min-w-[18px] rounded-full bg-[#e29ba8] px-1.5 py-0.5 text-[9px] font-black leading-none text-[#1a1a1f]">
+                      {alertasUnread > 9 ? '9+' : alertasUnread}
+                    </span>
+                  )}
+                </button>
               )}
-            >
-              {dark ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
-            </button>
+              <button
+                onClick={toggle}
+                className={cn(
+                  "p-2 rounded-xl transition-all hover:scale-110 active:scale-90",
+                  dark ? "bg-white/5 text-[#d6b6bc] hover:text-white" : "bg-[#fff2f1] text-[#8c6b75] hover:text-[#c2737f]"
+                )}
+              >
+                {dark ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
+              </button>
+            </div>
           </div>
         </div>
 
@@ -373,6 +517,23 @@ export default function AdminLayout() {
           <BrandLogo compact variant={dark ? 'darkBg' : 'lightBg'} imageClassName="w-[148px]" />
         </div>
         <div className="flex items-center gap-4">
+          {podeVerAlertas && (
+            <button
+              onClick={() => {
+                setAlertasOpen(true);
+                carregarAlertas({ silent: true });
+              }}
+              className="relative text-[#a98690]"
+              aria-label="Abrir notificacoes"
+            >
+              <Bell className="w-5 h-5" />
+              {alertasUnread > 0 && (
+                <span className="absolute -right-2 -top-2 min-w-[18px] rounded-full bg-[#e29ba8] px-1.5 py-0.5 text-[9px] font-black leading-none text-[#1a1a1f]">
+                  {alertasUnread > 9 ? '9+' : alertasUnread}
+                </span>
+              )}
+            </button>
+          )}
           <button onClick={toggle} className="text-[#a98690]">{dark ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}</button>
           <button
             onClick={() => setMenuOpen((open) => !open)}
@@ -448,6 +609,129 @@ export default function AdminLayout() {
                 <LogOut className="w-4 h-4" /> Encerrar Sessao
               </button>
             </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      <AnimatePresence>
+        {alertasOpen && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[82] bg-black/55 backdrop-blur-sm"
+            onClick={() => setAlertasOpen(false)}
+          >
+            <motion.aside
+              initial={{ x: 360 }}
+              animate={{ x: 0 }}
+              exit={{ x: 360 }}
+              transition={{ type: 'spring', damping: 26, stiffness: 220 }}
+              className={cn(
+                "ml-auto flex h-full w-full max-w-md flex-col border-l shadow-2xl",
+                dark ? "bg-[#17151b] border-white/5" : "bg-[#fff9f8] border-[#edd7d4]"
+              )}
+              onClick={(event) => event.stopPropagation()}
+            >
+              <div className="border-b border-gray-200 px-5 py-5 dark:border-white/5">
+                <div className="flex items-start justify-between gap-4">
+                  <div>
+                    <p className="text-[10px] font-black uppercase tracking-[0.28em] text-[#e29ba8]">Central de alertas</p>
+                    <h2 className="mt-2 text-2xl font-brand-display text-gray-900 dark:text-white">Agendamentos</h2>
+                    <p className="mt-2 text-sm text-[#8c6b75] dark:text-white/55">
+                      {alertasUnread > 0 ? `${alertasUnread} notificacao(oes) sem leitura.` : 'Tudo em dia por aqui.'}
+                    </p>
+                  </div>
+                  <button
+                    onClick={() => setAlertasOpen(false)}
+                    className={cn(
+                      "rounded-2xl p-3 transition-all",
+                      dark ? "bg-white/5 text-white/60 hover:text-white" : "bg-[#fff0f1] text-[#8c6b75] hover:text-[#1a1a1f]"
+                    )}
+                  >
+                    <X className="h-5 w-5" />
+                  </button>
+                </div>
+
+                <div className="mt-5 flex items-center justify-between gap-3">
+                  <button
+                    onClick={() => carregarAlertas()}
+                    className={cn(
+                      "rounded-[1.1rem] border px-4 py-3 text-[10px] font-black uppercase tracking-[0.22em] transition-all",
+                      dark ? "border-white/10 bg-white/5 text-white/70 hover:text-white" : "border-[#edd7d4] bg-white text-[#8c6b75] hover:text-[#1a1a1f]"
+                    )}
+                  >
+                    {loadingAlertas ? 'Atualizando...' : 'Atualizar'}
+                  </button>
+                  <button
+                    onClick={handleMarcarTodasLidas}
+                    disabled={alertasUnread === 0}
+                    className={cn(
+                      "inline-flex items-center gap-2 rounded-[1.1rem] px-4 py-3 text-[10px] font-black uppercase tracking-[0.22em] transition-all disabled:cursor-not-allowed disabled:opacity-45",
+                      dark ? "bg-[#e29ba8] text-[#1a1a1f]" : "bg-[#2f242d] text-white"
+                    )}
+                  >
+                    <CheckCheck className="h-4 w-4" />
+                    Marcar tudo como lido
+                  </button>
+                </div>
+              </div>
+
+              <div className="flex-1 overflow-y-auto px-4 py-4 custom-scrollbar">
+                {alertas.length === 0 ? (
+                  <div className={cn(
+                    "mt-6 rounded-[2rem] border border-dashed p-8 text-center",
+                    dark ? "border-white/10 bg-white/[0.03]" : "border-[#edd7d4] bg-white"
+                  )}>
+                    <Bell className="mx-auto h-10 w-10 text-[#e29ba8]" />
+                    <p className="mt-4 text-lg font-black text-gray-900 dark:text-white">Nenhum alerta por enquanto</p>
+                    <p className="mt-2 text-sm text-[#8c6b75] dark:text-white/55">
+                      Novos agendamentos online vao aparecer aqui automaticamente.
+                    </p>
+                  </div>
+                ) : (
+                  <div className="space-y-3">
+                    {alertas.map((alerta) => {
+                      const lida = Array.isArray(alerta.lidaPorUserIds) && alerta.lidaPorUserIds.includes(userId);
+                      return (
+                        <button
+                          key={alerta.id}
+                          type="button"
+                          onClick={() => handleOpenAlerta(alerta)}
+                          className={cn(
+                            "w-full rounded-[1.6rem] border p-4 text-left transition-all",
+                            lida
+                              ? dark
+                                ? "border-white/5 bg-white/[0.03] text-white/72"
+                                : "border-[#edd7d4] bg-white text-[#5d4750]"
+                              : dark
+                                ? "border-[#e29ba8]/28 bg-[#e29ba8]/10 text-white shadow-[0_24px_48px_-32px_rgba(226,155,168,0.6)]"
+                                : "border-[#efc8ce] bg-[#fff4f5] text-[#2f242d] shadow-[0_24px_48px_-34px_rgba(226,155,168,0.45)]"
+                          )}
+                        >
+                          <div className="flex items-start justify-between gap-4">
+                            <div className="min-w-0">
+                              <div className="flex items-center gap-2">
+                                {!lida && <span className="h-2.5 w-2.5 rounded-full bg-[#10b981]" />}
+                                <p className="truncate text-[11px] font-black uppercase tracking-[0.22em] text-[#e29ba8]">
+                                  {alerta.tipo === 'agendamento_online_novo' ? 'Agendamento online' : 'Alerta'}
+                                </p>
+                              </div>
+                              <p className="mt-2 text-base font-black text-gray-900 dark:text-white">{alerta.titulo}</p>
+                              <p className="mt-2 text-sm leading-relaxed">{alerta.mensagem}</p>
+                            </div>
+                            <ChevronRight className="mt-1 h-4 w-4 flex-shrink-0 opacity-50" />
+                          </div>
+                          <p className="mt-3 text-[10px] font-black uppercase tracking-[0.22em] text-[#8c6b75] dark:text-white/38">
+                            {formatAlertaData(alerta.createdAt)}
+                          </p>
+                        </button>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+            </motion.aside>
           </motion.div>
         )}
       </AnimatePresence>

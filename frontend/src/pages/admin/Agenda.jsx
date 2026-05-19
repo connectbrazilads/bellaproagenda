@@ -42,7 +42,7 @@ import {
 import { 
   getProfissionais, getAgendamentos, getServicos, getPacotes, getProdutos,
   criarAgendamentoAdmin, updateStatusAgendamento, deleteAgendamento, 
-  buscarClientes, addItemAgendamento, removeItemAgendamento, addProdutoAgendamento, removeProdutoAgendamento, updatePagamentoAgendamento,
+  buscarClientes, addItemAgendamento, removeItemAgendamento, addProdutoAgendamento, removeProdutoAgendamento, updatePagamentoAgendamento, updateObservacaoAgendamento,
   createBloqueio, getListaEspera, createListaEspera, deleteListaEspera, reagendarAgendamento, getCaixaStatusPagamento
 } from '../../services/api';
 import { addDays, cn, formatDateBR, formatDateInput, formatDurationLabel } from '../../lib/utils';
@@ -118,6 +118,10 @@ function getAgendamentoTitulo(agendamento) {
     || agendamento?.pacote?.nome
     || agendamento?.itens?.map((item) => item.nome || item.servico?.nome).filter(Boolean).join(' + ')
     || 'Servico';
+}
+
+function isAgendamentoOnline(agendamento) {
+  return String(agendamento?.origem || '').toLowerCase() === 'online';
 }
 
 // Se??o visual BellaPro
@@ -615,10 +619,16 @@ function ModalDetalhesAgendamento({ agendamento: initialAgendamento, onClose, on
   const [produtos, setProdutos] = useState([]);
   const [concluidoSucesso, setConcluidoSucesso] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [savingObservacao, setSavingObservacao] = useState(false);
   const [tab, setTab] = useState('comanda');
   const [pagamentoForma, setPagamentoForma] = useState('');
   const [pagamentoTaxa, setPagamentoTaxa] = useState('0');
   const [caixaPagamentoStatus, setCaixaPagamentoStatus] = useState({ aberto: true, mensagem: '' });
+  const [observacaoDraft, setObservacaoDraft] = useState(initialAgendamento?.observacao || '');
+  const [servicosBusca, setServicosBusca] = useState('');
+  const [produtosBusca, setProdutosBusca] = useState('');
+  const [servicosExpandido, setServicosExpandido] = useState(true);
+  const [produtosExpandido, setProdutosExpandido] = useState(true);
 
   async function refreshCaixaPagamentoStatus() {
     try {
@@ -640,7 +650,41 @@ function ModalDetalhesAgendamento({ agendamento: initialAgendamento, onClose, on
 
   useEffect(() => {
     setAgendamento(initialAgendamento);
+    setObservacaoDraft(initialAgendamento?.observacao || '');
+    setServicosBusca('');
+    setProdutosBusca('');
+    setServicosExpandido(true);
+    setProdutosExpandido(true);
   }, [initialAgendamento]);
+
+  const servicosFiltrados = useMemo(() => {
+    const termo = servicosBusca.trim().toLowerCase();
+    return (servicos || [])
+      .filter((s) => s.id !== agendamento?.servicoId)
+      .filter((s) => !termo || s.nome?.toLowerCase().includes(termo));
+  }, [servicos, servicosBusca, agendamento?.servicoId]);
+
+  const produtosFiltrados = useMemo(() => {
+    const termo = produtosBusca.trim().toLowerCase();
+    return (produtos || []).filter((p) => !termo || p.nome?.toLowerCase().includes(termo));
+  }, [produtos, produtosBusca]);
+
+  async function handleSalvarObservacao() {
+    if (!agendamento?.id) return;
+    setSavingObservacao(true);
+    try {
+      const res = await updateObservacaoAgendamento(agendamento.id, observacaoDraft);
+      if (res?.data) {
+        setAgendamento(res.data);
+        setObservacaoDraft(res.data.observacao || '');
+        onUpdate?.(res.data);
+      }
+    } catch (error) {
+      alert(error.response?.data?.error || 'Erro ao salvar observacao.');
+    } finally {
+      setSavingObservacao(false);
+    }
+  }
 
   async function handleAddItem(servicoId) {
     try {
@@ -732,6 +776,11 @@ function ModalDetalhesAgendamento({ agendamento: initialAgendamento, onClose, on
                 <h2 className="text-2xl md:text-4xl font-black text-gray-900 dark:text-white uppercase tracking-tighter leading-none break-words">{agendamento.clienteNome}</h2>
                 <div className="flex flex-wrap items-center gap-3 md:gap-4 mt-2">
                    <span className="text-[10px] font-black text-[#E29BA8] uppercase tracking-[0.3em]">Gestao de Agenda BellaPro</span>
+                   {isAgendamentoOnline(agendamento) && (
+                     <span className="rounded-full border border-[#14b8a6]/25 bg-[#14b8a6]/12 px-3 py-1 text-[9px] font-black uppercase tracking-[0.24em] text-[#0f9a8c] dark:text-[#6ee7d8]">
+                       Online
+                     </span>
+                   )}
                    <div className="w-1.5 h-1.5 rounded-full bg-gray-200 dark:bg-white/20" />
                    <span className="text-[10px] font-black text-gray-400 uppercase tracking-[0.3em]">{formatDateBR(agendamento.data)} - {agendamento.inicioHora} - {agendamento.profissional?.nome}</span>
                 </div>
@@ -750,6 +799,11 @@ function ModalDetalhesAgendamento({ agendamento: initialAgendamento, onClose, on
               <div className={cn("px-3 py-1.5 rounded-xl text-[8px] font-black uppercase tracking-[0.2em] border", STATUS_CONFIG[agendamento.status]?.bg, STATUS_CONFIG[agendamento.status]?.text, STATUS_CONFIG[agendamento.status]?.border)}>
                 {STATUS_CONFIG[agendamento.status]?.label || agendamento.status}
               </div>
+              {isAgendamentoOnline(agendamento) && (
+                <div className="px-3 py-1.5 rounded-xl text-[8px] font-black uppercase tracking-[0.2em] border border-[#14b8a6]/25 bg-[#14b8a6]/12 text-[#0f9a8c] dark:text-[#6ee7d8]">
+                  Reserva online
+                </div>
+              )}
               <div className={cn("px-3 py-1.5 rounded-xl text-[8px] font-black uppercase tracking-[0.2em] border", agendamento.statusPagamento === 'pago' ? 'bg-[#E29BA8]/10 text-[#E29BA8] border-[#E29BA8]/20' : 'bg-bellapro-blush/10 text-bellapro-blush border-bellapro-blush/20')}>
                 {agendamento.statusPagamento === 'pago' ? 'PAGAMENTO OK' : 'PENDENTE'}
               </div>
@@ -825,6 +879,16 @@ function ModalDetalhesAgendamento({ agendamento: initialAgendamento, onClose, on
                       <span className="text-[10px] font-bold text-gray-400 uppercase">Preco Unitario</span>
                       <span className="font-black text-gray-900 dark:text-white">{Number(agendamento.servico?.preco || agendamento.pacote?.preco || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</span>
                    </div>
+                </div>
+
+                <div className="bg-white dark:bg-white/5 p-4 md:p-6 rounded-[2rem] border border-gray-100 dark:border-white/5">
+                  <div className="flex items-center gap-3">
+                    <MessageSquare size={14} className="text-[#E29BA8]" />
+                    <p className="text-[9px] font-black text-[#E29BA8] uppercase tracking-[0.3em]">Observacao do agendamento</p>
+                  </div>
+                  <p className="mt-3 text-sm leading-6 text-gray-600 dark:text-gray-300 whitespace-pre-wrap">
+                    {agendamento.observacao?.trim() || 'Nenhuma observacao registrada para este atendimento.'}
+                  </p>
                 </div>
 
                 {agendamento?.itens?.length > 0 && (
@@ -951,15 +1015,63 @@ function ModalDetalhesAgendamento({ agendamento: initialAgendamento, onClose, on
 
               {tab === 'comanda' ? (
                 <div className="space-y-12">
+                   <section className="rounded-[2rem] border border-gray-100 dark:border-white/5 bg-gray-50 dark:bg-white/5 p-4 sm:p-6">
+                      <div className="flex items-center justify-between gap-4 mb-4">
+                        <div>
+                          <h4 className="text-[11px] font-black text-gray-900 dark:text-white uppercase tracking-[0.3em] flex items-center gap-3">
+                            <MessageSquare size={14} className="text-[#E29BA8]" /> Observacao
+                          </h4>
+                          <p className="mt-2 text-xs font-medium text-gray-500 dark:text-gray-400">
+                            Use para anotar pedidos do cliente, formula, cor, orientacoes ou qualquer detalhe interno.
+                          </p>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={handleSalvarObservacao}
+                          disabled={savingObservacao}
+                          className="shrink-0 rounded-2xl bg-[#E29BA8] px-4 py-3 text-[10px] font-black uppercase tracking-[0.2em] text-white transition-all hover:bg-[#d48997] disabled:opacity-60"
+                        >
+                          {savingObservacao ? 'Salvando' : 'Salvar'}
+                        </button>
+                      </div>
+
+                      <textarea
+                        value={observacaoDraft}
+                        onChange={(event) => setObservacaoDraft(event.target.value)}
+                        rows={4}
+                        placeholder="Ex.: cliente pediu tonalidade rosa, teste de mecha, alergia, observacao da profissional..."
+                        className="w-full rounded-[1.75rem] border border-gray-200 dark:border-white/5 bg-white dark:bg-[#111113] px-5 py-4 text-sm text-gray-900 dark:text-white outline-none placeholder:text-gray-400 dark:placeholder:text-gray-500"
+                      />
+                   </section>
+
                    <section>
                       <div className="flex items-center justify-between mb-6">
                         <h4 className="text-[11px] font-black text-gray-900 dark:text-white uppercase tracking-[0.3em] flex items-center gap-3">
                           <div className="w-1.5 h-1.5 rounded-full bg-[#E29BA8]" /> Servicos Adicionais
                         </h4>
-                        <span className="text-[9px] font-black text-gray-400 uppercase tracking-widest">{(servicos || []).length} DISPONIVEIS</span>
+                        <div className="flex items-center gap-2">
+                          <span className="text-[9px] font-black text-gray-400 uppercase tracking-widest">{servicosFiltrados.length} DISPONIVEIS</span>
+                          <button
+                            type="button"
+                            onClick={() => setServicosExpandido((prev) => !prev)}
+                            className="inline-flex h-10 w-10 items-center justify-center rounded-2xl border border-gray-100 dark:border-white/5 bg-gray-50 dark:bg-white/5 text-gray-500 dark:text-gray-300"
+                          >
+                            {servicosExpandido ? <Minimize2 size={14} /> : <Maximize2 size={14} />}
+                          </button>
+                        </div>
                       </div>
+                      <div className="mb-5 flex items-center gap-3 rounded-[1.75rem] border border-gray-100 dark:border-white/5 bg-gray-50 dark:bg-white/5 px-4 py-3">
+                        <Search size={16} className="text-gray-400" />
+                        <input
+                          value={servicosBusca}
+                          onChange={(event) => setServicosBusca(event.target.value)}
+                          placeholder="Buscar servico por nome"
+                          className="w-full bg-transparent text-sm text-gray-900 dark:text-white outline-none placeholder:text-gray-400"
+                        />
+                      </div>
+                      {servicosExpandido ? (
                       <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">
-                         {(servicos || []).filter((s) => s.id !== agendamento.servicoId).map((s) => (
+                         {servicosFiltrados.map((s) => (
                            <motion.button 
                              key={s.id} 
                              whileHover={{ scale: 1.05, y: -5 }}
@@ -973,6 +1085,18 @@ function ModalDetalhesAgendamento({ agendamento: initialAgendamento, onClose, on
                            </motion.button>
                          ))}
                       </div>
+                      ) : (
+                        <div className="rounded-[2rem] border border-dashed border-gray-100 dark:border-white/5 bg-gray-50/70 dark:bg-white/[0.03] px-5 py-4 text-sm text-gray-500 dark:text-gray-400">
+                          Lista de servicos recolhida. Toque no icone para expandir novamente.
+                        </div>
+                      )}
+                      {servicosExpandido && servicosFiltrados.length === 0 ? (
+                        <div className="rounded-[2rem] border border-dashed border-gray-100 dark:border-white/5 bg-gray-50/70 dark:bg-white/[0.03] px-5 py-4 text-sm text-gray-500 dark:text-gray-400">
+                          Nenhum servico encontrado com esse filtro.
+                        </div>
+                      ) : (
+                        null
+                      )}
                    </section>
 
                    <section>
@@ -980,10 +1104,29 @@ function ModalDetalhesAgendamento({ agendamento: initialAgendamento, onClose, on
                         <h4 className="text-[11px] font-black text-gray-900 dark:text-white uppercase tracking-[0.3em] flex items-center gap-3">
                           <div className="w-1.5 h-1.5 rounded-full bg-[#E29BA8]" /> Produtos & Bar
                         </h4>
-                        <span className="text-[9px] font-black text-gray-400 uppercase tracking-widest">{(produtos || []).length} PRODUTOS</span>
+                        <div className="flex items-center gap-2">
+                          <span className="text-[9px] font-black text-gray-400 uppercase tracking-widest">{produtosFiltrados.length} PRODUTOS</span>
+                          <button
+                            type="button"
+                            onClick={() => setProdutosExpandido((prev) => !prev)}
+                            className="inline-flex h-10 w-10 items-center justify-center rounded-2xl border border-gray-100 dark:border-white/5 bg-gray-50 dark:bg-white/5 text-gray-500 dark:text-gray-300"
+                          >
+                            {produtosExpandido ? <Minimize2 size={14} /> : <Maximize2 size={14} />}
+                          </button>
+                        </div>
                       </div>
+                      <div className="mb-5 flex items-center gap-3 rounded-[1.75rem] border border-gray-100 dark:border-white/5 bg-gray-50 dark:bg-white/5 px-4 py-3">
+                        <Search size={16} className="text-gray-400" />
+                        <input
+                          value={produtosBusca}
+                          onChange={(event) => setProdutosBusca(event.target.value)}
+                          placeholder="Buscar produto por nome"
+                          className="w-full bg-transparent text-sm text-gray-900 dark:text-white outline-none placeholder:text-gray-400"
+                        />
+                      </div>
+                      {produtosExpandido ? (
                       <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">
-                         {(produtos || []).map(p => (
+                         {produtosFiltrados.map(p => (
                            <motion.button 
                              key={p.id} 
                              whileHover={{ scale: 1.05, y: -5 }}
@@ -996,6 +1139,18 @@ function ModalDetalhesAgendamento({ agendamento: initialAgendamento, onClose, on
                            </motion.button>
                          ))}
                       </div>
+                      ) : (
+                        <div className="rounded-[2rem] border border-dashed border-gray-100 dark:border-white/5 bg-gray-50/70 dark:bg-white/[0.03] px-5 py-4 text-sm text-gray-500 dark:text-gray-400">
+                          Lista de produtos recolhida. Toque no icone para expandir novamente.
+                        </div>
+                      )}
+                      {produtosExpandido && produtosFiltrados.length === 0 ? (
+                        <div className="rounded-[2rem] border border-dashed border-gray-100 dark:border-white/5 bg-gray-50/70 dark:bg-white/[0.03] px-5 py-4 text-sm text-gray-500 dark:text-gray-400">
+                          Nenhum produto encontrado com esse filtro.
+                        </div>
+                      ) : (
+                        null
+                      )}
                    </section>
                 </div>
               ) : (
@@ -1266,10 +1421,20 @@ export default function Agenda() {
   const [modalDetalhes, setModalDetalhes] = useState(false);
   const [modalBloqueioPeriodo, setModalBloqueioPeriodo] = useState(null);
   const [agendamentoSelecionado, setAgendamentoSelecionado] = useState(null);
+  const [pendingAgendamentoId, setPendingAgendamentoId] = useState('');
   const [currentTime, setCurrentTime] = useState(new Date());
 
   useEffect(() => {
     const params = new URLSearchParams(location.search);
+    const dataQuery = params.get('data');
+    const agendamentoQuery = params.get('agendamento') || '';
+
+    if (dataQuery) {
+      setDataFiltro(dataQuery);
+    }
+
+    setPendingAgendamentoId(agendamentoQuery);
+
     if (params.get('novoAgendamento') === '1') {
       const pNome = params.get('nome') || '';
       const pTel = params.get('telefone') || '';
@@ -1336,6 +1501,16 @@ export default function Agenda() {
   }
 
   useEffect(() => { carregar(); }, [dataFiltro]);
+  useEffect(() => {
+    if (!pendingAgendamentoId || agendamentos.length === 0) return;
+
+    const alvo = agendamentos.find((item) => item.id === pendingAgendamentoId);
+    if (!alvo) return;
+
+    setAgendamentoSelecionado(alvo);
+    setModalDetalhes(true);
+    setPendingAgendamentoId('');
+  }, [pendingAgendamentoId, agendamentos]);
   useEffect(() => {
     const timer = setInterval(() => setCurrentTime(new Date()), 60000);
     return () => clearInterval(timer);
@@ -1645,7 +1820,10 @@ export default function Agenda() {
               <button className="flex h-10 w-10 items-center justify-center rounded-2xl bg-white text-[#8c6b75] shadow-sm">
                 <Share2 size={18} />
               </button>
-              <button className="flex h-10 w-10 items-center justify-center rounded-2xl bg-white text-[#8c6b75] shadow-sm">
+              <button
+                onClick={() => window.dispatchEvent(new CustomEvent('admin:open-notifications'))}
+                className="flex h-10 w-10 items-center justify-center rounded-2xl bg-white text-[#8c6b75] shadow-sm"
+              >
                 <Bell size={18} />
               </button>
               <button onClick={carregar} className="flex h-10 w-10 items-center justify-center rounded-2xl bg-white text-[#8c6b75] shadow-sm">
@@ -1783,6 +1961,7 @@ export default function Agenda() {
                         {agendamentos.filter(a => a.profissionalId === p.id && a.status !== 'cancelado').map((a) => {
                           const duracaoTotal = (a.servico?.duracaoMin ?? a.pacote?.duracaoMin ?? 0) + (a.itens?.reduce((s, i) => s + i.duracaoMin, 0) || 0);
                           const [h, m] = (a.inicioHora || '00:00').split(':').map(Number);
+                          const isOnline = isAgendamentoOnline(a);
                           return (
                             <motion.div
                               key={`grid-${a.id}`}
@@ -1790,9 +1969,19 @@ export default function Agenda() {
                               animate={{ opacity: 1, scale: 1 }}
                               onClick={(e) => { e.stopPropagation(); setAgendamentoSelecionado(a); setModalDetalhes(true); }}
                               style={{ top: ((h - START_HOUR) * mobileHourHeight) + ((m / 60) * mobileHourHeight) + 54, height: Math.max((duracaoTotal / 60) * mobileHourHeight - 4, 48), width: `calc(${mobileColWidth}px - 8px)` }}
-                              className="absolute left-1 rounded-[14px] border border-blue-300 bg-[#bcd4fb] shadow-sm px-2.5 py-2 overflow-hidden z-20"
+                              className={cn(
+                                "absolute left-1 rounded-[14px] border shadow-sm px-2.5 py-2 overflow-hidden z-20",
+                                isOnline ? "border-[#5dd7c7] bg-[#d8fbf4]" : "border-blue-300 bg-[#bcd4fb]"
+                              )}
                             >
-                              <p className="text-[10px] text-slate-700 leading-none">{a.inicioHora} - {a.fimHora}</p>
+                              <div className="flex items-center justify-between gap-2">
+                                <p className="text-[10px] text-slate-700 leading-none">{a.inicioHora} - {a.fimHora}</p>
+                                {isOnline && (
+                                  <span className="rounded-full bg-[#14b8a6] px-2 py-0.5 text-[8px] font-black uppercase tracking-[0.18em] text-white">
+                                    Online
+                                  </span>
+                                )}
+                              </div>
                               <p className="mt-1 text-[11px] font-black text-slate-900 leading-tight line-clamp-2">{a.clienteNome}</p>
                               <p className="mt-1 text-[9px] text-slate-800 line-clamp-2">{getAgendamentoTitulo(a)}</p>
                             </motion.div>
@@ -1823,13 +2012,17 @@ export default function Agenda() {
                 const StatusIcon = config.icon;
                 const total = calculateAgendamentoTotal(a);
                 const isPago = a.statusPagamento === 'pago';
+                const isOnline = isAgendamentoOnline(a);
                 return (
                   <motion.div
                     key={a.id}
                     initial={{ opacity: 0, y: 8 }}
                     animate={{ opacity: 1, y: 0 }}
                     onClick={() => { setAgendamentoSelecionado(a); setModalDetalhes(true); }}
-                    className={`rounded-[1.5rem] border p-4 flex items-center gap-4 cursor-pointer active:scale-[0.98] transition-all ${config.bg} ${config.border}`}
+                    className={cn(
+                      `rounded-[1.5rem] border p-4 flex items-center gap-4 cursor-pointer active:scale-[0.98] transition-all ${config.bg} ${config.border}`,
+                      isOnline && 'ring-1 ring-[#14b8a6]/40 shadow-[0_22px_44px_-34px_rgba(20,184,166,0.6)]'
+                    )}
                   >
                     {/* Se??o BellaPro */}
                     <div className="w-14 h-14 rounded-2xl bg-white/60 dark:bg-black/20 flex flex-col items-center justify-center flex-shrink-0 border border-white/40">
@@ -1844,6 +2037,11 @@ export default function Agenda() {
                         <span className={`text-[9px] font-black uppercase tracking-widest px-2 py-0.5 rounded-lg ${config.bg} ${config.text} border ${config.border}`}>
                           <StatusIcon size={8} className="inline mr-1" />{config.label || a.status}
                         </span>
+                        {isOnline && (
+                          <span className="rounded-lg border border-[#14b8a6]/25 bg-[#14b8a6]/12 px-2 py-0.5 text-[9px] font-black uppercase tracking-widest text-[#0f9a8c]">
+                            Online
+                          </span>
+                        )}
                         <span className={`text-[9px] font-black uppercase tracking-widest ${isPago ? 'text-[#E29BA8]' : 'text-bellapro-blush'}`}>
                           {isPago ? 'â��S Pago' : `R$ ${total.toFixed(2)}`}
                         </span>
@@ -1926,6 +2124,7 @@ export default function Agenda() {
                       const pos = getPosition(a.inicioHora, duracaoTotal);
                       const config = STATUS_CONFIG[a.status] || STATUS_CONFIG.confirmado;
                       const StatusIcon = config.icon;
+                      const isOnline = isAgendamentoOnline(a);
                       
                       return (
                         <motion.div 
@@ -1941,14 +2140,24 @@ export default function Agenda() {
                             zIndex: 20,
                             width: `calc(${colWidth}px - 12px)`,
                           }} 
-                          className={`absolute left-1.5 rounded-[1.25rem] border shadow-lg ${config.bg} ${config.border} p-3 cursor-pointer overflow-hidden group hover:z-50 transition-all`}
+                          className={cn(
+                            `absolute left-1.5 rounded-[1.25rem] border shadow-lg ${config.bg} ${config.border} p-3 cursor-pointer overflow-hidden group hover:z-50 transition-all`,
+                            isOnline && 'border-[#5dd7c7] ring-1 ring-[#14b8a6]/35 shadow-[0_26px_52px_-36px_rgba(20,184,166,0.65)]'
+                          )}
                         >
                           <div className="flex justify-between items-center mb-2">
                             <div className="flex items-center gap-1.5">
                               <StatusIcon size={10} className={config.text} />
                               <span className={`text-[9px] font-black uppercase tracking-widest ${config.text}`}>{a.inicioHora}</span>
                             </div>
-                            <div className={`w-2 h-2 rounded-full ${config.dot}`} />
+                            <div className="flex items-center gap-2">
+                              {isOnline && (
+                                <span className="rounded-full bg-[#14b8a6] px-2 py-0.5 text-[7px] font-black uppercase tracking-[0.22em] text-white">
+                                  Online
+                                </span>
+                              )}
+                              <div className={`w-2 h-2 rounded-full ${config.dot}`} />
+                            </div>
                           </div>
                           
                           <p className={`text-[10px] font-black truncate uppercase tracking-tighter leading-none mb-1 ${config.text} dark:text-white`}>{a.clienteNome}</p>

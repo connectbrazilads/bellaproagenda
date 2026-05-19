@@ -16,6 +16,11 @@ const {
 } = require('../lib/permissions');
 const { createAuditLog } = require('../lib/audit');
 const { validateStrongPassword } = require('../lib/security');
+const {
+  listarNotificacoesSalao,
+  marcarNotificacaoLida,
+  marcarTodasNotificacoesLidas,
+} = require('../services/notificationCenterService');
 
 function isScopedProfessional(req) {
   return req.user?.role === 'profissional' && !!req.user?.profissionalId;
@@ -295,14 +300,14 @@ async function getSalao(req, res) {
 async function updateSalao(req, res) {
   const {
     nome, telefone, endereco, corPrimaria, corSecundaria,
-    bannerUrl, bannerTexto, tema, whatsapp, logoUrl,
+    bannerUrl, bannerTexto, tema, whatsapp, whatsappAgendamentos, logoUrl,
     infoFaq, infoPoliticas, infoPromocoes, infoRegras
   } = req.body;
   const salao = await prisma.salao.update({
     where: { id: req.user.salaoId },
     data: {
       nome, telefone, endereco, corPrimaria, corSecundaria,
-      bannerUrl, bannerTexto, tema, whatsapp, logoUrl,
+      bannerUrl, bannerTexto, tema, whatsapp, whatsappAgendamentos, logoUrl,
       infoFaq, infoPoliticas, infoPromocoes, infoRegras
     }
   });
@@ -1007,6 +1012,7 @@ async function criarAgendamentoAdmin(req, res) {
         data: d,
         inicioHora: hora,
         fimHora,
+        origem: 'admin',
         observacao: recorrente ? `${observacao || ''} (Recorrente)`.trim() : observacao,
         itens: itensData.length > 0 ? { create: itensData } : undefined,
       },
@@ -1075,6 +1081,39 @@ async function getAgendamentos(req, res) {
 }
 
 // ─── LÓGICA INTERNA DE CONCLUSÃO (reutilizável por status e pagamento) ────────
+
+async function getAlertasAgendamento(req, res) {
+  const resultado = await listarNotificacoesSalao({
+    salaoId: req.user.salaoId,
+    userId: req.user.id,
+    limit: Number(req.query?.limit || 40),
+  });
+
+  res.json(resultado);
+}
+
+async function markAlertaAgendamentoLido(req, res) {
+  const notificacao = await marcarNotificacaoLida({
+    salaoId: req.user.salaoId,
+    notificacaoId: req.params.id,
+    userId: req.user.id,
+  });
+
+  if (!notificacao) {
+    return res.status(404).json({ error: 'Notificacao nao encontrada' });
+  }
+
+  res.json({ ok: true });
+}
+
+async function markTodosAlertasAgendamentoLidos(req, res) {
+  const total = await marcarTodasNotificacoesLidas({
+    salaoId: req.user.salaoId,
+    userId: req.user.id,
+  });
+
+  res.json({ ok: true, total });
+}
 
 async function getListaEspera(req, res) {
   const { status } = req.query;
@@ -1317,6 +1356,36 @@ async function updateStatusAgendamento(req, res) {
     req,
   });
   return res.json(updated);
+}
+
+async function updateObservacaoAgendamento(req, res) {
+  const { id } = req.params;
+  const agendamento = await getScopedAgendamento(req, id);
+  if (!agendamento) return res.status(404).json({ error: 'Agendamento nao encontrado' });
+
+  const observacaoNormalizada = typeof req.body?.observacao === 'string'
+    ? req.body.observacao.trim()
+    : '';
+
+  await prisma.agendamento.update({
+    where: { id },
+    data: {
+      observacao: observacaoNormalizada || null,
+    },
+  });
+
+  await createAuditLog({
+    salaoId: req.user.salaoId,
+    usuarioId: req.user.id,
+    acao: 'agenda.observacao.editar',
+    entidade: 'agendamento',
+    entidadeId: id,
+    mensagem: 'Observacao do agendamento atualizada',
+    contexto: { observacaoPreenchida: !!observacaoNormalizada },
+    req,
+  });
+
+  return res.json(await getAgendamentoCompleto(id));
 }
 
 async function reagendarAgendamento(req, res) {
@@ -3375,7 +3444,8 @@ module.exports = {
   getServicos, createServico, updateServico, deleteServico,
   getPacotes, createPacote, updatePacote, deletePacote,
   getBloqueios, createBloqueio, deleteBloqueio,
-  criarAgendamentoAdmin, getAgendamentos, updateStatusAgendamento, updatePagamentoAgendamento,
+  criarAgendamentoAdmin, getAgendamentos, updateStatusAgendamento, updateObservacaoAgendamento, updatePagamentoAgendamento,
+  getAlertasAgendamento, markAlertaAgendamentoLido, markTodosAlertasAgendamentoLidos,
   reagendarAgendamento,
   deleteAgendamento, addItemAgendamento, removeItemAgendamento,
   getListaEspera, createListaEspera, updateListaEspera, deleteListaEspera,
