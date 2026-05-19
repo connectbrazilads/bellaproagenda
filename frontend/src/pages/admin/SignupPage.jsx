@@ -35,6 +35,7 @@ export default function SignupPage() {
       localStorage.setItem('salao_data', JSON.stringify(response.data.salao));
       setAdminSession({
         expiresAt: response.data.expiresAt,
+        userId: response.data.user?.id || '',
         role: response.data.user?.role || 'admin',
         profissionalId: response.data.user?.profissionalId || '',
         permissions: response.data.user?.permissions || [],

@@ -35,6 +35,7 @@ export default function LoginPage() {
 
       setAdminSession({
         expiresAt: res.data.expiresAt,
+        userId: user.id || '',
         role: user.role || '',
         profissionalId: user.profissionalId || '',
         permissions: user.permissions || res.data.permissions || [],

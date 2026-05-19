@@ -4,6 +4,7 @@ const SUPERADMIN_SESSION_KEY = 'athena_superadmin_session_active';
 export function setAdminSession(data = {}) {
   localStorage.setItem(ADMIN_SESSION_KEY, 'true');
   localStorage.setItem('salao_token_expires_at', String(data.expiresAt || ''));
+  localStorage.setItem('salao_user_id', data.userId || '');
   localStorage.setItem('salao_user_role', data.role || '');
   localStorage.setItem('salao_user_pid', data.profissionalId || '');
   localStorage.setItem('salao_user_permissions', JSON.stringify(data.permissions || []));
@@ -13,6 +14,7 @@ export function setAdminSession(data = {}) {
 export function clearAdminSession() {
   localStorage.removeItem(ADMIN_SESSION_KEY);
   localStorage.removeItem('salao_token_expires_at');
+  localStorage.removeItem('salao_user_id');
   localStorage.removeItem('salao_user_role');
   localStorage.removeItem('salao_user_pid');
   localStorage.removeItem('salao_user_permissions');
