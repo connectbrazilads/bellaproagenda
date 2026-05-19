@@ -22,6 +22,7 @@ import { ptBR } from 'date-fns/locale';
 import { toast } from 'react-hot-toast';
 import {
   createLancamentoRemuneracao,
+  getCaixaStatusPagamento,
   getProfissionais,
   getRelatorioRemuneracao,
   updateComissaoPaga,
@@ -49,6 +50,10 @@ function getSaldoAberto(lancamento) {
   return Math.max(0, Number(lancamento?.saldoAberto ?? (Number(lancamento?.valor || 0) - Number(lancamento?.valorCompensado || 0))));
 }
 
+function getDinheiroDisponivelCaixa(caixaStatus) {
+  return Number(caixaStatus?.dinheiroDisponivel || 0);
+}
+
 function buildAgendamentoTotal(agendamento) {
   const precoBase = Number(agendamento?.servico?.preco ?? agendamento?.pacote?.preco ?? 0);
   const precoItens = agendamento?.itens?.reduce((sum, item) => sum + Number(item.preco || 0), 0) || 0;
@@ -56,8 +61,27 @@ function buildAgendamentoTotal(agendamento) {
   return precoBase + precoItens + precoProdutos;
 }
 
-function LancamentoModal({ open, onClose, onSave, form, setForm, profissionais, saving, isScopedProfessional, myPid }) {
+function LancamentoModal({
+  open,
+  onClose,
+  onSave,
+  form,
+  setForm,
+  profissionais,
+  saving,
+  isScopedProfessional,
+  myPid,
+  caixaStatus,
+  loadingCaixaStatus,
+}) {
   if (!open) return null;
+
+  const dinheiroDisponivelCaixa = getDinheiroDisponivelCaixa(caixaStatus);
+  const valorLancamento = Number(form.valor || 0);
+  const caixaDisponivelParaLancamento = !!caixaStatus?.permiteSaida;
+  const valorExcedeCaixa = form.tipo === 'adiantamento' && form.origem === 'caixa' && valorLancamento > dinheiroDisponivelCaixa;
+  const bloquearSalvar = saving
+    || (form.tipo === 'adiantamento' && form.origem === 'caixa' && (loadingCaixaStatus || !caixaDisponivelParaLancamento || valorExcedeCaixa));
 
   return (
     <AnimatePresence>
@@ -65,7 +89,7 @@ function LancamentoModal({ open, onClose, onSave, form, setForm, profissionais, 
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
-        className="fixed inset-0 z-[160] flex items-center justify-center bg-black/80 p-4 backdrop-blur-md"
+        className="fixed inset-0 z-[160] flex items-start justify-center overflow-y-auto bg-black/80 p-4 py-6 backdrop-blur-md md:items-center"
         onClick={onClose}
       >
         <motion.div
@@ -73,7 +97,7 @@ function LancamentoModal({ open, onClose, onSave, form, setForm, profissionais, 
           animate={{ opacity: 1, y: 0, scale: 1 }}
           exit={{ opacity: 0, y: 24, scale: 0.96 }}
           onClick={(event) => event.stopPropagation()}
-          className="w-full max-w-2xl rounded-[2.5rem] border border-gray-100 bg-white p-6 shadow-[0_40px_120px_-32px_rgba(0,0,0,0.6)] dark:border-white/5 dark:bg-[#161219] md:p-8"
+          className="my-auto max-h-[calc(100vh-2rem)] w-full max-w-2xl overflow-y-auto rounded-[2.5rem] border border-gray-100 bg-white p-6 shadow-[0_40px_120px_-32px_rgba(0,0,0,0.6)] dark:border-white/5 dark:bg-[#161219] md:max-h-[calc(100vh-3rem)] md:p-8"
         >
           <div className="mb-8 flex items-start justify-between gap-4">
             <div>
@@ -126,7 +150,9 @@ function LancamentoModal({ open, onClose, onSave, form, setForm, profissionais, 
                   setForm((prev) => ({
                     ...prev,
                     tipo: nextTipo,
-                    origem: nextTipo === 'adiantamento' ? prev.origem || 'caixa' : '',
+                    origem: nextTipo === 'adiantamento'
+                      ? (caixaDisponivelParaLancamento ? (prev.origem || 'caixa') : 'conta')
+                      : '',
                   }));
                 }}
                 className="h-14 w-full rounded-[1.25rem] border border-gray-200 bg-gray-50 px-4 text-sm font-bold text-gray-900 outline-none focus:border-[#d48997] dark:border-white/10 dark:bg-white/5 dark:text-white"
@@ -154,8 +180,9 @@ function LancamentoModal({ open, onClose, onSave, form, setForm, profissionais, 
                   <button
                     type="button"
                     onClick={() => setForm((prev) => ({ ...prev, origem: 'caixa' }))}
+                    disabled={loadingCaixaStatus || !caixaDisponivelParaLancamento}
                     className={cn(
-                      'h-14 rounded-[1.25rem] border text-sm font-black uppercase tracking-[0.16em] transition-all',
+                      'h-14 rounded-[1.25rem] border text-sm font-black uppercase tracking-[0.16em] transition-all disabled:cursor-not-allowed disabled:opacity-45',
                       form.origem === 'caixa'
                         ? 'border-[#d48997] bg-[#d48997] text-white'
                         : 'border-gray-200 bg-gray-50 text-gray-500 dark:border-white/10 dark:bg-white/5 dark:text-white/60'
@@ -175,6 +202,23 @@ function LancamentoModal({ open, onClose, onSave, form, setForm, profissionais, 
                   >
                     Conta
                   </button>
+                </div>
+
+                <div
+                  className={cn(
+                    'mt-3 rounded-[1.25rem] border px-4 py-3 text-sm',
+                    valorExcedeCaixa || (!loadingCaixaStatus && !caixaDisponivelParaLancamento)
+                      ? 'border-amber-300/25 bg-amber-400/10 text-amber-200'
+                      : 'border-[#d48997]/18 bg-[#d48997]/8 text-[#d48997]'
+                  )}
+                >
+                  {loadingCaixaStatus
+                    ? 'Consultando saldo do caixa...'
+                    : valorExcedeCaixa
+                      ? `Saldo insuficiente no caixa. Disponivel agora: ${formatMoney(dinheiroDisponivelCaixa)}.`
+                      : !caixaDisponivelParaLancamento
+                        ? (caixaStatus?.mensagemSaida || 'Caixa indisponivel para este lancamento. Use a opcao Conta.')
+                        : `Disponivel no caixa agora: ${formatMoney(dinheiroDisponivelCaixa)}.`}
                 </div>
               </Field>
             )}
@@ -202,7 +246,7 @@ function LancamentoModal({ open, onClose, onSave, form, setForm, profissionais, 
             </button>
             <button
               type="button"
-              disabled={saving}
+              disabled={bloquearSalvar}
               onClick={() => onSave(isScopedProfessional ? { ...form, profissionalId: myPid } : form)}
               className="flex-1 rounded-[1.4rem] bg-[#d48997] px-6 py-4 text-[11px] font-black uppercase tracking-[0.22em] text-white shadow-xl shadow-[#d48997]/25 transition hover:bg-[#c77888] disabled:cursor-not-allowed disabled:opacity-60"
             >
@@ -259,6 +303,8 @@ export default function Remuneracao() {
   const [showModal, setShowModal] = useState(false);
   const [savingLancamento, setSavingLancamento] = useState(false);
   const [formLancamento, setFormLancamento] = useState(FORM_INICIAL);
+  const [caixaStatus, setCaixaStatus] = useState(null);
+  const [loadingCaixaStatus, setLoadingCaixaStatus] = useState(false);
 
   const role = localStorage.getItem('salao_user_role');
   const myPid = localStorage.getItem('salao_user_pid');
@@ -275,6 +321,11 @@ export default function Remuneracao() {
   useEffect(() => {
     fetchDados();
   }, [dataInicio, dataFim, profissionalId]);
+
+  useEffect(() => {
+    if (!showModal) return;
+    fetchCaixaStatus();
+  }, [showModal]);
 
   async function fetchProfissionais() {
     try {
@@ -304,10 +355,56 @@ export default function Remuneracao() {
     }
   }
 
+  async function fetchCaixaStatus() {
+    setLoadingCaixaStatus(true);
+    try {
+      const res = await getCaixaStatusPagamento();
+      const status = res.data || null;
+      setCaixaStatus(status);
+
+      if (status && !status.permiteSaida) {
+        setFormLancamento((prev) => (
+          prev.tipo === 'adiantamento' && prev.origem === 'caixa'
+            ? { ...prev, origem: 'conta' }
+            : prev
+        ));
+      }
+
+      return status;
+    } catch (err) {
+      console.error(err);
+      setCaixaStatus(null);
+      setFormLancamento((prev) => (
+        prev.tipo === 'adiantamento' && prev.origem === 'caixa'
+          ? { ...prev, origem: 'conta' }
+          : prev
+      ));
+      return null;
+    } finally {
+      setLoadingCaixaStatus(false);
+    }
+  }
+
   async function handleSalvarLancamento(payload) {
     if (!payload.profissionalId) {
       toast.error('Selecione o profissional.');
       return;
+    }
+
+    if (payload.tipo === 'adiantamento' && payload.origem === 'caixa') {
+      const statusAtual = await fetchCaixaStatus();
+      const dinheiroDisponivel = getDinheiroDisponivelCaixa(statusAtual);
+
+      if (!statusAtual?.permiteSaida) {
+        toast.error(statusAtual?.mensagemSaida || 'Caixa indisponivel para este lancamento. Use a opcao Conta.');
+        setFormLancamento((prev) => ({ ...prev, origem: 'conta' }));
+        return;
+      }
+
+      if (Number(payload.valor || 0) > dinheiroDisponivel) {
+        toast.error(`Saldo insuficiente no caixa. Disponivel agora: ${formatMoney(dinheiroDisponivel)}.`);
+        return;
+      }
     }
 
     setSavingLancamento(true);
@@ -846,6 +943,8 @@ export default function Remuneracao() {
         saving={savingLancamento}
         isScopedProfessional={isScopedProfessional}
         myPid={myPid}
+        caixaStatus={caixaStatus}
+        loadingCaixaStatus={loadingCaixaStatus}
       />
     </motion.div>
   );

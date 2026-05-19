@@ -33,6 +33,10 @@ export default function BookingPage({ slug }) {
   const [agendamentoCriado, setAgendamentoCriado] = useState(null);
 
   useEffect(() => {
+    setBooking((current) => ({ ...current, slug }));
+  }, [slug]);
+
+  useEffect(() => {
     if (!slug) return;
 
     setLoadingSalao(true);

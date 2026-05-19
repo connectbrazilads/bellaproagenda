@@ -52,6 +52,11 @@ function BookingSlugWrapper() {
   return <BookingPage slug={slug} />;
 }
 
+function BookingCompatWrapper() {
+  const { slug } = useParams();
+  return <Navigate to={`/${slug}`} replace />;
+}
+
 function AdminBookingRedirect() {
   const { slug } = useParams();
   return <Navigate to={`/${slug}`} replace />;
@@ -145,6 +150,8 @@ export default function App() {
           </Route>
 
           <Route path="/:slug" element={<BookingSlugWrapper />} />
+          <Route path="/booking/:slug" element={<BookingCompatWrapper />} />
+          <Route path="/booking" element={<LandingPage />} />
           <Route path="/admin/:slug" element={<AdminBookingRedirect />} />
 
           <Route

@@ -44,6 +44,53 @@ async function getCaixaAberto(salaoId) {
   });
 }
 
+async function getCaixaAbertoComResumo(salaoId) {
+  const sessao = await prisma.caixaSessao.findFirst({
+    where: {
+      salaoId,
+      status: 'aberto',
+    },
+    orderBy: { abertoEm: 'desc' },
+    include: {
+      movimentos: { orderBy: { createdAt: 'desc' } },
+    },
+  });
+
+  if (!sessao) return null;
+
+  const resumo = await buildCaixaResumo({
+    salaoId,
+    inicio: sessao.abertoEm,
+    fim: new Date(),
+    profissionalId: null,
+  });
+
+  return {
+    ...sessao,
+    resumo,
+  };
+}
+
+function calcularDinheiroDisponivelCaixa(caixa) {
+  const resumo = caixa?.resumo || {};
+  return Number(caixa?.fundoInicial || 0)
+    + Number(resumo.totalDinheiro || 0)
+    + Number(resumo.totalSuprimentos || 0)
+    - Number(resumo.totalSangrias || 0);
+}
+
+function formatCurrencyBRL(value) {
+  return Number(value || 0).toLocaleString('pt-BR', {
+    style: 'currency',
+    currency: 'BRL',
+  });
+}
+
+function buildPublicBookingUrl(salao, req) {
+  const baseUrl = String(process.env.APP_URL || req.headers.origin || 'http://localhost:5173').replace(/\/$/, '');
+  return `${baseUrl}/${salao.slug}`;
+}
+
 function horaParaMinutos(hora) {
   const [h, m] = String(hora || '').split(':').map(Number);
   if (Number.isNaN(h) || Number.isNaN(m)) return null;
@@ -1818,7 +1865,8 @@ async function dispararIAProativa(req, res) {
 
   let convitesEnviados = 0;
   for (const c of clientesAusentes) {
-    const msg = `Oi ${c.nome}! Notamos que faz um tempo que você não nos visita. ✂️ Que tal renovar o visual essa semana? Veja nossos horários: ${req.headers.origin || ''}/booking`;
+    const bookingUrl = buildPublicBookingUrl(salao, req);
+    const msg = `Oi ${c.nome}! Notamos que faz um tempo que voce nao nos visita. Que tal renovar o visual essa semana? Veja nossos horarios: ${bookingUrl}`;
     const num = c.telefone.replace(/\D/g, '');
     
     try {
@@ -2241,11 +2289,24 @@ async function getCaixaAtual(req, res) {
 }
 
 async function getCaixaStatusPagamento(req, res) {
-  const sessao = await getCaixaAberto(req.user.salaoId);
+  const sessao = await getCaixaAbertoComResumo(req.user.salaoId);
+  const dinheiroDisponivel = sessao ? calcularDinheiroDisponivelCaixa(sessao) : 0;
+  const permiteSaida = !!sessao && dinheiroDisponivel > 0;
   res.json({
     aberto: !!sessao,
-    sessao,
+    sessao: sessao ? {
+      id: sessao.id,
+      turnoNome: sessao.turnoNome,
+      abertoEm: sessao.abertoEm,
+    } : null,
     mensagem: sessao ? null : 'Abra o caixa antes de registrar pagamentos ou vendas.',
+    dinheiroDisponivel,
+    permiteSaida,
+    mensagemSaida: !sessao
+      ? 'Abra o caixa antes de registrar um adiantamento saindo do caixa.'
+      : !permiteSaida
+        ? 'Nao ha saldo disponivel no caixa. Para este lancamento, use a opcao Conta.'
+        : null,
   });
 }
 
@@ -3107,9 +3168,18 @@ async function createLancamentoRemuneracao(req, res) {
 
   let caixaSessaoId = null;
   if (tipoNormalizado === 'adiantamento' && origemNormalizada === 'caixa') {
-    const caixaAberto = await getCaixaAberto(req.user.salaoId);
+    const caixaAberto = await getCaixaAbertoComResumo(req.user.salaoId);
     if (!caixaAberto) {
       return res.status(400).json({ error: 'Abra o caixa antes de registrar um adiantamento saindo do caixa.' });
+    }
+    const dinheiroDisponivel = calcularDinheiroDisponivelCaixa(caixaAberto);
+    if (dinheiroDisponivel <= 0) {
+      return res.status(400).json({ error: 'Nao ha saldo disponivel no caixa. Para este lancamento, use a opcao Conta.' });
+    }
+    if (valorNumerico > dinheiroDisponivel) {
+      return res.status(400).json({
+        error: `Saldo insuficiente no caixa para este adiantamento. Disponivel: ${formatCurrencyBRL(dinheiroDisponivel)}.`,
+      });
     }
     caixaSessaoId = caixaAberto.id;
   }
