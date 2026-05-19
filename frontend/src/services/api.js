@@ -36,6 +36,7 @@ export const getPacotesPublicos = (slug) => api.get(`/public/${slug}/pacotes`);
 export const getProfissionaisPublicos = (slug) => api.get(`/public/${slug}/profissionais`);
 export const getProfissionaisPorServico = (slug, servicoId) => api.get(`/public/${slug}/profissionais/${servicoId}`);
 export const getProfissionaisPorPacote = (slug, pacoteId) => api.get(`/public/${slug}/profissionais-pacote/${pacoteId}`);
+export const getDatasDisponiveis = (slug, params) => api.get(`/public/${slug}/datas-disponiveis`, { params });
 export const getHorariosDisponiveis = (slug, params) => api.get(`/public/${slug}/horarios-disponiveis`, { params });
 export const criarAgendamentoPublico = (slug, data) => api.post(`/public/${slug}/agendamentos`, data);
 

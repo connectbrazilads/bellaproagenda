@@ -145,6 +145,81 @@ async function getProfissionaisPorPacote(req, res) {
   res.json(compativeis);
 }
 
+function normalizarIdsServico(servicoId, servicoIds) {
+  if (servicoIds) return Array.isArray(servicoIds) ? servicoIds : [servicoIds];
+  if (servicoId) return [servicoId];
+  return [];
+}
+
+async function resolverDuracaoConsulta(slug, { profissionalId, servicoId, servicoIds, pacoteId }) {
+  if (!profissionalId || (!servicoId && !pacoteId && !servicoIds)) {
+    return { erro: 'profissionalId, (servicoId/servicoIds ou pacoteId) sao obrigatorios', status: 400 };
+  }
+
+  const salao = await findSalao(slug);
+  if (!salao) return { erro: 'Salao nao encontrado', status: 404 };
+
+  let duracaoMin = 0;
+  const sIds = normalizarIdsServico(servicoId, servicoIds);
+
+  if (pacoteId) {
+    const pacote = await prisma.pacote.findUnique({ where: { id: pacoteId } });
+    duracaoMin = pacote?.duracaoMin || 0;
+    const servicoIdsDoPacote = await getServicoIdsDoPacote(pacoteId, salao.id);
+    if (!servicoIdsDoPacote) return { erro: 'Pacote nao encontrado', status: 404 };
+
+    const profissionalCompativelPacote = await profissionalAtendeTodosServicos(profissionalId, servicoIdsDoPacote, salao.id);
+    if (!profissionalCompativelPacote) {
+      return { erro: 'O profissional selecionado nao atende todos os servicos deste pacote', status: 400 };
+    }
+  } else {
+    const servicos = await prisma.servico.findMany({ where: { id: { in: sIds }, salaoId: salao.id } });
+    duracaoMin = servicos.reduce((acc, s) => acc + s.duracaoMin, 0);
+    const profissionalCompativelServicos = await profissionalAtendeTodosServicos(profissionalId, sIds, salao.id);
+    if (!profissionalCompativelServicos) {
+      console.log(`[Agendamento] Profissional ${profissionalId} nao atende oficialmente todos os servicos escolhidos, mas prosseguindo por flexibilidade.`);
+    }
+  }
+
+  if (duracaoMin === 0) {
+    return { erro: 'Duracao invalida ou servicos nao encontrados', status: 400 };
+  }
+
+  return { salao, duracaoMin };
+}
+
+async function getDatasDisponiveisHandler(req, res) {
+  const { profissionalId, servicoId, servicoIds, pacoteId, ano, mes } = req.query;
+  const anoNum = Number(ano);
+  const mesNum = Number(mes);
+
+  if (!anoNum || !mesNum || mesNum < 1 || mesNum > 12) {
+    return res.status(400).json({ error: 'ano e mes validos sao obrigatorios' });
+  }
+
+  const consulta = await resolverDuracaoConsulta(req.params.slug, { profissionalId, servicoId, servicoIds, pacoteId });
+  if (consulta.erro) {
+    return res.status(consulta.status).json({ error: consulta.erro });
+  }
+
+  const { salao, duracaoMin } = consulta;
+  const ultimoDia = new Date(anoNum, mesNum, 0).getDate();
+  const hoje = new Date();
+  hoje.setHours(0, 0, 0, 0);
+
+  const checks = Array.from({ length: ultimoDia }, (_, idx) => idx + 1).map(async (dia) => {
+    const dataStr = `${anoNum}-${String(mesNum).padStart(2, '0')}-${String(dia).padStart(2, '0')}`;
+    const data = new Date(`${dataStr}T00:00:00`);
+    if (data < hoje) return null;
+
+    const slots = await getHorariosDisponiveis(profissionalId, null, dataStr, duracaoMin, salao.id);
+    return slots.length > 0 ? dataStr : null;
+  });
+
+  const datas = (await Promise.all(checks)).filter(Boolean);
+  res.json(datas);
+}
+
 async function getHorariosDisponiveisHandler(req, res) {
   const { profissionalId, servicoId, servicoIds, pacoteId, data } = req.query;
   if (!profissionalId || (!servicoId && !pacoteId && !servicoIds) || !data) {
@@ -177,6 +252,22 @@ async function getHorariosDisponiveisHandler(req, res) {
 
   if (duracaoMin === 0) return res.status(400).json({ error: 'Duração inválida ou serviços não encontrados' });
 
+  const slots = await getHorariosDisponiveis(profissionalId, null, data, duracaoMin, salao.id);
+  res.json(slots);
+}
+
+async function getHorariosDisponiveisHandlerPublic(req, res) {
+  const { profissionalId, servicoId, servicoIds, pacoteId, data } = req.query;
+  if (!data) {
+    return res.status(400).json({ error: 'data e obrigatoria' });
+  }
+
+  const consulta = await resolverDuracaoConsulta(req.params.slug, { profissionalId, servicoId, servicoIds, pacoteId });
+  if (consulta.erro) {
+    return res.status(consulta.status).json({ error: consulta.erro });
+  }
+
+  const { salao, duracaoMin } = consulta;
   const slots = await getHorariosDisponiveis(profissionalId, null, data, duracaoMin, salao.id);
   res.json(slots);
 }
@@ -363,6 +454,7 @@ module.exports = {
   getProfissionaisPublicos,
   getProfissionaisPorServico,
   getProfissionaisPorPacote,
-  getHorariosDisponiveisHandler,
+  getDatasDisponiveisHandler,
+  getHorariosDisponiveisHandler: getHorariosDisponiveisHandlerPublic,
   criarAgendamento,
 };

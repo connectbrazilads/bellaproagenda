@@ -76,7 +76,7 @@ const STATUS_CONFIG = {
     icon: Zap
   },
   concluido: {
-    label: 'Conclu?do',
+    label: 'Concluido',
     bg: 'bg-[#E29BA8]/5/90 dark:bg-[#E29BA8]/10 backdrop-blur-xl',
     border: 'border-[#E29BA8]/20 dark:border-[#E29BA8]/30',
     text: 'text-emerald-700 dark:text-[#efbac2]',
@@ -281,7 +281,7 @@ function ModalNovoAgendamento({ onClose, onSave, preData, preHora, preProf, pref
 
   async function salvar() {
     if (!form.clienteNome || !form.clienteTelefone || !form.profissionalId || (form.servicoIds.length === 0 && !form.pacoteId) || !form.hora) {
-      alert('Preencha todos os campos obrigatÒ³rios');
+      alert('Preencha todos os campos obrigatorios');
       return;
     }
     try {
@@ -355,7 +355,7 @@ function ModalNovoAgendamento({ onClose, onSave, preData, preHora, preProf, pref
             <div className="rounded-[2rem] border border-amber-200 dark:border-bellapro-blush/20 bg-amber-50/80 dark:bg-bellapro-blush/10 p-4 sm:p-6 md:p-8 space-y-4">
               <div className="flex items-start justify-between gap-4">
                 <div>
-                  <p className="text-[10px] font-black uppercase tracking-[0.3em] text-bellapro-blush">Cliente j?Ò¡ possui agenda nao dia</p>
+                  <p className="text-[10px] font-black uppercase tracking-[0.3em] text-bellapro-blush">Cliente ja possui agenda no dia</p>
                   <h3 className="mt-2 text-xl font-black text-gray-900 dark:text-white">
                     {loadingDuplicidade ? 'Verificando agendamentos...' : `${agendamentosCliente.length} horario(s) encontrado(s) em ${formatDateBR(form.data)}`}
                   </h3>
@@ -417,7 +417,7 @@ function ModalNovoAgendamento({ onClose, onSave, preData, preHora, preProf, pref
                   setForm({...form, clienteNome: e.target.value});
                   buscar(e.target.value);
                 }} 
-                placeholder="IdentificaÒ§Ò£o do cliente..."
+                placeholder="Identificacao do cliente..."
                 className="w-full bg-gray-50 dark:bg-white/5 border border-gray-100 dark:border-white/5 rounded-[2rem] px-8 py-5 outline-none text-gray-900 dark:text-white focus:ring-4 ring-[#E29BA8]/10 transition-all font-black text-sm" 
               />
               
@@ -511,7 +511,7 @@ function ModalNovoAgendamento({ onClose, onSave, preData, preHora, preProf, pref
               </select>
               {(form.servicoIds.length > 0 || form.pacoteId) && profissionaisCompativeis.length === 0 && (
                 <p className="text-xs font-bold text-bellapro-blush ml-6">
-                  Nenhum profissional atende essa combinaÒ§Ò£o de servicos.
+                  Nenhum profissional atende essa combinacao de servicos.
                 </p>
               )}
             </div>
@@ -592,7 +592,7 @@ function ModalNovoAgendamento({ onClose, onSave, preData, preHora, preProf, pref
               onChange={e => setForm({...form, encaixe: e.target.checked})}
               className="w-6 h-6 rounded-lg accent-[#d48997] cursor-pointer"
             />
-            <label htmlFor="encaixe" className="text-xs font-black uppercase tracking-widest text-gray-600 dark:text-gray-300 cursor-pointer">ForÒ§ar Encaixe (Permitir SobreposiÒ§Ò£o)</label>
+            <label htmlFor="encaixe" className="text-xs font-black uppercase tracking-widest text-gray-600 dark:text-gray-300 cursor-pointer">Forcar Encaixe (Permitir Sobreposicao)</label>
           </div>
 
           <motion.button 
@@ -731,7 +731,7 @@ function ModalDetalhesAgendamento({ agendamento: initialAgendamento, onClose, on
               <div className="min-w-0">
                 <h2 className="text-2xl md:text-4xl font-black text-gray-900 dark:text-white uppercase tracking-tighter leading-none break-words">{agendamento.clienteNome}</h2>
                 <div className="flex flex-wrap items-center gap-3 md:gap-4 mt-2">
-                   <span className="text-[10px] font-black text-[#E29BA8] uppercase tracking-[0.3em]">Gestão de Agenda BellaPro</span>
+                   <span className="text-[10px] font-black text-[#E29BA8] uppercase tracking-[0.3em]">Gestao de Agenda BellaPro</span>
                    <div className="w-1.5 h-1.5 rounded-full bg-gray-200 dark:bg-white/20" />
                    <span className="text-[10px] font-black text-gray-400 uppercase tracking-[0.3em]">{formatDateBR(agendamento.data)} - {agendamento.inicioHora} - {agendamento.profissional?.nome}</span>
                 </div>
@@ -822,7 +822,7 @@ function ModalDetalhesAgendamento({ agendamento: initialAgendamento, onClose, on
                    <p className="text-[9px] font-black text-[#E29BA8] uppercase tracking-[0.3em] mb-2">Servico Agendado</p>
                    <p className="text-lg font-black text-gray-900 dark:text-white uppercase leading-tight">{getAgendamentoTitulo(agendamento)}</p>
                    <div className="mt-4 pt-4 border-t border-gray-50 dark:border-white/5 flex items-center justify-between">
-                      <span className="text-[10px] font-bold text-gray-400 uppercase">PreÒ§o UnitÒ¡rio</span>
+                      <span className="text-[10px] font-bold text-gray-400 uppercase">Preco Unitario</span>
                       <span className="font-black text-gray-900 dark:text-white">{Number(agendamento.servico?.preco || agendamento.pacote?.preco || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</span>
                    </div>
                 </div>
@@ -956,7 +956,7 @@ function ModalDetalhesAgendamento({ agendamento: initialAgendamento, onClose, on
                         <h4 className="text-[11px] font-black text-gray-900 dark:text-white uppercase tracking-[0.3em] flex items-center gap-3">
                           <div className="w-1.5 h-1.5 rounded-full bg-[#E29BA8]" /> Servicos Adicionais
                         </h4>
-                        <span className="text-[9px] font-black text-gray-400 uppercase tracking-widest">{(servicos || []).length} DISPONÒVEIS</span>
+                        <span className="text-[9px] font-black text-gray-400 uppercase tracking-widest">{(servicos || []).length} DISPONIVEIS</span>
                       </div>
                       <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">
                          {(servicos || []).filter((s) => s.id !== agendamento.servicoId).map((s) => (
@@ -1006,7 +1006,7 @@ function ModalDetalhesAgendamento({ agendamento: initialAgendamento, onClose, on
                            <CheckCircle2 size={48} />
                         </div>
                         <h2 className="text-2xl sm:text-4xl font-black text-gray-900 dark:text-white uppercase tracking-tighter mb-4">Pago com Sucesso!</h2>
-                        <p className="text-gray-500 text-lg mb-12 max-w-sm font-medium">O atendimento foi concluÒ­do e os valores foram integrados ao seu financeiro BellaPro.</p>
+                        <p className="text-gray-500 text-lg mb-12 max-w-sm font-medium">O atendimento foi concluido e os valores foram integrados ao seu financeiro BellaPro.</p>
                         
                         <div className="w-full max-w-md space-y-4">
                           <button 
@@ -1049,7 +1049,7 @@ function ModalDetalhesAgendamento({ agendamento: initialAgendamento, onClose, on
                            </div>
                            <div>
                              <h3 className="text-2xl sm:text-4xl font-black text-gray-900 dark:text-white tracking-tighter uppercase leading-none">Checkout Final</h3>
-                             <p className="text-gray-500 text-sm font-medium mt-3">Finalize a experiÒªncia do cliente e lance os valores nao fluxo financeiro BellaPro.</p>
+                             <p className="text-gray-500 text-sm font-medium mt-3">Finalize a experiencia do cliente e lance os valores nao fluxo financeiro BellaPro.</p>
                            </div>
                         </div>
 
@@ -1084,7 +1084,7 @@ function ModalDetalhesAgendamento({ agendamento: initialAgendamento, onClose, on
                                    </div>
                                    <div>
                                      <p className={cn('text-sm font-black uppercase tracking-widest', pagamentoForma === item.forma ? 'text-gray-900 dark:text-white' : 'text-gray-900 dark:text-white')}>{item.label}</p>
-                                     <p className={cn('text-[10px] font-bold uppercase tracking-[0.2em] mt-1', pagamentoForma === item.forma ? 'text-gray-600 dark:text-white/70' : 'text-gray-400')}>Cobran?a rÒ¡pida</p>
+                                     <p className={cn('text-[10px] font-bold uppercase tracking-[0.2em] mt-1', pagamentoForma === item.forma ? 'text-gray-600 dark:text-white/70' : 'text-gray-400')}>Cobranca rapida</p>
                                    </div>
                                  </div>
                                </button>
@@ -1115,7 +1115,7 @@ function ModalDetalhesAgendamento({ agendamento: initialAgendamento, onClose, on
                                 disabled={!pagamentoForma || loading || agendamento.statusPagamento === 'pago' || !caixaPagamentoStatus.aberto}
                                 className="w-full rounded-[2rem] bg-[#E29BA8] hover:bg-[#d48997] disabled:opacity-40 disabled:cursor-not-allowed text-white py-6 font-black uppercase tracking-[0.2em] text-xs shadow-xl shadow-[#E29BA8]/20 transition-all flex items-center justify-center gap-3 mt-4"
                               >
-                               <CheckCircle2 size={18} /> {agendamento.statusPagamento === 'pago' ? 'JÒ¡ pago' : 'Finalizar cobranÒ§a'}
+                               <CheckCircle2 size={18} /> {agendamento.statusPagamento === 'pago' ? 'Ja pago' : 'Finalizar cobranca'}
                              </button>
                            </div>
                         </div>
@@ -1440,7 +1440,7 @@ export default function Agenda() {
         clienteTelefone,
         servicoId: servicoId || undefined,
         dataDesejada: dataFiltro,
-        observacao: 'Entrada rÒ¡pida pela agenda',
+        observacao: 'Entrada rapida pela agenda',
       });
       carregar();
     } catch (e) {
@@ -1531,7 +1531,7 @@ export default function Agenda() {
         <div className="p-4 md:p-8 space-y-8 w-[280px]">
           <div>
             <h3 className="text-2xl font-black text-gray-900 dark:text-white tracking-tighter uppercase leading-none mb-2">Escala</h3>
-            <p className="text-[9px] font-black text-[#d48997] uppercase tracking-widest bg-[#d48997]/10 px-3 py-1.5 rounded-lg inline-flex">CustomizaÒ§Ò£o Visual</p>
+            <p className="text-[9px] font-black text-[#d48997] uppercase tracking-widest bg-[#d48997]/10 px-3 py-1.5 rounded-lg inline-flex">Customizacao Visual</p>
           </div>
           
           <div className="space-y-6">
@@ -1617,7 +1617,7 @@ export default function Agenda() {
                     </div>
                     <div className="text-left overflow-hidden flex-1">
                       <p className={`text-[11px] font-black uppercase tracking-tight truncate leading-none ${profVisiveis[p.id] ? 'text-gray-900 dark:text-white' : 'text-gray-500'}`}>{p.nome}</p>
-                      {profVisiveis[p.id] && <p className="text-[8px] text-[#E29BA8] uppercase tracking-[0.2em] mt-1 font-bold">VisÒ­vel</p>}
+                      {profVisiveis[p.id] && <p className="text-[8px] text-[#E29BA8] uppercase tracking-[0.2em] mt-1 font-bold">Visivel</p>}
                     </div>
                   </button>
                 ))}
@@ -1629,30 +1629,30 @@ export default function Agenda() {
 
       <div className="flex-1 flex flex-col relative min-w-0">
         {/* Se??o BellaPro */}
-        <div className="md:hidden px-3 py-3 border-b border-gray-100 dark:border-white/5 bg-white/95 dark:bg-[#0c0c0e]/92 backdrop-blur-3xl sticky top-[var(--admin-mobile-header-height,73px)] z-50 shadow-sm space-y-3">
+        <div className="md:hidden px-3 py-3 border-b border-[#f0d6db] bg-[#fff7f8]/95 backdrop-blur-3xl sticky top-[var(--admin-mobile-header-height,73px)] z-50 shadow-sm space-y-3">
           <div className="flex items-center justify-between gap-3">
             <div className="flex items-center gap-3 min-w-0">
               <button
                 onClick={() => setSidebarOpen(!sidebarOpen)}
-                className="w-11 h-11 flex items-center justify-center rounded-2xl border border-gray-200 dark:border-white/10 bg-white dark:bg-white/5 text-gray-700 dark:text-white shadow-sm"
+                className="w-11 h-11 flex items-center justify-center rounded-2xl border border-[#ecd5d9] bg-white text-[#6f5560] shadow-sm"
               >
                 <Menu size={20} />
               </button>
-              <h2 className="text-[15px] font-black text-gray-950 dark:text-white truncate">Agenda</h2>
+              <h2 className="truncate text-[15px] font-black text-[#20191f]">Agenda</h2>
             </div>
 
             <div className="flex items-center gap-1">
-              <button className="w-10 h-10 flex items-center justify-center rounded-2xl text-gray-700 dark:text-white">
+              <button className="flex h-10 w-10 items-center justify-center rounded-2xl bg-white text-[#8c6b75] shadow-sm">
                 <Share2 size={18} />
               </button>
-              <button className="w-10 h-10 flex items-center justify-center rounded-2xl text-gray-700 dark:text-white">
+              <button className="flex h-10 w-10 items-center justify-center rounded-2xl bg-white text-[#8c6b75] shadow-sm">
                 <Bell size={18} />
               </button>
-              <button onClick={carregar} className="w-10 h-10 flex items-center justify-center rounded-2xl text-gray-700 dark:text-white">
+              <button onClick={carregar} className="flex h-10 w-10 items-center justify-center rounded-2xl bg-white text-[#8c6b75] shadow-sm">
                 <RefreshCw size={18} />
               </button>
               <div className="relative">
-                <select className="appearance-none h-11 rounded-2xl border border-gray-200 dark:border-white/10 bg-white dark:bg-white/5 pl-4 pr-9 text-sm font-black text-gray-900 dark:text-white outline-none">
+                <select className="appearance-none h-11 rounded-2xl border border-[#ecd5d9] bg-white pl-4 pr-9 text-sm font-black text-[#20191f] outline-none shadow-sm">
                   <option>Dia</option>
                 </select>
                 <ChevronRight size={14} className="absolute right-3 top-1/2 -translate-y-1/2 rotate-90 text-gray-400 pointer-events-none" />
@@ -1661,25 +1661,25 @@ export default function Agenda() {
           </div>
 
           <div className="flex items-center justify-between gap-3">
-            <div className="flex items-center gap-1 rounded-2xl bg-white dark:bg-white/5 px-2 py-1.5 border border-gray-200 dark:border-white/10 shadow-sm">
+            <div className="flex items-center gap-1 rounded-2xl border border-[#3b3139] bg-[#2c232a] px-2 py-1.5 shadow-[0_10px_26px_-18px_rgba(32,25,31,0.9)]">
               <button onClick={() => setDataFiltro(addDays(dataFiltro, -1))} className="w-9 h-9 flex items-center justify-center rounded-xl text-gray-500">
                 <ChevronLeft size={18} />
               </button>
               <div className="relative px-2">
-                <span className="block text-[12px] font-black text-gray-900 dark:text-[#E29BA8] uppercase tracking-tight min-w-[118px] text-center">
+                <span className="block min-w-[118px] text-center text-[12px] font-black uppercase tracking-tight text-white">
                   {formatDateBR(dataFiltro)}
                 </span>
                 <input type="date" value={dataFiltro} onChange={e => setDataFiltro(e.target.value)} className="absolute inset-0 opacity-0 cursor-pointer" aria-label="Selecionar data da agenda" />
               </div>
-              <button onClick={() => setDataFiltro(addDays(dataFiltro, 1))} className="w-9 h-9 flex items-center justify-center rounded-xl text-gray-500">
+              <button onClick={() => setDataFiltro(addDays(dataFiltro, 1))} className="w-9 h-9 flex items-center justify-center rounded-xl text-gray-300">
                 <ChevronRight size={18} />
               </button>
-              <button className="w-9 h-9 flex items-center justify-center rounded-xl text-gray-500">
+              <button className="w-9 h-9 flex items-center justify-center rounded-xl text-gray-300">
                 <MoreVertical size={18} />
               </button>
             </div>
 
-            <button onClick={() => setModalNovo(true)} className="shrink-0 bg-[#E29BA8] text-[#111116] hover:bg-[#d81b6f] text-white px-5 h-12 rounded-2xl font-black text-sm shadow-[0_10px_22px_rgba(234,30,121,0.35)]">
+            <button onClick={() => setModalNovo(true)} className="shrink-0 rounded-2xl bg-[#E29BA8] px-5 text-sm font-black text-white shadow-[0_10px_22px_rgba(226,155,168,0.45)] transition hover:bg-[#d48997] h-12">
               Agendar
             </button>
           </div>
@@ -1994,7 +1994,7 @@ export default function Agenda() {
               className="fixed z-[160] bg-white dark:bg-[#121214] border border-gray-100 dark:border-white/10 rounded-2xl shadow-2xl overflow-hidden py-2 min-w-[180px] backdrop-blur-xl"
             >
               <div className="px-4 py-2 border-b border-gray-100 dark:border-white/5 mb-1">
-                <p className="text-[8px] font-black text-gray-400 uppercase tracking-widest">{contextMenu.hora} - OpÒ§Òµes</p>
+                <p className="text-[8px] font-black text-gray-400 uppercase tracking-widest">{contextMenu.hora} - Opcoes</p>
               </div>
               <button 
                 onClick={() => {

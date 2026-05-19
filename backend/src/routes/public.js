@@ -28,6 +28,7 @@ router.get('/:slug/pacotes', ctrl.getPacotesPublicos);
 router.get('/:slug/profissionais', ctrl.getProfissionaisPublicos);
 router.get('/:slug/profissionais/:servicoId', ctrl.getProfissionaisPorServico);
 router.get('/:slug/profissionais-pacote/:pacoteId', ctrl.getProfissionaisPorPacote);
+router.get('/:slug/datas-disponiveis', bookingLookupRateLimiter, ctrl.getDatasDisponiveisHandler);
 router.get('/:slug/horarios-disponiveis', bookingLookupRateLimiter, ctrl.getHorariosDisponiveisHandler);
 router.post('/:slug/agendamentos', bookingCreateRateLimiter, ctrl.criarAgendamento);
 

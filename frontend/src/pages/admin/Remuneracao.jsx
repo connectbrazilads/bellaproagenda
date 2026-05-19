@@ -236,7 +236,7 @@ function LancamentoModal({
             </div>
           </div>
 
-          <div className="mt-8 flex flex-col gap-3 md:flex-row">
+          <div className="sticky bottom-0 mt-8 flex flex-col-reverse gap-3 border-t border-gray-100 bg-white/95 pt-5 backdrop-blur dark:border-white/5 dark:bg-[#161219]/95 md:flex-row">
             <button
               type="button"
               onClick={onClose}

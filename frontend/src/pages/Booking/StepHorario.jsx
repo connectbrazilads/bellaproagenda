@@ -1,12 +1,13 @@
 import React, { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
-import { Clock, Sun, Sunrise, Coffee, Moon } from 'lucide-react';
+import { Clock, Sun, Sunrise, Coffee, Moon, AlertCircle } from 'lucide-react';
 import { getHorariosDisponiveis } from '../../services/api';
 import { cn } from '../../lib/utils';
 
 export default function StepHorario({ booking, set, next, cor }) {
   const [slots, setSlots] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [erro, setErro] = useState('');
 
   useEffect(() => {
     const isPacote = booking.servicos[0]?.isPacote;
@@ -17,8 +18,16 @@ export default function StepHorario({ booking, set, next, cor }) {
     };
 
     setLoading(true);
+    setErro('');
+
     getHorariosDisponiveis(booking.slug, params)
-      .then((response) => setSlots(response.data || []))
+      .then((response) => {
+        setSlots(response.data || []);
+      })
+      .catch((error) => {
+        setSlots([]);
+        setErro(error.response?.data?.error || 'Nao foi possivel consultar os horarios desta data.');
+      })
       .finally(() => setLoading(false));
   }, [booking.slug, booking.profissional.id, booking.servicos, booking.data]);
 
@@ -50,13 +59,25 @@ export default function StepHorario({ booking, set, next, cor }) {
             <Clock size={24} />
           </div>
           <div>
-            <p className="mb-1 text-[10px] font-black uppercase tracking-widest text-gray-400">Data Escolhida</p>
+            <p className="mb-1 text-[10px] font-black uppercase tracking-widest text-gray-400">Data escolhida</p>
             <p className="text-sm font-black uppercase tracking-tight text-gray-900">
               {new Date(`${booking.data}T00:00:00`).toLocaleDateString('pt-BR', { day: '2-digit', month: 'long', weekday: 'long' })}
             </p>
           </div>
         </div>
       </div>
+
+      {erro && (
+        <div className="flex items-start gap-4 rounded-[2rem] border border-rose-100 bg-rose-50 p-5 text-rose-700">
+          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-white shadow-sm">
+            <AlertCircle size={20} />
+          </div>
+          <div>
+            <p className="text-xs font-black uppercase tracking-[0.24em]">Nao foi possivel carregar os horarios</p>
+            <p className="mt-2 text-sm font-medium leading-relaxed">{erro}</p>
+          </div>
+        </div>
+      )}
 
       <div className="space-y-12">
         {Object.entries(periods).map(([name, times], idx) => times.length > 0 && (
@@ -104,14 +125,16 @@ export default function StepHorario({ booking, set, next, cor }) {
         ))}
       </div>
 
-      {slots.length === 0 && (
+      {!erro && slots.length === 0 && (
         <div className="space-y-4 rounded-[2.5rem] border-2 border-dashed border-gray-100 bg-gray-50/50 p-12 text-center">
           <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-white text-gray-300 shadow-lg">
             <Coffee size={32} />
           </div>
           <div>
-            <p className="text-lg font-black uppercase tracking-tight text-gray-900">Sem horarios para hoje</p>
-            <p className="mx-auto max-w-[200px] text-xs font-medium text-gray-400">Nao encontramos vagas nesta data. Tente outro dia ou especialista.</p>
+            <p className="text-lg font-black uppercase tracking-tight text-gray-900">Sem horarios nesta data</p>
+            <p className="mx-auto max-w-[240px] text-xs font-medium text-gray-400">
+              Nao encontramos vagas para esse profissional neste dia. Tente outra data ou escolha outro especialista.
+            </p>
           </div>
         </div>
       )}
