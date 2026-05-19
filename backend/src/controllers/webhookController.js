@@ -79,6 +79,80 @@ function buildMensagemConteudo(texto, media) {
   return media.legenda || 'Midia recebida';
 }
 
+function uniqueNonEmpty(values) {
+  return [...new Set(
+    values
+      .map((value) => String(value || '').trim())
+      .filter(Boolean)
+  )];
+}
+
+function normalizePhoneDigits(value = '') {
+  return String(value || '').replace(/\D/g, '');
+}
+
+function buildPhoneVariants(values) {
+  const variants = new Set();
+
+  for (const value of values) {
+    const digits = normalizePhoneDigits(value);
+    if (!digits) continue;
+
+    variants.add(digits);
+    if (digits.startsWith('55') && digits.length > 11) {
+      variants.add(digits.slice(2));
+    }
+  }
+
+  return [...variants];
+}
+
+function extractSalaoLookupCandidates(body, data) {
+  const rawCandidates = uniqueNonEmpty([
+    body?.instance,
+    body?.instanceName,
+    body?.sender,
+    body?.owner,
+    body?.numberId,
+    data?.instance,
+    data?.instanceName,
+    data?.sender,
+    data?.owner,
+    data?.numberId,
+  ]).flatMap((value) => {
+    const withoutJid = value.replace(/@s\.whatsapp\.net$/i, '');
+    return withoutJid && withoutJid !== value ? [value, withoutJid] : [value];
+  });
+
+  return {
+    rawCandidates: uniqueNonEmpty(rawCandidates),
+    phoneCandidates: buildPhoneVariants(rawCandidates),
+  };
+}
+
+async function findSalaoByWebhookPayload(body, data) {
+  const { rawCandidates, phoneCandidates } = extractSalaoLookupCandidates(body, data);
+
+  if (!rawCandidates.length && !phoneCandidates.length) {
+    return { salao: null, rawCandidates: [], phoneCandidates: [] };
+  }
+
+  const or = [
+    ...rawCandidates.flatMap((candidate) => ([
+      { evolutionInstance: candidate },
+      { slug: candidate },
+    ])),
+    ...phoneCandidates.flatMap((candidate) => ([
+      { whatsapp: { contains: candidate } },
+      { whatsappAgendamentos: { contains: candidate } },
+      { telefone: { contains: candidate } },
+    ])),
+  ];
+
+  const salao = await prisma.salao.findFirst({ where: { OR: or } });
+  return { salao, rawCandidates, phoneCandidates };
+}
+
 async function handleWhatsapp(req, res) {
   res.sendStatus(200);
 
@@ -102,19 +176,15 @@ async function handleWhatsapp(req, res) {
     const conteudoMensagem = buildMensagemConteudo(texto, media);
     if (!conteudoMensagem) return;
 
-    // Identify the salão by the Evolution API instance (slug) that sent the webhook
-    const instanceName = String(body?.instance || body?.instanceName || body?.sender || '').trim();
-    if (!instanceName) return;
-
-    const salao = await prisma.salao.findFirst({
-      where: {
-        OR: [
-          { evolutionInstance: instanceName },
-          { slug: instanceName },
-        ],
-      },
-    });
-    if (!salao) return;
+    const { salao, rawCandidates, phoneCandidates } = await findSalaoByWebhookPayload(body, data);
+    if (!salao) {
+      console.warn('[Webhook WhatsApp] Salao nao encontrado para payload', {
+        event: body?.event,
+        rawCandidates,
+        phoneCandidates,
+      });
+      return;
+    }
 
     const salaoId = salao.id;
 
