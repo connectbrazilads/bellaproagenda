@@ -27,7 +27,7 @@ import {
   getRelatorioRemuneracao,
   updateComissaoPaga,
 } from '../../services/api';
-import { cn } from '../../lib/utils';
+import { calculateAgendamentoTotal, cn } from '../../lib/utils';
 
 const FORM_INICIAL = {
   profissionalId: '',
@@ -55,10 +55,7 @@ function getDinheiroDisponivelCaixa(caixaStatus) {
 }
 
 function buildAgendamentoTotal(agendamento) {
-  const precoBase = Number(agendamento?.servico?.preco ?? agendamento?.pacote?.preco ?? 0);
-  const precoItens = agendamento?.itens?.reduce((sum, item) => sum + Number(item.preco || 0), 0) || 0;
-  const precoProdutos = agendamento?.produtos?.reduce((sum, item) => sum + (Number(item.preco || 0) * Number(item.quantidade || 0)), 0) || 0;
-  return precoBase + precoItens + precoProdutos;
+  return calculateAgendamentoTotal(agendamento);
 }
 
 function LancamentoModal({

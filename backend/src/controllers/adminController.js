@@ -225,9 +225,32 @@ async function buildCaixaResumo({ salaoId, inicio, fim, profissionalId }) {
 
 function calcularTotalAgendamento(agendamento) {
   const precoBase = Number(agendamento?.servico?.preco ?? agendamento?.pacote?.preco ?? 0);
-  const precoItens = agendamento?.itens?.reduce((sum, item) => sum + Number(item.preco || 0), 0) || 0;
+  const precoItens = getAgendamentoItensExtras(agendamento).reduce((sum, item) => sum + Number(item.preco || 0), 0);
   const precoProdutos = agendamento?.produtos?.reduce((sum, item) => sum + (Number(item.preco || 0) * Number(item.quantidade || 0)), 0) || 0;
   return precoBase + precoItens + precoProdutos;
+}
+
+function isAgendamentoItemDuplicadoBase(agendamento, item) {
+  if (!agendamento?.servicoId || !agendamento?.servico || !item?.servicoId) return false;
+  if (item.servicoId !== agendamento.servicoId) return false;
+
+  const createdAtAgendamento = agendamento?.createdAt ? new Date(agendamento.createdAt).getTime() : null;
+  const createdAtItem = item?.createdAt ? new Date(item.createdAt).getTime() : null;
+  const createdTogether = createdAtAgendamento && createdAtItem
+    ? Math.abs(createdAtItem - createdAtAgendamento) < 60 * 1000
+    : false;
+
+  return createdTogether
+    && Number(item.preco || 0) === Number(agendamento.servico?.preco || 0)
+    && Number(item.duracaoMin || 0) === Number(agendamento.servico?.duracaoMin || 0);
+}
+
+function getAgendamentoItensExtras(agendamento) {
+  return (agendamento?.itens || []).filter((item) => !isAgendamentoItemDuplicadoBase(agendamento, item));
+}
+
+function getAgendamentoDuracaoExtra(agendamento) {
+  return getAgendamentoItensExtras(agendamento).reduce((sum, item) => sum + Number(item.duracaoMin || 0), 0);
 }
 
 function calcularSaldoLancamento(lancamento) {
@@ -241,7 +264,7 @@ async function aplicarConsumoEstoqueDoServico(agendamento) {
   if (agendamento.servicoId) {
     ocorrenciasServico[agendamento.servicoId] = (ocorrenciasServico[agendamento.servicoId] || 0) + 1;
   }
-  for (const item of agendamento.itens || []) {
+  for (const item of getAgendamentoItensExtras(agendamento)) {
     if (!item.servicoId) continue;
     ocorrenciasServico[item.servicoId] = (ocorrenciasServico[item.servicoId] || 0) + 1;
   }
@@ -925,7 +948,7 @@ async function getClientes(req, res) {
     const concluidos = c.agendamentos.filter((a) => a.status === 'concluido');
     const totalGasto = concluidos.reduce((sum, a) => {
       const base = a.servico?.preco ?? a.pacote?.preco ?? 0;
-      const extras = a.itens.reduce((s, i) => s + i.preco, 0);
+      const extras = getAgendamentoItensExtras(a).reduce((s, i) => s + Number(i.preco || 0), 0);
       return sum + base + extras;
     }, 0);
     const ultimaVisitaAg = [...concluidos].sort((a, b) => new Date(b.data) - new Date(a.data))[0];
@@ -1052,7 +1075,9 @@ async function criarAgendamentoAdmin(req, res) {
       return res.status(400).json({ error: 'O profissional selecionado não atende todos os serviços escolhidos' });
     }
     totalDuracao = servicos.reduce((acc, s) => acc + s.duracaoMin, 0);
-    itensData = servicos.map(s => ({ servicoId: s.id, nome: s.nome, preco: s.preco, duracaoMin: s.duracaoMin }));
+    itensData = sIds.length > 1
+      ? servicos.map((s) => ({ servicoId: s.id, nome: s.nome, preco: s.preco, duracaoMin: s.duracaoMin }))
+      : [];
   }
 
   const [hh, mm] = hora.split(':').map(Number);
@@ -1296,7 +1321,8 @@ async function executarConclusaoAgendamento(agId, salaoId) {
   if (!ag || ag.status === 'concluido') return { comissaoValor: ag?.comissaoValor ?? 0, saldoRestante: null, fidelidadeGanho: 0, fidelidadeTipo: salao?.fidelidadeTipo };
 
   const precoBase = ag.servico?.preco ?? ag.pacote?.preco ?? 0;
-  const precoItens = ag.itens.reduce((s, i) => s + i.preco, 0);
+  const itensExtras = getAgendamentoItensExtras(ag);
+  const precoItens = itensExtras.reduce((s, i) => s + Number(i.preco || 0), 0);
   const precoProds = ag.produtos.reduce((s, p) => s + (p.preco * p.quantidade), 0);
   const totalAg = precoBase + precoItens + precoProds;
 
@@ -1319,8 +1345,8 @@ async function executarConclusaoAgendamento(agId, salaoId) {
       return (preco * globalPerc) / 100;
     };
     if (ag.servicoId) comissaoValor = getComissao(ag.servicoId, precoBase - custoProd);
-    if (ag.itens?.length > 0) {
-      for (const item of ag.itens) comissaoValor += getComissao(item.servicoId, item.preco);
+    if (itensExtras.length > 0) {
+      for (const item of itensExtras) comissaoValor += getComissao(item.servicoId, item.preco);
     }
   }
 
@@ -1476,7 +1502,7 @@ async function reagendarAgendamento(req, res) {
   }
 
   const duracao = (original.servico?.duracaoMin ?? original.pacote?.duracaoMin ?? 0)
-    + ((original.itens || []).reduce((sum, item) => sum + Number(item.duracaoMin || 0), 0));
+    + getAgendamentoDuracaoExtra(original);
   const [hh, mm] = hora.split(':').map(Number);
   const fimMin = (hh * 60) + mm + duracao;
   const fimHora = `${String(Math.floor(fimMin / 60)).padStart(2, '0')}:${String(fimMin % 60).padStart(2, '0')}`;
@@ -1495,9 +1521,9 @@ async function reagendarAgendamento(req, res) {
       fimHora,
       observacao: `Reagendado do atendimento ${original.inicioHora} em ${original.data.toISOString().slice(0, 10)}.${original.observacao ? ` ${original.observacao}` : ''}`.trim(),
       reagendadoDeId: original.id,
-      itens: original.itens?.length
+      itens: getAgendamentoItensExtras(original).length
         ? {
-            create: original.itens.map((item) => ({
+            create: getAgendamentoItensExtras(original).map((item) => ({
               servicoId: item.servicoId,
               nome: item.nome,
               preco: item.preco,
@@ -1650,9 +1676,7 @@ async function updatePagamentoAgendamento(req, res) {
     include: { servico: true, pacote: true, itens: true, produtos: true }
   });
   
-  const totalDevido = (ag.servico?.preco ?? ag.pacote?.preco ?? 0) + 
-                     ag.itens.reduce((s,i) => s + i.preco, 0) + 
-                     ag.produtos.reduce((s,p) => s + (p.preco * p.quantidade), 0);
+  const totalDevido = calcularTotalAgendamento(ag);
   
   const totalPago = pagamentosLista.reduce((s,p) => s + Number(p.valor || 0), 0);
   const taxa = parseFloat(taxaOperadora) || 0;
@@ -1756,8 +1780,8 @@ async function addItemAgendamento(req, res) {
     where: { id }, 
     include: { servico: true, pacote: true, itens: true } 
   });
-  const duracaoTotal = (ag.servico?.duracaoMin ?? ag.pacote?.duracaoMin ?? 0) + 
-                      ag.itens.reduce((s, i) => s + i.duracaoMin, 0);
+  const duracaoTotal = (ag.servico?.duracaoMin ?? ag.pacote?.duracaoMin ?? 0)
+    + getAgendamentoDuracaoExtra(ag);
   const [hh, mm] = ag.inicioHora.split(':').map(Number);
   const totalMin = hh * 60 + mm + duracaoTotal;
   const fimHora = `${String(Math.floor(totalMin / 60)).padStart(2, '0')}:${String(totalMin % 60).padStart(2, '0')}`;
@@ -1793,8 +1817,8 @@ async function removeItemAgendamento(req, res) {
     where: { id }, 
     include: { servico: true, pacote: true, itens: true } 
   });
-  const duracaoTotal = (ag.servico?.duracaoMin ?? ag.pacote?.duracaoMin ?? 0) + 
-                      ag.itens.reduce((s, i) => s + i.duracaoMin, 0);
+  const duracaoTotal = (ag.servico?.duracaoMin ?? ag.pacote?.duracaoMin ?? 0)
+    + getAgendamentoDuracaoExtra(ag);
   const [hh, mm] = ag.inicioHora.split(':').map(Number);
   const totalMin = hh * 60 + mm + duracaoTotal;
   const fimHora = `${String(Math.floor(totalMin / 60)).padStart(2, '0')}:${String(totalMin % 60).padStart(2, '0')}`;
@@ -2332,7 +2356,8 @@ async function getFinanceiro(req, res) {
   agendamentos.forEach(ag => {
     const dataKey = ag.data.toISOString().split('T')[0];
     const precoBase = ag.servico?.preco ?? ag.pacote?.preco ?? 0;
-    const precoItens = ag.itens.reduce((s,i) => s + i.preco, 0);
+    const itensExtras = getAgendamentoItensExtras(ag);
+    const precoItens = itensExtras.reduce((s, i) => s + Number(i.preco || 0), 0);
     const precoProds = ag.produtos.reduce((s,p) => s + (p.preco * p.quantidade), 0);
     const totalAg = (precoBase + precoItens + precoProds);
     
@@ -2355,7 +2380,7 @@ async function getFinanceiro(req, res) {
     if (ag.servico) {
       porServico[ag.servico.nome] = (porServico[ag.servico.nome] || 0) + ag.servico.preco;
     }
-    ag.itens.forEach(item => {
+    itensExtras.forEach((item) => {
       if (item.servico) {
         porServico[item.servico.nome] = (porServico[item.servico.nome] || 0) + item.preco;
       }
@@ -3108,7 +3133,7 @@ async function getDashboardExecutivo(req, res) {
     .filter((item) => item.status !== 'cancelado')
     .reduce((sum, item) => {
       const base = Number(item.servico?.duracaoMin || item.pacote?.duracaoMin || 0);
-      const extras = item.itens?.reduce((acc, extra) => acc + Number(extra.duracaoMin || 0), 0) || 0;
+      const extras = getAgendamentoDuracaoExtra(item);
       return sum + base + extras;
     }, 0);
   const capacidade = Math.max(1, profissionais.length) * diasPeriodo * 9 * 60;

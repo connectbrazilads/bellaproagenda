@@ -47,6 +47,40 @@ export function getStartOfMonthInput(date = new Date()) {
   return formatDateInput(new Date(date.getFullYear(), date.getMonth(), 1));
 }
 
+function isAgendamentoItemDuplicadoBase(agendamento, item) {
+  if (!agendamento?.servicoId || !agendamento?.servico || !item?.servicoId) return false;
+  if (item.servicoId !== agendamento.servicoId) return false;
+
+  const createdAtAgendamento = agendamento?.createdAt ? new Date(agendamento.createdAt).getTime() : null;
+  const createdAtItem = item?.createdAt ? new Date(item.createdAt).getTime() : null;
+  const createdTogether = createdAtAgendamento && createdAtItem
+    ? Math.abs(createdAtItem - createdAtAgendamento) < 60 * 1000
+    : false;
+
+  return createdTogether
+    && Number(item.preco || 0) === Number(agendamento.servico?.preco || 0)
+    && Number(item.duracaoMin || 0) === Number(agendamento.servico?.duracaoMin || 0);
+}
+
+export function getAgendamentoItensExtras(agendamento) {
+  return (agendamento?.itens || []).filter((item) => !isAgendamentoItemDuplicadoBase(agendamento, item));
+}
+
+export function calculateAgendamentoTotal(agendamento) {
+  const precoBase = Number(agendamento?.servico?.preco || agendamento?.pacote?.preco || 0);
+  const precoItens = getAgendamentoItensExtras(agendamento).reduce((sum, item) => sum + Number(item.preco || 0), 0);
+  const precoProdutos = agendamento?.produtos?.reduce((sum, produto) => {
+    return sum + (Number(produto.preco || 0) * Number(produto.quantidade || 0));
+  }, 0) || 0;
+  return precoBase + precoItens + precoProdutos;
+}
+
+export function calculateAgendamentoDuration(agendamento) {
+  const duracaoBase = Number(agendamento?.servico?.duracaoMin || agendamento?.pacote?.duracaoMin || 0);
+  const duracaoItens = getAgendamentoItensExtras(agendamento).reduce((sum, item) => sum + Number(item.duracaoMin || 0), 0);
+  return duracaoBase + duracaoItens;
+}
+
 export function downloadCsv(filename, rows) {
   const escapeCell = (value) => `"${String(value ?? '').replace(/"/g, '""')}"`;
   const content = rows.map((row) => row.map(escapeCell).join(',')).join('\n');

@@ -22,7 +22,13 @@ import {
   updatePagamentoAgendamento,
   updateStatusAgendamento,
 } from '../../services/api';
-import { cn, formatDateBR, formatDurationLabel } from '../../lib/utils';
+import {
+  calculateAgendamentoDuration,
+  calculateAgendamentoTotal,
+  cn,
+  formatDateBR,
+  formatDurationLabel,
+} from '../../lib/utils';
 
 const STATUS_CONFIG = {
   confirmado: { label: 'Confirmado', tone: 'bg-blue-500/10 text-blue-200 border-blue-500/20', icon: Clock },
@@ -108,11 +114,7 @@ export default function Agendamentos() {
   }
 
   function calcTotal(agendamento) {
-    return (
-      Number(agendamento.servico?.preco || agendamento.pacote?.preco || 0) +
-      (agendamento.itens?.reduce((sum, item) => sum + Number(item.preco || 0), 0) || 0) +
-      (agendamento.produtos?.reduce((sum, produto) => sum + Number(produto.preco || 0) * Number(produto.quantidade || 0), 0) || 0)
-    );
+    return calculateAgendamentoTotal(agendamento);
   }
 
   function calcPago(agendamento) {
@@ -268,7 +270,7 @@ export default function Agendamentos() {
                         {agendamento.servico?.nome || agendamento.pacote?.nome || 'Sem serviço principal'}
                       </span>
                       <span className="rounded-full bg-white/6 px-3 py-2 text-[10px] font-black uppercase tracking-[0.16em] text-gray-600 dark:text-white/64">
-                        {formatDurationLabel((agendamento.servico?.duracaoMin ?? agendamento.pacote?.duracaoMin ?? 0) + (agendamento.itens?.reduce((sum, item) => sum + Number(item.duracaoMin || 0), 0) || 0))}
+                        {formatDurationLabel(calculateAgendamentoDuration(agendamento))}
                       </span>
                     </div>
                   </div>

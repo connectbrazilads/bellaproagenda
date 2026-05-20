@@ -20,7 +20,7 @@ import {
   ResponsiveContainer 
 } from 'recharts';
 import { getAgendamentos, getClientes, getProfissionais, dispararIAProativa, dispararLembretes, updateStatusAgendamento, getDashboardExecutivo, getResumoFaturasSalao } from '../../services/api';
-import { cn, formatDateInput } from '../../lib/utils';
+import { calculateAgendamentoDuration, calculateAgendamentoTotal, cn, formatDateInput, getAgendamentoItensExtras } from '../../lib/utils';
 import { Plus, UserPlus, ShoppingBag, CreditCard, AlertTriangle } from 'lucide-react';
 import useElementWidth from '../../hooks/useElementWidth';
 
@@ -67,17 +67,11 @@ export default function Dashboard() {
 
       const profissionaisComAgenda = new Set(ags.map((a) => a.profissionalId).filter(Boolean)).size;
       const minutosReservados = ags.reduce((acc, a) => {
-        const base = Number(a.servico?.duracaoMin || a.pacote?.duracaoMin || 0);
-        const extras = a.itens?.reduce((s, i) => s + Number(i.duracaoMin || 0), 0) || 0;
-        return acc + base + extras;
+        return acc + calculateAgendamentoDuration(a);
       }, 0);
       const capacidadeDia = Math.max(profissionais.length, 1) * 9 * 60;
       const ocupacao = Math.min(100, Math.round((minutosReservados / capacidadeDia) * 100));
-      const fatHoje = ags.reduce((acc, a) => {
-        const base = Number(a.servico?.preco || a.pacote?.preco || 0);
-        const extras = a.itens?.reduce((s, i) => s + Number(i.preco || 0), 0) || 0;
-        return acc + base + extras;
-      }, 0);
+      const fatHoje = ags.reduce((acc, a) => acc + calculateAgendamentoTotal(a), 0);
       const sparkline = ags
         .slice()
         .sort((a, b) => (a.inicioHora || '').localeCompare(b.inicioHora || ''))
@@ -339,10 +333,10 @@ export default function Dashboard() {
                             <button 
                               onClick={(e) => { 
                                 e.stopPropagation(); 
-                                const total = (Number(a.servico?.preco || a.pacote?.preco || 0) + (a.itens?.reduce((s,i) => s + i.preco, 0) || 0) + (a.produtos?.reduce((s,p) => s + (p.preco * p.quantidade), 0) || 0));
+                                const total = calculateAgendamentoTotal(a);
                                 const itensArr = [
                                   a.servico?.nome || a.pacote?.nome,
-                                  ...(a.itens?.map(i => i.servico?.nome) || []),
+                                  ...getAgendamentoItensExtras(a).map((i) => i.servico?.nome || i.nome),
                                   ...(a.produtos?.map(p => `${p.quantidade}x ${p.produto?.nome}`) || [])
                                 ].filter(Boolean);
                                 const itensStr = itensArr.join(', ');
@@ -493,10 +487,10 @@ export default function Dashboard() {
             <div className="space-y-3">
               <button 
                 onClick={() => {
-                  const total = (Number(checkoutSuccess.servico?.preco || checkoutSuccess.pacote?.preco || 0) + (checkoutSuccess.itens?.reduce((s,i) => s + i.preco, 0) || 0) + (checkoutSuccess.produtos?.reduce((s,p) => s + (p.preco * p.quantidade), 0) || 0));
+                  const total = calculateAgendamentoTotal(checkoutSuccess);
                   const itensArr = [
                     checkoutSuccess.servico?.nome || checkoutSuccess.pacote?.nome,
-                    ...(checkoutSuccess.itens?.map(i => i.servico?.nome) || []),
+                    ...getAgendamentoItensExtras(checkoutSuccess).map((i) => i.servico?.nome || i.nome),
                     ...(checkoutSuccess.produtos?.map(p => `${p.quantidade}x ${p.produto?.nome}`) || [])
                   ].filter(Boolean);
                   const itensStr = itensArr.join(', ');

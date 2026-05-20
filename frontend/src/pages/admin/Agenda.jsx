@@ -45,7 +45,16 @@ import {
   buscarClientes, addItemAgendamento, removeItemAgendamento, addProdutoAgendamento, removeProdutoAgendamento, updatePagamentoAgendamento, updateObservacaoAgendamento,
   createBloqueio, getListaEspera, createListaEspera, deleteListaEspera, reagendarAgendamento, getCaixaStatusPagamento, reorderProfissionais
 } from '../../services/api';
-import { addDays, cn, formatDateBR, formatDateInput, formatDurationLabel } from '../../lib/utils';
+import {
+  addDays,
+  calculateAgendamentoDuration,
+  calculateAgendamentoTotal,
+  cn,
+  formatDateBR,
+  formatDateInput,
+  formatDurationLabel,
+  getAgendamentoItensExtras,
+} from '../../lib/utils';
 
 const START_HOUR = 7;
 const END_HOUR = 22;
@@ -137,17 +146,10 @@ function getMobileAppointmentLayout(inicioHora, duracaoMin, mobileHourHeight) {
   };
 }
 
-function calculateAgendamentoTotal(agendamento) {
-  let total = Number(agendamento?.servico?.preco || agendamento?.pacote?.preco || 0);
-  total += agendamento?.itens?.reduce((acc, item) => acc + Number(item.preco || 0), 0) || 0;
-  total += agendamento?.produtos?.reduce((acc, produto) => acc + (Number(produto.preco || 0) * Number(produto.quantidade || 0)), 0) || 0;
-  return total;
-}
-
 function getAgendamentoTitulo(agendamento) {
   return agendamento?.servico?.nome
     || agendamento?.pacote?.nome
-    || agendamento?.itens?.map((item) => item.nome || item.servico?.nome).filter(Boolean).join(' + ')
+    || getAgendamentoItensExtras(agendamento).map((item) => item.nome || item.servico?.nome).filter(Boolean).join(' + ')
     || 'Servico';
 }
 
@@ -434,7 +436,7 @@ function ModalNovoAgendamento({ onClose, onSave, preData, preHora, preProf, pref
                         </p>
                       </div>
                       <p className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em]">
-                        {formatDurationLabel((ag.servico?.duracaoMin ?? ag.pacote?.duracaoMin ?? 0) + (ag.itens?.reduce((sum, item) => sum + Number(item.duracaoMin || 0), 0) || 0))}
+                        {formatDurationLabel(calculateAgendamentoDuration(ag))}
                       </p>
                     </div>
                   ))}
@@ -748,6 +750,8 @@ function ModalDetalhesAgendamento({ agendamento: initialAgendamento, onClose, on
       .filter((s) => !termo || s.nome?.toLowerCase().includes(termo));
   }, [servicos, servicosBusca, agendamento?.servicoId]);
 
+  const itensExtras = useMemo(() => getAgendamentoItensExtras(agendamento), [agendamento]);
+
   const produtosFiltrados = useMemo(() => {
     const termo = produtosBusca.trim().toLowerCase();
     return (produtos || []).filter((p) => !termo || p.nome?.toLowerCase().includes(termo));
@@ -975,9 +979,9 @@ function ModalDetalhesAgendamento({ agendamento: initialAgendamento, onClose, on
                   </p>
                 </div>
 
-                {agendamento?.itens?.length > 0 && (
+                {itensExtras.length > 0 && (
                   <div className="space-y-4">
-                    {agendamento.itens.map(item => (
+                    {itensExtras.map(item => (
                       <motion.div 
                         key={item.id} 
                         initial={{ x: -20, opacity: 0 }}
@@ -1057,10 +1061,10 @@ function ModalDetalhesAgendamento({ agendamento: initialAgendamento, onClose, on
                     </div>
                     <button 
                       onClick={() => {
-                        const total = (Number(agendamento.servico?.preco || agendamento.pacote?.preco || 0) + (agendamento.itens?.reduce((s,i) => s + i.preco, 0) || 0) + (agendamento.produtos?.reduce((s,p) => s + (p.preco * p.quantidade), 0) || 0));
+                        const total = calculateAgendamentoTotal(agendamento);
                         const itensArr = [
                           agendamento.servico?.nome || agendamento.pacote?.nome,
-                          ...(agendamento.itens?.map(i => i.servico?.nome) || []),
+                          ...itensExtras.map((i) => i.servico?.nome || i.nome),
                           ...(agendamento.produtos?.map(p => `${p.quantidade}x ${p.produto?.nome}`) || [])
                         ].filter(Boolean);
                         const itensStr = itensArr.join(', ');
@@ -1253,7 +1257,7 @@ function ModalDetalhesAgendamento({ agendamento: initialAgendamento, onClose, on
                               const total = calculateTotal();
                               const itens = [
                                 agendamento.servico?.nome || agendamento.pacote?.nome,
-                                ...(agendamento.itens?.map(i => i.servico?.nome) || []),
+                                ...itensExtras.map((i) => i.servico?.nome || i.nome),
                                 ...(agendamento.produtos?.map(p => `${p.quantidade}x ${p.produto?.nome}`) || [])
                               ].filter(Boolean).join(', ');
                               
@@ -2101,7 +2105,7 @@ export default function Agenda() {
                           );
                         })}
                         {agendamentos.filter(a => a.profissionalId === p.id && a.status !== 'cancelado').map((a) => {
-                          const duracaoTotal = (a.servico?.duracaoMin ?? a.pacote?.duracaoMin ?? 0) + (a.itens?.reduce((s, i) => s + i.duracaoMin, 0) || 0);
+                          const duracaoTotal = calculateAgendamentoDuration(a);
                           const mobileLayout = getMobileAppointmentLayout(a.inicioHora, duracaoTotal, mobileHourHeight);
                           const isOnline = isAgendamentoOnline(a);
                           return (
@@ -2293,7 +2297,7 @@ export default function Agenda() {
 
                   <AnimatePresence>
                     {agendamentos.filter(a => a.profissionalId === p.id && a.status !== 'cancelado').map(a => {
-                      const duracaoTotal = (a.servico?.duracaoMin ?? a.pacote?.duracaoMin ?? 0) + (a.itens?.reduce((s, i) => s + i.duracaoMin, 0) || 0);
+                      const duracaoTotal = calculateAgendamentoDuration(a);
                       const pos = getPosition(a.inicioHora, duracaoTotal);
                       const config = STATUS_CONFIG[a.status] || STATUS_CONFIG.confirmado;
                       const StatusIcon = config.icon;
