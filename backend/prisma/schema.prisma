@@ -118,6 +118,7 @@ model Profissional {
   id              String                @id @default(uuid())
   salaoId         String
   nome            String
+  displayOrder    Int                   @default(0)
   email           String?
   telefone        String?
   cpf             String?

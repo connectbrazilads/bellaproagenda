@@ -106,6 +106,12 @@ const PATH_PERMISSIONS = {
   '/admin/configuracoes': 'configuracoes',
 };
 
+const CAIXA_ACTION_PERMISSIONS = [
+  'financeiro.caixa.abrir',
+  'financeiro.caixa.movimentar',
+  'financeiro.caixa.fechar',
+];
+
 function formatAlertaData(value) {
   if (!value) return '';
 
@@ -246,6 +252,17 @@ export default function AdminLayout() {
     }, 0);
   }
 
+  function canAccessPath(path) {
+    if (path === '/admin/financeiro') {
+      return userPermissions.includes('financeiro')
+        || CAIXA_ACTION_PERMISSIONS.some((permission) => userActionPermissions.includes(permission));
+    }
+
+    const permission = PATH_PERMISSIONS[path];
+    if (!permission) return true;
+    return userPermissions.includes(permission);
+  }
+
   function isItemActive(item) {
     if (item.end) {
       return location.pathname === item.to;
@@ -344,24 +361,20 @@ export default function AdminLayout() {
 
   const visibleGroups = NAV_GROUPS.map((group) => {
     const visibleItems = group.items.filter((item) => {
-      const permission = item.permission || PATH_PERMISSIONS[item.to];
-      if (!permission) return true;
-      return userPermissions.includes(permission);
+      return canAccessPath(item.to);
     });
 
     return { ...group, items: visibleItems };
   }).filter((group) => group.items.length > 0);
 
   useEffect(() => {
-    const currentPermission = PATH_PERMISSIONS[location.pathname];
-    if (!currentPermission) return;
-    if (userPermissions.includes(currentPermission)) return;
+    if (canAccessPath(location.pathname)) return;
 
     const fallbackRoute = visibleGroups[0]?.items?.[0]?.to || '/admin';
     if (fallbackRoute !== location.pathname) {
       navigate(fallbackRoute, { replace: true });
     }
-  }, [location.pathname, navigate, userPermissions, visibleGroups]);
+  }, [location.pathname, navigate, userPermissions, userActionPermissions, visibleGroups]);
 
   useEffect(() => {
     const expiresAt = Number(localStorage.getItem('salao_token_expires_at') || 0);

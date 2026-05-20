@@ -161,7 +161,18 @@ function requireActionPermission(permission) {
       return next();
     }
 
-    return res.status(403).json({ error: 'Ação não permitida para este login' });
+    return res.status(403).json({ error: 'Acao nao permitida para este login' });
+  };
+}
+
+function requireAnyActionPermission(permissions) {
+  return (req, res, next) => {
+    const allowed = permissions.some((permission) => hasActionPermission(req.user, permission));
+    if (allowed) {
+      return next();
+    }
+
+    return res.status(403).json({ error: 'Acao nao permitida para este login' });
   };
 }
 
@@ -179,4 +190,5 @@ module.exports = {
   requirePermission,
   requireAnyPermission,
   requireActionPermission,
+  requireAnyActionPermission,
 };

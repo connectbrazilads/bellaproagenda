@@ -36,7 +36,12 @@ import {
 } from '../../services/api';
 import { Area, AreaChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
 import { cn, downloadCsv, formatDateInput, getStartOfMonthInput } from '../../lib/utils';
-import { getEffectiveActionPermissions, readStoredActionPermissions } from '../../lib/permissions';
+import {
+  getEffectiveActionPermissions,
+  getEffectivePermissions,
+  readStoredActionPermissions,
+  readStoredPermissions,
+} from '../../lib/permissions';
 import useElementWidth from '../../hooks/useElementWidth';
 
 function formatMoney(value) {
@@ -66,6 +71,11 @@ function getMovimentoTipoLabel(tipo) {
 }
 
 const FINANCEIRO_MOBILE_LAYOUT_KEY = 'financeiro_mobile_layout_v1';
+const CAIXA_ACTION_PERMISSIONS = [
+  'financeiro.caixa.abrir',
+  'financeiro.caixa.movimentar',
+  'financeiro.caixa.fechar',
+];
 const FINANCEIRO_MOBILE_MODULES = [
   { id: 'stat-receita', label: 'Receita bruta' },
   { id: 'stat-comissoes', label: 'Comissoes' },
@@ -239,10 +249,14 @@ export default function Financeiro() {
   const userId = localStorage.getItem('salao_user_id') || '';
   const role = localStorage.getItem('salao_user_role') || 'gestor';
   const profissionalId = localStorage.getItem('salao_user_pid') || '';
+  const permissions = getEffectivePermissions(role, readStoredPermissions());
   const actionPermissions = getEffectiveActionPermissions(role, readStoredActionPermissions());
+  const hasFinanceiroAccess = permissions.includes('financeiro');
   const canAbrirCaixa = actionPermissions.includes('financeiro.caixa.abrir');
   const canMovimentarCaixa = actionPermissions.includes('financeiro.caixa.movimentar');
   const canFecharCaixa = actionPermissions.includes('financeiro.caixa.fechar');
+  const hasCaixaAccess = CAIXA_ACTION_PERMISSIONS.some((permission) => actionPermissions.includes(permission));
+  const canViewFechamentoDiario = hasFinanceiroAccess && actionPermissions.includes('relatorio.fechamento_diario.ver');
   const mobileLayoutStorageKey = `${FINANCEIRO_MOBILE_LAYOUT_KEY}:${userId || role}:${profissionalId || 'all'}`;
 
   useEffect(() => {
@@ -312,19 +326,19 @@ export default function Financeiro() {
         caixaHistoricoResponse,
         caixaRelatorioResponse,
         fechamentoResponse,
-      ] = await Promise.all([
-        getFinanceiro(datas),
-        getCaixaAtual(),
-        getCaixaSessoes(),
-        getCaixaRelatorioDiario({ data: dataRelatorioCaixa }),
-        getFechamentoDiario({ data: dataRelatorioCaixa }),
+      ] = await Promise.allSettled([
+        hasFinanceiroAccess ? getFinanceiro(datas) : Promise.resolve({ data: null }),
+        hasCaixaAccess ? getCaixaAtual() : Promise.resolve({ data: null }),
+        hasCaixaAccess ? getCaixaSessoes() : Promise.resolve({ data: [] }),
+        hasCaixaAccess ? getCaixaRelatorioDiario({ data: dataRelatorioCaixa }) : Promise.resolve({ data: null }),
+        canViewFechamentoDiario ? getFechamentoDiario({ data: dataRelatorioCaixa }) : Promise.resolve({ data: null }),
       ]);
 
-      setData(financeiroResponse?.data || null);
-      setCaixaAtual(caixaAtualResponse?.data || null);
-      setCaixaHistorico(caixaHistoricoResponse?.data || []);
-      setCaixaRelatorioDiario(caixaRelatorioResponse?.data || null);
-      setFechamentoDiario(fechamentoResponse?.data || null);
+      setData(financeiroResponse.status === 'fulfilled' ? financeiroResponse.value?.data || null : null);
+      setCaixaAtual(caixaAtualResponse.status === 'fulfilled' ? caixaAtualResponse.value?.data || null : null);
+      setCaixaHistorico(caixaHistoricoResponse.status === 'fulfilled' ? caixaHistoricoResponse.value?.data || [] : []);
+      setCaixaRelatorioDiario(caixaRelatorioResponse.status === 'fulfilled' ? caixaRelatorioResponse.value?.data || null : null);
+      setFechamentoDiario(fechamentoResponse.status === 'fulfilled' ? fechamentoResponse.value?.data || null : null);
     } catch (error) {
       console.error(error);
     } finally {
@@ -918,6 +932,35 @@ export default function Financeiro() {
     return (
       <div className="flex min-h-[60vh] items-center justify-center">
         <div className="h-12 w-12 animate-spin rounded-full border-4 border-[rgba(233,155,168,0.22)] border-t-[#e99ba8]" />
+      </div>
+    );
+  }
+
+  if (!hasFinanceiroAccess && hasCaixaAccess) {
+    return (
+      <div ref={pageRef} className="mx-auto flex max-w-5xl flex-col gap-6 pb-16 lg:gap-8">
+        <section className="flex flex-col gap-5 rounded-[34px] border border-white/8 bg-[rgba(28,23,31,0.92)] p-6 shadow-[0_30px_80px_rgba(0,0,0,0.32)] lg:p-8">
+          <div className="flex items-center gap-3 text-[11px] font-semibold uppercase tracking-[0.42em] text-[#e99ba8]">
+            <DollarSign className="h-4 w-4" />
+            Caixa operacional
+          </div>
+          <div className="space-y-4">
+            <h1 className="font-['Playfair_Display'] text-4xl leading-none text-[#faf7f6] sm:text-5xl">
+              Operacao de <span className="text-[#e99ba8]">Caixa</span>
+            </h1>
+            <p className="max-w-2xl text-lg leading-8 text-[#c7adb4]">
+              Este acesso foi liberado para abertura, movimento, conferencia e fechamento de turno.
+            </p>
+          </div>
+        </section>
+
+        <div className="grid gap-6 xl:grid-cols-[minmax(0,1.05fr),minmax(0,0.95fr)]">
+          {renderMobileModule('caixa-operacional')}
+          <div className="space-y-6">
+            {renderMobileModule('relatorio-caixa')}
+            {renderMobileModule('historico-turnos')}
+          </div>
+        </div>
       </div>
     );
   }

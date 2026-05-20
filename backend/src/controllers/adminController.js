@@ -330,7 +330,10 @@ async function getProfissionais(req, res) {
       salaoId: req.user.salaoId,
       ...(isScopedProfessional(req) ? { id: req.user.profissionalId } : {}),
     },
-    orderBy: { nome: 'asc' },
+    orderBy: [
+      { displayOrder: 'asc' },
+      { nome: 'asc' },
+    ],
     include: {
       servicos: { include: { servico: true } },
       categorias: { include: { categoria: true } },
@@ -361,11 +364,17 @@ async function createProfissional(req, res) {
     banco, agencia, conta, pix,
     metaMensal, bonusMetaValor, bonusMetaPercent
   } = req.body;
+  const orderAggregate = await prisma.profissional.aggregate({
+    where: { salaoId: req.user.salaoId },
+    _max: { displayOrder: true },
+  });
+  const nextDisplayOrder = Number(orderAggregate?._max?.displayOrder ?? -1) + 1;
 
   const profissional = await prisma.profissional.create({
     data: {
       salaoId: req.user.salaoId,
       nome, bio, fotoUrl,
+      displayOrder: nextDisplayOrder,
       email, telefone, cpf, rg,
       dataNascimento: dataNascimento ? new Date(dataNascimento) : null,
       endereco, numero, complemento, bairro, cep, cidade, estado,
@@ -474,6 +483,61 @@ async function updateProfissional(req, res) {
     req,
   });
   res.json(profissional);
+}
+
+async function reorderProfissionais(req, res) {
+  if (isScopedProfessional(req)) {
+    return res.status(403).json({ error: 'Voce nao pode reordenar profissionais.' });
+  }
+
+  const ids = Array.isArray(req.body?.ids)
+    ? req.body.ids.map((id) => String(id || '').trim()).filter(Boolean)
+    : [];
+
+  if (ids.length === 0) {
+    return res.status(400).json({ error: 'Informe a ordem dos profissionais.' });
+  }
+
+  const profissionais = await prisma.profissional.findMany({
+    where: { salaoId: req.user.salaoId },
+    select: { id: true, nome: true },
+    orderBy: [
+      { displayOrder: 'asc' },
+      { nome: 'asc' },
+    ],
+  });
+
+  const availableIds = new Set(profissionais.map((item) => item.id));
+  if (ids.some((id) => !availableIds.has(id))) {
+    return res.status(400).json({ error: 'A lista contem profissionais invalidos.' });
+  }
+
+  const uniqueIds = [...new Set(ids)];
+  const finalOrder = [
+    ...uniqueIds,
+    ...profissionais.map((item) => item.id).filter((id) => !uniqueIds.includes(id)),
+  ];
+
+  await prisma.$transaction(
+    finalOrder.map((id, index) =>
+      prisma.profissional.update({
+        where: { id },
+        data: { displayOrder: index + 1 },
+      })
+    )
+  );
+
+  await createAuditLog({
+    salaoId: req.user.salaoId,
+    usuarioId: req.user.id,
+    acao: 'profissionais.reordenar',
+    entidade: 'profissional',
+    mensagem: 'Ordem dos profissionais atualizada',
+    contexto: { ids: finalOrder },
+    req,
+  });
+
+  res.json({ ok: true, ids: finalOrder });
 }
 
 async function deleteProfissional(req, res) {
@@ -3422,7 +3486,7 @@ module.exports = {
   getSalao, updateSalao,
   getWhatsappConfig, updateWhatsappConfig, getWhatsappStatus, connectWhatsapp, disconnectWhatsapp,
   getClientes, buscarClientes, createCliente,
-  getProfissionais, createProfissional, updateProfissional, deleteProfissional,
+  getProfissionais, createProfissional, updateProfissional, reorderProfissionais, deleteProfissional,
   getCategoriasProfissionais, createCategoriaProfissional, deleteCategoriaProfissional,
   setHorarios,
   getServicos, createServico, updateServico, deleteServico,

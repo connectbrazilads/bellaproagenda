@@ -43,7 +43,7 @@ import {
   getProfissionais, getAgendamentos, getServicos, getPacotes, getProdutos,
   criarAgendamentoAdmin, updateStatusAgendamento, deleteAgendamento, 
   buscarClientes, addItemAgendamento, removeItemAgendamento, addProdutoAgendamento, removeProdutoAgendamento, updatePagamentoAgendamento, updateObservacaoAgendamento,
-  createBloqueio, getListaEspera, createListaEspera, deleteListaEspera, reagendarAgendamento, getCaixaStatusPagamento
+  createBloqueio, getListaEspera, createListaEspera, deleteListaEspera, reagendarAgendamento, getCaixaStatusPagamento, reorderProfissionais
 } from '../../services/api';
 import { addDays, cn, formatDateBR, formatDateInput, formatDurationLabel } from '../../lib/utils';
 
@@ -104,6 +104,37 @@ function addMinutesToTime(horaStr, minutes = 60) {
   const nextHours = Math.floor(normalizedMinutes / 60);
   const nextMinutes = normalizedMinutes % 60;
   return `${String(nextHours).padStart(2, '0')}:${String(nextMinutes).padStart(2, '0')}`;
+}
+
+function reorderProfessionalsList(list, draggedId, targetId) {
+  const fromIndex = list.findIndex((item) => item.id === draggedId);
+  const toIndex = list.findIndex((item) => item.id === targetId);
+
+  if (fromIndex === -1 || toIndex === -1 || fromIndex === toIndex) {
+    return list;
+  }
+
+  const next = [...list];
+  const [moved] = next.splice(fromIndex, 1);
+  next.splice(toIndex, 0, moved);
+  return next;
+}
+
+function getMobileAppointmentLayout(inicioHora, duracaoMin, mobileHourHeight) {
+  const [hour, minute] = String(inicioHora || '00:00').split(':').map(Number);
+  const safeHour = Number.isNaN(hour) ? START_HOUR : hour;
+  const safeMinute = Number.isNaN(minute) ? 0 : minute;
+  const top = ((safeHour - START_HOUR) * mobileHourHeight) + ((safeMinute / 60) * mobileHourHeight) + 54;
+  const naturalHeight = Math.max((duracaoMin / 60) * mobileHourHeight - 4, 44);
+  const remainingMinutesInHour = Math.max(15, 60 - safeMinute);
+  const maxHeightInsideHour = Math.max((remainingMinutesInHour / 60) * mobileHourHeight - 8, 24);
+  const height = Math.min(naturalHeight, maxHeightInsideHour);
+
+  return {
+    top,
+    height,
+    compact: height < 62,
+  };
 }
 
 function calculateAgendamentoTotal(agendamento) {
@@ -1505,6 +1536,9 @@ export default function Agenda() {
   const [colWidth, setColWidth] = useState(180);
   const [hourHeight, setHourHeight] = useState(80);
   const [profVisiveis, setProfVisiveis] = useState({});
+  const [draggedProfId, setDraggedProfId] = useState('');
+  const [dragOverProfId, setDragOverProfId] = useState('');
+  const [savingProfessionalOrder, setSavingProfessionalOrder] = useState(false);
   // Se??o visual BellaPro
   const [sidebarOpen, setSidebarOpen] = useState(() => window.innerWidth >= 768);
   const isMobile = typeof window !== 'undefined' && window.innerWidth < 768;
@@ -1602,6 +1636,58 @@ export default function Agenda() {
       profId,
       hora: `${String(hour).padStart(2, '0')}:00`
     });
+  };
+
+  const handleProfessionalDragStart = (profId) => (event) => {
+    event.dataTransfer.effectAllowed = 'move';
+    event.dataTransfer.setData('text/plain', profId);
+    setDraggedProfId(profId);
+    setDragOverProfId(profId);
+  };
+
+  const handleProfessionalDragOver = (profId) => (event) => {
+    if (!draggedProfId || draggedProfId === profId) return;
+    event.preventDefault();
+    event.dataTransfer.dropEffect = 'move';
+    setDragOverProfId(profId);
+  };
+
+  const handleProfessionalDrop = (profId) => async (event) => {
+    event.preventDefault();
+    const sourceId = draggedProfId || event.dataTransfer.getData('text/plain');
+    if (!sourceId || sourceId === profId) {
+      setDraggedProfId('');
+      setDragOverProfId('');
+      return;
+    }
+
+    const previous = profissionais;
+    const next = reorderProfessionalsList(profissionais, sourceId, profId);
+    if (next === previous) {
+      setDraggedProfId('');
+      setDragOverProfId('');
+      return;
+    }
+
+    setProfissionais(next);
+    setDraggedProfId('');
+    setDragOverProfId('');
+    setSavingProfessionalOrder(true);
+
+    try {
+      await reorderProfissionais(next.map((item) => item.id));
+    } catch (error) {
+      console.error('Erro ao salvar ordem dos profissionais:', error);
+      setProfissionais(previous);
+      alert(error.response?.data?.error || 'Nao foi possivel salvar a ordem da equipe.');
+    } finally {
+      setSavingProfessionalOrder(false);
+    }
+  };
+
+  const handleProfessionalDragEnd = () => {
+    setDraggedProfId('');
+    setDragOverProfId('');
   };
 
   async function handleBloquear() {
@@ -1930,6 +2016,9 @@ export default function Agenda() {
             <div className="flex flex-col">
               <h2 className="text-lg md:text-2xl font-black uppercase tracking-tighter text-gray-900 dark:text-white leading-none">Agenda</h2>
               <p className="text-gray-400 text-[9px] font-black uppercase tracking-[0.3em] mt-0.5 hidden md:block">Painel Operacional</p>
+              <p className="text-[#d48997] text-[8px] font-black uppercase tracking-[0.28em] mt-1 hidden md:block">
+                {savingProfessionalOrder ? 'Salvando ordem da equipe...' : 'Arraste os profissionais do topo para reorganizar'}
+              </p>
             </div>
           </div>
 
@@ -2013,7 +2102,7 @@ export default function Agenda() {
                         })}
                         {agendamentos.filter(a => a.profissionalId === p.id && a.status !== 'cancelado').map((a) => {
                           const duracaoTotal = (a.servico?.duracaoMin ?? a.pacote?.duracaoMin ?? 0) + (a.itens?.reduce((s, i) => s + i.duracaoMin, 0) || 0);
-                          const [h, m] = (a.inicioHora || '00:00').split(':').map(Number);
+                          const mobileLayout = getMobileAppointmentLayout(a.inicioHora, duracaoTotal, mobileHourHeight);
                           const isOnline = isAgendamentoOnline(a);
                           return (
                             <motion.div
@@ -2021,22 +2110,37 @@ export default function Agenda() {
                               initial={{ opacity: 0, scale: 0.98 }}
                               animate={{ opacity: 1, scale: 1 }}
                               onClick={(e) => { e.stopPropagation(); setAgendamentoSelecionado(a); setModalDetalhes(true); }}
-                              style={{ top: ((h - START_HOUR) * mobileHourHeight) + ((m / 60) * mobileHourHeight) + 54, height: Math.max((duracaoTotal / 60) * mobileHourHeight - 4, 48), width: `calc(${mobileColWidth}px - 8px)` }}
+                              style={{ top: mobileLayout.top, height: mobileLayout.height, width: `calc(${mobileColWidth}px - 8px)` }}
                               className={cn(
-                                "absolute left-1 rounded-[14px] border shadow-sm px-2.5 py-2 overflow-hidden z-20",
+                                "absolute left-1 rounded-[14px] border shadow-sm px-2.5 py-2 overflow-hidden z-20 cursor-pointer",
                                 isOnline ? "border-[#5dd7c7] bg-[#d8fbf4]" : "border-blue-300 bg-[#bcd4fb]"
                               )}
                             >
-                              <div className="flex items-center justify-between gap-2">
-                                <p className="text-[10px] text-slate-700 leading-none">{a.inicioHora} - {a.fimHora}</p>
-                                {isOnline && (
-                                  <span className="rounded-full bg-[#14b8a6] px-2 py-0.5 text-[8px] font-black uppercase tracking-[0.18em] text-white">
-                                    Online
-                                  </span>
+                              <div className="flex h-full flex-col justify-between">
+                                <div>
+                                  <div className="flex items-center justify-between gap-2">
+                                    <p className={cn("text-slate-700 leading-none", mobileLayout.compact ? "text-[9px]" : "text-[10px]")}>
+                                      {a.inicioHora} - {a.fimHora}
+                                    </p>
+                                    {isOnline && !mobileLayout.compact && (
+                                      <span className="rounded-full bg-[#14b8a6] px-2 py-0.5 text-[8px] font-black uppercase tracking-[0.18em] text-white">
+                                        Online
+                                      </span>
+                                    )}
+                                  </div>
+                                  <p className={cn("mt-1 font-black text-slate-900 leading-tight", mobileLayout.compact ? "text-[10px] line-clamp-1" : "text-[11px] line-clamp-2")}>
+                                    {a.clienteNome}
+                                  </p>
+                                  {!mobileLayout.compact && (
+                                    <p className="mt-1 text-[9px] text-slate-800 line-clamp-2">{getAgendamentoTitulo(a)}</p>
+                                  )}
+                                </div>
+                                {mobileLayout.height >= 46 && (
+                                  <p className="mt-1 text-[8px] font-black uppercase tracking-[0.16em] text-slate-700/70">
+                                    {formatDurationLabel(duracaoTotal)}
+                                  </p>
                                 )}
                               </div>
-                              <p className="mt-1 text-[11px] font-black text-slate-900 leading-tight line-clamp-2">{a.clienteNome}</p>
-                              <p className="mt-1 text-[9px] text-slate-800 line-clamp-2">{getAgendamentoTitulo(a)}</p>
                             </motion.div>
                           );
                         })}
@@ -2113,8 +2217,24 @@ export default function Agenda() {
           {/* Se??o BellaPro */}
           <div className="sticky top-0 z-40 flex bg-white/80 dark:bg-[#0c0c0e]/80 backdrop-blur-3xl border-b border-gray-200 dark:border-white/5" style={{ marginLeft: 60 }}>
             {profsDisplay.map(p => (
-              <div key={p.id} className="py-5 px-3 flex flex-col items-center justify-center border-r border-gray-100 dark:border-white/5 flex-shrink-0 relative group" style={{ width: colWidth }}>
+              <div
+                key={p.id}
+                draggable
+                onDragStart={handleProfessionalDragStart(p.id)}
+                onDragOver={handleProfessionalDragOver(p.id)}
+                onDrop={handleProfessionalDrop(p.id)}
+                onDragEnd={handleProfessionalDragEnd}
+                className={cn(
+                  "py-5 px-3 flex flex-col items-center justify-center border-r border-gray-100 dark:border-white/5 flex-shrink-0 relative group cursor-grab active:cursor-grabbing transition-all",
+                  dragOverProfId === p.id && draggedProfId !== p.id && "bg-[#e29ba8]/10 dark:bg-[#e29ba8]/12",
+                  draggedProfId === p.id && "opacity-60"
+                )}
+                style={{ width: colWidth }}
+              >
                 <div className="absolute inset-0 bg-gradient-to-b from-[#E29BA8]/0 to-[#E29BA8]/5 opacity-0 group-hover:opacity-100 transition-opacity" />
+                <div className="absolute right-2 top-2 z-20 flex h-7 w-7 items-center justify-center rounded-full bg-white/80 text-[#d48997] shadow-sm dark:bg-white/10 dark:text-[#f1bcc4]">
+                  <MoreVertical size={14} />
+                </div>
                 <div className="w-14 h-14 rounded-[1.25rem] overflow-hidden bg-gray-50 dark:bg-white/5 relative z-10 shadow-lg border-2 border-white dark:border-[#1a1a1c] group-hover:border-[#E29BA8]/50 transition-all">
                   {p.fotoUrl ? <img src={p.fotoUrl} className="w-full h-full object-cover" /> : <div className="w-full h-full flex items-center justify-center font-black text-gray-300 dark:text-gray-600 text-xl uppercase">{p.nome[0]}</div>}
                 </div>

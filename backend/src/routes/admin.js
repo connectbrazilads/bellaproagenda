@@ -3,7 +3,12 @@ const { authenticate } = require('../controllers/authController');
 const ctrl = require('../controllers/adminController');
 const inbox = require('../controllers/inboxController');
 const ops = require('../controllers/operationsController');
-const { requirePermission, requireAnyPermission, requireActionPermission } = require('../lib/permissions');
+const {
+  requirePermission,
+  requireAnyPermission,
+  requireActionPermission,
+  requireAnyActionPermission,
+} = require('../lib/permissions');
 
 router.use(authenticate);
 
@@ -21,6 +26,7 @@ router.get('/profissionais-categorias', requireAnyPermission(['profissionais', '
 router.post('/profissionais-categorias', requirePermission('profissionais'), requireActionPermission('profissionais.editar'), ctrl.createCategoriaProfissional);
 router.delete('/profissionais-categorias/:id', requirePermission('profissionais'), requireActionPermission('profissionais.editar'), ctrl.deleteCategoriaProfissional);
 router.post('/profissionais', requirePermission('profissionais'), requireActionPermission('profissionais.criar'), ctrl.createProfissional);
+router.put('/profissionais/ordem', requireAnyPermission(['profissionais', 'agenda']), ctrl.reorderProfissionais);
 router.put('/profissionais/:id', requirePermission('profissionais'), requireActionPermission('profissionais.editar'), ctrl.updateProfissional);
 router.delete('/profissionais/:id', requirePermission('profissionais'), requireActionPermission('profissionais.excluir'), ctrl.deleteProfissional);
 router.put('/profissionais/:id/horarios', requirePermission('profissionais'), ctrl.setHorarios);
@@ -77,12 +83,24 @@ router.get('/financeiro', requirePermission('financeiro'), ctrl.getFinanceiro);
 router.get('/dashboard-executivo', requirePermission('dashboard'), ctrl.getDashboardExecutivo);
 router.get('/fechamento-diario', requirePermission('financeiro'), requireActionPermission('relatorio.fechamento_diario.ver'), ctrl.getFechamentoDiario);
 router.get('/caixa/status-pagamento', requireAnyPermission(['agenda', 'agendamentos', 'produtos', 'financeiro', 'remuneracao']), ctrl.getCaixaStatusPagamento);
-router.get('/caixa/atual', requirePermission('financeiro'), ctrl.getCaixaAtual);
-router.get('/caixa/sessoes', requirePermission('financeiro'), ctrl.getCaixaSessoes);
-router.get('/caixa/relatorio-diario', requirePermission('financeiro'), ctrl.getCaixaRelatorioDiario);
-router.post('/caixa/abrir', requirePermission('financeiro'), requireActionPermission('financeiro.caixa.abrir'), ctrl.abrirCaixa);
-router.post('/caixa/:id/fechar', requirePermission('financeiro'), requireActionPermission('financeiro.caixa.fechar'), ctrl.fecharCaixa);
-router.post('/caixa/:id/movimentos', requirePermission('financeiro'), requireActionPermission('financeiro.caixa.movimentar'), ctrl.addMovimentoCaixa);
+router.get(
+  '/caixa/atual',
+  requireAnyActionPermission(['financeiro.caixa.abrir', 'financeiro.caixa.movimentar', 'financeiro.caixa.fechar']),
+  ctrl.getCaixaAtual
+);
+router.get(
+  '/caixa/sessoes',
+  requireAnyActionPermission(['financeiro.caixa.abrir', 'financeiro.caixa.movimentar', 'financeiro.caixa.fechar']),
+  ctrl.getCaixaSessoes
+);
+router.get(
+  '/caixa/relatorio-diario',
+  requireAnyActionPermission(['financeiro.caixa.abrir', 'financeiro.caixa.movimentar', 'financeiro.caixa.fechar']),
+  ctrl.getCaixaRelatorioDiario
+);
+router.post('/caixa/abrir', requireActionPermission('financeiro.caixa.abrir'), ctrl.abrirCaixa);
+router.post('/caixa/:id/fechar', requireActionPermission('financeiro.caixa.fechar'), ctrl.fecharCaixa);
+router.post('/caixa/:id/movimentos', requireActionPermission('financeiro.caixa.movimentar'), ctrl.addMovimentoCaixa);
 router.put('/fidelidade', requirePermission('fidelidade'), ctrl.updateFidelidadeConfig);
 router.post('/campanha', requirePermission('notificacoes'), ctrl.dispararCampanhaMassiva);
 router.post('/lembretes', requirePermission('dashboard'), ctrl.dispararLembretes);
