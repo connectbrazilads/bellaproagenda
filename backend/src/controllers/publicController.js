@@ -4,6 +4,7 @@ const { notificarClienteAgendamento, notificarSalaoNovoAgendamento } = require('
 const { criarNotificacaoSalao } = require('../services/notificationCenterService');
 const {
   getServicoIdsDoPacote,
+  getServicoIdsDoProfissional,
   profissionalAtendeTodosServicos,
 } = require('../lib/profissionalServicoValidation');
 
@@ -32,6 +33,9 @@ async function getServicos(req, res) {
   const servicos = await prisma.servico.findMany({
     where: { salaoId: salao.id, ativo: true },
     orderBy: { nome: 'asc' },
+    include: {
+      categoria: true,
+    },
   });
   res.json(servicos);
 }
@@ -84,23 +88,32 @@ async function getProfissionaisPorServico(req, res) {
   const salao = await findSalao(slug);
   if (!salao) return res.status(404).json({ error: 'Salão não encontrado' });
 
-  const vinculos = await prisma.profissionalServico.findMany({
-    where: { 
-      servicoId,
-      servico: { salaoId: salao.id }
+  const profissionais = await prisma.profissional.findMany({
+    where: {
+      salaoId: salao.id,
+      ativo: true,
     },
-    include: {
-      profissional: {
+    orderBy: { nome: 'asc' },
+    select: {
+      id: true,
+      nome: true,
+      fotoUrl: true,
+      bio: true,
+      ativo: true,
+      categorias: {
         select: {
-          id: true,
-          nome: true,
-          fotoUrl: true,
-          bio: true,
-          ativo: true,
-          categorias: {
+          categoria: {
+            select: { id: true, nome: true },
+          },
+        },
+      },
+      servicos: { select: { servicoId: true } },
+      servicoCategorias: {
+        select: {
+          categoria: {
             select: {
-              categoria: {
-                select: { id: true, nome: true },
+              servicos: {
+                select: { id: true },
               },
             },
           },
@@ -108,10 +121,12 @@ async function getProfissionaisPorServico(req, res) {
       },
     },
   });
-  const profissionais = vinculos
-    .map((v) => v.profissional)
-    .filter((p) => p && p.ativo);
-  res.json(profissionais);
+
+  const compativeis = profissionais
+    .filter((profissional) => getServicoIdsDoProfissional(profissional).includes(servicoId))
+    .map(({ servicos, servicoCategorias, ...profissional }) => profissional);
+
+  res.json(compativeis);
 }
 
 async function getProfissionaisPorPacote(req, res) {
@@ -139,15 +154,26 @@ async function getProfissionaisPorPacote(req, res) {
         },
       },
       servicos: { select: { servicoId: true } },
+      servicoCategorias: {
+        select: {
+          categoria: {
+            select: {
+              servicos: {
+                select: { id: true },
+              },
+            },
+          },
+        },
+      },
     },
   });
 
   const compativeis = profissionais
     .filter((profissional) => {
-      const ids = new Set(profissional.servicos.map((item) => item.servicoId));
+      const ids = new Set(getServicoIdsDoProfissional(profissional));
       return servicoIdsDoPacote.every((servicoId) => ids.has(servicoId));
     })
-    .map(({ servicos, ...profissional }) => profissional);
+    .map(({ servicos, servicoCategorias, ...profissional }) => profissional);
 
   res.json(compativeis);
 }

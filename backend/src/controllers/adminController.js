@@ -5,6 +5,7 @@ const bcrypt = require('bcryptjs');
 const { PrismaClient } = require('@prisma/client');
 const {
   getServicoIdsDoPacote,
+  getServicoIdsDoProfissional,
   profissionalAtendeTodosServicos,
 } = require('../lib/profissionalServicoValidation');
 const {
@@ -113,12 +114,83 @@ function horaParaMinutos(hora) {
 async function getAllowedServicoIds(req) {
   if (!isScopedProfessional(req)) return null;
 
-  const rows = await prisma.profissionalServico.findMany({
-    where: { profissionalId: req.user.profissionalId },
-    select: { servicoId: true },
+  const profissional = await prisma.profissional.findFirst({
+    where: { id: req.user.profissionalId, salaoId: req.user.salaoId },
+    select: {
+      servicos: { select: { servicoId: true } },
+      servicoCategorias: {
+        select: {
+          categoria: {
+            select: {
+              servicos: { select: { id: true } },
+            },
+          },
+        },
+      },
+    },
   });
 
-  return rows.map((row) => row.servicoId);
+  return getServicoIdsDoProfissional(profissional);
+}
+
+const PROFISSIONAL_INCLUDE = {
+  servicos: { include: { servico: { include: { categoria: true } } } },
+  categorias: { include: { categoria: true } },
+  servicoCategorias: {
+    include: {
+      categoria: {
+        include: {
+          servicos: {
+            select: {
+              id: true,
+              nome: true,
+              preco: true,
+              duracaoMin: true,
+              categoriaId: true,
+            },
+          },
+        },
+      },
+    },
+  },
+};
+
+function serializeProfissional(profissional) {
+  const servicosMap = new Map();
+
+  for (const vinculo of profissional?.servicos || []) {
+    if (!vinculo?.servicoId || !vinculo?.servico) continue;
+    servicosMap.set(vinculo.servicoId, {
+      servicoId: vinculo.servicoId,
+      inherited: false,
+      comissaoPercent: vinculo.comissaoPercent ?? null,
+      comissaoValor: vinculo.comissaoValor ?? null,
+      servico: vinculo.servico,
+    });
+  }
+
+  for (const vinculoCategoria of profissional?.servicoCategorias || []) {
+    const categoria = vinculoCategoria?.categoria;
+    for (const servico of categoria?.servicos || []) {
+      if (!servico?.id || servicosMap.has(servico.id)) continue;
+      servicosMap.set(servico.id, {
+        servicoId: servico.id,
+        inherited: true,
+        categoriaServicoId: categoria?.id || null,
+        categoriaServicoNome: categoria?.nome || null,
+        comissaoPercent: null,
+        comissaoValor: null,
+        servico,
+      });
+    }
+  }
+
+  return {
+    ...profissional,
+    servicosEfetivos: [...servicosMap.values()].sort((a, b) =>
+      String(a?.servico?.nome || '').localeCompare(String(b?.servico?.nome || ''))
+    ),
+  };
 }
 
 async function getScopedAgendamento(req, id, include) {
@@ -358,12 +430,11 @@ async function getProfissionais(req, res) {
       { nome: 'asc' },
     ],
     include: {
-      servicos: { include: { servico: true } },
-      categorias: { include: { categoria: true } },
+      ...PROFISSIONAL_INCLUDE,
       horarios: { orderBy: { diaSemana: 'asc' } },
     },
   });
-  res.json(profissionais);
+  res.json(profissionais.map(serializeProfissional));
 }
 
 async function createProfissional(req, res) {
@@ -381,7 +452,7 @@ async function createProfissional(req, res) {
   }
 
   const { 
-    nome, bio, fotoUrl, servicos, categoriasIds, comissaoPercent,
+    nome, bio, fotoUrl, servicos, categoriasIds, servicoCategoriasIds, comissaoPercent,
     email, telefone, cpf, rg, dataNascimento, endereco,
     numero, complemento, bairro, cep, cidade, estado,
     banco, agencia, conta, pix,
@@ -411,6 +482,11 @@ async function createProfissional(req, res) {
             create: categoriasIds.map((categoriaId) => ({ categoriaId })),
           }
         : undefined,
+      servicoCategorias: servicoCategoriasIds?.length
+        ? {
+            create: servicoCategoriasIds.map((categoriaId) => ({ categoriaId })),
+          }
+        : undefined,
       servicos: servicos?.length ? { 
         create: servicos.map((s) => ({ 
           servicoId: s.id, 
@@ -420,8 +496,7 @@ async function createProfissional(req, res) {
       } : undefined,
     },
     include: {
-      servicos: { include: { servico: true } },
-      categorias: { include: { categoria: true } },
+      ...PROFISSIONAL_INCLUDE,
     },
   });
   await createAuditLog({
@@ -434,13 +509,13 @@ async function createProfissional(req, res) {
     contexto: { nome: profissional.nome },
     req,
   });
-  res.status(201).json(profissional);
+  res.status(201).json(serializeProfissional(profissional));
 }
 
 async function updateProfissional(req, res) {
   const id = getScopedProfessionalId(req, req.params.id);
   const { 
-    nome, bio, fotoUrl, ativo, servicos, categoriasIds, comissaoPercent,
+    nome, bio, fotoUrl, ativo, servicos, categoriasIds, servicoCategoriasIds, comissaoPercent,
     email, telefone, cpf, rg, dataNascimento, endereco,
     numero, complemento, bairro, cep, cidade, estado,
     banco, agencia, conta, pix,
@@ -476,6 +551,18 @@ async function updateProfissional(req, res) {
     }
   }
 
+  if (servicoCategoriasIds !== undefined) {
+    await prisma.profissionalCategoriaServico.deleteMany({ where: { profissionalId: id } });
+    if (servicoCategoriasIds.length > 0) {
+      await prisma.profissionalCategoriaServico.createMany({
+        data: servicoCategoriasIds.map((categoriaId) => ({
+          profissionalId: id,
+          categoriaId,
+        })),
+      });
+    }
+  }
+
   const profissional = await prisma.profissional.update({
     where: { id },
     data: { 
@@ -490,8 +577,7 @@ async function updateProfissional(req, res) {
       ...(bonusMetaPercent !== undefined && { bonusMetaPercent }),
     },
     include: {
-      servicos: { include: { servico: true } },
-      categorias: { include: { categoria: true } },
+      ...PROFISSIONAL_INCLUDE,
       horarios: true,
     },
   });
@@ -505,7 +591,7 @@ async function updateProfissional(req, res) {
     contexto: { nome: profissional.nome },
     req,
   });
-  res.json(profissional);
+  res.json(serializeProfissional(profissional));
 }
 
 async function reorderProfissionais(req, res) {
@@ -612,6 +698,50 @@ async function deleteCategoriaProfissional(req, res) {
   res.json({ ok: true });
 }
 
+async function getCategoriasServicos(req, res) {
+  const categorias = await prisma.categoriaServico.findMany({
+    where: { salaoId: req.user.salaoId, ativo: true },
+    orderBy: { nome: 'asc' },
+    include: {
+      servicos: {
+        select: { id: true, nome: true, preco: true, duracaoMin: true, ativo: true },
+        orderBy: { nome: 'asc' },
+      },
+    },
+  });
+  res.json(categorias);
+}
+
+async function createCategoriaServico(req, res) {
+  const nome = String(req.body?.nome || '').trim();
+  if (!nome) return res.status(400).json({ error: 'Nome da categoria e obrigatorio' });
+
+  const categoria = await prisma.categoriaServico.create({
+    data: {
+      salaoId: req.user.salaoId,
+      nome,
+    },
+    include: {
+      servicos: {
+        select: { id: true, nome: true, preco: true, duracaoMin: true, ativo: true },
+        orderBy: { nome: 'asc' },
+      },
+    },
+  });
+  res.status(201).json(categoria);
+}
+
+async function deleteCategoriaServico(req, res) {
+  const { id } = req.params;
+  await prisma.profissionalCategoriaServico.deleteMany({ where: { categoriaId: id } });
+  await prisma.servico.updateMany({
+    where: { categoriaId: id, salaoId: req.user.salaoId },
+    data: { categoriaId: null },
+  });
+  await prisma.categoriaServico.deleteMany({ where: { id, salaoId: req.user.salaoId } });
+  res.json({ ok: true });
+}
+
 async function setHorarios(req, res) {
   const id = getScopedProfessionalId(req, req.params.id);
   const { horarios } = req.body;
@@ -640,6 +770,7 @@ async function getServicos(req, res) {
     },
     orderBy: { nome: 'asc' },
     include: {
+      categoria: true,
       consumos: {
         include: {
           produto: {
@@ -653,10 +784,11 @@ async function getServicos(req, res) {
 }
 
 async function createServico(req, res) {
-  const { nome, descricao, duracaoMin, preco, custoProduto, consumosProdutos } = req.body;
+  const { nome, descricao, duracaoMin, preco, custoProduto, consumosProdutos, categoriaId } = req.body;
   const servico = await prisma.servico.create({
     data: {
       salaoId: req.user.salaoId,
+      categoriaId: categoriaId || null,
       nome,
       descricao,
       duracaoMin,
@@ -672,6 +804,7 @@ async function createServico(req, res) {
         : undefined,
     },
     include: {
+      categoria: true,
       consumos: {
         include: {
           produto: {
@@ -686,7 +819,7 @@ async function createServico(req, res) {
 
 async function updateServico(req, res) {
   const { id } = req.params;
-  const { nome, descricao, duracaoMin, preco, custoProduto, ativo, consumosProdutos } = req.body;
+  const { nome, descricao, duracaoMin, preco, custoProduto, ativo, consumosProdutos, categoriaId } = req.body;
   const existe = await prisma.servico.findFirst({ where: { id, salaoId: req.user.salaoId } });
   if (!existe) return res.status(404).json({ error: 'Serviço não encontrado' });
 
@@ -699,6 +832,7 @@ async function updateServico(req, res) {
     data: {
       nome,
       descricao,
+      categoriaId: categoriaId || null,
       duracaoMin,
       preco,
       custoProduto,
@@ -713,6 +847,7 @@ async function updateServico(req, res) {
         : undefined,
     },
     include: {
+      categoria: true,
       consumos: {
         include: {
           produto: {
@@ -3513,6 +3648,7 @@ module.exports = {
   getClientes, buscarClientes, createCliente,
   getProfissionais, createProfissional, updateProfissional, reorderProfissionais, deleteProfissional,
   getCategoriasProfissionais, createCategoriaProfissional, deleteCategoriaProfissional,
+  getCategoriasServicos, createCategoriaServico, deleteCategoriaServico,
   setHorarios,
   getServicos, createServico, updateServico, deleteServico,
   getPacotes, createPacote, updatePacote, deletePacote,

@@ -205,7 +205,7 @@ function ModalNovoAgendamento({ onClose, onSave, preData, preHora, preProf, pref
 
   const servicoIdsDoProfissionalSelecionado = useMemo(() => {
     const profissional = profissionais.find((p) => p.id === form.profissionalId);
-    return new Set((profissional?.servicos || []).map((item) => item.servicoId));
+    return new Set((profissional?.servicosEfetivos || profissional?.servicos || []).map((item) => item.servicoId));
   }, [profissionais, form.profissionalId]);
 
   const servicoIdsDoPacoteSelecionado = useMemo(() => {
@@ -218,7 +218,7 @@ function ModalNovoAgendamento({ onClose, onSave, preData, preHora, preProf, pref
     if (servicosNecessarios.length === 0) return profissionais;
 
     return profissionais.filter((profissional) => {
-      const servicosDoProfissional = new Set((profissional.servicos || []).map((item) => item.servicoId));
+      const servicosDoProfissional = new Set((profissional.servicosEfetivos || profissional.servicos || []).map((item) => item.servicoId));
       return servicosNecessarios.every((servicoId) => servicosDoProfissional.has(servicoId));
     });
   }, [profissionais, form.servicoIds, form.pacoteId, servicoIdsDoPacoteSelecionado]);

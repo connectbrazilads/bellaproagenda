@@ -73,6 +73,9 @@ export const setHorariosProfissional = (id, horarios) => api.put(`/admin/profiss
 
 // ADMIN SERVICOS
 export const getServicos = () => api.get('/admin/servicos');
+export const getCategoriasServicos = () => api.get('/admin/servicos-categorias');
+export const createCategoriaServico = (data) => api.post('/admin/servicos-categorias', data);
+export const deleteCategoriaServico = (id) => api.delete(`/admin/servicos-categorias/${id}`);
 export const createServico = (data) => api.post('/admin/servicos', data);
 export const updateServico = (id, data) => api.put(`/admin/servicos/${id}`, data);
 export const deleteServico = (id) => api.delete(`/admin/servicos/${id}`);

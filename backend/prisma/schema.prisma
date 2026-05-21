@@ -77,6 +77,7 @@ model Salao {
   usuarios      Usuario[]
   profissionais Profissional[]
   categoriasProfissionais CategoriaProfissional[]
+  categoriasServicos     CategoriaServico[]
   servicos      Servico[]
   clientes      Cliente[]
   produtos      Produto[]
@@ -149,6 +150,7 @@ model Profissional {
   bloqueios       Bloqueio[]
   servicos        ProfissionalServico[]
   categorias      ProfissionalCategoria[]
+  servicoCategorias ProfissionalCategoriaServico[]
   listaEspera     ListaEspera[]
   agendamentos    Agendamento[]
   lancamentosFinanceiros ProfissionalLancamento[]
@@ -172,6 +174,28 @@ model ProfissionalCategoria {
   categoriaId    String
   profissional   Profissional          @relation(fields: [profissionalId], references: [id], onDelete: Cascade)
   categoria      CategoriaProfissional @relation(fields: [categoriaId], references: [id], onDelete: Cascade)
+
+  @@id([profissionalId, categoriaId])
+}
+
+model CategoriaServico {
+  id             String                         @id @default(uuid())
+  salaoId        String
+  nome           String
+  ativo          Boolean                        @default(true)
+  createdAt      DateTime                       @default(now())
+  salao          Salao                          @relation(fields: [salaoId], references: [id], onDelete: Cascade)
+  servicos       Servico[]
+  profissionais  ProfissionalCategoriaServico[]
+
+  @@unique([salaoId, nome])
+}
+
+model ProfissionalCategoriaServico {
+  profissionalId  String
+  categoriaId     String
+  profissional    Profissional     @relation(fields: [profissionalId], references: [id], onDelete: Cascade)
+  categoria       CategoriaServico @relation(fields: [categoriaId], references: [id], onDelete: Cascade)
 
   @@id([profissionalId, categoriaId])
 }
@@ -222,6 +246,7 @@ model ClientePacote {
 model Servico {
   id               String                @id @default(uuid())
   salaoId          String
+  categoriaId      String?
   nome             String
   descricao        String?
   duracaoMin       Int
@@ -230,6 +255,7 @@ model Servico {
   ativo            Boolean               @default(true)
   createdAt        DateTime              @default(now())
   salao           Salao                 @relation(fields: [salaoId], references: [id], onDelete: Cascade)
+  categoria       CategoriaServico?     @relation(fields: [categoriaId], references: [id], onDelete: SetNull)
   profissionais    ProfissionalServico[]
   consumos        ServicoProdutoConsumo[]
   listaEspera     ListaEspera[]

@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+﻿import { useEffect, useMemo, useRef, useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import {
   Activity,
@@ -22,6 +22,7 @@ import {
   X,
 } from 'lucide-react';
 import {
+  getCategoriasServicos,
   createCategoriaProfissional,
   createProfissional,
   deleteCategoriaProfissional,
@@ -53,6 +54,7 @@ const EMPTY_FORM = {
   fotoUrl: '',
   servicos: [],
   categoriasIds: [],
+  servicoCategoriasIds: [],
   comissaoPercent: 50,
   ativo: true,
   email: '',
@@ -85,6 +87,7 @@ export default function Profissionais() {
   const [profissionais, setProfissionais] = useState([]);
   const [servicosDisponiveis, setServicosDisponiveis] = useState([]);
   const [categoriasDisponiveis, setCategoriasDisponiveis] = useState([]);
+  const [categoriasServicosDisponiveis, setCategoriasServicosDisponiveis] = useState([]);
   const [salaoInfo, setSalaoInfo] = useState(null);
   const [novaCategoria, setNovaCategoria] = useState('');
   const [form, setForm] = useState(EMPTY_FORM);
@@ -105,16 +108,18 @@ export default function Profissionais() {
   }, []);
 
   async function loadData() {
-    const [profissionaisResponse, servicosResponse, categoriasResponse, salaoResponse] = await Promise.all([
+    const [profissionaisResponse, servicosResponse, categoriasResponse, categoriasServicosResponse, salaoResponse] = await Promise.all([
       getProfissionais(),
       getServicos(),
       getCategoriasProfissionais(),
+      getCategoriasServicos(),
       getAdminSalao(),
     ]);
 
     setProfissionais(profissionaisResponse.data || []);
     setServicosDisponiveis(servicosResponse.data || []);
     setCategoriasDisponiveis(categoriasResponse.data || []);
+    setCategoriasServicosDisponiveis(categoriasServicosResponse.data || []);
     setSalaoInfo(salaoResponse.data || null);
   }
 
@@ -136,6 +141,7 @@ export default function Profissionais() {
         comissaoValor: item.comissaoValor,
       })),
       categoriasIds: (profissional.categorias || []).map((item) => item.categoriaId),
+      servicoCategoriasIds: (profissional.servicoCategorias || []).map((item) => item.categoriaId),
       comissaoPercent: profissional.comissaoPercent || 50,
       ativo: profissional.ativo !== false,
       email: profissional.email || '',
@@ -255,6 +261,15 @@ export default function Profissionais() {
     }));
   }
 
+  function toggleCategoriaServico(categoriaId) {
+    setForm((prev) => ({
+      ...prev,
+      servicoCategoriasIds: prev.servicoCategoriasIds.includes(categoriaId)
+        ? prev.servicoCategoriasIds.filter((id) => id !== categoriaId)
+        : [...prev.servicoCategoriasIds, categoriaId],
+    }));
+  }
+
   async function addCategoria() {
     const nome = novaCategoria.trim();
     if (!nome) return;
@@ -266,7 +281,7 @@ export default function Profissionais() {
   }
 
   async function removeCategoria(categoriaId) {
-    if (!window.confirm('Deseja excluir esta categoria do salão inteiro?')) return;
+    if (!window.confirm('Deseja excluir esta categoria do salÃ£o inteiro?')) return;
     await deleteCategoriaProfissional(categoriaId);
     setCategoriasDisponiveis((prev) => prev.filter((categoria) => categoria.id !== categoriaId));
     setForm((prev) => ({ ...prev, categoriasIds: prev.categoriasIds.filter((id) => id !== categoriaId) }));
@@ -277,6 +292,47 @@ export default function Profissionais() {
     if (!isScopedProfessional) return profissionais;
     return profissionais.filter((profissional) => profissional.id === myProfissionalId);
   }, [isScopedProfessional, myProfissionalId, profissionais]);
+
+  const servicoIdsPorCategoriaSelecionada = useMemo(() => {
+    const ids = new Set();
+    for (const categoria of categoriasServicosDisponiveis) {
+      if (!form.servicoCategoriasIds.includes(categoria.id)) continue;
+      for (const servico of categoria.servicos || []) {
+        if (servico?.id) ids.add(servico.id);
+      }
+    }
+    return ids;
+  }, [categoriasServicosDisponiveis, form.servicoCategoriasIds]);
+
+  const servicosVinculadosNoFormulario = useMemo(() => {
+    const mapa = new Map();
+
+    for (const categoria of categoriasServicosDisponiveis) {
+      if (!form.servicoCategoriasIds.includes(categoria.id)) continue;
+      for (const servico of categoria.servicos || []) {
+        if (!servico?.id || mapa.has(servico.id)) continue;
+        mapa.set(servico.id, {
+          id: servico.id,
+          nome: servico.nome,
+          inherited: true,
+          categoriaNome: categoria.nome,
+        });
+      }
+    }
+
+    for (const servicoManual of form.servicos) {
+      const servico = servicosDisponiveis.find((item) => item.id === servicoManual.id);
+      if (!servico) continue;
+      mapa.set(servico.id, {
+        id: servico.id,
+        nome: servico.nome,
+        inherited: servicoIdsPorCategoriaSelecionada.has(servico.id),
+        categoriaNome: mapa.get(servico.id)?.categoriaNome || null,
+      });
+    }
+
+    return [...mapa.values()].sort((a, b) => a.nome.localeCompare(b.nome));
+  }, [categoriasServicosDisponiveis, form.servicoCategoriasIds, form.servicos, servicoIdsPorCategoriaSelecionada, servicosDisponiveis]);
 
   return (
     <motion.div ref={pageRef} initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} className="max-w-7xl mx-auto space-y-8 lg:space-y-10 pb-20">
@@ -291,14 +347,14 @@ export default function Profissionais() {
               Elite <span className="brand-text-gradient">Squad</span>
             </h1>
             <p className="mt-4 max-w-2xl text-base text-gray-600 dark:text-white/60">
-              Organize os talentos que sustentam a experiência do salão com um cadastro claro, bonito e pronto para operar.
+              Organize os talentos que sustentam a experiÃªncia do salÃ£o com um cadastro claro, bonito e pronto para operar.
             </p>
           </div>
 
           <div className="flex flex-wrap items-center gap-4">
             <div className={cn('rounded-[1.8rem] border border-gray-200 dark:border-white/5 bg-white/[0.03] px-6 py-4 items-center gap-4 sm:p-6', showSummaryCard ? 'flex' : 'hidden')}>
               <MiniMetric label="Ativos" value={visibleProfessionals.filter((item) => item.ativo).length} />
-              <MiniMetric label="Serviços" value={servicosDisponiveis.length} highlight />
+              <MiniMetric label="ServiÃ§os" value={servicosDisponiveis.length} highlight />
             </div>
 
             {!isScopedProfessional && (
@@ -408,7 +464,7 @@ export default function Profissionais() {
                   </span>
                 </button>
                 <div className="rounded-xl sm:rounded-[1.3rem] border border-gray-200 dark:border-white/5 bg-white/[0.04] px-3 py-3 sm:px-4 sm:py-4 text-center text-[9px] sm:text-[10px] font-black uppercase tracking-[0.22em] text-gray-600 dark:text-white/74 flex items-center justify-center">
-                  Produção
+                  ProduÃ§Ã£o
                 </div>
               </div>
             </motion.article>
@@ -466,14 +522,14 @@ export default function Profissionais() {
                 {activeTab === 'geral' && (
                   <div className="space-y-8">
                     <div className="grid gap-4 sm:p-6 md:grid-cols-2">
-                      <Field label="Nome artístico ou completo" value={form.nome} onChange={(value) => setForm((prev) => ({ ...prev, nome: value }))} required />
+                      <Field label="Nome artÃ­stico ou completo" value={form.nome} onChange={(value) => setForm((prev) => ({ ...prev, nome: value }))} required />
                       <Field label="Biografia ou especialidade" value={form.bio} onChange={(value) => setForm((prev) => ({ ...prev, bio: value }))} />
                     </div>
 
                     <div className={cn('grid gap-4 sm:p-6', useWideEditorLayout && 'lg:grid-cols-[minmax(0,1fr)_320px]')}>
                       <div className="rounded-[2rem] border border-gray-200 dark:border-white/5 bg-white dark:bg-[#1a171f] p-4 sm:p-6">
                         <p className="text-[10px] font-black uppercase tracking-[0.22em] text-[#efbac2]">Categorias profissionais</p>
-                        <h3 className="mt-3 text-3xl font-brand-display text-gray-900 dark:text-white">Defina como esta pessoa aparece no salão</h3>
+                        <h3 className="mt-3 text-3xl font-brand-display text-gray-900 dark:text-white">Defina como esta pessoa aparece no salÃ£o</h3>
                         <p className="mt-3 text-sm text-gray-200 dark:text-white/56">
                           Exemplos: cabeleireiro, manicure, barbeiro, esteticista ou designer de sobrancelhas.
                         </p>
@@ -482,7 +538,7 @@ export default function Profissionais() {
                           <input
                             value={novaCategoria}
                             onChange={(event) => setNovaCategoria(event.target.value)}
-                            placeholder="Criar nova categoria do salão"
+                            placeholder="Criar nova categoria do salÃ£o"
                             className="flex-1 rounded-[1.2rem] border border-gray-200 dark:border-white/5 bg-[#332832] px-4 py-3 text-sm text-white outline-none placeholder:text-white/28 focus:border-[#e29ba8]/28"
                           />
                           <button type="button" onClick={addCategoria} className="rounded-[1.2rem] bg-gradient-to-r from-[#E29BA8] to-[#d48997] text-[#111116] px-5 py-3 text-[10px] font-black uppercase tracking-[0.22em] text-white">
@@ -562,24 +618,95 @@ export default function Profissionais() {
                     <div className="flex flex-col gap-3 rounded-[2rem] border border-gray-200 dark:border-white/5 bg-black/14 p-4 sm:p-6 md:flex-row md:items-center md:justify-between">
                       <div>
                         <p className="text-[10px] font-black uppercase tracking-[0.22em] text-[#efbac2]">Menu de especialidades</p>
-                        <h3 className="mt-2 text-3xl font-brand-display text-gray-900 dark:text-white">Serviços e comissões</h3>
-                        <p className="mt-2 text-sm text-gray-200 dark:text-white/56">Escolha os serviços que esta pessoa executa e ajuste regras específicas quando precisar.</p>
+                        <h3 className="mt-2 text-3xl font-brand-display text-gray-900 dark:text-white">Servicos e comissoes</h3>
+                        <p className="mt-2 text-sm text-gray-200 dark:text-white/56">Use categorias para liberar pacotes inteiros de servicos e complemente manualmente so quando precisar.</p>
                       </div>
                       <div className="rounded-full bg-[#e29ba8]/10 px-4 py-3 text-[10px] font-black uppercase tracking-[0.18em] text-[#f2c1c9]">
-                        {form.servicos.length} servicos vinculados
+                        {servicosVinculadosNoFormulario.length} servicos ativos
+                      </div>
+                    </div>
+
+                    <div className="rounded-[2rem] border border-gray-200 dark:border-white/5 bg-black/14 p-4 sm:p-6">
+                      <p className="text-[10px] font-black uppercase tracking-[0.22em] text-[#efbac2]">Categorias de servicos</p>
+                      <h4 className="mt-2 text-2xl font-brand-display text-gray-900 dark:text-white">Marque uma vez e herde todos os servicos</h4>
+                      <p className="mt-2 text-sm text-gray-200 dark:text-white/56">
+                        Quando uma categoria estiver marcada, os servicos dela passam a valer automaticamente para este profissional.
+                      </p>
+
+                      <div className="mt-5 flex flex-wrap gap-3">
+                        {categoriasServicosDisponiveis.map((categoria) => {
+                          const active = form.servicoCategoriasIds.includes(categoria.id);
+                          return (
+                            <button
+                              key={categoria.id}
+                              type="button"
+                              onClick={() => toggleCategoriaServico(categoria.id)}
+                              className={cn(
+                                'rounded-[1.3rem] border px-4 py-3 text-left transition',
+                                active
+                                  ? 'border-[#e29ba8]/34 bg-[#e29ba8]/10 shadow-[0_18px_40px_-30px_rgba(222,151,165,0.6)]'
+                                  : 'border-gray-200 dark:border-white/5 bg-white/[0.03]'
+                              )}
+                            >
+                              <p className={cn('text-[10px] font-black uppercase tracking-[0.18em]', active ? 'text-[#f2c1c9]' : 'text-gray-500 dark:text-white/48')}>
+                                {categoria.nome}
+                              </p>
+                              <p className="mt-2 text-sm text-gray-600 dark:text-white/62">
+                                {(categoria.servicos || []).length} servicos
+                              </p>
+                            </button>
+                          );
+                        })}
+                        {categoriasServicosDisponiveis.length === 0 && (
+                          <span className="text-sm text-gray-500 dark:text-white/40">Nenhuma categoria de servicos criada ainda. Cadastre em Servicos.</span>
+                        )}
+                      </div>
+                    </div>
+
+                    <div className="rounded-[2rem] border border-gray-200 dark:border-white/5 bg-black/14 p-4 sm:p-6">
+                      <p className="text-[10px] font-black uppercase tracking-[0.22em] text-[#efbac2]">Resumo efetivo</p>
+                      <div className="mt-4 flex flex-wrap gap-2">
+                        {servicosVinculadosNoFormulario.map((servico) => (
+                          <span key={servico.id} className={cn('rounded-full border px-3 py-2 text-[10px] font-black uppercase tracking-[0.16em]', servico.inherited ? 'border-[#e29ba8]/20 bg-[#e29ba8]/10 text-[#f2c1c9]' : 'border-gray-200 dark:border-white/5 bg-white/[0.03] text-gray-600 dark:text-white/64')}>
+                            {servico.nome}
+                            {servico.categoriaNome ? ` · ${servico.categoriaNome}` : ''}
+                          </span>
+                        ))}
+                        {servicosVinculadosNoFormulario.length === 0 && (
+                          <span className="text-sm text-gray-500 dark:text-white/40">Nenhum servico vinculado ainda.</span>
+                        )}
                       </div>
                     </div>
 
                     <div className="space-y-4">
                       {servicosDisponiveis.map((servico) => {
                         const selected = form.servicos.find((item) => item.id === servico.id);
+                        const inherited = servicoIdsPorCategoriaSelecionada.has(servico.id);
                         return (
-                          <div key={servico.id} className={cn('rounded-[2rem] border p-5 transition', selected ? 'border-[#e29ba8]/34 bg-[#e29ba8]/08' : 'border-gray-200 dark:border-white/5 bg-white/[0.03]')}>
+                          <div key={servico.id} className={cn('rounded-[2rem] border p-5 transition', selected || inherited ? 'border-[#e29ba8]/34 bg-[#e29ba8]/08' : 'border-gray-200 dark:border-white/5 bg-white/[0.03]')}>
                             <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-                              <label className="flex cursor-pointer items-center gap-4">
-                                <input type="checkbox" checked={Boolean(selected)} onChange={() => toggleServico(servico.id)} className="h-4 w-4 accent-[#de97a5]" />
+                              <label className={cn('flex items-center gap-4', inherited && !selected ? 'cursor-default' : 'cursor-pointer')}>
+                                <input
+                                  type="checkbox"
+                                  checked={Boolean(selected || inherited)}
+                                  disabled={inherited && !selected}
+                                  onChange={() => toggleServico(servico.id)}
+                                  className="h-4 w-4 accent-[#de97a5] disabled:cursor-not-allowed disabled:opacity-70"
+                                />
                                 <div>
-                                  <p className="text-sm font-semibold text-gray-900 dark:text-white">{servico.nome}</p>
+                                  <div className="flex flex-wrap items-center gap-2">
+                                    <p className="text-sm font-semibold text-gray-900 dark:text-white">{servico.nome}</p>
+                                    {servico.categoria?.nome && (
+                                      <span className="rounded-full border border-[#e29ba8]/18 bg-[#e29ba8]/08 px-2 py-1 text-[9px] font-black uppercase tracking-[0.16em] text-[#f2c1c9]">
+                                        {servico.categoria.nome}
+                                      </span>
+                                    )}
+                                    {inherited && (
+                                      <span className="rounded-full border border-emerald-400/20 bg-emerald-400/10 px-2 py-1 text-[9px] font-black uppercase tracking-[0.16em] text-emerald-200">
+                                        Herdado por categoria
+                                      </span>
+                                    )}
+                                  </div>
                                   <p className="mt-1 text-xs text-gray-500 dark:text-white/44">
                                     {Number(servico.preco || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
                                   </p>
@@ -599,7 +726,6 @@ export default function Profissionais() {
                     </div>
                   </div>
                 )}
-
                 {activeTab === 'banco' && (
                   <div className="space-y-6">
                     <div className="grid gap-4 sm:p-6 md:grid-cols-2">
@@ -612,7 +738,7 @@ export default function Profissionais() {
                     <div className="rounded-[2rem] border border-[#e29ba8]/12 bg-[#e29ba8]/06 p-4 sm:p-6">
                       <p className="text-[10px] font-black uppercase tracking-[0.22em] text-[#efbac2]">Repasse organizado</p>
                       <p className="mt-3 text-sm leading-relaxed text-white/62">
-                        Esses dados ajudam no controle de comissões e deixam a rotina financeira mais segura na hora do pagamento da equipe.
+                        Esses dados ajudam no controle de comissÃµes e deixam a rotina financeira mais segura na hora do pagamento da equipe.
                       </p>
                     </div>
                   </div>
@@ -748,3 +874,4 @@ function CompactInput({ label, value, onChange, type = 'text' }) {
     </div>
   );
 }
+

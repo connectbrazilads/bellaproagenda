@@ -32,6 +32,9 @@ router.delete('/profissionais/:id', requirePermission('profissionais'), requireA
 router.put('/profissionais/:id/horarios', requirePermission('profissionais'), ctrl.setHorarios);
 
 router.get('/servicos', requireAnyPermission(['servicos', 'agenda', 'pacotes']), ctrl.getServicos);
+router.get('/servicos-categorias', requireAnyPermission(['servicos', 'profissionais', 'agenda']), ctrl.getCategoriasServicos);
+router.post('/servicos-categorias', requirePermission('servicos'), ctrl.createCategoriaServico);
+router.delete('/servicos-categorias/:id', requirePermission('servicos'), ctrl.deleteCategoriaServico);
 router.post('/servicos', requirePermission('servicos'), ctrl.createServico);
 router.put('/servicos/:id', requirePermission('servicos'), ctrl.updateServico);
 router.delete('/servicos/:id', requirePermission('servicos'), ctrl.deleteServico);
