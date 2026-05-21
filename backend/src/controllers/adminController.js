@@ -295,8 +295,24 @@ async function buildCaixaResumo({ salaoId, inicio, fim, profissionalId }) {
   };
 }
 
+function getAgendamentoPrecoBaseOriginal(agendamento) {
+  return Number(agendamento?.servico?.preco ?? agendamento?.pacote?.preco ?? 0);
+}
+
+function getAgendamentoPrecoBase(agendamento) {
+  const precoBaseOriginal = getAgendamentoPrecoBaseOriginal(agendamento);
+  const precoBaseAjustado = agendamento?.valorBaseAjustado;
+
+  if (precoBaseAjustado === null || precoBaseAjustado === undefined) {
+    return precoBaseOriginal;
+  }
+
+  const precoBaseAjustadoNumero = Number(precoBaseAjustado);
+  return Number.isFinite(precoBaseAjustadoNumero) ? precoBaseAjustadoNumero : precoBaseOriginal;
+}
+
 function calcularTotalAgendamento(agendamento) {
-  const precoBase = Number(agendamento?.servico?.preco ?? agendamento?.pacote?.preco ?? 0);
+  const precoBase = getAgendamentoPrecoBase(agendamento);
   const precoItens = getAgendamentoItensExtras(agendamento).reduce((sum, item) => sum + Number(item.preco || 0), 0);
   const precoProdutos = agendamento?.produtos?.reduce((sum, item) => sum + (Number(item.preco || 0) * Number(item.quantidade || 0)), 0) || 0;
   return precoBase + precoItens + precoProdutos;
@@ -1082,7 +1098,7 @@ async function getClientes(req, res) {
   const resultado = clientes.map((c) => {
     const concluidos = c.agendamentos.filter((a) => a.status === 'concluido');
     const totalGasto = concluidos.reduce((sum, a) => {
-      const base = a.servico?.preco ?? a.pacote?.preco ?? 0;
+      const base = getAgendamentoPrecoBase(a);
       const extras = getAgendamentoItensExtras(a).reduce((s, i) => s + Number(i.preco || 0), 0);
       return sum + base + extras;
     }, 0);
@@ -1455,7 +1471,8 @@ async function executarConclusaoAgendamento(agId, salaoId) {
 
   if (!ag || ag.status === 'concluido') return { comissaoValor: ag?.comissaoValor ?? 0, saldoRestante: null, fidelidadeGanho: 0, fidelidadeTipo: salao?.fidelidadeTipo };
 
-  const precoBase = ag.servico?.preco ?? ag.pacote?.preco ?? 0;
+  const precoBase = getAgendamentoPrecoBase(ag);
+  const precoBaseOriginal = getAgendamentoPrecoBaseOriginal(ag);
   const itensExtras = getAgendamentoItensExtras(ag);
   const precoItens = itensExtras.reduce((s, i) => s + Number(i.preco || 0), 0);
   const precoProds = ag.produtos.reduce((s, p) => s + (p.preco * p.quantidade), 0);
@@ -1479,7 +1496,8 @@ async function executarConclusaoAgendamento(agId, salaoId) {
       const globalPerc = ag.profissional?.comissaoPercent ?? 50;
       return (preco * globalPerc) / 100;
     };
-    if (ag.servicoId) comissaoValor = getComissao(ag.servicoId, precoBase - custoProd);
+    const baseComissao = Math.max(0, precoBase - (precoBaseOriginal > 0 ? custoProd : 0));
+    if (ag.servicoId) comissaoValor = getComissao(ag.servicoId, baseComissao);
     if (itensExtras.length > 0) {
       for (const item of itensExtras) comissaoValor += getComissao(item.servicoId, item.preco);
     }
@@ -1782,14 +1800,35 @@ async function criarVendaPDV(req, res) {
 
 async function updatePagamentoAgendamento(req, res) {
   const { id } = req.params;
-  const { pagamentos, taxaOperadora } = req.body;
+  const { pagamentos, taxaOperadora, valorBaseAjustado } = req.body;
   const salaoId = req.user.salaoId;
   const pagamentosLista = Array.isArray(pagamentos) ? pagamentos : [];
   const totalPagoSolicitado = pagamentosLista.reduce((sum, pagamento) => sum + Number(pagamento?.valor || 0), 0);
+  const campoValorBaseAjustadoPresente = Object.prototype.hasOwnProperty.call(req.body, 'valorBaseAjustado');
 
   // Segurança: verificar que o agendamento pertence ao salão
-  const agExiste = await getScopedAgendamento(req, id);
+  const agExiste = await getScopedAgendamento(req, id, {
+    servico: { select: { preco: true } },
+    pacote: { select: { preco: true } },
+  });
   if (!agExiste) return res.status(404).json({ error: 'Agendamento não encontrado' });
+
+  let valorBaseAjustadoNormalizado = agExiste?.valorBaseAjustado ?? null;
+  if (campoValorBaseAjustadoPresente) {
+    if (valorBaseAjustado === null || valorBaseAjustado === '') {
+      valorBaseAjustadoNormalizado = null;
+    } else {
+      const valorBaseAjustadoNumero = Number(valorBaseAjustado);
+      if (!Number.isFinite(valorBaseAjustadoNumero) || valorBaseAjustadoNumero < 0) {
+        return res.status(400).json({ error: 'Informe um valor ajustado valido para o servico.' });
+      }
+
+      const precoBaseOriginal = getAgendamentoPrecoBaseOriginal(agExiste);
+      valorBaseAjustadoNormalizado = Math.abs(valorBaseAjustadoNumero - precoBaseOriginal) < 0.001
+        ? null
+        : valorBaseAjustadoNumero;
+    }
+  }
 
   if (totalPagoSolicitado > 0) {
     const caixaAberto = await getCaixaAberto(req.user.salaoId);
@@ -1811,7 +1850,7 @@ async function updatePagamentoAgendamento(req, res) {
     include: { servico: true, pacote: true, itens: true, produtos: true }
   });
   
-  const totalDevido = calcularTotalAgendamento(ag);
+  const totalDevido = calcularTotalAgendamento({ ...ag, valorBaseAjustado: valorBaseAjustadoNormalizado });
   
   const totalPago = pagamentosLista.reduce((s,p) => s + Number(p.valor || 0), 0);
   const taxa = parseFloat(taxaOperadora) || 0;
@@ -1826,7 +1865,8 @@ async function updatePagamentoAgendamento(req, res) {
     where: { id },
     data: { 
       statusPagamento: novoStatusPagamento,
-      taxaOperadora: taxa
+      taxaOperadora: taxa,
+      valorBaseAjustado: valorBaseAjustadoNormalizado
     }
   });
 
@@ -1849,7 +1889,7 @@ async function updatePagamentoAgendamento(req, res) {
     entidade: 'agendamento',
     entidadeId: id,
     mensagem: 'Pagamento de agendamento atualizado',
-    contexto: { totalPago, taxa, statusPagamento: novoStatusPagamento },
+    contexto: { totalPago, taxa, statusPagamento: novoStatusPagamento, valorBaseAjustado: valorBaseAjustadoNormalizado },
     req,
   });
 
@@ -2259,7 +2299,7 @@ async function getHistoricoCliente(req, res) {
     }
     mapa[key].agendamentos.push(a);
     if (a.status === 'concluido') {
-      mapa[key].totalGasto += a.servico?.preco ?? a.pacote?.preco ?? 0;
+      mapa[key].totalGasto += calcularTotalAgendamento(a);
       mapa[key].visitas += 1;
     }
   }
@@ -2287,7 +2327,7 @@ async function getRelatorio(req, res) {
     orderBy: { data: 'asc' },
   });
 
-  const total = agendamentos.reduce((acc, a) => acc + (a.servico?.preco ?? a.pacote?.preco ?? 0), 0);
+  const total = agendamentos.reduce((acc, a) => acc + calcularTotalAgendamento(a), 0);
   const totalComissoes = agendamentos.reduce((acc, a) => acc + (a.comissaoValor ?? 0), 0);
   
   const despesas = await prisma.despesa.findMany({
@@ -2303,7 +2343,7 @@ async function getRelatorio(req, res) {
 
   for (const a of agendamentos) {
     const nome = a.profissional.nome;
-    const preco = a.servico?.preco ?? a.pacote?.preco ?? 0;
+    const preco = calcularTotalAgendamento(a);
 
     if (!porProfissional[nome]) porProfissional[nome] = { total: 0, quantidade: 0, comissao: 0 };
     porProfissional[nome].total += preco;
@@ -2490,11 +2530,9 @@ async function getFinanceiro(req, res) {
 
   agendamentos.forEach(ag => {
     const dataKey = ag.data.toISOString().split('T')[0];
-    const precoBase = ag.servico?.preco ?? ag.pacote?.preco ?? 0;
+    const precoBase = getAgendamentoPrecoBase(ag);
     const itensExtras = getAgendamentoItensExtras(ag);
-    const precoItens = itensExtras.reduce((s, i) => s + Number(i.preco || 0), 0);
-    const precoProds = ag.produtos.reduce((s,p) => s + (p.preco * p.quantidade), 0);
-    const totalAg = (precoBase + precoItens + precoProds);
+    const totalAg = calcularTotalAgendamento(ag);
     
     totalBruto += totalAg;
     totalComissoes += ag.comissaoValor || 0;
@@ -2513,7 +2551,7 @@ async function getFinanceiro(req, res) {
     }
 
     if (ag.servico) {
-      porServico[ag.servico.nome] = (porServico[ag.servico.nome] || 0) + ag.servico.preco;
+      porServico[ag.servico.nome] = (porServico[ag.servico.nome] || 0) + precoBase;
     }
     itensExtras.forEach((item) => {
       if (item.servico) {

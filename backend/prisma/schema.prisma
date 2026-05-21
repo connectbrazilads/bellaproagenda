@@ -402,6 +402,7 @@ model Agendamento {
   status          String            @default("confirmado")
   statusPagamento String            @default("pendente")
   formaPagamento  String?
+  valorBaseAjustado Float?
   comissaoValor   Float?
   comissaoPaga    Boolean           @default(false)
   estoqueConsumido Boolean          @default(false)

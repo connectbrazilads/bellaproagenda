@@ -28,6 +28,9 @@ import {
   cn,
   formatDateBR,
   formatDurationLabel,
+  getAgendamentoBasePrice,
+  getAgendamentoOriginalBasePrice,
+  hasAgendamentoAdjustedBasePrice,
 } from '../../lib/utils';
 
 const STATUS_CONFIG = {
@@ -52,6 +55,7 @@ export default function Agendamentos() {
   const [filtroStatus, setFiltroStatus] = useState('');
   const [pagamentoModal, setPagamentoModal] = useState(null);
   const [pagamentos, setPagamentos] = useState([{ forma: 'PIX', valor: '' }]);
+  const [valorBaseAjustado, setValorBaseAjustado] = useState('');
   const [taxaOperadora, setTaxaOperadora] = useState('0');
   const [valorRecebido, setValorRecebido] = useState('');
   const [caixaPagamentoStatus, setCaixaPagamentoStatus] = useState({ aberto: true, mensagem: '' });
@@ -126,6 +130,7 @@ export default function Agendamentos() {
     loadCaixaPagamentoStatus();
     setPagamentoModal(agendamento);
     setPagamentos([{ forma: 'PIX', valor: total.toFixed(2) }]);
+    setValorBaseAjustado(getAgendamentoBasePrice(agendamento).toFixed(2));
     setTaxaOperadora('0');
     setValorRecebido('');
   }
@@ -144,6 +149,10 @@ export default function Agendamentos() {
 
   async function confirmPagamento() {
     if (!pagamentoModal) return;
+    if (!valorBaseAjustadoValido) {
+      window.alert('Informe um valor valido para o servico antes de confirmar o pagamento.');
+      return;
+    }
     if (!caixaPagamentoStatus.aberto) {
       window.alert(caixaPagamentoStatus.mensagem || 'Abra o caixa antes de registrar pagamentos.');
       return;
@@ -156,6 +165,7 @@ export default function Agendamentos() {
           valor: Number(item.valor || 0),
         })),
         taxaOperadora: Number(taxaOperadora || 0),
+        valorBaseAjustado: valorBaseAjustadoAtivo ? valorBaseAjustadoNumero : null,
         valorRecebido: Number(valorRecebido || 0),
       });
 
@@ -166,7 +176,14 @@ export default function Agendamentos() {
     }
   }
 
-  const totalDevido = pagamentoModal ? calcTotal(pagamentoModal) : 0;
+  const valorBaseAjustadoNumero = Number(valorBaseAjustado);
+  const valorBaseAjustadoValido = valorBaseAjustado !== '' && Number.isFinite(valorBaseAjustadoNumero) && valorBaseAjustadoNumero >= 0;
+  const precoBaseOriginal = pagamentoModal ? getAgendamentoOriginalBasePrice(pagamentoModal) : 0;
+  const valorBaseAjustadoAtivo = valorBaseAjustadoValido && Math.abs(valorBaseAjustadoNumero - precoBaseOriginal) >= 0.001;
+  const pagamentoModalPreview = pagamentoModal
+    ? { ...pagamentoModal, valorBaseAjustado: valorBaseAjustadoAtivo ? valorBaseAjustadoNumero : null }
+    : null;
+  const totalDevido = pagamentoModalPreview ? calcTotal(pagamentoModalPreview) : 0;
   const totalPago = pagamentos.reduce((sum, item) => sum + Number(item.valor || 0), 0);
   const troco = pagamentos.some((item) => item.forma === 'Dinheiro')
     ? Math.max(0, Number(valorRecebido || 0) - totalDevido)
@@ -269,6 +286,11 @@ export default function Agendamentos() {
                       <span className="rounded-full bg-[#e29ba8]/10 px-3 py-2 text-[10px] font-black uppercase tracking-[0.16em] text-[#f3c7cd]">
                         {agendamento.servico?.nome || agendamento.pacote?.nome || 'Sem serviço principal'}
                       </span>
+                      {hasAgendamentoAdjustedBasePrice(agendamento) && (
+                        <span className="rounded-full bg-amber-400/10 px-3 py-2 text-[10px] font-black uppercase tracking-[0.16em] text-amber-200">
+                          Valor ajustado
+                        </span>
+                      )}
                       <span className="rounded-full bg-white/6 px-3 py-2 text-[10px] font-black uppercase tracking-[0.16em] text-gray-600 dark:text-white/64">
                         {formatDurationLabel(calculateAgendamentoDuration(agendamento))}
                       </span>
@@ -327,6 +349,29 @@ export default function Agendamentos() {
                 <ResumoItem label="Troco" value={troco} />
               </div>
 
+              <div className="mt-6 grid gap-4 md:grid-cols-2">
+                <InputMoney label="Valor do servico" value={valorBaseAjustado} onChange={setValorBaseAjustado} />
+                <div className="rounded-[1.5rem] border border-gray-200 dark:border-white/5 bg-white/[0.03] px-4 py-4">
+                  <p className="text-[10px] font-black uppercase tracking-[0.18em] text-gray-500 dark:text-white/40">Referencia</p>
+                  <p className="mt-2 text-xl font-semibold text-gray-900 dark:text-white">
+                    {precoBaseOriginal.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
+                  </p>
+                  <div className="mt-3 flex items-center justify-between gap-3">
+                    <button
+                      onClick={() => setValorBaseAjustado(precoBaseOriginal.toFixed(2))}
+                      className="text-[10px] font-black uppercase tracking-[0.18em] text-[#f3c7cd]"
+                    >
+                      Restaurar original
+                    </button>
+                    {valorBaseAjustadoAtivo && (
+                      <span className="text-[10px] font-black uppercase tracking-[0.18em] text-amber-200">
+                        Valor ajustado
+                      </span>
+                    )}
+                  </div>
+                </div>
+              </div>
+
               <div className="mt-6 space-y-3">
                 {pagamentos.map((item, index) => (
                   <div key={index} className="grid gap-3 rounded-[1.5rem] border border-gray-200 dark:border-white/5 bg-white/[0.03] p-4 md:grid-cols-[170px_minmax(0,1fr)_auto]">
@@ -375,7 +420,7 @@ export default function Agendamentos() {
 
               <div className="mt-6 flex flex-col gap-3 md:flex-row">
                 <ActionButton variant="secondary" onClick={() => setPagamentoModal(null)} label="Cancelar" />
-                <ActionButton onClick={confirmPagamento} label="Confirmar pagamento" disabled={!caixaPagamentoStatus.aberto} />
+                <ActionButton onClick={confirmPagamento} label="Confirmar pagamento" disabled={!caixaPagamentoStatus.aberto || !valorBaseAjustadoValido} />
               </div>
             </motion.div>
           </motion.div>

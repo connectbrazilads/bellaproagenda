@@ -53,7 +53,10 @@ import {
   formatDateBR,
   formatDateInput,
   formatDurationLabel,
+  getAgendamentoBasePrice,
   getAgendamentoItensExtras,
+  getAgendamentoOriginalBasePrice,
+  hasAgendamentoAdjustedBasePrice,
 } from '../../lib/utils';
 
 const START_HOUR = 7;
@@ -709,6 +712,7 @@ function ModalDetalhesAgendamento({ agendamento: initialAgendamento, onClose, on
   const [tab, setTab] = useState('comanda');
   const [pagamentoForma, setPagamentoForma] = useState('');
   const [pagamentoTaxa, setPagamentoTaxa] = useState('0');
+  const [pagamentoValorBase, setPagamentoValorBase] = useState(() => String(getAgendamentoBasePrice(initialAgendamento)));
   const [caixaPagamentoStatus, setCaixaPagamentoStatus] = useState({ aberto: true, mensagem: '' });
   const [observacaoDraft, setObservacaoDraft] = useState(initialAgendamento?.observacao || '');
   const [servicosBusca, setServicosBusca] = useState('');
@@ -741,6 +745,7 @@ function ModalDetalhesAgendamento({ agendamento: initialAgendamento, onClose, on
     setProdutosBusca('');
     setServicosExpandido(true);
     setProdutosExpandido(true);
+    setPagamentoValorBase(String(getAgendamentoBasePrice(initialAgendamento)));
   }, [initialAgendamento]);
 
   const servicosFiltrados = useMemo(() => {
@@ -751,6 +756,19 @@ function ModalDetalhesAgendamento({ agendamento: initialAgendamento, onClose, on
   }, [servicos, servicosBusca, agendamento?.servicoId]);
 
   const itensExtras = useMemo(() => getAgendamentoItensExtras(agendamento), [agendamento]);
+  const precoBaseOriginal = useMemo(() => getAgendamentoOriginalBasePrice(agendamento), [agendamento]);
+  const precoBaseAtual = useMemo(() => getAgendamentoBasePrice(agendamento), [agendamento]);
+  const valorBaseDigitado = Number(pagamentoValorBase);
+  const pagamentoValorBaseValido = pagamentoValorBase !== '' && Number.isFinite(valorBaseDigitado) && valorBaseDigitado >= 0;
+  const precoBaseCheckout = pagamentoValorBaseValido ? valorBaseDigitado : 0;
+  const valorBaseAjustadoAtivo = Math.abs(precoBaseCheckout - precoBaseOriginal) >= 0.001;
+  const agendamentoCheckout = useMemo(() => {
+    if (!agendamento) return agendamento;
+    return {
+      ...agendamento,
+      valorBaseAjustado: valorBaseAjustadoAtivo ? precoBaseCheckout : null,
+    };
+  }, [agendamento, precoBaseCheckout, valorBaseAjustadoAtivo]);
 
   const produtosFiltrados = useMemo(() => {
     const termo = produtosBusca.trim().toLowerCase();
@@ -815,6 +833,11 @@ function ModalDetalhesAgendamento({ agendamento: initialAgendamento, onClose, on
   }
 
   async function handleCheckout(forma) {
+    if (!pagamentoValorBaseValido) {
+      alert('Informe um valor valido para o servico antes de finalizar a cobranca.');
+      return;
+    }
+
     if (!caixaPagamentoStatus.aberto) {
       alert(caixaPagamentoStatus.mensagem || 'Abra o caixa antes de registrar pagamentos.');
       return;
@@ -825,10 +848,12 @@ function ModalDetalhesAgendamento({ agendamento: initialAgendamento, onClose, on
       const total = calculateTotal();
       const res = await updatePagamentoAgendamento(agendamento.id, { 
         pagamentos: [{ forma, valor: total }],
-        taxaOperadora: Number(pagamentoTaxa) || 0
+        taxaOperadora: Number(pagamentoTaxa) || 0,
+        valorBaseAjustado: valorBaseAjustadoAtivo ? precoBaseCheckout : null,
       });
       if (res?.data) {
         setAgendamento(res.data);
+        setPagamentoValorBase(String(getAgendamentoBasePrice(res.data)));
         onUpdate(res.data);
       }
       setConcluidoSucesso(true);
@@ -840,7 +865,7 @@ function ModalDetalhesAgendamento({ agendamento: initialAgendamento, onClose, on
   }
 
   const calculateTotal = () => {
-    return calculateAgendamentoTotal(agendamento);
+    return calculateAgendamentoTotal(agendamentoCheckout);
   };
 
   if (!agendamento) return null;
@@ -963,9 +988,21 @@ function ModalDetalhesAgendamento({ agendamento: initialAgendamento, onClose, on
                    <div className="absolute top-4 right-4 p-2 bg-[#E29BA8]/10 rounded-lg text-[#E29BA8]"><Scissors size={12} /></div>
                    <p className="text-[9px] font-black text-[#E29BA8] uppercase tracking-[0.3em] mb-2">Servico Agendado</p>
                    <p className="text-lg font-black text-gray-900 dark:text-white uppercase leading-tight">{getAgendamentoTitulo(agendamento)}</p>
+                   {hasAgendamentoAdjustedBasePrice(agendamento) && (
+                     <p className="mt-3 text-[10px] font-black uppercase tracking-[0.18em] text-bellapro-blush">
+                       Valor ajustado aplicado no checkout
+                     </p>
+                   )}
                    <div className="mt-4 pt-4 border-t border-gray-50 dark:border-white/5 flex items-center justify-between">
-                      <span className="text-[10px] font-bold text-gray-400 uppercase">Preco Unitario</span>
-                      <span className="font-black text-gray-900 dark:text-white">{Number(agendamento.servico?.preco || agendamento.pacote?.preco || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</span>
+                      <span className="text-[10px] font-bold text-gray-400 uppercase">Preco do servico</span>
+                      <div className="text-right">
+                        {hasAgendamentoAdjustedBasePrice(agendamento) && (
+                          <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-gray-400 line-through">
+                            {precoBaseOriginal.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
+                          </p>
+                        )}
+                        <span className="font-black text-gray-900 dark:text-white">{precoBaseAtual.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</span>
+                      </div>
                    </div>
                 </div>
 
@@ -1336,6 +1373,33 @@ function ModalDetalhesAgendamento({ agendamento: initialAgendamento, onClose, on
 
                            <div className="rounded-[2rem] border border-gray-100 dark:border-white/5 bg-gray-50 dark:bg-white/5 p-4 sm:p-6 space-y-4">
                              <div>
+                               <div className="mb-2 flex items-center justify-between gap-3">
+                                 <p className="text-[10px] font-black text-gray-400 uppercase tracking-[0.3em]">Valor do servico</p>
+                                 <button
+                                   type="button"
+                                   onClick={() => setPagamentoValorBase(String(precoBaseOriginal))}
+                                   className="text-[10px] font-black uppercase tracking-[0.18em] text-[#d48997] transition hover:text-[#b96a79]"
+                                 >
+                                   Restaurar original
+                                 </button>
+                               </div>
+                               <input
+                                 type="number"
+                                 value={pagamentoValorBase}
+                                 onChange={(e) => setPagamentoValorBase(e.target.value)}
+                                 min="0"
+                                 step="0.01"
+                                 className="w-full rounded-2xl border border-gray-200 dark:border-white/5 bg-white dark:bg-[#111113] px-5 py-4 text-sm font-black text-gray-900 dark:text-white outline-none"
+                               />
+                               <div className="mt-2 flex items-center justify-between gap-3 text-[10px] font-bold uppercase tracking-[0.16em]">
+                                 <span className="text-gray-400">Original {precoBaseOriginal.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</span>
+                                 {valorBaseAjustadoAtivo && (
+                                   <span className="text-bellapro-blush">Ajustado</span>
+                                 )}
+                               </div>
+                             </div>
+
+                             <div>
                                <p className="text-[10px] font-black text-gray-400 uppercase tracking-[0.3em] mb-2">Taxa da Maquininha</p>
                                <input
                                  type="number"
@@ -1355,7 +1419,7 @@ function ModalDetalhesAgendamento({ agendamento: initialAgendamento, onClose, on
                               <button
                                 type="button"
                                 onClick={() => handleCheckout(pagamentoForma)}
-                                disabled={!pagamentoForma || loading || agendamento.statusPagamento === 'pago' || !caixaPagamentoStatus.aberto}
+                                disabled={!pagamentoForma || loading || agendamento.statusPagamento === 'pago' || !caixaPagamentoStatus.aberto || !pagamentoValorBaseValido}
                                 className="w-full rounded-[2rem] bg-[#E29BA8] hover:bg-[#d48997] disabled:opacity-40 disabled:cursor-not-allowed text-white py-6 font-black uppercase tracking-[0.2em] text-xs shadow-xl shadow-[#E29BA8]/20 transition-all flex items-center justify-center gap-3 mt-4"
                               >
                                <CheckCircle2 size={18} /> {agendamento.statusPagamento === 'pago' ? 'Ja pago' : 'Finalizar cobranca'}

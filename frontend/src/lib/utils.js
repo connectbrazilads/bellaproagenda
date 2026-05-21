@@ -43,6 +43,28 @@ export function formatDurationLabel(totalMinutes = 0) {
   return `${rest}min`;
 }
 
+export function getAgendamentoOriginalBasePrice(agendamento) {
+  return Number(agendamento?.servico?.preco || agendamento?.pacote?.preco || 0);
+}
+
+export function getAgendamentoBasePrice(agendamento) {
+  const precoBaseOriginal = getAgendamentoOriginalBasePrice(agendamento);
+  const precoBaseAjustado = agendamento?.valorBaseAjustado;
+
+  if (precoBaseAjustado === null || precoBaseAjustado === undefined) {
+    return precoBaseOriginal;
+  }
+
+  const precoBaseAjustadoNumero = Number(precoBaseAjustado);
+  return Number.isFinite(precoBaseAjustadoNumero) ? precoBaseAjustadoNumero : precoBaseOriginal;
+}
+
+export function hasAgendamentoAdjustedBasePrice(agendamento) {
+  const precoBaseAjustado = agendamento?.valorBaseAjustado;
+  if (precoBaseAjustado === null || precoBaseAjustado === undefined) return false;
+  return Math.abs(getAgendamentoBasePrice(agendamento) - getAgendamentoOriginalBasePrice(agendamento)) >= 0.001;
+}
+
 export function getStartOfMonthInput(date = new Date()) {
   return formatDateInput(new Date(date.getFullYear(), date.getMonth(), 1));
 }
@@ -67,7 +89,7 @@ export function getAgendamentoItensExtras(agendamento) {
 }
 
 export function calculateAgendamentoTotal(agendamento) {
-  const precoBase = Number(agendamento?.servico?.preco || agendamento?.pacote?.preco || 0);
+  const precoBase = getAgendamentoBasePrice(agendamento);
   const precoItens = getAgendamentoItensExtras(agendamento).reduce((sum, item) => sum + Number(item.preco || 0), 0);
   const precoProdutos = agendamento?.produtos?.reduce((sum, produto) => {
     return sum + (Number(produto.preco || 0) * Number(produto.quantidade || 0));

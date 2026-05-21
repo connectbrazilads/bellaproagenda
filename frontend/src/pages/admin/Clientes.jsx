@@ -19,7 +19,7 @@ import {
   getClientes,
   getHistoricoCliente,
 } from '../../services/api';
-import { cn } from '../../lib/utils';
+import { calculateAgendamentoTotal, cn } from '../../lib/utils';
 import useElementWidth from '../../hooks/useElementWidth';
 
 const STATUS_MAP = {
@@ -633,7 +633,7 @@ export default function Clientes() {
                             </div>
                             <div className="shrink-0 text-right">
                               <p className="text-sm font-semibold text-[#2f2430] dark:text-[#faf7f6]">
-                                {moeda(agendamento.servico?.preco || agendamento.pacote?.preco || 0)}
+                                {moeda(calculateAgendamentoTotal(agendamento))}
                               </p>
                             </div>
                           </div>

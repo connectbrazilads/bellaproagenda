@@ -181,10 +181,17 @@ async function getSalao(req, res) {
     include: {
       servico: { select: { preco: true } },
       pacote: { select: { preco: true } },
+      itens: true,
+      produtos: true,
     },
   });
   const faturamentoTotal = agendamentosConcluidos.reduce(
-    (acc, item) => acc + (item.servico?.preco ?? item.pacote?.preco ?? 0),
+    (acc, item) => {
+      const precoBase = item.valorBaseAjustado ?? item.servico?.preco ?? item.pacote?.preco ?? 0;
+      const precoItens = (item.itens || []).reduce((sum, agendamentoItem) => sum + Number(agendamentoItem.preco || 0), 0);
+      const precoProdutos = (item.produtos || []).reduce((sum, produto) => sum + (Number(produto.preco || 0) * Number(produto.quantidade || 0)), 0);
+      return acc + precoBase + precoItens + precoProdutos;
+    },
     0
   );
 
