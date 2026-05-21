@@ -101,7 +101,6 @@ export default function Profissionais() {
   const isCompactPage = pageWidth < 1380;
   const showSummaryCard = pageWidth >= 1480;
   const showThreeCards = pageWidth >= 1520;
-  const useWideEditorLayout = pageWidth >= 1380;
 
   useEffect(() => {
     loadData();
@@ -474,7 +473,7 @@ export default function Profissionais() {
 
       {modalOpen && (
         <div className="fixed inset-0 z-[120] flex items-center justify-center overflow-y-auto overscroll-contain bg-black/82 p-3 backdrop-blur-md sm:p-4">
-          <div className={cn('flex max-h-[calc(100dvh-1.5rem)] w-full max-w-6xl flex-col overflow-hidden rounded-[2.6rem] border border-gray-200 dark:border-white/5 bg-white dark:bg-[#1a171f]', useWideEditorLayout && 'lg:flex-row')}>
+          <div className="flex max-h-[calc(100dvh-1.5rem)] w-full max-w-6xl flex-col overflow-hidden rounded-[2.6rem] border border-gray-200 dark:border-white/5 bg-white dark:bg-[#1a171f] lg:flex-row">
             <aside className="w-full border-b border-gray-200 dark:border-white/5 bg-gray-50 dark:bg-[#16141a] p-4 sm:p-6 lg:w-80 lg:border-b-0 lg:border-r">
               <div className="mb-8 flex items-start justify-between gap-4">
                 <div>
@@ -491,7 +490,7 @@ export default function Profissionais() {
                 </button>
               </div>
 
-              <div className={cn('flex gap-2 overflow-x-auto pb-2', useWideEditorLayout && 'lg:block lg:space-y-2 lg:overflow-visible')}>
+              <div className="flex gap-2 overflow-x-auto pb-2 lg:block lg:space-y-2 lg:overflow-visible">
                 {TABS.map((tab) => {
                   const Icon = tab.icon;
                   const active = activeTab === tab.id;
@@ -517,7 +516,7 @@ export default function Profissionais() {
               </div>
             </aside>
 
-            <div className="min-h-0 flex-1 overflow-y-auto p-4 custom-scrollbar sm:p-6 md:p-8">
+            <div className="min-h-0 min-w-0 flex-1 overflow-y-auto p-4 custom-scrollbar sm:p-6 md:p-8">
               <form onSubmit={handleSubmit} className="space-y-8">
                 {activeTab === 'geral' && (
                   <div className="space-y-8">
@@ -526,7 +525,7 @@ export default function Profissionais() {
                       <Field label="Biografia ou especialidade" value={form.bio} onChange={(value) => setForm((prev) => ({ ...prev, bio: value }))} />
                     </div>
 
-                    <div className={cn('grid gap-4 sm:p-6', useWideEditorLayout && 'lg:grid-cols-[minmax(0,1fr)_320px]')}>
+                    <div className="grid gap-4 sm:p-6 lg:grid-cols-[minmax(0,1fr)_320px]">
                       <div className="rounded-[2rem] border border-gray-200 dark:border-white/5 bg-white dark:bg-[#1a171f] p-4 sm:p-6">
                         <p className="text-[10px] font-black uppercase tracking-[0.22em] text-[#efbac2]">Categorias profissionais</p>
                         <h3 className="mt-3 text-3xl font-brand-display text-gray-900 dark:text-white">Defina como esta pessoa aparece no salÃ£o</h3>
