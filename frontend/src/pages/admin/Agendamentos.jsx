@@ -19,15 +19,18 @@ import {
   deleteAgendamento,
   getAgendamentos,
   getCaixaStatusPagamento,
+  reabrirComandaAgendamento,
   updatePagamentoAgendamento,
   updateStatusAgendamento,
 } from '../../services/api';
 import {
   calculateAgendamentoDuration,
+  calculateGroupedAgendamentosTotal,
   calculateAgendamentoTotal,
   cn,
   formatDateBR,
   formatDurationLabel,
+  getAgendamentosMesmoClienteNoDia,
   getAgendamentoBasePrice,
   getAgendamentoOriginalBasePrice,
   hasAgendamentoAdjustedBasePrice,
@@ -126,13 +129,31 @@ export default function Agendamentos() {
   }
 
   function openPagamento(agendamento) {
-    const total = calcTotal(agendamento);
+    const grupo = getAgendamentosMesmoClienteNoDia(agendamentos, agendamento).filter((item) => item.statusPagamento !== 'pago');
+    const total = grupo.length ? calculateGroupedAgendamentosTotal(grupo) : calcTotal(agendamento);
     loadCaixaPagamentoStatus();
     setPagamentoModal(agendamento);
     setPagamentos([{ forma: 'PIX', valor: total.toFixed(2) }]);
     setValorBaseAjustado(getAgendamentoBasePrice(agendamento).toFixed(2));
     setTaxaOperadora('0');
     setValorRecebido('');
+  }
+
+  async function handleReabrir(agendamento) {
+    const grupo = getAgendamentosMesmoClienteNoDia(agendamentos, agendamento).filter(
+      (item) => item.statusPagamento === 'pago' || (item.pagamentos || []).length > 0 || item.status === 'concluido'
+    );
+
+    if (!window.confirm('Deseja reabrir esta comanda para ajustes?')) return;
+
+    try {
+      await reabrirComandaAgendamento(agendamento.id, {
+        agendamentoIds: (grupo.length ? grupo : [agendamento]).map((item) => item.id),
+      });
+      await loadAgendamentos();
+    } catch (error) {
+      window.alert(error?.response?.data?.error || 'Nao foi possivel reabrir a comanda.');
+    }
   }
 
   function updatePagamento(index, field, value) {
@@ -167,6 +188,7 @@ export default function Agendamentos() {
         taxaOperadora: Number(taxaOperadora || 0),
         valorBaseAjustado: valorBaseAjustadoAtivo ? valorBaseAjustadoNumero : null,
         valorRecebido: Number(valorRecebido || 0),
+        agendamentoIds: (pagamentoModalGrupo.length ? pagamentoModalGrupo : [pagamentoModal]).map((item) => item.id),
       });
 
       setPagamentoModal(null);
@@ -183,7 +205,17 @@ export default function Agendamentos() {
   const pagamentoModalPreview = pagamentoModal
     ? { ...pagamentoModal, valorBaseAjustado: valorBaseAjustadoAtivo ? valorBaseAjustadoNumero : null }
     : null;
-  const totalDevido = pagamentoModalPreview ? calcTotal(pagamentoModalPreview) : 0;
+  const pagamentoModalGrupo = pagamentoModal
+    ? getAgendamentosMesmoClienteNoDia(agendamentos, pagamentoModal).filter((item) => item.statusPagamento !== 'pago')
+    : [];
+  const totalDevido = pagamentoModalPreview
+    ? (pagamentoModalGrupo.length
+      ? pagamentoModalGrupo.reduce((sum, item) => {
+          if (item.id === pagamentoModalPreview.id) return sum + calcTotal(pagamentoModalPreview);
+          return sum + calcTotal(item);
+        }, 0)
+      : calcTotal(pagamentoModalPreview))
+    : 0;
   const totalPago = pagamentos.reduce((sum, item) => sum + Number(item.valor || 0), 0);
   const troco = pagamentos.some((item) => item.forma === 'Dinheiro')
     ? Math.max(0, Number(valorRecebido || 0) - totalDevido)
@@ -321,6 +353,9 @@ export default function Agendamentos() {
                       disabled={!caixaPagamentoStatus.aberto}
                     />
                   )}
+                  {agendamento.statusPagamento === 'pago' && (
+                    <ActionButton variant="secondary" onClick={() => handleReabrir(agendamento)} label="Reabrir comanda" />
+                  )}
                   <ActionButton variant="danger" onClick={() => handleDelete(agendamento.id)} label="Excluir" icon={<Trash2 size={13} />} />
                 </div>
               </article>
@@ -348,6 +383,25 @@ export default function Agendamentos() {
                 <ResumoItem label="Lançado" value={totalPago} />
                 <ResumoItem label="Troco" value={troco} />
               </div>
+
+              {pagamentoModalGrupo.length > 1 && (
+                <div className="mt-6 rounded-[1.5rem] border border-gray-200 dark:border-white/5 bg-white/[0.03] p-4">
+                  <p className="text-[10px] font-black uppercase tracking-[0.18em] text-gray-500 dark:text-white/40">Procedimentos agrupados no dia</p>
+                  <div className="mt-4 space-y-3">
+                    {pagamentoModalGrupo.map((item) => (
+                      <div key={item.id} className="flex items-center justify-between gap-3 rounded-[1rem] bg-white/[0.03] px-4 py-3">
+                        <div>
+                          <p className="text-sm font-semibold text-gray-900 dark:text-white">{item.inicioHora} · {item.servico?.nome || item.pacote?.nome || 'Servico'}</p>
+                          <p className="mt-1 text-[10px] uppercase tracking-[0.18em] text-gray-500 dark:text-white/40">{item.profissional?.nome || 'Equipe'}</p>
+                        </div>
+                        <p className="text-sm font-semibold text-gray-900 dark:text-white">
+                          {calcTotal(item).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
+                        </p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
 
               <div className="mt-6 grid gap-4 md:grid-cols-2">
                 <InputMoney label="Valor do servico" value={valorBaseAjustado} onChange={setValorBaseAjustado} />

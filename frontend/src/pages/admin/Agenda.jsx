@@ -41,18 +41,21 @@ import {
 } from 'lucide-react';
 import { 
   getProfissionais, getAgendamentos, getServicos, getPacotes, getProdutos,
-  criarAgendamentoAdmin, updateStatusAgendamento, deleteAgendamento, 
+  criarAgendamentoAdmin, updateAgendamentoAdmin, updateStatusAgendamento, deleteAgendamento, 
   buscarClientes, addItemAgendamento, removeItemAgendamento, addProdutoAgendamento, removeProdutoAgendamento, updatePagamentoAgendamento, updateObservacaoAgendamento,
-  createBloqueio, getListaEspera, createListaEspera, deleteListaEspera, reagendarAgendamento, getCaixaStatusPagamento, reorderProfissionais
+  createBloqueio, getListaEspera, createListaEspera, deleteListaEspera, reagendarAgendamento, getCaixaStatusPagamento, reorderProfissionais,
+  reabrirComandaAgendamento
 } from '../../services/api';
 import {
   addDays,
   calculateAgendamentoDuration,
+  calculateGroupedAgendamentosTotal,
   calculateAgendamentoTotal,
   cn,
   formatDateBR,
   formatDateInput,
   formatDurationLabel,
+  getAgendamentosMesmoClienteNoDia,
   getAgendamentoBasePrice,
   getAgendamentoItensExtras,
   getAgendamentoOriginalBasePrice,
@@ -702,7 +705,125 @@ function ModalNovoAgendamento({ onClose, onSave, preData, preHora, preProf, pref
   );
 }
 
-function ModalDetalhesAgendamento({ agendamento: initialAgendamento, onClose, onUpdate, onReagendar }) {
+function ModalAjusteAgendamento({ agendamento, profissionais, onClose, onSave }) {
+  const [form, setForm] = useState({
+    data: String(agendamento?.data || '').slice(0, 10),
+    hora: agendamento?.inicioHora || '',
+    profissionalId: agendamento?.profissionalId || '',
+  });
+  const [saving, setSaving] = useState(false);
+
+  async function salvar(event) {
+    event.preventDefault();
+    if (!form.data || !form.hora || !form.profissionalId) {
+      window.alert('Informe dia, horario e profissional para ajustar o agendamento.');
+      return;
+    }
+
+    setSaving(true);
+    try {
+      await onSave(form);
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  return (
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      className="fixed inset-0 bg-black/80 backdrop-blur-2xl z-[210] flex items-center justify-center overflow-y-auto overscroll-contain p-3 sm:p-4"
+    >
+      <motion.form
+        initial={{ scale: 0.96, y: 24, opacity: 0 }}
+        animate={{ scale: 1, y: 0, opacity: 1 }}
+        exit={{ scale: 0.96, y: 24, opacity: 0 }}
+        onSubmit={salvar}
+        className="relative w-full max-w-xl rounded-[2.4rem] border border-gray-200 dark:border-white/5 bg-white dark:bg-[#0c0c0e] p-5 shadow-[0_40px_90px_-40px_rgba(0,0,0,0.92)] sm:p-8"
+      >
+        <button
+          type="button"
+          onClick={onClose}
+          className="absolute right-5 top-5 rounded-full border border-gray-200 dark:border-white/5 p-2 text-[#8a7079] transition hover:text-[#3b2a35] dark:text-[#c7adb4] dark:hover:text-[#faf7f6]"
+        >
+          <X size={16} />
+        </button>
+
+        <div className="mb-8">
+          <p className="text-[10px] font-black uppercase tracking-[0.3em] text-[#E29BA8]">Ajuste rapido</p>
+          <h2 className="mt-3 text-3xl font-black uppercase tracking-tight text-gray-900 dark:text-white">Editar agenda</h2>
+          <p className="mt-3 text-sm text-gray-500 dark:text-gray-400">
+            {agendamento?.clienteNome} · {getAgendamentoTitulo(agendamento)}
+          </p>
+        </div>
+
+        <div className="grid gap-4 sm:grid-cols-2">
+          <label className="space-y-3">
+            <span className="text-[10px] font-black uppercase tracking-[0.28em] text-gray-500">Dia</span>
+            <input
+              type="date"
+              value={form.data}
+              onChange={(event) => setForm((prev) => ({ ...prev, data: event.target.value }))}
+              className="h-14 w-full rounded-[1.5rem] border border-gray-200 dark:border-white/5 bg-white dark:bg-[#111113] px-5 text-sm font-black text-gray-900 dark:text-white outline-none"
+            />
+          </label>
+
+          <label className="space-y-3">
+            <span className="text-[10px] font-black uppercase tracking-[0.28em] text-gray-500">Horario</span>
+            <select
+              value={form.hora}
+              onChange={(event) => setForm((prev) => ({ ...prev, hora: event.target.value }))}
+              className="h-14 w-full rounded-[1.5rem] border border-gray-200 dark:border-white/5 bg-white dark:bg-[#111113] px-5 text-sm font-black text-gray-900 dark:text-white outline-none"
+            >
+              <option value="">Selecione...</option>
+              {Array.from({ length: (END_HOUR - START_HOUR) * 4 + 1 }, (_, i) => {
+                const totalMin = START_HOUR * 60 + i * 15;
+                const h = String(Math.floor(totalMin / 60)).padStart(2, '0');
+                const m = String(totalMin % 60).padStart(2, '0');
+                const time = `${h}:${m}`;
+                return <option key={time} value={time}>{time}</option>;
+              })}
+            </select>
+          </label>
+        </div>
+
+        <label className="mt-5 block space-y-3">
+          <span className="text-[10px] font-black uppercase tracking-[0.28em] text-gray-500">Profissional</span>
+          <select
+            value={form.profissionalId}
+            onChange={(event) => setForm((prev) => ({ ...prev, profissionalId: event.target.value }))}
+            className="h-14 w-full rounded-[1.5rem] border border-gray-200 dark:border-white/5 bg-white dark:bg-[#111113] px-5 text-sm font-black text-gray-900 dark:text-white outline-none"
+          >
+            <option value="">Selecione...</option>
+            {(profissionais || []).map((profissional) => (
+              <option key={profissional.id} value={profissional.id}>{profissional.nome}</option>
+            ))}
+          </select>
+        </label>
+
+        <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:justify-end">
+          <button
+            type="button"
+            onClick={onClose}
+            className="inline-flex min-h-[50px] items-center justify-center rounded-full border border-gray-200 px-6 text-[11px] font-black uppercase tracking-[0.18em] text-[#8a7079] transition hover:border-[rgba(233,155,168,0.18)] hover:text-[#3b2a35] dark:border-white/5 dark:text-[#c7adb4] dark:hover:text-[#faf7f6]"
+          >
+            Cancelar
+          </button>
+          <button
+            type="submit"
+            disabled={saving}
+            className="inline-flex min-h-[50px] items-center justify-center rounded-full bg-[#E29BA8] px-6 text-[11px] font-black uppercase tracking-[0.18em] text-white transition hover:bg-[#d48997] disabled:opacity-60"
+          >
+            {saving ? 'Salvando...' : 'Salvar ajuste'}
+          </button>
+        </div>
+      </motion.form>
+    </motion.div>
+  );
+}
+
+function ModalDetalhesAgendamento({ agendamento: initialAgendamento, allAgendamentos = [], onClose, onUpdate, onReagendar, onAjustar }) {
   const [agendamento, setAgendamento] = useState(initialAgendamento);
   const [servicos, setServicos] = useState([]);
   const [produtos, setProdutos] = useState([]);
@@ -775,6 +896,29 @@ function ModalDetalhesAgendamento({ agendamento: initialAgendamento, onClose, on
     return (produtos || []).filter((p) => !termo || p.nome?.toLowerCase().includes(termo));
   }, [produtos, produtosBusca]);
 
+  const agendamentosMesmoClienteNoDia = useMemo(
+    () => getAgendamentosMesmoClienteNoDia(allAgendamentos, agendamento, { excluirCancelados: true }),
+    [allAgendamentos, agendamento]
+  );
+
+  const grupoComandaPendente = useMemo(
+    () => agendamentosMesmoClienteNoDia.filter((item) => item.statusPagamento !== 'pago'),
+    [agendamentosMesmoClienteNoDia]
+  );
+
+  const grupoComandaPago = useMemo(
+    () => agendamentosMesmoClienteNoDia.filter((item) => item.statusPagamento === 'pago' || (item.pagamentos || []).length > 0 || item.status === 'concluido'),
+    [agendamentosMesmoClienteNoDia]
+  );
+
+  const totalGrupoComanda = useMemo(() => {
+    if (grupoComandaPendente.length === 0) return calculateAgendamentoTotal(agendamentoCheckout);
+    return grupoComandaPendente.reduce((sum, item) => {
+      if (item.id === agendamentoCheckout?.id) return sum + calculateAgendamentoTotal(agendamentoCheckout);
+      return sum + calculateAgendamentoTotal(item);
+    }, 0);
+  }, [agendamentoCheckout, grupoComandaPendente]);
+
   async function handleSalvarObservacao() {
     if (!agendamento?.id) return;
     setSavingObservacao(true);
@@ -845,11 +989,12 @@ function ModalDetalhesAgendamento({ agendamento: initialAgendamento, onClose, on
 
     setLoading(true);
     try {
-      const total = calculateTotal();
+      const total = totalGrupoComanda;
       const res = await updatePagamentoAgendamento(agendamento.id, { 
         pagamentos: [{ forma, valor: total }],
         taxaOperadora: Number(pagamentoTaxa) || 0,
         valorBaseAjustado: valorBaseAjustadoAtivo ? precoBaseCheckout : null,
+        agendamentoIds: (grupoComandaPendente.length ? grupoComandaPendente : [agendamento]).map((item) => item.id),
       });
       if (res?.data) {
         setAgendamento(res.data);
@@ -864,8 +1009,29 @@ function ModalDetalhesAgendamento({ agendamento: initialAgendamento, onClose, on
     }
   }
 
+  async function handleReabrirComanda() {
+    const ids = (grupoComandaPago.length ? grupoComandaPago : [agendamento]).map((item) => item.id);
+    if (!window.confirm('Deseja reabrir esta comanda para ajustes?')) return;
+
+    setLoading(true);
+    try {
+      const res = await reabrirComandaAgendamento(agendamento.id, { agendamentoIds: ids });
+      if (res?.data) {
+        setAgendamento(res.data);
+        setPagamentoValorBase(String(getAgendamentoBasePrice(res.data)));
+        setConcluidoSucesso(false);
+        setTab('comanda');
+        onUpdate?.();
+      }
+    } catch (error) {
+      alert(error.response?.data?.error || 'Nao foi possivel reabrir a comanda.');
+    } finally {
+      setLoading(false);
+    }
+  }
+
   const calculateTotal = () => {
-    return calculateAgendamentoTotal(agendamentoCheckout);
+    return totalGrupoComanda;
   };
 
   if (!agendamento) return null;
@@ -961,10 +1127,26 @@ function ModalDetalhesAgendamento({ agendamento: initialAgendamento, onClose, on
               )}
               {agendamento.status !== 'cancelado' && (
                 <button
+                  onClick={() => onAjustar?.(agendamento)}
+                  className="px-4 py-2.5 rounded-xl bg-white text-[#3b2a35] text-[9px] font-black uppercase tracking-widest hover:bg-gray-100 transition-all shadow-lg dark:bg-white/10 dark:text-white"
+                >
+                  Ajustar
+                </button>
+              )}
+              {agendamento.status !== 'cancelado' && (
+                <button
                   onClick={() => onReagendar?.(agendamento)}
                   className="px-4 py-2.5 rounded-xl bg-slate-900 text-gray-900 dark:text-white text-[9px] font-black uppercase tracking-widest hover:bg-slate-700 transition-all shadow-lg"
                 >
                   Reagendar
+                </button>
+              )}
+              {agendamento.statusPagamento === 'pago' && (
+                <button
+                  onClick={handleReabrirComanda}
+                  className="px-4 py-2.5 rounded-xl bg-amber-500 text-gray-950 text-[9px] font-black uppercase tracking-widest hover:bg-amber-400 transition-all shadow-lg shadow-amber-500/20"
+                >
+                  Reabrir Comanda
                 </button>
               )}
               <button 
@@ -1015,6 +1197,39 @@ function ModalDetalhesAgendamento({ agendamento: initialAgendamento, onClose, on
                     {agendamento.observacao?.trim() || 'Nenhuma observacao registrada para este atendimento.'}
                   </p>
                 </div>
+
+                {agendamentosMesmoClienteNoDia.length > 1 && (
+                  <div className="bg-white dark:bg-white/5 p-4 md:p-6 rounded-[2rem] border border-gray-100 dark:border-white/5">
+                    <div className="flex items-center justify-between gap-3">
+                      <div>
+                        <p className="text-[9px] font-black text-[#E29BA8] uppercase tracking-[0.3em]">Comanda agrupada</p>
+                        <h4 className="mt-2 text-lg font-black text-gray-900 dark:text-white uppercase">
+                          {agendamentosMesmoClienteNoDia.length} procedimentos no dia
+                        </h4>
+                      </div>
+                      <p className="text-sm font-black text-[#d48997]">
+                        {calculateGroupedAgendamentosTotal(agendamentosMesmoClienteNoDia).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
+                      </p>
+                    </div>
+                    <div className="mt-4 space-y-2">
+                      {agendamentosMesmoClienteNoDia.map((item) => (
+                        <div key={item.id} className="flex items-center justify-between gap-3 rounded-[1.25rem] bg-gray-50 dark:bg-white/[0.04] px-4 py-3">
+                          <div>
+                            <p className="text-[11px] font-black uppercase tracking-[0.16em] text-gray-900 dark:text-white">
+                              {item.inicioHora} · {getAgendamentoTitulo(item)}
+                            </p>
+                            <p className="mt-1 text-[10px] font-bold uppercase tracking-[0.16em] text-gray-400">
+                              {item.profissional?.nome || 'Equipe'} · {item.statusPagamento === 'pago' ? 'Pago' : 'Pendente'}
+                            </p>
+                          </div>
+                          <p className="text-sm font-black text-gray-900 dark:text-white">
+                            {calculateAgendamentoTotal(item).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
+                          </p>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
 
                 {itensExtras.length > 0 && (
                   <div className="space-y-4">
@@ -1571,6 +1786,7 @@ export default function Agenda() {
   const [modalNovo, setModalNovo] = useState(false);
   const [prefillAgendaData, setPrefillAgendaData] = useState(null);
   const [modalDetalhes, setModalDetalhes] = useState(false);
+  const [modalAjuste, setModalAjuste] = useState(null);
   const [modalBloqueioPeriodo, setModalBloqueioPeriodo] = useState(null);
   const [agendamentoSelecionado, setAgendamentoSelecionado] = useState(null);
   const [pendingAgendamentoId, setPendingAgendamentoId] = useState('');
@@ -1878,9 +2094,26 @@ export default function Agenda() {
             onClose={() => setModalBloqueioPeriodo(null)}
           />
         )}
+        {modalAjuste && (
+          <ModalAjusteAgendamento
+            agendamento={modalAjuste}
+            profissionais={profissionais}
+            onClose={() => setModalAjuste(null)}
+            onSave={async (form) => {
+              try {
+                await updateAgendamentoAdmin(modalAjuste.id, form);
+                setModalAjuste(null);
+                await carregar();
+              } catch (error) {
+                window.alert(error?.response?.data?.error || 'Nao foi possivel ajustar o agendamento.');
+              }
+            }}
+          />
+        )}
         {modalDetalhes && agendamentoSelecionado && (
           <ModalDetalhesAgendamento 
             agendamento={agendamentoSelecionado} 
+            allAgendamentos={agendamentos}
             onUpdate={(updatedAgendamento) => {
               if (updatedAgendamento?.id) {
                 setAgendamentos((prev) => prev.map((item) => item.id === updatedAgendamento.id ? updatedAgendamento : item));
@@ -1899,6 +2132,10 @@ export default function Agenda() {
               setModalDetalhes(false);
               setAgendamentoSelecionado(null);
               setModalNovo(true);
+            }}
+            onAjustar={(agendamento) => {
+              setModalDetalhes(false);
+              setModalAjuste(agendamento);
             }}
             onClose={() => { setModalDetalhes(false); setAgendamentoSelecionado(null); }} 
           />

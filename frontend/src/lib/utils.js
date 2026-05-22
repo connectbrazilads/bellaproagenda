@@ -88,6 +88,40 @@ export function getAgendamentoItensExtras(agendamento) {
   return (agendamento?.itens || []).filter((item) => !isAgendamentoItemDuplicadoBase(agendamento, item));
 }
 
+export function normalizePhone(value = '') {
+  return String(value || '').replace(/\D/g, '');
+}
+
+export function isSameClientDayAgendamento(base, candidate) {
+  if (!base || !candidate) return false;
+
+  const baseDate = String(base.data || '').slice(0, 10);
+  const candidateDate = String(candidate.data || '').slice(0, 10);
+  if (!baseDate || baseDate !== candidateDate) return false;
+
+  if (base.clienteId && candidate.clienteId) {
+    return base.clienteId === candidate.clienteId;
+  }
+
+  const basePhone = normalizePhone(base.clienteTelefone);
+  const candidatePhone = normalizePhone(candidate.clienteTelefone);
+  if (basePhone && candidatePhone) {
+    return basePhone === candidatePhone
+      || basePhone.endsWith(candidatePhone)
+      || candidatePhone.endsWith(basePhone);
+  }
+
+  return String(base.clienteNome || '').trim().toLowerCase() === String(candidate.clienteNome || '').trim().toLowerCase();
+}
+
+export function getAgendamentosMesmoClienteNoDia(agendamentos = [], base, options = {}) {
+  const { excluirCancelados = true } = options;
+  return (agendamentos || []).filter((item) => {
+    if (excluirCancelados && item?.status === 'cancelado') return false;
+    return isSameClientDayAgendamento(base, item);
+  });
+}
+
 export function calculateAgendamentoTotal(agendamento) {
   const precoBase = getAgendamentoBasePrice(agendamento);
   const precoItens = getAgendamentoItensExtras(agendamento).reduce((sum, item) => sum + Number(item.preco || 0), 0);
@@ -101,6 +135,10 @@ export function calculateAgendamentoDuration(agendamento) {
   const duracaoBase = Number(agendamento?.servico?.duracaoMin || agendamento?.pacote?.duracaoMin || 0);
   const duracaoItens = getAgendamentoItensExtras(agendamento).reduce((sum, item) => sum + Number(item.duracaoMin || 0), 0);
   return duracaoBase + duracaoItens;
+}
+
+export function calculateGroupedAgendamentosTotal(agendamentos = []) {
+  return (agendamentos || []).reduce((sum, item) => sum + calculateAgendamentoTotal(item), 0);
 }
 
 export function downloadCsv(filename, rows) {

@@ -111,6 +111,49 @@ function horaParaMinutos(hora) {
   return h * 60 + m;
 }
 
+function normalizarTelefone(valor = '') {
+  return String(valor || '').replace(/\D/g, '');
+}
+
+function getDateBounds(dateLike) {
+  const base = new Date(dateLike);
+  const inicio = new Date(base);
+  const fim = new Date(base);
+  inicio.setHours(0, 0, 0, 0);
+  fim.setHours(23, 59, 59, 999);
+  return { inicio, fim };
+}
+
+function isSameCalendarDay(a, b) {
+  return new Date(a).toISOString().slice(0, 10) === new Date(b).toISOString().slice(0, 10);
+}
+
+function isSameClientRecord(base, candidate) {
+  if (!base || !candidate) return false;
+
+  if (base.clienteId && candidate.clienteId) {
+    return base.clienteId === candidate.clienteId;
+  }
+
+  const telefoneBase = normalizarTelefone(base.clienteTelefone);
+  const telefoneCandidato = normalizarTelefone(candidate.clienteTelefone);
+
+  if (telefoneBase && telefoneCandidato) {
+    return telefoneBase === telefoneCandidato
+      || telefoneBase.endsWith(telefoneCandidato)
+      || telefoneCandidato.endsWith(telefoneBase);
+  }
+
+  return String(base.clienteNome || '').trim().toLowerCase() === String(candidate.clienteNome || '').trim().toLowerCase();
+}
+
+function calcularFimHora(inicioHora, duracaoMin) {
+  const inicioMin = horaParaMinutos(inicioHora);
+  if (inicioMin === null) return null;
+  const totalMin = inicioMin + Number(duracaoMin || 0);
+  return `${String(Math.floor(totalMin / 60)).padStart(2, '0')}:${String(totalMin % 60).padStart(2, '0')}`;
+}
+
 async function getAllowedServicoIds(req) {
   if (!isScopedProfessional(req)) return null;
 
@@ -202,6 +245,83 @@ async function getScopedAgendamento(req, id, include) {
     },
     include,
   });
+}
+
+async function getAgendamentosMesmoClienteNoDia(req, agendamento, include) {
+  if (!agendamento?.data) return [];
+
+  const { inicio, fim } = getDateBounds(agendamento.data);
+  const candidatos = await prisma.agendamento.findMany({
+    where: {
+      salaoId: req.user.salaoId,
+      ...professionalScopeFilter(req),
+      status: { not: 'cancelado' },
+      data: { gte: inicio, lte: fim },
+    },
+    include,
+    orderBy: [{ inicioHora: 'asc' }, { createdAt: 'asc' }],
+  });
+
+  return candidatos.filter((item) => isSameClientRecord(agendamento, item));
+}
+
+async function validarDisponibilidadeAgendamento({
+  salaoId,
+  profissionalId,
+  data,
+  inicioHora,
+  fimHora,
+  ignoreAgendamentoId,
+}) {
+  const { inicio, fim } = getDateBounds(data);
+  const [agendamentos, bloqueios] = await Promise.all([
+    prisma.agendamento.findMany({
+      where: {
+        salaoId,
+        profissionalId,
+        status: { not: 'cancelado' },
+        data: { gte: inicio, lte: fim },
+        ...(ignoreAgendamentoId ? { id: { not: ignoreAgendamentoId } } : {}),
+      },
+      select: { id: true, inicioHora: true, fimHora: true, clienteNome: true },
+    }),
+    prisma.bloqueio.findMany({
+      where: {
+        profissionalId,
+        data: { gte: inicio, lte: fim },
+      },
+      select: { id: true, inicioHora: true, fimHora: true, motivo: true },
+    }),
+  ]);
+
+  const inicioMin = horaParaMinutos(inicioHora);
+  const fimMin = horaParaMinutos(fimHora);
+  if (inicioMin === null || fimMin === null || fimMin <= inicioMin) {
+    return 'Horario invalido para este agendamento.';
+  }
+
+  const temConflitoAgenda = agendamentos.some((item) => {
+    const itemInicio = horaParaMinutos(item.inicioHora);
+    const itemFim = horaParaMinutos(item.fimHora);
+    return inicioMin < itemFim && fimMin > itemInicio;
+  });
+
+  if (temConflitoAgenda) {
+    return 'Ja existe outro agendamento neste horario para o profissional selecionado.';
+  }
+
+  const temBloqueio = bloqueios.some((item) => {
+    if (!item.inicioHora || !item.fimHora) return true;
+    const bloqueioInicio = horaParaMinutos(item.inicioHora);
+    const bloqueioFim = horaParaMinutos(item.fimHora);
+    return inicioMin < bloqueioFim && fimMin > bloqueioInicio;
+  });
+
+  if (temBloqueio) {
+    return 'Existe um bloqueio na agenda do profissional para este periodo.';
+  }
+
+  return null;
 }
 
 async function buildCaixaResumo({ salaoId, inicio, fim, profissionalId }) {
@@ -396,6 +516,135 @@ async function aplicarConsumoEstoqueDoServico(agendamento) {
     where: { id: agendamento.id },
     data: { estoqueConsumido: true },
   });
+}
+
+async function reverterConsumoEstoqueDoServico(agendamento) {
+  if (!agendamento || !agendamento.estoqueConsumido) return;
+
+  const ocorrenciasServico = {};
+  if (agendamento.servicoId) {
+    ocorrenciasServico[agendamento.servicoId] = (ocorrenciasServico[agendamento.servicoId] || 0) + 1;
+  }
+  for (const item of getAgendamentoItensExtras(agendamento)) {
+    if (!item.servicoId) continue;
+    ocorrenciasServico[item.servicoId] = (ocorrenciasServico[item.servicoId] || 0) + 1;
+  }
+
+  const servicoIds = Object.keys(ocorrenciasServico);
+  if (servicoIds.length > 0) {
+    const consumos = await prisma.servicoProdutoConsumo.findMany({
+      where: { servicoId: { in: servicoIds } },
+    });
+
+    const totaisPorProduto = {};
+    for (const consumo of consumos) {
+      const multiplicador = ocorrenciasServico[consumo.servicoId] || 0;
+      if (!multiplicador) continue;
+      totaisPorProduto[consumo.produtoId] = (totaisPorProduto[consumo.produtoId] || 0) + (Number(consumo.quantidade || 0) * multiplicador);
+    }
+
+    for (const [produtoId, quantidadeRaw] of Object.entries(totaisPorProduto)) {
+      const quantidade = Math.max(0, Math.round(quantidadeRaw || 0));
+      if (!quantidade) continue;
+
+      await prisma.produto.updateMany({
+        where: { id: produtoId },
+        data: {
+          estoque: { increment: quantidade },
+        },
+      });
+    }
+  }
+
+  await prisma.agendamento.update({
+    where: { id: agendamento.id },
+    data: { estoqueConsumido: false },
+  });
+}
+
+async function recomputarUltimaVisitaCliente(clienteId) {
+  if (!clienteId) return;
+
+  const ultimoAgendamentoConcluido = await prisma.agendamento.findFirst({
+    where: {
+      clienteId,
+      status: 'concluido',
+    },
+    orderBy: [{ data: 'desc' }, { createdAt: 'desc' }],
+    select: { data: true },
+  });
+
+  await prisma.cliente.update({
+    where: { id: clienteId },
+    data: {
+      lastVisit: ultimoAgendamentoConcluido?.data || null,
+    },
+  });
+}
+
+async function reverterConclusaoAgendamento(agendamento, salao) {
+  if (!agendamento || agendamento.status !== 'concluido') return;
+
+  const totalAg = calcularTotalAgendamento(agendamento);
+  let fidelidadeGanho = 0;
+
+  if (salao?.fidelidadeAtiva && salao.fidelidadeRegra && agendamento.clienteId) {
+    const regra = parseFloat(salao.fidelidadeRegra) || 0;
+    fidelidadeGanho = salao.fidelidadeTipo === 'pontos'
+      ? Math.floor(totalAg * regra)
+      : (totalAg * regra) / 100;
+  }
+
+  if (agendamento.clienteId) {
+    const clienteAtual = await prisma.cliente.findUnique({
+      where: { id: agendamento.clienteId },
+      select: {
+        totalVisitas: true,
+        totalGasto: true,
+        cashbackSaldo: true,
+        pontosSaldo: true,
+      },
+    });
+
+    if (!clienteAtual) return;
+
+    await prisma.cliente.update({
+      where: { id: agendamento.clienteId },
+      data: {
+        totalVisitas: Math.max(0, Number(clienteAtual.totalVisitas || 0) - 1),
+        totalGasto: Math.max(0, Number(clienteAtual.totalGasto || 0) - totalAg),
+        cashbackSaldo: salao?.fidelidadeTipo === 'cashback'
+          ? Math.max(0, Number(clienteAtual.cashbackSaldo || 0) - fidelidadeGanho)
+          : undefined,
+        pontosSaldo: salao?.fidelidadeTipo === 'pontos'
+          ? Math.max(0, Number(clienteAtual.pontosSaldo || 0) - fidelidadeGanho)
+          : undefined,
+      },
+    });
+
+    await recomputarUltimaVisitaCliente(agendamento.clienteId);
+  }
+
+  if (agendamento.pacoteId && agendamento.clienteId) {
+    const pacoteCliente = await prisma.clientePacote.findFirst({
+      where: {
+        clienteId: agendamento.clienteId,
+        pacoteId: agendamento.pacoteId,
+      },
+      orderBy: [{ dataCompra: 'desc' }, { id: 'desc' }],
+    });
+
+    if (pacoteCliente) {
+      await prisma.clientePacote.update({
+        where: { id: pacoteCliente.id },
+        data: {
+          sessoesRestantes: Number(pacoteCliente.sessoesRestantes || 0) + 1,
+        },
+      });
+    }
+  }
+
+  await reverterConsumoEstoqueDoServico(agendamento);
 }
 
 function getDateRange(query, defaultDays = 30) {
@@ -1086,9 +1335,11 @@ async function getClientes(req, res) {
       agendamentos: {
         where: isScopedProfessional(req) ? { profissionalId: req.user.profissionalId } : undefined,
         include: {
-          servico: { select: { preco: true } },
-          pacote: { select: { preco: true } },
+          servico: { select: { nome: true, preco: true, duracaoMin: true } },
+          pacote: { select: { nome: true, preco: true, duracaoMin: true } },
+          profissional: { select: { nome: true } },
           itens: true,
+          produtos: true,
         },
       },
     },
@@ -1114,14 +1365,23 @@ async function getClientes(req, res) {
     return {
       id: c.id,
       nome: c.nome,
+      apelido: c.apelido,
+      nomeExibicao: c.apelido || c.nome,
       telefone: c.telefone,
+      email: c.email,
+      instagram: c.instagram,
+      dataNascimento: c.dataNascimento,
+      endereco: c.endereco,
       createdAt: c.createdAt,
       visitas: concluidos.length,
+      totalVisitas: c.totalVisitas ?? concluidos.length,
       totalAgendamentos: c.agendamentos.length,
-      totalGasto,
-      ultimaVisita,
+      totalGasto: c.totalGasto ?? totalGasto,
+      ultimaVisita: c.lastVisit || ultimaVisita,
+      lastVisit: c.lastVisit || ultimaVisita,
       diasSemVir,
       status: statusCliente,
+      agendamentos: c.agendamentos,
     };
   });
 
@@ -1153,9 +1413,9 @@ async function buscarClientes(req, res) {
 }
 
 async function createCliente(req, res) {
-  const { nome, telefone, email, instagram, cpf, rg, dataNascimento, endereco } = req.body;
+  const { nome, apelido, telefone, email, instagram, cpf, rg, dataNascimento, endereco } = req.body;
   const salaoId = req.user.salaoId;
-  const cleanTel = (telefone || '').replace(/\D/g, '');
+  const cleanTel = normalizarTelefone(telefone);
 
   if (!nome || !cleanTel) return res.status(400).json({ error: 'Nome e telefone são obrigatórios' });
 
@@ -1166,6 +1426,7 @@ async function createCliente(req, res) {
     data: {
       salaoId,
       nome,
+      apelido: apelido || null,
       telefone: cleanTel,
       email,
       instagram,
@@ -1179,15 +1440,100 @@ async function createCliente(req, res) {
   res.status(201).json(cliente);
 }
 
+async function updateCliente(req, res) {
+  const { id } = req.params;
+  const { nome, apelido, telefone, email, instagram, cpf, rg, dataNascimento, endereco } = req.body;
+
+  const clienteAtual = await prisma.cliente.findFirst({
+    where: {
+      id,
+      salaoId: req.user.salaoId,
+      ...(isScopedProfessional(req)
+        ? { agendamentos: { some: { profissionalId: req.user.profissionalId } } }
+        : {}),
+    },
+  });
+
+  if (!clienteAtual) {
+    return res.status(404).json({ error: 'Cliente nao encontrado' });
+  }
+
+  const nomeNormalizado = String(nome || '').trim();
+  const apelidoNormalizado = String(apelido || '').trim();
+  const telefoneNormalizado = normalizarTelefone(telefone);
+
+  if (!nomeNormalizado || !telefoneNormalizado) {
+    return res.status(400).json({ error: 'Nome e telefone sao obrigatorios' });
+  }
+
+  const telefoneDuplicado = await prisma.cliente.findFirst({
+    where: {
+      salaoId: req.user.salaoId,
+      telefone: telefoneNormalizado,
+      id: { not: id },
+    },
+    select: { id: true },
+  });
+
+  if (telefoneDuplicado) {
+    return res.status(400).json({ error: 'Ja existe um cliente com este telefone' });
+  }
+
+  const cliente = await prisma.cliente.update({
+    where: { id },
+    data: {
+      nome: nomeNormalizado,
+      apelido: apelidoNormalizado || null,
+      telefone: telefoneNormalizado,
+      email: email || null,
+      instagram: instagram || null,
+      cpf: cpf || null,
+      rg: rg || null,
+      dataNascimento: dataNascimento ? new Date(dataNascimento) : null,
+      endereco: endereco || null,
+    },
+  });
+
+  await prisma.agendamento.updateMany({
+    where: {
+      salaoId: req.user.salaoId,
+      OR: [
+        { clienteId: id },
+        { clienteTelefone: clienteAtual.telefone },
+      ],
+    },
+    data: {
+      clienteNome: apelidoNormalizado || nomeNormalizado,
+      clienteTelefone: telefoneNormalizado,
+    },
+  });
+
+  await createAuditLog({
+    salaoId: req.user.salaoId,
+    usuarioId: req.user.id,
+    acao: 'cliente.editar',
+    entidade: 'cliente',
+    entidadeId: id,
+    mensagem: 'Cadastro de cliente atualizado',
+    contexto: {
+      apelidoPreenchido: !!apelidoNormalizado,
+      telefoneAlterado: telefoneNormalizado !== clienteAtual.telefone,
+    },
+    req,
+  });
+
+  res.json(cliente);
+}
+
 async function findOrCreateCliente(salaoId, nome, telefone) {
   try {
-    const numero = telefone.replace(/\D/g, '');
+    const numero = normalizarTelefone(telefone);
     const sufixo = numero.slice(-9);
     const existente = await prisma.cliente.findFirst({ 
       where: { salaoId, telefone: { endsWith: sufixo } } 
     });
     if (existente) return existente.id;
-    const novo = await prisma.cliente.create({ data: { salaoId, nome, telefone } });
+    const novo = await prisma.cliente.create({ data: { salaoId, nome, telefone: numero || telefone } });
     return novo.id;
   } catch {
     return null;
@@ -1639,6 +1985,80 @@ async function updateObservacaoAgendamento(req, res) {
   return res.json(await getAgendamentoCompleto(id));
 }
 
+async function updateAgendamento(req, res) {
+  const { id } = req.params;
+  const { data, hora, profissionalId } = req.body;
+  const profissionalIdFinal = getScopedProfessionalId(req, profissionalId);
+  const agendamento = await getScopedAgendamento(req, id, {
+    servico: true,
+    pacote: true,
+    itens: true,
+  });
+
+  if (!agendamento) return res.status(404).json({ error: 'Agendamento nao encontrado' });
+  if (!data || !hora || !profissionalIdFinal) {
+    return res.status(400).json({ error: 'Informe dia, horario e profissional para ajustar o agendamento.' });
+  }
+
+  const duracaoTotal = (agendamento.servico?.duracaoMin ?? agendamento.pacote?.duracaoMin ?? 0)
+    + getAgendamentoDuracaoExtra(agendamento);
+  const fimHora = calcularFimHora(hora, duracaoTotal);
+
+  if (!fimHora) {
+    return res.status(400).json({ error: 'Nao foi possivel calcular o horario final do atendimento.' });
+  }
+
+  if (agendamento.pacoteId) {
+    const servicoIdsDoPacote = await getServicoIdsDoPacote(agendamento.pacoteId, req.user.salaoId);
+    const profissionalCompativelPacote = await profissionalAtendeTodosServicos(profissionalIdFinal, servicoIdsDoPacote, req.user.salaoId);
+    if (!profissionalCompativelPacote) {
+      return res.status(400).json({ error: 'O profissional selecionado nao atende todos os servicos deste pacote.' });
+    }
+  } else {
+    const servicosIds = [agendamento.servicoId, ...getAgendamentoItensExtras(agendamento).map((item) => item.servicoId)].filter(Boolean);
+    const profissionalCompativel = await profissionalAtendeTodosServicos(profissionalIdFinal, servicosIds, req.user.salaoId);
+    if (!profissionalCompativel) {
+      return res.status(400).json({ error: 'O profissional selecionado nao atende todos os servicos desta comanda.' });
+    }
+  }
+
+  const indisponibilidade = await validarDisponibilidadeAgendamento({
+    salaoId: req.user.salaoId,
+    profissionalId: profissionalIdFinal,
+    data: new Date(`${data}T00:00:00`),
+    inicioHora: hora,
+    fimHora,
+    ignoreAgendamentoId: id,
+  });
+
+  if (indisponibilidade) {
+    return res.status(400).json({ error: indisponibilidade });
+  }
+
+  await prisma.agendamento.update({
+    where: { id },
+    data: {
+      data: new Date(`${data}T00:00:00`),
+      inicioHora: hora,
+      fimHora,
+      profissionalId: profissionalIdFinal,
+    },
+  });
+
+  await createAuditLog({
+    salaoId: req.user.salaoId,
+    usuarioId: req.user.id,
+    acao: 'agenda.ajustar',
+    entidade: 'agendamento',
+    entidadeId: id,
+    mensagem: 'Agendamento ajustado na agenda',
+    contexto: { data, hora, profissionalId: profissionalIdFinal },
+    req,
+  });
+
+  return res.json(await getAgendamentoCompleto(id));
+}
+
 async function reagendarAgendamento(req, res) {
   const { id } = req.params;
   const { data, hora, profissionalId } = req.body;
@@ -1894,6 +2314,275 @@ async function updatePagamentoAgendamento(req, res) {
   });
 
   res.json({ ...updatedAg, totalLiquido, ...resultado });
+}
+
+async function updatePagamentoAgendamento(req, res) {
+  const { id } = req.params;
+  const { pagamentos, taxaOperadora, valorBaseAjustado, agendamentoIds } = req.body;
+  const salaoId = req.user.salaoId;
+  const pagamentosLista = Array.isArray(pagamentos) ? pagamentos : [];
+  const totalPagoSolicitado = pagamentosLista.reduce((sum, pagamento) => sum + Number(pagamento?.valor || 0), 0);
+  const campoValorBaseAjustadoPresente = Object.prototype.hasOwnProperty.call(req.body, 'valorBaseAjustado');
+  const idsSolicitados = Array.isArray(agendamentoIds) && agendamentoIds.length > 0 ? [...new Set(agendamentoIds)] : [id];
+
+  const agExiste = await getScopedAgendamento(req, id, {
+    cliente: {
+      select: {
+        id: true,
+        totalVisitas: true,
+        totalGasto: true,
+        cashbackSaldo: true,
+        pontosSaldo: true,
+      },
+    },
+    servico: true,
+    pacote: true,
+    itens: true,
+    produtos: true,
+    pagamentos: true,
+  });
+  if (!agExiste) return res.status(404).json({ error: 'Agendamento nao encontrado' });
+
+  const agendamentosGrupo = await prisma.agendamento.findMany({
+    where: {
+      id: { in: idsSolicitados },
+      salaoId: req.user.salaoId,
+      ...professionalScopeFilter(req),
+      status: { not: 'cancelado' },
+    },
+    include: {
+      cliente: {
+        select: {
+          id: true,
+          totalVisitas: true,
+          totalGasto: true,
+          cashbackSaldo: true,
+          pontosSaldo: true,
+        },
+      },
+      servico: true,
+      pacote: true,
+      itens: true,
+      produtos: true,
+      pagamentos: true,
+    },
+    orderBy: [{ inicioHora: 'asc' }, { createdAt: 'asc' }],
+  });
+
+  if (agendamentosGrupo.length !== idsSolicitados.length) {
+    return res.status(400).json({ error: 'Nem todos os atendimentos enviados podem ser fechados nesta comanda.' });
+  }
+
+  if (!agendamentosGrupo.some((item) => item.id === id)) {
+    return res.status(400).json({ error: 'O atendimento principal precisa fazer parte da comanda.' });
+  }
+
+  const grupoValido = agendamentosGrupo.every((item) =>
+    isSameCalendarDay(item.data, agExiste.data) && isSameClientRecord(agExiste, item)
+  );
+
+  if (!grupoValido) {
+    return res.status(400).json({ error: 'Somente atendimentos do mesmo cliente e do mesmo dia podem ser agrupados na comanda.' });
+  }
+
+  let valorBaseAjustadoNormalizado = agExiste?.valorBaseAjustado ?? null;
+  if (campoValorBaseAjustadoPresente) {
+    if (valorBaseAjustado === null || valorBaseAjustado === '') {
+      valorBaseAjustadoNormalizado = null;
+    } else {
+      const valorBaseAjustadoNumero = Number(valorBaseAjustado);
+      if (!Number.isFinite(valorBaseAjustadoNumero) || valorBaseAjustadoNumero < 0) {
+        return res.status(400).json({ error: 'Informe um valor ajustado valido para o servico.' });
+      }
+
+      const precoBaseOriginal = getAgendamentoPrecoBaseOriginal(agExiste);
+      valorBaseAjustadoNormalizado = Math.abs(valorBaseAjustadoNumero - precoBaseOriginal) < 0.001
+        ? null
+        : valorBaseAjustadoNumero;
+    }
+  }
+
+  if (totalPagoSolicitado > 0) {
+    const caixaAberto = await getCaixaAberto(req.user.salaoId);
+    if (!caixaAberto) {
+      return res.status(400).json({ error: 'Abra o caixa antes de registrar pagamentos ou vendas.' });
+    }
+  }
+
+  const totalDevido = agendamentosGrupo.reduce((sum, agendamentoAtual) => {
+    if (agendamentoAtual.id === id) {
+      return sum + calcularTotalAgendamento({ ...agendamentoAtual, valorBaseAjustado: valorBaseAjustadoNormalizado });
+    }
+    return sum + calcularTotalAgendamento(agendamentoAtual);
+  }, 0);
+
+  if (agendamentosGrupo.length > 1 && totalPagoSolicitado > 0 && totalPagoSolicitado < (totalDevido - 0.1)) {
+    return res.status(400).json({ error: 'Para fechar uma comanda agrupada, informe o valor total de todos os procedimentos do dia.' });
+  }
+
+  await prisma.agendamentoPagamento.deleteMany({ where: { agendamentoId: { in: idsSolicitados } } });
+
+  await Promise.all(pagamentosLista.map((pagamento) =>
+    prisma.agendamentoPagamento.create({
+      data: { agendamentoId: id, forma: pagamento.forma, valor: pagamento.valor }
+    })
+  ));
+
+  const totalPago = pagamentosLista.reduce((sum, pagamento) => sum + Number(pagamento.valor || 0), 0);
+  const taxa = parseFloat(taxaOperadora) || 0;
+  const totalLiquido = totalPago - taxa;
+  const pagamentoIntegral = totalPago >= (totalDevido - 0.1);
+  const novoStatusPagamento = pagamentoIntegral
+    ? 'pago'
+    : totalPago > 0 ? 'parcial' : 'pendente';
+
+  await Promise.all(agendamentosGrupo.map((agendamentoAtual) =>
+    prisma.agendamento.update({
+      where: { id: agendamentoAtual.id },
+      data: {
+        statusPagamento: agendamentoAtual.id === id || pagamentoIntegral ? novoStatusPagamento : 'pendente',
+        taxaOperadora: agendamentoAtual.id === id ? taxa : 0,
+        valorBaseAjustado: agendamentoAtual.id === id ? valorBaseAjustadoNormalizado : agendamentoAtual.valorBaseAjustado,
+      },
+    })
+  ));
+
+  let resultado = {};
+  if (pagamentoIntegral) {
+    for (const agendamentoAtual of agendamentosGrupo) {
+      if (agendamentoAtual.status !== 'concluido') {
+        resultado = await executarConclusaoAgendamento(agendamentoAtual.id, salaoId);
+      }
+    }
+  }
+
+  const updatedAg = await getAgendamentoCompleto(id);
+
+  await createAuditLog({
+    salaoId: req.user.salaoId,
+    usuarioId: req.user.id,
+    acao: 'agenda.pagamento',
+    entidade: 'agendamento',
+    entidadeId: id,
+    mensagem: 'Pagamento de agendamento atualizado',
+    contexto: {
+      totalPago,
+      taxa,
+      statusPagamento: novoStatusPagamento,
+      valorBaseAjustado: valorBaseAjustadoNormalizado,
+      agendamentoIds: idsSolicitados,
+      totalDevido,
+    },
+    req,
+  });
+
+  res.json({ ...updatedAg, totalLiquido, ...resultado });
+}
+
+async function reabrirComandaAgendamento(req, res) {
+  const { id } = req.params;
+  const idsSolicitados = Array.isArray(req.body?.agendamentoIds) && req.body.agendamentoIds.length > 0
+    ? [...new Set(req.body.agendamentoIds)]
+    : [id];
+
+  const agendamentoBase = await getScopedAgendamento(req, id, {
+    cliente: {
+      select: {
+        id: true,
+        totalVisitas: true,
+        totalGasto: true,
+        cashbackSaldo: true,
+        pontosSaldo: true,
+      },
+    },
+    servico: true,
+    pacote: true,
+    itens: true,
+    produtos: true,
+    pagamentos: true,
+  });
+
+  if (!agendamentoBase) {
+    return res.status(404).json({ error: 'Agendamento nao encontrado' });
+  }
+
+  const agendamentosGrupo = await prisma.agendamento.findMany({
+    where: {
+      id: { in: idsSolicitados },
+      salaoId: req.user.salaoId,
+      ...professionalScopeFilter(req),
+      status: { not: 'cancelado' },
+    },
+    include: {
+      cliente: {
+        select: {
+          id: true,
+          totalVisitas: true,
+          totalGasto: true,
+          cashbackSaldo: true,
+          pontosSaldo: true,
+        },
+      },
+      servico: true,
+      pacote: true,
+      itens: true,
+      produtos: true,
+      pagamentos: true,
+    },
+    orderBy: [{ inicioHora: 'asc' }, { createdAt: 'asc' }],
+  });
+
+  if (agendamentosGrupo.length !== idsSolicitados.length) {
+    return res.status(400).json({ error: 'Nem todos os atendimentos enviados podem ser reabertos nesta comanda.' });
+  }
+
+  const grupoValido = agendamentosGrupo.every((item) =>
+    isSameCalendarDay(item.data, agendamentoBase.data) && isSameClientRecord(agendamentoBase, item)
+  );
+
+  if (!grupoValido) {
+    return res.status(400).json({ error: 'Somente atendimentos do mesmo cliente e do mesmo dia podem ser reabertos juntos.' });
+  }
+
+  if (agendamentosGrupo.some((item) => item.comissaoPaga)) {
+    return res.status(400).json({ error: 'Esta comanda possui comissao ja liquidada. Desfaca a liquidacao antes de reabrir.' });
+  }
+
+  const salao = await prisma.salao.findUnique({ where: { id: req.user.salaoId } });
+
+  for (const agendamentoAtual of agendamentosGrupo) {
+    if (agendamentoAtual.status === 'concluido') {
+      await reverterConclusaoAgendamento(agendamentoAtual, salao);
+    }
+
+    await prisma.agendamentoPagamento.deleteMany({
+      where: { agendamentoId: agendamentoAtual.id },
+    });
+
+    await prisma.agendamento.update({
+      where: { id: agendamentoAtual.id },
+      data: {
+        status: agendamentoAtual.status === 'concluido' ? 'em_atendimento' : agendamentoAtual.status,
+        statusPagamento: 'pendente',
+        taxaOperadora: 0,
+        comissaoValor: null,
+        comissaoPaga: false,
+      },
+    });
+  }
+
+  await createAuditLog({
+    salaoId: req.user.salaoId,
+    usuarioId: req.user.id,
+    acao: 'agenda.comanda.reabrir',
+    entidade: 'agendamento',
+    entidadeId: id,
+    mensagem: 'Comanda reaberta para ajustes',
+    contexto: { agendamentoIds: idsSolicitados },
+    req,
+  });
+
+  res.json(await getAgendamentoCompleto(id));
 }
 
 async function getAgendamentoCompleto(id) {
@@ -3683,7 +4372,7 @@ async function updateComissaoPaga(req, res) {
 module.exports = {
   getSalao, updateSalao,
   getWhatsappConfig, updateWhatsappConfig, getWhatsappStatus, connectWhatsapp, disconnectWhatsapp,
-  getClientes, buscarClientes, createCliente,
+  getClientes, buscarClientes, createCliente, updateCliente,
   getProfissionais, createProfissional, updateProfissional, reorderProfissionais, deleteProfissional,
   getCategoriasProfissionais, createCategoriaProfissional, deleteCategoriaProfissional,
   getCategoriasServicos, createCategoriaServico, deleteCategoriaServico,
@@ -3691,9 +4380,9 @@ module.exports = {
   getServicos, createServico, updateServico, deleteServico,
   getPacotes, createPacote, updatePacote, deletePacote,
   getBloqueios, createBloqueio, deleteBloqueio,
-  criarAgendamentoAdmin, getAgendamentos, updateStatusAgendamento, updateObservacaoAgendamento, updatePagamentoAgendamento,
+  criarAgendamentoAdmin, getAgendamentos, updateAgendamento, updateStatusAgendamento, updateObservacaoAgendamento, updatePagamentoAgendamento,
   getAlertasAgendamento, markAlertaAgendamentoLido, markTodosAlertasAgendamentoLidos,
-  reagendarAgendamento,
+  reagendarAgendamento, reabrirComandaAgendamento,
   deleteAgendamento, addItemAgendamento, removeItemAgendamento,
   getListaEspera, createListaEspera, updateListaEspera, deleteListaEspera,
   getProdutos, createProduto, updateProduto, deleteProduto,

@@ -2,6 +2,7 @@ import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import {
   Calendar,
+  Edit3,
   History,
   MapPin,
   MessageSquare,
@@ -18,6 +19,7 @@ import {
   dispararCampanha,
   getClientes,
   getHistoricoCliente,
+  updateCliente,
 } from '../../services/api';
 import { calculateAgendamentoTotal, cn } from '../../lib/utils';
 import useElementWidth from '../../hooks/useElementWidth';
@@ -47,6 +49,7 @@ const STATUS_MAP = {
 
 const EMPTY_CLIENTE = {
   nome: '',
+  apelido: '',
   telefone: '',
   email: '',
   instagram: '',
@@ -83,6 +86,8 @@ export default function Clientes() {
     'Ola! Sentimos sua falta aqui na BellaPro. Que tal agendar um horario para esta semana? Use o cupom VOLTA10 para 10% de desconto.'
   );
   const [novoCliente, setNovoCliente] = useState(EMPTY_CLIENTE);
+  const [clienteEdicao, setClienteEdicao] = useState(null);
+  const [salvandoEdicao, setSalvandoEdicao] = useState(false);
   const pageWidth = useElementWidth(pageRef, typeof window !== 'undefined' ? window.innerWidth : 1440);
   const isCompactPage = pageWidth < 1260;
   const isTightPage = pageWidth < 980;
@@ -135,6 +140,23 @@ export default function Clientes() {
       window.alert(error?.response?.data?.error || 'Nao foi possivel cadastrar o cliente.');
     } finally {
       setCriando(false);
+    }
+  }
+
+  async function salvarEdicaoCliente(event) {
+    event.preventDefault();
+    if (!clienteEdicao?.id) return;
+
+    setSalvandoEdicao(true);
+    try {
+      await updateCliente(clienteEdicao.id, clienteEdicao);
+      await carregarClientes();
+      setExpandido(clienteEdicao.id);
+      setClienteEdicao(null);
+    } catch (error) {
+      window.alert(error?.response?.data?.error || 'Nao foi possivel atualizar o cadastro do cliente.');
+    } finally {
+      setSalvandoEdicao(false);
     }
   }
 
@@ -277,13 +299,18 @@ export default function Clientes() {
                   <div className="flex items-center gap-5">
                     <div className="relative">
                       <div className="flex h-20 w-20 items-center justify-center rounded-[26px] bg-[#3b2a35]/14 text-3xl font-semibold text-[#3b2a35] dark:bg-[rgba(20,16,22,0.55)] dark:text-[#faf7f6]">
-                        {initials(cliente.nome)}
+                        {initials(cliente.apelido || cliente.nome)}
                       </div>
                       <span className={cn('absolute -right-1 -top-1 h-5 w-5 rounded-full border-2 border-[#2b2228]', status.dot)} />
                     </div>
                     <div>
                       <div className="flex flex-wrap items-center gap-3">
-                        <h3 className="font-['Playfair_Display'] text-3xl text-[#2f2430] dark:text-[#faf7f6]">{cliente.nome}</h3>
+                        <div>
+                          <h3 className="font-['Playfair_Display'] text-3xl text-[#2f2430] dark:text-[#faf7f6]">{cliente.apelido || cliente.nome}</h3>
+                          {cliente.apelido ? (
+                            <p className="mt-1 text-xs uppercase tracking-[0.18em] text-[#9f848d]">Cadastro: {cliente.nome}</p>
+                          ) : null}
+                        </div>
                         <span className={cn('rounded-full border px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.16em]', status.chip)}>
                           {status.label}
                         </span>
@@ -362,6 +389,7 @@ export default function Clientes() {
               <div className="grid gap-5 sm:grid-cols-2">
                 {[
                   ['nome', 'Nome', 'text', true],
+                  ['apelido', 'Como chamar', 'text', false],
                   ['telefone', 'Telefone', 'text', true],
                   ['email', 'Email', 'email', false],
                   ['instagram', 'Instagram', 'text', false],
@@ -500,6 +528,89 @@ export default function Clientes() {
       </AnimatePresence>
 
       <AnimatePresence>
+        {clienteEdicao ? (
+          <div className="fixed inset-0 z-[215] flex items-center justify-center overflow-y-auto overscroll-contain p-3 sm:p-6">
+            <motion.button
+              type="button"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setClienteEdicao(null)}
+              className="absolute inset-0 bg-black/70 backdrop-blur-sm"
+            />
+
+            <motion.form
+              initial={{ opacity: 0, y: 18, scale: 0.98 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: 18, scale: 0.98 }}
+              onSubmit={salvarEdicaoCliente}
+              className="relative z-10 max-h-[calc(100dvh-1.5rem)] w-full max-w-2xl overflow-y-auto rounded-[2rem] border border-gray-200 bg-white/95 p-4 shadow-[0_40px_120px_rgba(0,0,0,0.18)] custom-scrollbar dark:border-white/5 dark:bg-[rgba(28,23,31,0.98)] dark:shadow-[0_40px_120px_rgba(0,0,0,0.45)] sm:p-6 lg:p-8"
+            >
+              <button
+                type="button"
+                onClick={() => setClienteEdicao(null)}
+                className="absolute right-5 top-5 rounded-full border border-gray-200 p-2 text-[#8a7079] transition hover:text-[#3b2a35] dark:border-white/5 dark:text-[#c7adb4] dark:hover:text-[#faf7f6]"
+              >
+                <X className="h-4 w-4" />
+              </button>
+
+              <div className="mb-8 border-b border-gray-200 dark:border-white/5 pb-6">
+                <p className="text-[11px] font-semibold uppercase tracking-[0.3em] text-[#E29BA8]">Atualizacao de cadastro</p>
+                <h2 className="mt-3 font-['Playfair_Display'] text-2xl text-[#2f2430] dark:text-[#faf7f6] sm:text-4xl">Editar cliente</h2>
+              </div>
+
+              <div className="grid gap-5 sm:grid-cols-2">
+                {[
+                  ['nome', 'Nome do cadastro', 'text', true],
+                  ['apelido', 'Como chamar', 'text', false],
+                  ['telefone', 'Telefone', 'text', true],
+                  ['email', 'Email', 'email', false],
+                  ['instagram', 'Instagram', 'text', false],
+                  ['dataNascimento', 'Data de nascimento', 'date', false],
+                  ['endereco', 'Endereco', 'text', false],
+                ].map(([field, label, type, required]) => (
+                  <label key={field} className={field === 'endereco' ? 'sm:col-span-2' : ''}>
+                    <span className="mb-3 block text-[11px] font-semibold uppercase tracking-[0.26em] text-[#8a7079] dark:text-[#c7adb4]">
+                      {label}
+                    </span>
+                    <input
+                      type={type}
+                      required={required}
+                      value={clienteEdicao[field] || ''}
+                      onChange={(event) =>
+                        setClienteEdicao((prev) => ({
+                          ...prev,
+                          [field]: event.target.value,
+                        }))
+                      }
+                      className="h-14 w-full rounded-[20px] border border-gray-200 bg-white px-5 text-base text-[#2f2430] outline-none placeholder:text-[#9a7f88] focus:border-[rgba(233,155,168,0.28)] dark:border-white/5 dark:bg-[rgba(20,16,22,0.66)] dark:text-[#faf7f6] dark:placeholder:text-[#806871]"
+                    />
+                  </label>
+                ))}
+              </div>
+
+              <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:justify-end">
+                <button
+                  type="button"
+                  onClick={() => setClienteEdicao(null)}
+                  className="inline-flex min-h-[52px] items-center justify-center rounded-full border border-gray-200 px-7 text-sm font-semibold uppercase tracking-[0.22em] text-[#8a7079] transition hover:border-[rgba(233,155,168,0.18)] hover:text-[#3b2a35] dark:border-white/5 dark:text-[#c7adb4] dark:hover:text-[#faf7f6]"
+                >
+                  Cancelar
+                </button>
+                <button
+                  type="submit"
+                  disabled={salvandoEdicao}
+                  className="inline-flex min-h-[52px] items-center justify-center rounded-full bg-gradient-to-r from-[#E29BA8] to-[#d48997] text-[#111116] px-7 text-sm font-semibold uppercase tracking-[0.22em] text-[#20191f] transition hover:brightness-105 disabled:cursor-not-allowed disabled:opacity-70"
+                >
+                  {salvandoEdicao ? 'Salvando...' : 'Salvar alteracoes'}
+                </button>
+              </div>
+            </motion.form>
+          </div>
+        ) : null}
+      </AnimatePresence>
+
+      <AnimatePresence>
         {clienteExpandido ? (
           <div className="fixed inset-0 z-[220] flex justify-end">
             <motion.button
@@ -528,10 +639,13 @@ export default function Clientes() {
 
               <div className="border-b border-gray-200 dark:border-white/5 p-4 md:p-8">
                 <div className="mx-auto flex h-28 w-28 items-center justify-center rounded-full bg-[#3b2a35]/14 text-3xl sm:text-5xl font-semibold text-[#3b2a35] dark:bg-[rgba(20,16,22,0.55)] dark:text-[#faf7f6]">
-                  {initials(clienteExpandido.nome)}
+                  {initials(clienteExpandido.apelido || clienteExpandido.nome)}
                 </div>
                 <div className="mt-6 text-center">
-                  <h2 className="font-['Playfair_Display'] text-2xl text-[#2f2430] dark:text-[#faf7f6] sm:text-4xl">{clienteExpandido.nome}</h2>
+                  <h2 className="font-['Playfair_Display'] text-2xl text-[#2f2430] dark:text-[#faf7f6] sm:text-4xl">{clienteExpandido.apelido || clienteExpandido.nome}</h2>
+                  {clienteExpandido.apelido ? (
+                    <p className="mt-2 text-[11px] uppercase tracking-[0.22em] text-[#9f848d]">Nome do cadastro: {clienteExpandido.nome}</p>
+                  ) : null}
                   <div className="mt-4 flex flex-wrap items-center justify-center gap-4 text-sm text-[#7f6570] dark:text-[#c7adb4]">
                     <span className="inline-flex items-center gap-2">
                       <Phone className="h-4 w-4 text-[#f7c1b6]" />
@@ -544,6 +658,23 @@ export default function Clientes() {
                       </span>
                     ) : null}
                   </div>
+                  <button
+                    type="button"
+                    onClick={() => setClienteEdicao({
+                      id: clienteExpandido.id,
+                      nome: clienteExpandido.nome || '',
+                      apelido: clienteExpandido.apelido || '',
+                      telefone: clienteExpandido.telefone || '',
+                      email: clienteExpandido.email || '',
+                      instagram: clienteExpandido.instagram || '',
+                      dataNascimento: clienteExpandido.dataNascimento ? String(clienteExpandido.dataNascimento).slice(0, 10) : '',
+                      endereco: clienteExpandido.endereco || '',
+                    })}
+                    className="mt-5 inline-flex min-h-[46px] items-center justify-center gap-2 rounded-full border border-gray-200 px-5 text-[11px] font-semibold uppercase tracking-[0.18em] text-[#8a7079] transition hover:border-[rgba(233,155,168,0.18)] hover:text-[#3b2a35] dark:border-white/5 dark:text-[#c7adb4] dark:hover:text-[#faf7f6]"
+                  >
+                    <Edit3 className="h-4 w-4 text-[#f7c1b6]" />
+                    Editar cadastro
+                  </button>
                 </div>
               </div>
 
