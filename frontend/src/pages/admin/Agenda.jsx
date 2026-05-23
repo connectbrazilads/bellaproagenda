@@ -1161,11 +1161,12 @@ function ModalDetalhesAgendamento({ agendamento: initialAgendamento, allAgendame
   function getCheckoutDiscountDefaults(agendamentoAtual) {
     const original = getAgendamentoOriginalBasePrice(agendamentoAtual);
     const atual = getAgendamentoBasePrice(agendamentoAtual);
-    const descontoAtual = Math.max(0, Number((original - atual).toFixed(2)));
+    const diferencaAtual = Number((atual - original).toFixed(2));
 
     return {
+      tipo: diferencaAtual >= 0 ? 'acrescimo' : 'desconto',
       modo: 'valor',
-      valor: descontoAtual > 0 ? String(descontoAtual) : '',
+      valor: Math.abs(diferencaAtual) > 0 ? String(Math.abs(diferencaAtual)) : '',
     };
   }
 
@@ -1178,8 +1179,10 @@ function ModalDetalhesAgendamento({ agendamento: initialAgendamento, allAgendame
   const [tab, setTab] = useState('comanda');
   const [pagamentoForma, setPagamentoForma] = useState('');
   const [pagamentoTaxa, setPagamentoTaxa] = useState('0');
+  const [pagamentoAjusteTipo, setPagamentoAjusteTipo] = useState(() => getCheckoutDiscountDefaults(initialAgendamento).tipo);
   const [pagamentoDescontoModo, setPagamentoDescontoModo] = useState(() => getCheckoutDiscountDefaults(initialAgendamento).modo);
   const [pagamentoDesconto, setPagamentoDesconto] = useState(() => getCheckoutDiscountDefaults(initialAgendamento).valor);
+  const [pagamentoAjusteObservacao, setPagamentoAjusteObservacao] = useState(initialAgendamento?.ajusteObservacao || '');
   const [caixaPagamentoStatus, setCaixaPagamentoStatus] = useState({ aberto: true, mensagem: '' });
   const [observacaoDraft, setObservacaoDraft] = useState(initialAgendamento?.observacao || '');
   const [servicosBusca, setServicosBusca] = useState('');
@@ -1221,8 +1224,10 @@ function ModalDetalhesAgendamento({ agendamento: initialAgendamento, allAgendame
     setServicosExpandido(true);
     setProdutosExpandido(true);
     const descontoPadrao = getCheckoutDiscountDefaults(initialAgendamento);
+    setPagamentoAjusteTipo(descontoPadrao.tipo);
     setPagamentoDescontoModo(descontoPadrao.modo);
     setPagamentoDesconto(descontoPadrao.valor);
+    setPagamentoAjusteObservacao(initialAgendamento?.ajusteObservacao || '');
     setNovoItemComanda({
       servicoId: '',
       profissionalId: '',
@@ -1245,16 +1250,24 @@ function ModalDetalhesAgendamento({ agendamento: initialAgendamento, allAgendame
   const pagamentoDescontoValido = !descontoInformado || (
     Number.isFinite(descontoDigitado) &&
     descontoDigitado >= 0 &&
-    (pagamentoDescontoModo !== 'percentual' || descontoDigitado <= 100)
+    (
+      pagamentoDescontoModo !== 'percentual'
+      || pagamentoAjusteTipo === 'acrescimo'
+      || descontoDigitado <= 100
+    )
   );
-  const descontoCalculado = !pagamentoDescontoValido || !descontoInformado
+  const ajusteCalculado = !pagamentoDescontoValido || !descontoInformado
     ? 0
     : pagamentoDescontoModo === 'percentual'
       ? (precoBaseOriginal * descontoDigitado) / 100
       : descontoDigitado;
-  const descontoAplicado = Math.min(precoBaseOriginal, descontoCalculado);
-  const precoBaseCheckout = Math.max(0, precoBaseOriginal - descontoAplicado);
-  const valorBaseAjustadoAtivo = descontoAplicado >= 0.001;
+  const ajusteAplicado = pagamentoAjusteTipo === 'desconto'
+    ? Math.min(precoBaseOriginal, ajusteCalculado)
+    : ajusteCalculado;
+  const precoBaseCheckout = pagamentoAjusteTipo === 'desconto'
+    ? Math.max(0, precoBaseOriginal - ajusteAplicado)
+    : precoBaseOriginal + ajusteAplicado;
+  const valorBaseAjustadoAtivo = ajusteAplicado >= 0.001;
   const agendamentoCheckout = useMemo(() => {
     if (!agendamento) return agendamento;
     return {
@@ -1394,7 +1407,7 @@ function ModalDetalhesAgendamento({ agendamento: initialAgendamento, allAgendame
 
   async function handleCheckout(forma) {
     if (!pagamentoDescontoValido) {
-      alert('Informe um desconto valido antes de finalizar a cobranca.');
+      alert('Informe um ajuste valido antes de finalizar a cobranca.');
       return;
     }
 
@@ -1410,13 +1423,16 @@ function ModalDetalhesAgendamento({ agendamento: initialAgendamento, allAgendame
         pagamentos: [{ forma, valor: total }],
         taxaOperadora: Number(pagamentoTaxa) || 0,
         valorBaseAjustado: valorBaseAjustadoAtivo ? precoBaseCheckout : null,
+        ajusteObservacao: pagamentoAjusteObservacao.trim() || null,
         agendamentoIds: (grupoComandaPendente.length ? grupoComandaPendente : [agendamento]).map((item) => item.id),
       });
       if (res?.data) {
         setAgendamento(res.data);
         const descontoPadrao = getCheckoutDiscountDefaults(res.data);
+        setPagamentoAjusteTipo(descontoPadrao.tipo);
         setPagamentoDescontoModo(descontoPadrao.modo);
         setPagamentoDesconto(descontoPadrao.valor);
+        setPagamentoAjusteObservacao(res.data?.ajusteObservacao || '');
         onUpdate?.();
       }
       setConcluidoSucesso(true);
@@ -1437,8 +1453,10 @@ function ModalDetalhesAgendamento({ agendamento: initialAgendamento, allAgendame
       if (res?.data) {
         setAgendamento(res.data);
         const descontoPadrao = getCheckoutDiscountDefaults(res.data);
+        setPagamentoAjusteTipo(descontoPadrao.tipo);
         setPagamentoDescontoModo(descontoPadrao.modo);
         setPagamentoDesconto(descontoPadrao.valor);
+        setPagamentoAjusteObservacao(res.data?.ajusteObservacao || '');
         setConcluidoSucesso(false);
         setTab('comanda');
         onUpdate?.();
@@ -1592,7 +1610,7 @@ function ModalDetalhesAgendamento({ agendamento: initialAgendamento, allAgendame
                    <p className="text-lg font-black text-gray-900 dark:text-white uppercase leading-tight">{getAgendamentoTitulo(agendamento)}</p>
                    {valorBaseAjustadoAtivo && (
                      <p className="mt-3 text-[10px] font-black uppercase tracking-[0.18em] text-bellapro-blush">
-                       Desconto aplicado neste checkout
+                       {pagamentoAjusteTipo === 'acrescimo' ? 'Acrescimo aplicado neste checkout' : 'Desconto aplicado neste checkout'}
                      </p>
                    )}
                    <div className="mt-4 pt-4 border-t border-gray-50 dark:border-white/5 flex items-center justify-between">
@@ -1615,6 +1633,16 @@ function ModalDetalhesAgendamento({ agendamento: initialAgendamento, allAgendame
                   </div>
                   <p className="mt-3 text-sm leading-6 text-gray-600 dark:text-gray-300 whitespace-pre-wrap">
                     {agendamento.observacao?.trim() || 'Nenhuma observacao registrada para este atendimento.'}
+                  </p>
+                </div>
+
+                <div className="bg-white dark:bg-white/5 p-4 md:p-6 rounded-[2rem] border border-gray-100 dark:border-white/5">
+                  <div className="flex items-center gap-3">
+                    <MessageSquare size={14} className="text-[#E29BA8]" />
+                    <p className="text-[9px] font-black text-[#E29BA8] uppercase tracking-[0.3em]">Motivo do ajuste</p>
+                  </div>
+                  <p className="mt-3 text-sm leading-6 text-gray-600 dark:text-gray-300 whitespace-pre-wrap">
+                    {pagamentoAjusteObservacao.trim() || 'Nenhuma observacao registrada para este ajuste.'}
                   </p>
                 </div>
 
@@ -2102,8 +2130,26 @@ function ModalDetalhesAgendamento({ agendamento: initialAgendamento, allAgendame
                            <div className="rounded-[2rem] border border-gray-100 dark:border-white/5 bg-gray-50 dark:bg-white/5 p-4 sm:p-6 space-y-4">
                              <div>
                                <div className="mb-2 flex items-center justify-between gap-3">
-                                 <p className="text-[10px] font-black text-gray-400 uppercase tracking-[0.3em]">Desconto no servico</p>
-                                 <div className="flex items-center gap-2">
+                                 <p className="text-[10px] font-black text-gray-400 uppercase tracking-[0.3em]">Ajuste no servico</p>
+                                 <div className="flex flex-wrap items-center justify-end gap-2">
+                                   {[
+                                     { id: 'desconto', label: 'Desconto' },
+                                     { id: 'acrescimo', label: 'Acrescimo' },
+                                   ].map((tipo) => (
+                                     <button
+                                       key={tipo.id}
+                                       type="button"
+                                       onClick={() => setPagamentoAjusteTipo(tipo.id)}
+                                       className={cn(
+                                         'rounded-xl border px-3 py-2 text-[10px] font-black uppercase tracking-[0.16em] transition-all',
+                                         pagamentoAjusteTipo === tipo.id
+                                           ? 'border-[#d48997] bg-[#d48997] text-white'
+                                           : 'border-gray-200 text-gray-500 hover:border-[#d48997]/30 dark:border-white/10 dark:text-white/70'
+                                       )}
+                                     >
+                                       {tipo.label}
+                                     </button>
+                                   ))}
                                    {[
                                      { id: 'valor', label: 'R$' },
                                      { id: 'percentual', label: '%' },
@@ -2125,8 +2171,10 @@ function ModalDetalhesAgendamento({ agendamento: initialAgendamento, allAgendame
                                    <button
                                      type="button"
                                      onClick={() => {
+                                       setPagamentoAjusteTipo('desconto');
                                        setPagamentoDescontoModo('valor');
                                        setPagamentoDesconto('');
+                                       setPagamentoAjusteObservacao('');
                                      }}
                                      className="text-[10px] font-black uppercase tracking-[0.18em] text-[#d48997] transition hover:text-[#b96a79]"
                                    >
@@ -2148,15 +2196,26 @@ function ModalDetalhesAgendamento({ agendamento: initialAgendamento, allAgendame
                                  <span className="text-gray-400">Original {precoBaseOriginal.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</span>
                                  {valorBaseAjustadoAtivo && (
                                    <span className="text-bellapro-blush">
-                                     Desconto {pagamentoDescontoModo === 'percentual'
+                                     {pagamentoAjusteTipo === 'acrescimo' ? 'Acrescimo' : 'Desconto'} {pagamentoDescontoModo === 'percentual'
                                        ? `${Number.isFinite(descontoDigitado) ? descontoDigitado : 0}%`
-                                       : descontoAplicado.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
+                                       : ajusteAplicado.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
                                    </span>
                                  )}
                                </div>
                                <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-gray-400">
                                  Final do servico {precoBaseCheckout.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
                                </p>
+                             </div>
+
+                             <div>
+                               <p className="text-[10px] font-black text-gray-400 uppercase tracking-[0.3em] mb-2">Observacao do ajuste</p>
+                               <textarea
+                                 value={pagamentoAjusteObservacao}
+                                 onChange={(e) => setPagamentoAjusteObservacao(e.target.value)}
+                                 rows={3}
+                                 placeholder="Ex.: desconto por cortesia, acrescimo por horario especial..."
+                                 className="w-full resize-none rounded-2xl border border-gray-200 dark:border-white/5 bg-white dark:bg-[#111113] px-5 py-4 text-sm font-medium text-gray-900 dark:text-white outline-none"
+                               />
                              </div>
 
                              <div>

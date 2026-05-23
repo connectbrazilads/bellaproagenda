@@ -2509,11 +2509,12 @@ async function criarVendaPDV(req, res) {
 
 async function updatePagamentoAgendamento(req, res) {
   const { id } = req.params;
-  const { pagamentos, taxaOperadora, valorBaseAjustado } = req.body;
+  const { pagamentos, taxaOperadora, valorBaseAjustado, ajusteObservacao } = req.body;
   const salaoId = req.user.salaoId;
   const pagamentosLista = Array.isArray(pagamentos) ? pagamentos : [];
   const totalPagoSolicitado = pagamentosLista.reduce((sum, pagamento) => sum + Number(pagamento?.valor || 0), 0);
   const campoValorBaseAjustadoPresente = Object.prototype.hasOwnProperty.call(req.body, 'valorBaseAjustado');
+  const campoAjusteObservacaoPresente = Object.prototype.hasOwnProperty.call(req.body, 'ajusteObservacao');
 
   // Segurança: verificar que o agendamento pertence ao salão
   const agExiste = await getScopedAgendamento(req, id, {
@@ -2523,6 +2524,7 @@ async function updatePagamentoAgendamento(req, res) {
   if (!agExiste) return res.status(404).json({ error: 'Agendamento não encontrado' });
 
   let valorBaseAjustadoNormalizado = agExiste?.valorBaseAjustado ?? null;
+  let ajusteObservacaoNormalizada = agExiste?.ajusteObservacao ?? null;
   if (campoValorBaseAjustadoPresente) {
     if (valorBaseAjustado === null || valorBaseAjustado === '') {
       valorBaseAjustadoNormalizado = null;
@@ -2537,6 +2539,12 @@ async function updatePagamentoAgendamento(req, res) {
         ? null
         : valorBaseAjustadoNumero;
     }
+  }
+
+  if (campoAjusteObservacaoPresente) {
+    ajusteObservacaoNormalizada = typeof ajusteObservacao === 'string'
+      ? ajusteObservacao.trim() || null
+      : null;
   }
 
   if (totalPagoSolicitado > 0) {
@@ -2575,7 +2583,8 @@ async function updatePagamentoAgendamento(req, res) {
     data: { 
       statusPagamento: novoStatusPagamento,
       taxaOperadora: taxa,
-      valorBaseAjustado: valorBaseAjustadoNormalizado
+      valorBaseAjustado: valorBaseAjustadoNormalizado,
+      ajusteObservacao: ajusteObservacaoNormalizada,
     }
   });
 
@@ -2598,7 +2607,7 @@ async function updatePagamentoAgendamento(req, res) {
     entidade: 'agendamento',
     entidadeId: id,
     mensagem: 'Pagamento de agendamento atualizado',
-    contexto: { totalPago, taxa, statusPagamento: novoStatusPagamento, valorBaseAjustado: valorBaseAjustadoNormalizado },
+    contexto: { totalPago, taxa, statusPagamento: novoStatusPagamento, valorBaseAjustado: valorBaseAjustadoNormalizado, ajusteObservacao: ajusteObservacaoNormalizada },
     req,
   });
 
@@ -2607,11 +2616,12 @@ async function updatePagamentoAgendamento(req, res) {
 
 async function updatePagamentoAgendamento(req, res) {
   const { id } = req.params;
-  const { pagamentos, taxaOperadora, valorBaseAjustado, agendamentoIds } = req.body;
+  const { pagamentos, taxaOperadora, valorBaseAjustado, ajusteObservacao, agendamentoIds } = req.body;
   const salaoId = req.user.salaoId;
   const pagamentosLista = Array.isArray(pagamentos) ? pagamentos : [];
   const totalPagoSolicitado = pagamentosLista.reduce((sum, pagamento) => sum + Number(pagamento?.valor || 0), 0);
   const campoValorBaseAjustadoPresente = Object.prototype.hasOwnProperty.call(req.body, 'valorBaseAjustado');
+  const campoAjusteObservacaoPresente = Object.prototype.hasOwnProperty.call(req.body, 'ajusteObservacao');
   const idsSolicitados = Array.isArray(agendamentoIds) && agendamentoIds.length > 0 ? [...new Set(agendamentoIds)] : [id];
 
   const agExiste = await getScopedAgendamento(req, id, {
@@ -2673,6 +2683,7 @@ async function updatePagamentoAgendamento(req, res) {
   }
 
   let valorBaseAjustadoNormalizado = agExiste?.valorBaseAjustado ?? null;
+  let ajusteObservacaoNormalizada = agExiste?.ajusteObservacao ?? null;
   if (campoValorBaseAjustadoPresente) {
     if (valorBaseAjustado === null || valorBaseAjustado === '') {
       valorBaseAjustadoNormalizado = null;
@@ -2687,6 +2698,12 @@ async function updatePagamentoAgendamento(req, res) {
         ? null
         : valorBaseAjustadoNumero;
     }
+  }
+
+  if (campoAjusteObservacaoPresente) {
+    ajusteObservacaoNormalizada = typeof ajusteObservacao === 'string'
+      ? ajusteObservacao.trim() || null
+      : null;
   }
 
   if (totalPagoSolicitado > 0) {
@@ -2730,6 +2747,7 @@ async function updatePagamentoAgendamento(req, res) {
         statusPagamento: agendamentoAtual.id === id || pagamentoIntegral ? novoStatusPagamento : 'pendente',
         taxaOperadora: agendamentoAtual.id === id ? taxa : 0,
         valorBaseAjustado: agendamentoAtual.id === id ? valorBaseAjustadoNormalizado : agendamentoAtual.valorBaseAjustado,
+        ajusteObservacao: agendamentoAtual.id === id ? ajusteObservacaoNormalizada : agendamentoAtual.ajusteObservacao,
       },
     })
   ));
@@ -2760,6 +2778,7 @@ async function updatePagamentoAgendamento(req, res) {
       taxa,
       statusPagamento: novoStatusPagamento,
       valorBaseAjustado: valorBaseAjustadoNormalizado,
+      ajusteObservacao: ajusteObservacaoNormalizada,
       agendamentoIds: idsSolicitados,
       totalDevido,
     },
