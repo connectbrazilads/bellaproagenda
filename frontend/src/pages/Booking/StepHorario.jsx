@@ -187,7 +187,7 @@ export default function StepHorario({ booking, set, next, cor }) {
           {multiItens.map((item) => (
             <HorarioCard
               key={item.servicoId}
-              titulo={`${item.servicoNome} · ${item.profissionalNome}`}
+              titulo={`${item.servicoNome} - ${item.profissionalNome}`}
               slots={slotsPorItem[item.servicoId] || []}
               selecionado={item.hora}
               onSelect={(hora) => selecionarHoraItem(item.servicoId, hora)}

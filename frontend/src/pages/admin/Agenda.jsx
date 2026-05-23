@@ -994,7 +994,7 @@ function ModalNovoAgendamento({ onClose, onSave, preData, preHora, preProf, pref
                       const profissional = profissionais.find((entry) => entry.id === item.profissionalId);
                       return (
                         <div key={item.id} className="flex items-center justify-between gap-4 rounded-[1.5rem] border border-gray-100 bg-gray-50 px-4 py-4 dark:border-white/5 dark:bg-black/20">
-                          <div>
+                          <div className="min-w-0 flex-1">
                             <p className="text-[10px] font-black uppercase tracking-[0.24em] text-[#d48997]">Item {index + 1}</p>
                             <p className="mt-2 text-sm font-black uppercase tracking-tight text-gray-900 dark:text-white">
                               {servico?.nome || 'Servico'}
@@ -1158,6 +1158,17 @@ function ModalAjusteAgendamento({ agendamento, profissionais, onClose, onSave })
 }
 
 function ModalDetalhesAgendamento({ agendamento: initialAgendamento, allAgendamentos = [], onClose, onUpdate, onReagendar, onAjustar }) {
+  function getCheckoutDiscountDefaults(agendamentoAtual) {
+    const original = getAgendamentoOriginalBasePrice(agendamentoAtual);
+    const atual = getAgendamentoBasePrice(agendamentoAtual);
+    const descontoAtual = Math.max(0, Number((original - atual).toFixed(2)));
+
+    return {
+      modo: 'valor',
+      valor: descontoAtual > 0 ? String(descontoAtual) : '',
+    };
+  }
+
   const [agendamento, setAgendamento] = useState(initialAgendamento);
   const [servicos, setServicos] = useState([]);
   const [produtos, setProdutos] = useState([]);
@@ -1167,7 +1178,8 @@ function ModalDetalhesAgendamento({ agendamento: initialAgendamento, allAgendame
   const [tab, setTab] = useState('comanda');
   const [pagamentoForma, setPagamentoForma] = useState('');
   const [pagamentoTaxa, setPagamentoTaxa] = useState('0');
-  const [pagamentoValorBase, setPagamentoValorBase] = useState(() => String(getAgendamentoBasePrice(initialAgendamento)));
+  const [pagamentoDescontoModo, setPagamentoDescontoModo] = useState(() => getCheckoutDiscountDefaults(initialAgendamento).modo);
+  const [pagamentoDesconto, setPagamentoDesconto] = useState(() => getCheckoutDiscountDefaults(initialAgendamento).valor);
   const [caixaPagamentoStatus, setCaixaPagamentoStatus] = useState({ aberto: true, mensagem: '' });
   const [observacaoDraft, setObservacaoDraft] = useState(initialAgendamento?.observacao || '');
   const [servicosBusca, setServicosBusca] = useState('');
@@ -1208,7 +1220,9 @@ function ModalDetalhesAgendamento({ agendamento: initialAgendamento, allAgendame
     setProdutosBusca('');
     setServicosExpandido(true);
     setProdutosExpandido(true);
-    setPagamentoValorBase(String(getAgendamentoBasePrice(initialAgendamento)));
+    const descontoPadrao = getCheckoutDiscountDefaults(initialAgendamento);
+    setPagamentoDescontoModo(descontoPadrao.modo);
+    setPagamentoDesconto(descontoPadrao.valor);
     setNovoItemComanda({
       servicoId: '',
       profissionalId: '',
@@ -1226,11 +1240,21 @@ function ModalDetalhesAgendamento({ agendamento: initialAgendamento, allAgendame
 
   const itensExtras = useMemo(() => getAgendamentoItensExtras(agendamento), [agendamento]);
   const precoBaseOriginal = useMemo(() => getAgendamentoOriginalBasePrice(agendamento), [agendamento]);
-  const precoBaseAtual = useMemo(() => getAgendamentoBasePrice(agendamento), [agendamento]);
-  const valorBaseDigitado = Number(pagamentoValorBase);
-  const pagamentoValorBaseValido = pagamentoValorBase !== '' && Number.isFinite(valorBaseDigitado) && valorBaseDigitado >= 0;
-  const precoBaseCheckout = pagamentoValorBaseValido ? valorBaseDigitado : 0;
-  const valorBaseAjustadoAtivo = Math.abs(precoBaseCheckout - precoBaseOriginal) >= 0.001;
+  const descontoDigitado = Number(pagamentoDesconto);
+  const descontoInformado = pagamentoDesconto !== '';
+  const pagamentoDescontoValido = !descontoInformado || (
+    Number.isFinite(descontoDigitado) &&
+    descontoDigitado >= 0 &&
+    (pagamentoDescontoModo !== 'percentual' || descontoDigitado <= 100)
+  );
+  const descontoCalculado = !pagamentoDescontoValido || !descontoInformado
+    ? 0
+    : pagamentoDescontoModo === 'percentual'
+      ? (precoBaseOriginal * descontoDigitado) / 100
+      : descontoDigitado;
+  const descontoAplicado = Math.min(precoBaseOriginal, descontoCalculado);
+  const precoBaseCheckout = Math.max(0, precoBaseOriginal - descontoAplicado);
+  const valorBaseAjustadoAtivo = descontoAplicado >= 0.001;
   const agendamentoCheckout = useMemo(() => {
     if (!agendamento) return agendamento;
     return {
@@ -1369,8 +1393,8 @@ function ModalDetalhesAgendamento({ agendamento: initialAgendamento, allAgendame
   }
 
   async function handleCheckout(forma) {
-    if (!pagamentoValorBaseValido) {
-      alert('Informe um valor valido para o servico antes de finalizar a cobranca.');
+    if (!pagamentoDescontoValido) {
+      alert('Informe um desconto valido antes de finalizar a cobranca.');
       return;
     }
 
@@ -1390,7 +1414,9 @@ function ModalDetalhesAgendamento({ agendamento: initialAgendamento, allAgendame
       });
       if (res?.data) {
         setAgendamento(res.data);
-        setPagamentoValorBase(String(getAgendamentoBasePrice(res.data)));
+        const descontoPadrao = getCheckoutDiscountDefaults(res.data);
+        setPagamentoDescontoModo(descontoPadrao.modo);
+        setPagamentoDesconto(descontoPadrao.valor);
         onUpdate?.();
       }
       setConcluidoSucesso(true);
@@ -1410,7 +1436,9 @@ function ModalDetalhesAgendamento({ agendamento: initialAgendamento, allAgendame
       const res = await reabrirComandaAgendamento(agendamento.id, { agendamentoIds: ids });
       if (res?.data) {
         setAgendamento(res.data);
-        setPagamentoValorBase(String(getAgendamentoBasePrice(res.data)));
+        const descontoPadrao = getCheckoutDiscountDefaults(res.data);
+        setPagamentoDescontoModo(descontoPadrao.modo);
+        setPagamentoDesconto(descontoPadrao.valor);
         setConcluidoSucesso(false);
         setTab('comanda');
         onUpdate?.();
@@ -1479,7 +1507,7 @@ function ModalDetalhesAgendamento({ agendamento: initialAgendamento, allAgendame
                 {agendamento.statusPagamento === 'pago' ? 'PAGAMENTO OK' : 'PENDENTE'}
               </div>
            </div>
-           <div className="flex items-center gap-2">
+           <div className="flex flex-wrap items-center justify-end gap-2 md:max-w-[60%]">
               {agendamento.status === 'confirmado' && (
                 <button 
                   onClick={async () => {
@@ -1562,20 +1590,20 @@ function ModalDetalhesAgendamento({ agendamento: initialAgendamento, allAgendame
                    <div className="absolute top-4 right-4 p-2 bg-[#E29BA8]/10 rounded-lg text-[#E29BA8]"><Scissors size={12} /></div>
                    <p className="text-[9px] font-black text-[#E29BA8] uppercase tracking-[0.3em] mb-2">Servico Agendado</p>
                    <p className="text-lg font-black text-gray-900 dark:text-white uppercase leading-tight">{getAgendamentoTitulo(agendamento)}</p>
-                   {hasAgendamentoAdjustedBasePrice(agendamento) && (
+                   {valorBaseAjustadoAtivo && (
                      <p className="mt-3 text-[10px] font-black uppercase tracking-[0.18em] text-bellapro-blush">
-                       Valor ajustado aplicado no checkout
+                       Desconto aplicado neste checkout
                      </p>
                    )}
                    <div className="mt-4 pt-4 border-t border-gray-50 dark:border-white/5 flex items-center justify-between">
                       <span className="text-[10px] font-bold text-gray-400 uppercase">Preco do servico</span>
                       <div className="text-right">
-                        {hasAgendamentoAdjustedBasePrice(agendamento) && (
+                        {valorBaseAjustadoAtivo && (
                           <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-gray-400 line-through">
                             {precoBaseOriginal.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
                           </p>
                         )}
-                        <span className="font-black text-gray-900 dark:text-white">{precoBaseAtual.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</span>
+                        <span className="font-black text-gray-900 dark:text-white">{precoBaseCheckout.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</span>
                       </div>
                    </div>
                 </div>
@@ -1605,7 +1633,7 @@ function ModalDetalhesAgendamento({ agendamento: initialAgendamento, allAgendame
                     </div>
                     <div className="mt-4 space-y-2">
                       {agendamentosMesmoClienteNoDia.map((item) => (
-                        <div key={item.id} className="flex items-center justify-between gap-3 rounded-[1.25rem] bg-gray-50 dark:bg-white/[0.04] px-4 py-3">
+                        <div key={item.id} className="flex flex-col gap-3 rounded-[1.25rem] bg-gray-50 dark:bg-white/[0.04] px-4 py-3 xl:flex-row xl:items-center xl:justify-between">
                           <div>
                             <p className="text-[11px] font-black uppercase tracking-[0.16em] text-gray-900 dark:text-white">
                               {item.inicioHora} · {getAgendamentoTitulo(item)}
@@ -1614,10 +1642,15 @@ function ModalDetalhesAgendamento({ agendamento: initialAgendamento, allAgendame
                               {item.profissional?.nome || 'Equipe'} · {item.statusPagamento === 'pago' ? 'Pago' : 'Pendente'}
                             </p>
                           </div>
-                          <div className="flex items-center gap-2">
+                          <div className="flex flex-wrap items-center gap-2 xl:justify-end">
                             <button
                               type="button"
-                              onClick={() => setAgendamento(item)}
+                              onClick={() => {
+                                const descontoPadrao = getCheckoutDiscountDefaults(item);
+                                setPagamentoDescontoModo(descontoPadrao.modo);
+                                setPagamentoDesconto(descontoPadrao.valor);
+                                setAgendamento(item);
+                              }}
                               className="rounded-xl border border-gray-200 px-3 py-2 text-[9px] font-black uppercase tracking-[0.16em] text-gray-500 transition hover:bg-white dark:border-white/10 dark:text-white/70"
                             >
                               Abrir
@@ -1638,10 +1671,10 @@ function ModalDetalhesAgendamento({ agendamento: initialAgendamento, allAgendame
                                 Remover
                               </button>
                             )}
+                            <p className="ml-auto text-sm font-black text-gray-900 dark:text-white xl:ml-3">
+                              {calculateAgendamentoTotal(item).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
+                            </p>
                           </div>
-                          <p className="text-sm font-black text-gray-900 dark:text-white">
-                            {calculateAgendamentoTotal(item).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
-                          </p>
                         </div>
                       ))}
                     </div>
@@ -2069,29 +2102,61 @@ function ModalDetalhesAgendamento({ agendamento: initialAgendamento, allAgendame
                            <div className="rounded-[2rem] border border-gray-100 dark:border-white/5 bg-gray-50 dark:bg-white/5 p-4 sm:p-6 space-y-4">
                              <div>
                                <div className="mb-2 flex items-center justify-between gap-3">
-                                 <p className="text-[10px] font-black text-gray-400 uppercase tracking-[0.3em]">Valor do servico</p>
-                                 <button
-                                   type="button"
-                                   onClick={() => setPagamentoValorBase(String(precoBaseOriginal))}
-                                   className="text-[10px] font-black uppercase tracking-[0.18em] text-[#d48997] transition hover:text-[#b96a79]"
-                                 >
-                                   Restaurar original
-                                 </button>
+                                 <p className="text-[10px] font-black text-gray-400 uppercase tracking-[0.3em]">Desconto no servico</p>
+                                 <div className="flex items-center gap-2">
+                                   {[
+                                     { id: 'valor', label: 'R$' },
+                                     { id: 'percentual', label: '%' },
+                                   ].map((modo) => (
+                                     <button
+                                       key={modo.id}
+                                       type="button"
+                                       onClick={() => setPagamentoDescontoModo(modo.id)}
+                                       className={cn(
+                                         'rounded-xl border px-3 py-2 text-[10px] font-black uppercase tracking-[0.16em] transition-all',
+                                         pagamentoDescontoModo === modo.id
+                                           ? 'border-[#d48997] bg-[#d48997] text-white'
+                                           : 'border-gray-200 text-gray-500 hover:border-[#d48997]/30 dark:border-white/10 dark:text-white/70'
+                                       )}
+                                     >
+                                       {modo.label}
+                                     </button>
+                                   ))}
+                                   <button
+                                     type="button"
+                                     onClick={() => {
+                                       setPagamentoDescontoModo('valor');
+                                       setPagamentoDesconto('');
+                                     }}
+                                     className="text-[10px] font-black uppercase tracking-[0.18em] text-[#d48997] transition hover:text-[#b96a79]"
+                                   >
+                                     Restaurar original
+                                   </button>
+                                 </div>
                                </div>
                                <input
                                  type="number"
-                                 value={pagamentoValorBase}
-                                 onChange={(e) => setPagamentoValorBase(e.target.value)}
+                                 value={pagamentoDesconto}
+                                 onChange={(e) => setPagamentoDesconto(e.target.value)}
                                  min="0"
-                                 step="0.01"
+                                 max={pagamentoDescontoModo === 'percentual' ? '100' : undefined}
+                                 step={pagamentoDescontoModo === 'percentual' ? '1' : '0.01'}
+                                 placeholder={pagamentoDescontoModo === 'percentual' ? '0' : '0,00'}
                                  className="w-full rounded-2xl border border-gray-200 dark:border-white/5 bg-white dark:bg-[#111113] px-5 py-4 text-sm font-black text-gray-900 dark:text-white outline-none"
                                />
-                               <div className="mt-2 flex items-center justify-between gap-3 text-[10px] font-bold uppercase tracking-[0.16em]">
+                               <div className="mt-2 flex flex-wrap items-center justify-between gap-3 text-[10px] font-bold uppercase tracking-[0.16em]">
                                  <span className="text-gray-400">Original {precoBaseOriginal.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</span>
                                  {valorBaseAjustadoAtivo && (
-                                   <span className="text-bellapro-blush">Ajustado</span>
+                                   <span className="text-bellapro-blush">
+                                     Desconto {pagamentoDescontoModo === 'percentual'
+                                       ? `${Number.isFinite(descontoDigitado) ? descontoDigitado : 0}%`
+                                       : descontoAplicado.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
+                                   </span>
                                  )}
                                </div>
+                               <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-gray-400">
+                                 Final do servico {precoBaseCheckout.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
+                               </p>
                              </div>
 
                              <div>
@@ -2114,7 +2179,7 @@ function ModalDetalhesAgendamento({ agendamento: initialAgendamento, allAgendame
                               <button
                                 type="button"
                                 onClick={() => handleCheckout(pagamentoForma)}
-                                disabled={!pagamentoForma || loading || agendamento.statusPagamento === 'pago' || !caixaPagamentoStatus.aberto || !pagamentoValorBaseValido}
+                                disabled={!pagamentoForma || loading || agendamento.statusPagamento === 'pago' || !caixaPagamentoStatus.aberto || !pagamentoDescontoValido}
                                 className="w-full rounded-[2rem] bg-[#E29BA8] hover:bg-[#d48997] disabled:opacity-40 disabled:cursor-not-allowed text-white py-6 font-black uppercase tracking-[0.2em] text-xs shadow-xl shadow-[#E29BA8]/20 transition-all flex items-center justify-center gap-3 mt-4"
                               >
                                <CheckCircle2 size={18} /> {agendamento.statusPagamento === 'pago' ? 'Ja pago' : 'Finalizar cobranca'}
