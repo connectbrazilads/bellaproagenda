@@ -31,6 +31,7 @@ const {
   marcarNotificacaoLida,
   marcarTodasNotificacoesLidas,
 } = require('../services/notificationCenterService');
+const { notificarClienteAgendamento } = require('../services/whatsappService');
 
 function isScopedProfessional(req) {
   return req.user?.role === 'profissional' && !!req.user?.profissionalId;
@@ -1624,6 +1625,7 @@ async function criarAgendamentoAdmin(req, res) {
   const fimHora = `${String(Math.floor(fimMin / 60)).padStart(2, '0')}:${String(fimMin % 60).padStart(2, '0')}`;
 
   const clienteId = await findOrCreateCliente(req.user.salaoId, clienteNome, clienteTelefone);
+  const salao = await prisma.salao.findUnique({ where: { id: req.user.salaoId } });
 
   // Lógica de Recorrência
   const datas = [new Date(data + 'T00:00:00')];
@@ -1684,6 +1686,21 @@ async function criarAgendamentoAdmin(req, res) {
     req,
   });
 
+  if (salao?.moduloWhatsapp) {
+    for (const agendamento of agendamentos) {
+      const nomeItem = agendamento.servico?.nome || agendamento.pacote?.nome || 'Servico';
+      notificarClienteAgendamento({
+        clienteNome: agendamento.clienteNome,
+        clienteTelefone: agendamento.clienteTelefone,
+        servico: nomeItem,
+        profissional: agendamento.profissional?.nome || 'Profissional',
+        data: agendamento.data.toISOString().split('T')[0],
+        hora: agendamento.inicioHora,
+        salao,
+      }).catch((error) => console.error('Erro notif cliente admin:', error.message));
+    }
+  }
+
   res.status(201).json(agendamentos[0]);
 }
 
@@ -1710,6 +1727,7 @@ async function criarAgendamentoAdminMultiplo(req, res) {
   const salaoId = req.user.salaoId;
   const grupoAtendimentoId = createGrupoAtendimentoId();
   const clienteId = await findOrCreateCliente(salaoId, clienteNome, clienteTelefone);
+  const salao = await prisma.salao.findUnique({ where: { id: salaoId } });
   const dataAgendamento = new Date(`${dataBase}T00:00:00`);
   const comanda = await createComanda({
     salaoId,
@@ -1856,6 +1874,21 @@ async function criarAgendamentoAdminMultiplo(req, res) {
     },
     req,
   });
+
+  if (salao?.moduloWhatsapp) {
+    for (const agendamento of agendamentos) {
+      const nomeItem = agendamento.servico?.nome || 'Servico';
+      notificarClienteAgendamento({
+        clienteNome: agendamento.clienteNome,
+        clienteTelefone: agendamento.clienteTelefone,
+        servico: nomeItem,
+        profissional: agendamento.profissional?.nome || 'Profissional',
+        data: agendamento.data.toISOString().split('T')[0],
+        hora: agendamento.inicioHora,
+        salao,
+      }).catch((error) => console.error('Erro notif cliente admin multi:', error.message));
+    }
+  }
 
   res.status(201).json({
     grupoAtendimentoId,
@@ -3264,8 +3297,8 @@ async function dispararLembretes(req, res) {
     const diffMs = dataAg - agora;
     const diffHoras = diffMs / (1000 * 60 * 60);
 
-    // Se falta entre 1 e 4 horas para o agendamento
-    if (diffHoras > 0 && diffHoras <= 4) {
+    // Envia para qualquer agendamento futuro do dia.
+    if (diffHoras > 0) {
       const msg = `Olá ${ag.clienteNome}! Passando para lembrar do seu horário hoje às *${ag.inicioHora}* com ${ag.profissional.nome}. Te esperamos! ✂️`;
       try {
         await sendEvolutionText(salao, ag.clienteTelefone, msg);

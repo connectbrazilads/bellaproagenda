@@ -28,6 +28,8 @@ function iniciarLembretes() {
     }
 
     console.log(`Lembretes enviados: ${agendamentos.length}`);
+  }, {
+    timezone: 'America/Sao_Paulo',
   });
 }
 
