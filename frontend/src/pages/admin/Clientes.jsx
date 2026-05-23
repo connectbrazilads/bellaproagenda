@@ -53,6 +53,7 @@ const EMPTY_CLIENTE = {
   telefone: '',
   email: '',
   instagram: '',
+  cpf: '',
   dataNascimento: '',
   endereco: '',
 };
@@ -393,6 +394,7 @@ export default function Clientes() {
                   ['telefone', 'Telefone', 'text', true],
                   ['email', 'Email', 'email', false],
                   ['instagram', 'Instagram', 'text', false],
+                  ['cpf', 'CPF', 'text', false],
                   ['dataNascimento', 'Data de nascimento', 'date', false],
                   ['endereco', 'Endereco', 'text', false],
                 ].map(([field, label, type, required]) => (
@@ -566,6 +568,7 @@ export default function Clientes() {
                   ['telefone', 'Telefone', 'text', true],
                   ['email', 'Email', 'email', false],
                   ['instagram', 'Instagram', 'text', false],
+                  ['cpf', 'CPF', 'text', false],
                   ['dataNascimento', 'Data de nascimento', 'date', false],
                   ['endereco', 'Endereco', 'text', false],
                 ].map(([field, label, type, required]) => (
@@ -651,6 +654,12 @@ export default function Clientes() {
                       <Phone className="h-4 w-4 text-[#f7c1b6]" />
                       {clienteExpandido.telefone || 'Sem telefone'}
                     </span>
+                    {clienteExpandido.cpf ? (
+                      <span className="inline-flex items-center gap-2">
+                        <span className="text-[#f7c1b6]">CPF</span>
+                        {clienteExpandido.cpf}
+                      </span>
+                    ) : null}
                     {clienteExpandido.instagram ? (
                       <span className="inline-flex items-center gap-2">
                         <Smartphone className="h-4 w-4 text-[#f7c1b6]" />
@@ -667,6 +676,7 @@ export default function Clientes() {
                       telefone: clienteExpandido.telefone || '',
                       email: clienteExpandido.email || '',
                       instagram: clienteExpandido.instagram || '',
+                      cpf: clienteExpandido.cpf || '',
                       dataNascimento: clienteExpandido.dataNascimento ? String(clienteExpandido.dataNascimento).slice(0, 10) : '',
                       endereco: clienteExpandido.endereco || '',
                     })}
@@ -719,6 +729,12 @@ export default function Clientes() {
                         {clienteExpandido.dataNascimento
                           ? new Date(clienteExpandido.dataNascimento).toLocaleDateString()
                           : 'Nao informado'}
+                      </p>
+                    </div>
+                    <div className="rounded-[24px] border border-gray-200 dark:border-white/5 bg-[rgba(255,255,255,0.03)] p-5">
+                      <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-[#9f848d]">CPF</p>
+                      <p className="mt-2 text-sm text-[#2f2430] dark:text-[#faf7f6]">
+                        {clienteExpandido.cpf || 'Nao informado'}
                       </p>
                     </div>
                     <div className="rounded-[24px] border border-gray-200 dark:border-white/5 bg-[rgba(255,255,255,0.03)] p-5 sm:col-span-2">

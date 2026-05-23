@@ -1425,45 +1425,7 @@ async function getClientes(req, res) {
     },
   });
 
-  const agora = Date.now();
-  const resultado = clientes.map((c) => {
-    const concluidos = c.agendamentos.filter((a) => a.status === 'concluido');
-    const totalGasto = concluidos.reduce((sum, a) => {
-      const base = getAgendamentoPrecoBase(a);
-      const extras = getAgendamentoItensExtras(a).reduce((s, i) => s + Number(i.preco || 0), 0);
-      return sum + base + extras;
-    }, 0);
-    const ultimaVisitaAg = [...concluidos].sort((a, b) => new Date(b.data) - new Date(a.data))[0];
-    const ultimaVisita = ultimaVisitaAg?.data || null;
-    const diasSemVir = ultimaVisita ? Math.floor((agora - new Date(ultimaVisita)) / 86400000) : null;
-    const statusCliente =
-      diasSemVir === null ? 'sem_visita'
-      : diasSemVir <= 60 ? 'ativo'
-      : diasSemVir <= 180 ? 'inativo'
-      : 'perdido';
-
-    return {
-      id: c.id,
-      nome: c.nome,
-      apelido: c.apelido,
-      nomeExibicao: c.apelido || c.nome,
-      telefone: c.telefone,
-      email: c.email,
-      instagram: c.instagram,
-      dataNascimento: c.dataNascimento,
-      endereco: c.endereco,
-      createdAt: c.createdAt,
-      visitas: concluidos.length,
-      totalVisitas: c.totalVisitas ?? concluidos.length,
-      totalAgendamentos: c.agendamentos.length,
-      totalGasto: c.totalGasto ?? totalGasto,
-      ultimaVisita: c.lastVisit || ultimaVisita,
-      lastVisit: c.lastVisit || ultimaVisita,
-      diasSemVir,
-      status: statusCliente,
-      agendamentos: c.agendamentos,
-    };
-  });
+  const resultado = clientes.map(serializarClienteCRM);
 
   res.json(resultado);
 }
@@ -3383,43 +3345,85 @@ async function importarClientesCSV(req, res) {
 
 // ─── CLIENTES ────────────────────────────────────────────────────────────────
 
+function serializarClienteCRM(cliente) {
+  const agora = Date.now();
+  const concluidos = (cliente.agendamentos || []).filter((agendamento) => agendamento.status === 'concluido');
+  const totalGastoCalculado = concluidos.reduce((sum, agendamento) => {
+    const base = getAgendamentoPrecoBase(agendamento);
+    const extras = getAgendamentoItensExtras(agendamento).reduce((subtotal, item) => subtotal + Number(item.preco || 0), 0);
+    return sum + base + extras;
+  }, 0);
+  const ultimaVisitaAg = [...concluidos].sort((a, b) => new Date(b.data) - new Date(a.data))[0];
+  const ultimaVisita = ultimaVisitaAg?.data || null;
+  const diasSemVir = ultimaVisita ? Math.floor((agora - new Date(ultimaVisita)) / 86400000) : null;
+  const statusCliente =
+    diasSemVir === null ? 'sem_visita'
+    : diasSemVir <= 60 ? 'ativo'
+    : diasSemVir <= 180 ? 'inativo'
+    : 'perdido';
+
+  return {
+    id: cliente.id,
+    nome: cliente.nome,
+    apelido: cliente.apelido,
+    nomeExibicao: cliente.apelido || cliente.nome,
+    telefone: cliente.telefone,
+    email: cliente.email,
+    instagram: cliente.instagram,
+    cpf: cliente.cpf,
+    rg: cliente.rg,
+    dataNascimento: cliente.dataNascimento,
+    endereco: cliente.endereco,
+    createdAt: cliente.createdAt,
+    visitas: concluidos.length,
+    totalVisitas: cliente.totalVisitas ?? concluidos.length,
+    totalAgendamentos: (cliente.agendamentos || []).length,
+    totalGasto: cliente.totalGasto ?? totalGastoCalculado,
+    ultimaVisita: cliente.lastVisit || ultimaVisita,
+    lastVisit: cliente.lastVisit || ultimaVisita,
+    diasSemVir,
+    status: statusCliente,
+    agendamentos: cliente.agendamentos || [],
+  };
+}
+
 async function getHistoricoCliente(req, res) {
   const { busca } = req.query;
   if (!busca || busca.trim().length < 2) {
     return res.status(400).json({ error: 'Informe ao menos 2 caracteres para buscar' });
   }
 
-  const agendamentos = await prisma.agendamento.findMany({
+  const buscaNormalizada = busca.trim();
+  const buscaTelefone = normalizarTelefone(buscaNormalizada);
+
+  const clientes = await prisma.cliente.findMany({
     where: {
       salaoId: req.user.salaoId,
-      ...professionalScopeFilter(req),
+      ...(isScopedProfessional(req)
+        ? { agendamentos: { some: { profissionalId: req.user.profissionalId } } }
+        : {}),
       OR: [
-        { clienteNome: { contains: busca, mode: 'insensitive' } },
-        { clienteTelefone: { contains: busca } },
-      ],
+        { nome: { contains: buscaNormalizada, mode: 'insensitive' } },
+        { apelido: { contains: buscaNormalizada, mode: 'insensitive' } },
+        ...(buscaTelefone ? [{ telefone: { contains: buscaTelefone } }] : []),
+      ]
     },
-    orderBy: [{ clienteNome: 'asc' }, { data: 'desc' }],
+    orderBy: { nome: 'asc' },
     include: {
-      servico: { select: { nome: true, preco: true } },
-      pacote: { select: { nome: true, preco: true } },
-      profissional: { select: { nome: true } },
+      agendamentos: {
+        where: isScopedProfessional(req) ? { profissionalId: req.user.profissionalId } : undefined,
+        include: {
+          servico: { select: { nome: true, preco: true, duracaoMin: true } },
+          pacote: { select: { nome: true, preco: true, duracaoMin: true } },
+          profissional: { select: { nome: true } },
+          itens: true,
+          produtos: true,
+        },
+      },
     },
   });
 
-  const mapa = {};
-  for (const a of agendamentos) {
-    const key = a.clienteTelefone;
-    if (!mapa[key]) {
-      mapa[key] = { nome: a.clienteNome, telefone: a.clienteTelefone, agendamentos: [], totalGasto: 0, visitas: 0 };
-    }
-    mapa[key].agendamentos.push(a);
-    if (a.status === 'concluido') {
-      mapa[key].totalGasto += calcularTotalAgendamento(a);
-      mapa[key].visitas += 1;
-    }
-  }
-
-  res.json(Object.values(mapa));
+  res.json(clientes.map(serializarClienteCRM));
 }
 
 // ─── RELATÓRIO ───────────────────────────────────────────────────────────────
