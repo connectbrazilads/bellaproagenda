@@ -88,6 +88,16 @@ function uniqueNonEmpty(values) {
   )];
 }
 
+function normalizeLookupKey(value = '') {
+  return String(value || '')
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '')
+    .trim();
+}
+
 function normalizePhoneDigits(value = '') {
   return String(value || '').replace(/\D/g, '');
 }
@@ -189,8 +199,54 @@ async function findSalaoByWebhookPayload(body, data) {
     ])),
   ];
 
-  const salao = await prisma.salao.findFirst({ where: { OR: or } });
+  let salao = await prisma.salao.findFirst({ where: { OR: or } });
+  if (salao) {
+    return { salao, rawCandidates, phoneCandidates };
+  }
+
+  const normalizedCandidates = uniqueNonEmpty(rawCandidates.map(normalizeLookupKey));
+  if (!normalizedCandidates.length) {
+    return { salao: null, rawCandidates, phoneCandidates };
+  }
+
+  const saloes = await prisma.salao.findMany({
+    select: {
+      id: true,
+      nome: true,
+      slug: true,
+      telefone: true,
+      whatsapp: true,
+      whatsappAgendamentos: true,
+      evolutionUrl: true,
+      evolutionKey: true,
+      evolutionInstance: true,
+      moduloWhatsapp: true,
+      moduloIA: true,
+    },
+  });
+
+  salao = saloes.find((item) => {
+    const keys = uniqueNonEmpty([
+      normalizeLookupKey(item.slug),
+      normalizeLookupKey(item.nome),
+    ]);
+
+    return normalizedCandidates.some((candidate) =>
+      keys.some((key) => candidate === key || candidate.startsWith(key) || key.startsWith(candidate))
+    );
+  }) || null;
+
   return { salao, rawCandidates, phoneCandidates };
+}
+
+function pickEvolutionInstanceCandidate(rawCandidates = []) {
+  return rawCandidates.find((candidate) => {
+    const value = String(candidate || '').trim();
+    if (!value) return false;
+    if (value.includes('@')) return false;
+    if (/^\d+$/.test(value)) return false;
+    return /[a-z]/i.test(value);
+  }) || null;
 }
 
 async function handleWhatsapp(req, res) {
@@ -227,6 +283,21 @@ async function handleWhatsapp(req, res) {
     }
 
     const salaoId = salao.id;
+    const evolutionInstanceDetectada = pickEvolutionInstanceCandidate(rawCandidates);
+    let salaoAtual = salao;
+
+    if (
+      (evolutionInstanceDetectada && salao.evolutionInstance !== evolutionInstanceDetectada)
+      || !salao.moduloWhatsapp
+    ) {
+      salaoAtual = await prisma.salao.update({
+        where: { id: salaoId },
+        data: {
+          evolutionInstance: evolutionInstanceDetectada || salao.evolutionInstance,
+          moduloWhatsapp: true,
+        },
+      });
+    }
 
     // Find or create conversation (unique per salão + telefone)
     let conversa = await prisma.conversa.findUnique({ where: { salaoId_telefone: { salaoId, telefone } } });
@@ -236,7 +307,7 @@ async function handleWhatsapp(req, res) {
       let avatarUrl = null;
 
       try {
-        avatarUrl = await fetchEvolutionProfilePictureUrl(salao, telefone);
+        avatarUrl = await fetchEvolutionProfilePictureUrl(salaoAtual, telefone);
       } catch {
         avatarUrl = null;
       }
@@ -247,6 +318,7 @@ async function handleWhatsapp(req, res) {
           telefone,
           nomeCliente,
           avatarUrl,
+          atendimento: salaoAtual.moduloIA ? 'ia' : 'humano',
         },
       });
     } else {
@@ -262,7 +334,7 @@ async function handleWhatsapp(req, res) {
 
       if (!conversa.avatarUrl) {
         try {
-          const avatarUrl = await fetchEvolutionProfilePictureUrl(salao, telefone);
+          const avatarUrl = await fetchEvolutionProfilePictureUrl(salaoAtual, telefone);
           if (avatarUrl) dataAtualizacao.avatarUrl = avatarUrl;
         } catch {
           // segue sem avatar se a Evolution nao retornar imagem
@@ -294,12 +366,12 @@ async function handleWhatsapp(req, res) {
     inboxEvents.emit('nova_mensagem', { salaoId, conversaId: conversa.id, mensagem: novaMensagemEntrada });
 
     // Skip AI if a human is handling
-    if (conversa.atendimento !== 'ia') return;
+    if (!salaoAtual.moduloIA || conversa.atendimento !== 'ia') return;
 
     const resposta = await processarMensagem(salaoId, telefone, conteudoMensagem);
     if (!resposta) return;
 
-    await enviarMensagem(telefone, resposta, salao);
+    await enviarMensagem(telefone, resposta, salaoAtual);
 
     const novaMensagemSaida = await prisma.mensagem.create({
       data: {
