@@ -24,6 +24,14 @@ function extractIncomingText(data) {
   );
 }
 
+function isFromMeMessage(data) {
+  return Boolean(
+    data?.key?.fromMe ||
+    data?.fromMe ||
+    data?.message?.fromMe
+  );
+}
+
 function extractMediaPayload(data) {
   const message = data?.message || {};
 
@@ -78,6 +86,23 @@ function buildMensagemConteudo(texto, media) {
   if (media.tipo === 'anexo') return media.nomeArquivo ? `Anexo: ${media.nomeArquivo}` : 'Anexo recebido';
   if (media.tipo === 'video') return media.legenda ? `Video: ${media.legenda}` : 'Video recebido';
   return media.legenda || 'Midia recebida';
+}
+
+async function findRecentDuplicateMessage(conversaId, { conteudo, direcao, tipo, mediaUrl }) {
+  const limite = new Date(Date.now() - 5 * 1000);
+
+  return prisma.mensagem.findFirst({
+    where: {
+      conversaId,
+      direcao,
+      conteudo,
+      tipo,
+      createdAt: { gte: limite },
+      ...(mediaUrl ? { mediaUrl } : {}),
+    },
+    select: { id: true },
+    orderBy: { createdAt: 'desc' },
+  });
 }
 
 function uniqueNonEmpty(values) {
@@ -255,11 +280,11 @@ async function handleWhatsapp(req, res) {
   try {
     const body = req.body;
     const event = normalizeEvolutionEvent(body?.event);
-    if (event !== 'MESSAGES_UPSERT') return;
+    if (!['MESSAGES_UPSERT', 'SEND_MESSAGE'].includes(event)) return;
 
     const data = body?.data || body;
     if (!data?.key) return;
-    if (data.key.fromMe) return;
+    const mensagemSaida = isFromMeMessage(data);
 
     const jid = data.key.remoteJid || '';
     if (!jid || jid.includes('@g.us')) return;
@@ -299,8 +324,13 @@ async function handleWhatsapp(req, res) {
       });
     }
 
-    // Find or create conversation (unique per salão + telefone)
+    // Find or create conversation (unique per salao + telefone)
     let conversa = await prisma.conversa.findUnique({ where: { salaoId_telefone: { salaoId, telefone } } });
+
+    if (!conversa && mensagemSaida) {
+      // Saidas do celular entram no inbox apenas quando a conversa ja existe.
+      return;
+    }
 
     if (!conversa) {
       const nomeCliente = await findNomeCliente(salaoId, telefone, data);
@@ -347,14 +377,28 @@ async function handleWhatsapp(req, res) {
       });
     }
 
-    // Save incoming message
+    const tipoMensagem = media?.tipo || 'texto';
+    const direcaoMensagem = mensagemSaida ? 'saida' : 'entrada';
+    const origemMensagem = mensagemSaida ? 'admin' : 'cliente';
+
+    const duplicateMessage = await findRecentDuplicateMessage(conversa.id, {
+      conteudo: conteudoMensagem,
+      direcao: direcaoMensagem,
+      tipo: tipoMensagem,
+      mediaUrl: media?.mediaUrl || null,
+    });
+
+    if (duplicateMessage) {
+      return;
+    }
+
     const novaMensagemEntrada = await prisma.mensagem.create({
       data: {
         conversaId: conversa.id,
         conteudo: conteudoMensagem,
-        direcao: 'entrada',
-        origem: 'cliente',
-        tipo: media?.tipo || 'texto',
+        direcao: direcaoMensagem,
+        origem: origemMensagem,
+        tipo: tipoMensagem,
         mimeType: media?.mimeType || null,
         mediaUrl: media?.mediaUrl || null,
         mediaBase64: media?.mediaBase64 || null,
@@ -363,7 +407,19 @@ async function handleWhatsapp(req, res) {
       },
     });
 
+    await prisma.conversa.update({
+      where: { id: conversa.id },
+      data: {
+        updatedAt: new Date(),
+        status: 'aberta',
+      },
+    });
+
     inboxEvents.emit('nova_mensagem', { salaoId, conversaId: conversa.id, mensagem: novaMensagemEntrada });
+
+    if (mensagemSaida) {
+      return;
+    }
 
     // Skip AI if a human is handling
     if (!salaoAtual.moduloIA || conversa.atendimento !== 'ia') return;
