@@ -1904,6 +1904,9 @@ async function criarAgendamentoAdminMultiplo(req, res) {
 async function getAgendamentos(req, res) {
   const { data, status } = req.query;
   const profissionalId = getScopedProfessionalId(req, req.query.profissionalId);
+
+  await normalizarAgendamentosPagosConcluidos(req.user.salaoId);
+
   const where = { salaoId: req.user.salaoId };
   if (profissionalId) where.profissionalId = profissionalId;
   if (status) where.status = status;
@@ -2161,6 +2164,31 @@ async function executarConclusaoAgendamento(agId, salaoId) {
   await aplicarConsumoEstoqueDoServico(ag);
 
   return { comissaoValor, saldoRestante, fidelidadeGanho, fidelidadeTipo: salao?.fidelidadeTipo };
+}
+
+async function normalizarAgendamentosPagosConcluidos(salaoId, agendamentoIds = []) {
+  if (!salaoId) return 0;
+
+  const idsFiltrados = Array.isArray(agendamentoIds)
+    ? [...new Set(agendamentoIds.filter(Boolean))]
+    : [];
+
+  const pendentesConclusao = await prisma.agendamento.findMany({
+    where: {
+      salaoId,
+      statusPagamento: 'pago',
+      status: { notIn: ['concluido', 'cancelado'] },
+      ...(idsFiltrados.length ? { id: { in: idsFiltrados } } : {}),
+    },
+    select: { id: true },
+    orderBy: [{ data: 'asc' }, { inicioHora: 'asc' }, { createdAt: 'asc' }],
+  });
+
+  for (const agendamento of pendentesConclusao) {
+    await executarConclusaoAgendamento(agendamento.id, salaoId);
+  }
+
+  return pendentesConclusao.length;
 }
 
 async function updateStatusAgendamento(req, res) {
@@ -2751,6 +2779,7 @@ async function updatePagamentoAgendamento(req, res) {
         resultado = await executarConclusaoAgendamento(agendamentoAtual.id, salaoId);
       }
     }
+    await normalizarAgendamentosPagosConcluidos(salaoId, idsSolicitados);
   }
 
   await syncComandaStatus(agExiste.comandaId);
