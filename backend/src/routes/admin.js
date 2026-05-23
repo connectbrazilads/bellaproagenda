@@ -53,6 +53,7 @@ router.get('/alertas-agendamento', requireAnyPermission(['agenda', 'dashboard', 
 router.post('/alertas-agendamento/lidas', requireAnyPermission(['agenda', 'dashboard', 'agendamentos']), ctrl.markTodosAlertasAgendamentoLidos);
 router.post('/alertas-agendamento/:id/lida', requireAnyPermission(['agenda', 'dashboard', 'agendamentos']), ctrl.markAlertaAgendamentoLido);
 router.post('/agendamentos', requirePermission('agenda'), requireActionPermission('agenda.criar'), ctrl.criarAgendamentoAdmin);
+router.post('/agendamentos/multi', requirePermission('agenda'), requireActionPermission('agenda.criar'), ctrl.criarAgendamentoAdminMultiplo);
 router.put('/agendamentos/:id', requirePermission('agenda'), requireActionPermission('agenda.editar'), ctrl.updateAgendamento);
 router.put('/agendamentos/:id/observacao', requirePermission('agenda'), requireActionPermission('agenda.editar'), ctrl.updateObservacaoAgendamento);
 router.put('/agendamentos/:id/status', requirePermission('agenda'), requireActionPermission('agenda.editar'), ctrl.updateStatusAgendamento);
@@ -60,6 +61,7 @@ router.post('/agendamentos/:id/reagendar', requirePermission('agenda'), requireA
 router.post('/agendamentos/:id/reabrir-comanda', requirePermission('agenda'), requireActionPermission('agenda.editar'), ctrl.reabrirComandaAgendamento);
 router.put('/agendamentos/:id/pagamento', requirePermission('agenda'), requireActionPermission('agenda.pagamento'), ctrl.updatePagamentoAgendamento);
 router.post('/agendamentos/:id/itens', requirePermission('agenda'), ctrl.addItemAgendamento);
+router.post('/agendamentos/:id/comanda-itens', requirePermission('agenda'), requireActionPermission('agenda.criar'), ctrl.addItemComandaAgendamento);
 router.delete('/agendamentos/:id/itens/:itemId', requirePermission('agenda'), ctrl.removeItemAgendamento);
 router.delete('/agendamentos/:id', requirePermission('agenda'), requireActionPermission('agenda.excluir'), ctrl.deleteAgendamento);
 router.get('/lista-espera', requirePermission('agenda'), ctrl.getListaEspera);

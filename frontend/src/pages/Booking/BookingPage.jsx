@@ -24,6 +24,8 @@ export default function BookingPage({ slug }) {
     slug,
     servicos: [],
     profissional: null,
+    multiProfissional: false,
+    multiItens: [],
     data: '',
     hora: '',
     clienteNome: '',
@@ -64,7 +66,10 @@ export default function BookingPage({ slug }) {
   }
 
   function set(field, value) {
-    setBooking((current) => ({ ...current, [field]: value }));
+    setBooking((current) => ({
+      ...current,
+      [field]: typeof value === 'function' ? value(current[field]) : value,
+    }));
   }
 
   if (agendamentoCriado) {

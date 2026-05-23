@@ -83,6 +83,7 @@ model Salao {
   produtos      Produto[]
   listaEspera   ListaEspera[]
   pacotes       Pacote[]
+  comandas      Comanda[]
   agendamentos  Agendamento[]
   despesas      Despesa[]
   conversas          Conversa[]
@@ -228,6 +229,7 @@ model Cliente {
   updatedAt    DateTime      @updatedAt
   salao        Salao         @relation(fields: [salaoId], references: [id], onDelete: Cascade)
   agendamentos Agendamento[]
+  comandas     Comanda[]
   pacotes      ClientePacote[]
 
   @@unique([salaoId, telefone])
@@ -390,6 +392,8 @@ model RespostaRapida {
 model Agendamento {
   id              String            @id @default(uuid())
   salaoId         String
+  comandaId       String?
+  grupoAtendimentoId String?
   profissionalId  String
   servicoId       String?
   pacoteId        String?
@@ -413,6 +417,7 @@ model Agendamento {
   comentario      String?
   createdAt       DateTime          @default(now())
   salao           Salao             @relation(fields: [salaoId], references: [id], onDelete: Cascade)
+  comanda         Comanda?          @relation(fields: [comandaId], references: [id], onDelete: SetNull)
   profissional    Profissional      @relation(fields: [profissionalId], references: [id], onDelete: Cascade)
   servico         Servico?          @relation(fields: [servicoId], references: [id])
   pacote          Pacote?           @relation(fields: [pacoteId], references: [id])
@@ -426,6 +431,28 @@ model Agendamento {
   reagendadoDe    Agendamento?       @relation("AgendamentoReagendamento", fields: [reagendadoDeId], references: [id])
 
   @@index([salaoId, origem, createdAt])
+  @@index([salaoId, comandaId, data])
+  @@index([salaoId, grupoAtendimentoId, data])
+}
+
+model Comanda {
+  id              String         @id @default(uuid())
+  salaoId         String
+  clienteId       String?
+  clienteNome     String
+  clienteTelefone String
+  data            DateTime
+  status          String         @default("aberta")
+  origem          String         @default("admin")
+  observacao      String?
+  createdAt       DateTime       @default(now())
+  updatedAt       DateTime       @updatedAt
+  salao           Salao          @relation(fields: [salaoId], references: [id], onDelete: Cascade)
+  cliente         Cliente?       @relation(fields: [clienteId], references: [id], onDelete: SetNull)
+  agendamentos    Agendamento[]
+
+  @@index([salaoId, data])
+  @@index([salaoId, status, data])
 }
 
 model AgendamentoPagamento {

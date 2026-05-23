@@ -1,11 +1,17 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { motion } from 'framer-motion';
-import { ChevronLeft, ChevronRight, Calendar as CalendarIcon, User } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Calendar as CalendarIcon, User, Users } from 'lucide-react';
 import { getDatasDisponiveis } from '../../services/api';
 import { cn } from '../../lib/utils';
 
 const DIAS_SEMANA = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sab'];
 const MESES = ['Janeiro', 'Fevereiro', 'Marco', 'Abril', 'Maio', 'Junho', 'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'];
+
+function intersectDateLists(lists) {
+  if (!lists.length) return [];
+  const [first, ...rest] = lists;
+  return first.filter((date) => rest.every((list) => list.includes(date)));
+}
 
 export default function StepData({ booking, set, next, cor }) {
   const hoje = new Date();
@@ -36,7 +42,15 @@ export default function StepData({ booking, set, next, cor }) {
 
   function selecionar(d) {
     if (isPast(d) || !isDisponivel(d)) return;
-    set('data', formatarData(d));
+    const dataEscolhida = formatarData(d);
+    set('data', dataEscolhida);
+    if (booking.multiProfissional) {
+      set('multiItens', (booking.multiItens || []).map((item) => ({
+        ...item,
+        data: dataEscolhida,
+        hora: '',
+      })));
+    }
     set('hora', '');
     next();
   }
@@ -60,42 +74,65 @@ export default function StepData({ booking, set, next, cor }) {
   }
 
   useEffect(() => {
-    if (!booking.profissional?.id || !booking.servicos?.length) {
-      setDatasDisponiveis([]);
-      setLoadingDisponibilidade(false);
-      return;
-    }
-
-    const isPacote = booking.servicos[0]?.isPacote;
-    const params = {
-      profissionalId: booking.profissional.id,
-      ano,
-      mes: mais + 1,
-      ...(isPacote ? { pacoteId: booking.servicos[0].id } : { servicoIds: booking.servicos.map((item) => item.id) }),
-    };
-
     let cancelado = false;
-    setLoadingDisponibilidade(true);
-    setErroDisponibilidade('');
 
-    getDatasDisponiveis(booking.slug, params)
-      .then((response) => {
+    async function carregar() {
+      try {
+        setLoadingDisponibilidade(true);
+        setErroDisponibilidade('');
+
+        if (booking.multiProfissional) {
+          const itens = booking.multiItens || [];
+          if (!itens.length) {
+            setDatasDisponiveis([]);
+            return;
+          }
+
+          const respostas = await Promise.all(itens.map((item) =>
+            getDatasDisponiveis(booking.slug, {
+              profissionalId: item.profissionalId,
+              servicoId: item.servicoId,
+              ano,
+              mes: mais + 1,
+            })
+          ));
+
+          if (cancelado) return;
+          const listas = respostas.map((response) => response.data || []);
+          setDatasDisponiveis(intersectDateLists(listas));
+          return;
+        }
+
+        if (!booking.profissional?.id || !booking.servicos?.length) {
+          setDatasDisponiveis([]);
+          return;
+        }
+
+        const isPacote = booking.servicos[0]?.isPacote;
+        const params = {
+          profissionalId: booking.profissional.id,
+          ano,
+          mes: mais + 1,
+          ...(isPacote ? { pacoteId: booking.servicos[0].id } : { servicoIds: booking.servicos.map((item) => item.id) }),
+        };
+
+        const response = await getDatasDisponiveis(booking.slug, params);
         if (cancelado) return;
         setDatasDisponiveis(response.data || []);
-      })
-      .catch((error) => {
+      } catch (error) {
         if (cancelado) return;
         setDatasDisponiveis([]);
-        setErroDisponibilidade(error.response?.data?.error || 'Nao foi possivel consultar a agenda deste profissional.');
-      })
-      .finally(() => {
+        setErroDisponibilidade(error.response?.data?.error || 'Nao foi possivel consultar a agenda desta selecao.');
+      } finally {
         if (!cancelado) setLoadingDisponibilidade(false);
-      });
+      }
+    }
 
+    carregar();
     return () => {
       cancelado = true;
     };
-  }, [booking.slug, booking.profissional?.id, booking.servicos, ano, mais]);
+  }, [booking.slug, booking.profissional?.id, booking.servicos, booking.multiProfissional, booking.multiItens, ano, mais]);
 
   const dataAtual = booking.data
     ? new Date(`${booking.data}T00:00:00`)
@@ -105,7 +142,9 @@ export default function StepData({ booking, set, next, cor }) {
     <div className="space-y-8 pb-6">
       <div className="flex items-center gap-5 rounded-3xl border border-gray-100/50 bg-gray-50/50 p-5 backdrop-blur-sm">
         <div className="flex h-14 w-14 flex-shrink-0 items-center justify-center overflow-hidden rounded-2xl border border-gray-50 bg-white shadow-xl">
-          {booking.profissional.fotoUrl ? (
+          {booking.multiProfissional ? (
+            <Users size={24} className="text-[#d48997]" />
+          ) : booking.profissional?.fotoUrl ? (
             <img src={booking.profissional.fotoUrl} alt={booking.profissional.nome} className="h-full w-full object-cover" />
           ) : (
             <div className="flex h-full w-full items-center justify-center bg-gray-50 text-gray-300">
@@ -114,8 +153,12 @@ export default function StepData({ booking, set, next, cor }) {
           )}
         </div>
         <div>
-          <p className="mb-1 text-[10px] font-black uppercase tracking-[0.2em] text-gray-400">Agendando com</p>
-          <p className="text-lg font-black uppercase leading-none tracking-tight text-gray-900">{booking.profissional.nome}</p>
+          <p className="mb-1 text-[10px] font-black uppercase tracking-[0.2em] text-gray-400">
+            {booking.multiProfissional ? 'Com equipe' : 'Agendando com'}
+          </p>
+          <p className="text-lg font-black uppercase leading-none tracking-tight text-gray-900">
+            {booking.multiProfissional ? 'Profissionais separados por servico' : booking.profissional?.nome}
+          </p>
         </div>
       </div>
 
@@ -188,13 +231,6 @@ export default function StepData({ booking, set, next, cor }) {
                     cursor: disabled ? 'not-allowed' : 'pointer',
                   }}
                 >
-                  {selecionado && (
-                    <motion.div
-                      layoutId="activeDay"
-                      className="absolute inset-0 rounded-2xl"
-                      style={{ backgroundColor: cor }}
-                    />
-                  )}
                   <span className="relative z-10">{d}</span>
                   {!past && !selecionado && disponivel && (
                     <div className="relative z-10 mt-1 h-1 w-1 rounded-full bg-emerald-400" />
@@ -208,18 +244,12 @@ export default function StepData({ booking, set, next, cor }) {
 
       <div className="flex items-center justify-center gap-3 text-[10px] font-black uppercase tracking-widest text-gray-300">
         <CalendarIcon size={12} />
-        {loadingDisponibilidade ? 'Consultando dias com vaga' : 'Selecione um dia com vaga'}
+        {loadingDisponibilidade ? 'Consultando dias com vaga' : 'Selecione um dia com vaga para toda a equipe'}
       </div>
 
       {erroDisponibilidade && (
         <div className="rounded-3xl border border-rose-100 bg-rose-50 px-5 py-4 text-center text-sm font-semibold text-rose-700">
           {erroDisponibilidade}
-        </div>
-      )}
-
-      {!loadingDisponibilidade && !erroDisponibilidade && datasDisponiveis.length === 0 && (
-        <div className="rounded-3xl border border-amber-100 bg-amber-50 px-5 py-4 text-center text-sm font-semibold text-amber-800">
-          Nao encontramos horarios livres neste mes para essa selecao. Tente outro mes ou outro profissional.
         </div>
       )}
     </div>

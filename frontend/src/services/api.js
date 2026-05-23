@@ -39,6 +39,7 @@ export const getProfissionaisPorPacote = (slug, pacoteId) => api.get(`/public/${
 export const getDatasDisponiveis = (slug, params) => api.get(`/public/${slug}/datas-disponiveis`, { params });
 export const getHorariosDisponiveis = (slug, params) => api.get(`/public/${slug}/horarios-disponiveis`, { params });
 export const criarAgendamentoPublico = (slug, data) => api.post(`/public/${slug}/agendamentos`, data);
+export const criarAgendamentoPublicoMultiplo = (slug, data) => api.post(`/public/${slug}/agendamentos/multi`, data);
 
 // AUTH
 export const login = (data) => api.post('/auth/login', data);
@@ -97,6 +98,7 @@ export const getAlertasAgendamento = (params) => api.get('/admin/alertas-agendam
 export const markAlertaAgendamentoLido = (id) => api.post(`/admin/alertas-agendamento/${id}/lida`);
 export const markTodosAlertasAgendamentoLidos = () => api.post('/admin/alertas-agendamento/lidas');
 export const criarAgendamentoAdmin = (data) => api.post('/admin/agendamentos', data);
+export const criarAgendamentoAdminMultiplo = (data) => api.post('/admin/agendamentos/multi', data);
 export const updateAgendamentoAdmin = (id, data) => api.put(`/admin/agendamentos/${id}`, data);
 export const updateStatusAgendamento = (id, status) => api.put(`/admin/agendamentos/${id}/status`, { status });
 export const updateObservacaoAgendamento = (id, observacao) => api.put(`/admin/agendamentos/${id}/observacao`, { observacao });
@@ -105,6 +107,7 @@ export const reabrirComandaAgendamento = (id, data) => api.post(`/admin/agendame
 export const updatePagamentoAgendamento = (id, data) => api.put(`/admin/agendamentos/${id}/pagamento`, data);
 export const deleteAgendamento = (id) => api.delete(`/admin/agendamentos/${id}`);
 export const addItemAgendamento = (id, servicoId) => api.post(`/admin/agendamentos/${id}/itens`, { servicoId });
+export const addItemComandaAgendamento = (id, data) => api.post(`/admin/agendamentos/${id}/comanda-itens`, data);
 export const removeItemAgendamento = (id, itemId) => api.delete(`/admin/agendamentos/${id}/itens/${itemId}`);
 export const buscarClientes = (q) => api.get('/admin/clientes/buscar', { params: { q } });
 export const getListaEspera = (params) => api.get('/admin/lista-espera', { params });

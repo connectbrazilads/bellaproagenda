@@ -95,6 +95,14 @@ export function normalizePhone(value = '') {
 export function isSameClientDayAgendamento(base, candidate) {
   if (!base || !candidate) return false;
 
+  if (base.comandaId && candidate.comandaId) {
+    return base.comandaId === candidate.comandaId;
+  }
+
+  if (base.grupoAtendimentoId && candidate.grupoAtendimentoId) {
+    return base.grupoAtendimentoId === candidate.grupoAtendimentoId;
+  }
+
   const baseDate = String(base.data || '').slice(0, 10);
   const candidateDate = String(candidate.data || '').slice(0, 10);
   if (!baseDate || baseDate !== candidateDate) return false;

@@ -1,29 +1,29 @@
 # Arquitetura
 
-## Visão executiva
+## Visao executiva
 
-A BellaPro Agenda é um SaaS multi-tenant para operação de salões de beleza com três superfícies:
+A BellaPro Agenda e um SaaS multi-tenant para operacao de saloes de beleza com tres superficies:
 
-- experiência pública de agendamento
-- painel administrativo do salão
+- experiencia publica de agendamento
+- painel administrativo do salao
 - painel superadmin da plataforma
 
-## Arquitetura de alto nível
+## Arquitetura de alto nivel
 
 - `frontend/`: SPA React + Vite
 - `backend/`: Express + Prisma
 - `database`: PostgreSQL
 - `uploads`: armazenamento local autenticado
 
-Integrações principais:
+Integracoes principais:
 
 - Evolution API para WhatsApp
 - Gemini para IA
 - SMTP para e-mail
 
-## Domínio principal
+## Dominio principal
 
-A raiz multi-tenant é `Salao`.
+A raiz multi-tenant e `Salao`.
 
 Entidades centrais:
 
@@ -39,17 +39,73 @@ Entidades centrais:
 - `BillingSettings`
 - `Conversa` / `Mensagem`
 
-## Superfícies funcionais
+## Atendimento multi-profissional e checkout unico
 
-### Booking público
+Problema de negocio:
 
-Resolve o salão por `slug` e expõe:
+- um mesmo cliente pode consumir varios servicos no mesmo dia
+- cada servico pode ser executado por um profissional diferente
+- a operacao precisa separar agenda, execucao e comissao por profissional
+- a cobranca precisa acontecer em um unico checkout no final
 
-- serviços
+Decisao arquitetural:
+
+- separar `execucao` de `cobranca`
+- cada servico continua existindo como um `Agendamento` proprio
+- varios `Agendamento` do mesmo cliente e do mesmo dia podem ser agrupados em uma unica comanda logica
+- o checkout final fecha a comanda inteira, mesmo que a execucao tenha sido distribuida entre profissionais diferentes
+
+Regra de vinculacao recomendada:
+
+- prioridade 1: `clienteId`
+- prioridade 2: telefone normalizado
+- prioridade 3: nome somente como fallback operacional
+
+Observacoes:
+
+- telefone pode ser usado para localizar e agrupar quando o cliente ainda nao estiver cadastrado
+- nome sozinho nao deve ser a chave principal, porque gera colisao e erro operacional
+- quando o cliente for identificado com seguranca, o sistema deve persistir o mesmo `clienteId` em todos os agendamentos ligados a aquele atendimento
+
+Modelo operacional recomendado:
+
+- `Agendamento` continua sendo a unidade de agenda, execucao, comissao e consumo de estoque
+- `Comanda` passa a ser a unidade de cobranca e fechamento
+- uma `Comanda` possui 1 cliente, 1 data operacional e N agendamentos
+- pagamentos ficam registrados na `Comanda`, nao espalhados entre varios agendamentos
+- ao concluir o checkout, todos os agendamentos da comanda mudam para `statusPagamento = pago`
+
+Regras de negocio da comanda:
+
+- so pode agrupar agendamentos do mesmo cliente e do mesmo dia
+- agendamentos cancelados nao entram na comanda
+- a comanda pode misturar servicos, pacotes, itens extras e produtos
+- comissao continua calculada por agendamento, respeitando o profissional executor
+- taxa de operadora pode ficar no fechamento da comanda e depois ser distribuida apenas para relatorio, se necessario
+
+Estado atual do produto:
+
+- o sistema ja possui agrupamento logico de agendamentos do mesmo cliente no mesmo dia
+- esse agrupamento ja considera `clienteId`, telefone e nome
+- o backend ja aceita fechar varios `agendamentoIds` em um unico pagamento
+
+Evolucao recomendada:
+
+- curto prazo: manter o agrupamento logico atual e fortalecer a vinculacao por `clienteId` + telefone
+- medio prazo: criar a entidade explicita `Comanda` com `comandaId` em `Agendamento`
+- longo prazo: mover pagamentos, descontos, taxa e auditoria de checkout para o nivel de `Comanda`
+
+## Superficies funcionais
+
+### Booking publico
+
+Resolve o salao por `slug` e expoe:
+
+- servicos
 - pacotes
 - profissionais
-- horários disponíveis
-- criação de agendamento
+- horarios disponiveis
+- criacao de agendamento
 
 ### Painel admin
 
@@ -58,7 +114,7 @@ Opera:
 - agenda
 - clientes
 - profissionais
-- serviços
+- servicos
 - produtos
 - pacotes
 - inbox
@@ -70,73 +126,73 @@ Opera:
 
 Opera:
 
-- visão global da base
-- gestão de salões
+- visao global da base
+- gestao de saloes
 - billing SaaS
 - PIX global
-- emissão e conferência de faturas
+- emissao e conferencia de faturas
 - suporte operacional
 
 ## Billing SaaS
 
-O billing agora está centralizado em `BillingSettings`.
+O billing agora esta centralizado em `BillingSettings`.
 
 Campos relevantes:
 
-- configuração global de PIX
-- preço `basic`
-- preço `pro`
-- preço `enterprise`
+- configuracao global de PIX
+- preco `basic`
+- preco `pro`
+- preco `enterprise`
 - dia de vencimento
-- flag de cobrança automática
+- flag de cobranca automatica
 
-O módulo de invoices faz:
+O modulo de invoices faz:
 
-- criação manual de faturas
-- geração automática mensal por plano
-- exposição de faturas ao salão
+- criacao manual de faturas
+- geracao automatica mensal por plano
+- exposicao de faturas ao salao
 - envio de comprovante pelo cliente
 
-## Sessão
+## Sessao
 
-Sessões admin e superadmin usam cookies `httpOnly`.
+Sessoes admin e superadmin usam cookies `httpOnly`.
 
-Isso altera a arquitetura de navegação:
+Isso altera a arquitetura de navegacao:
 
 - frontend fala com a API usando `withCredentials`
-- backend passa a ser responsável direto pela sessão de navegador
+- backend passa a ser responsavel direto pela sessao de navegador
 
 ## Background jobs
 
 Hoje rodam dentro do processo da API:
 
 - lembretes
-- geração automática de faturas
+- geracao automatica de faturas
 
-Isso simplifica operação inicial, mas não é ideal para múltiplas réplicas.
+Isso simplifica a operacao inicial, mas nao e ideal para multiplas replicas.
 
-## Segurança arquitetural
+## Seguranca arquitetural
 
 Controles relevantes aplicados:
 
 - isolamento por `salaoId`
-- permissão por módulo e ação
+- permissao por modulo e acao
 - webhook com token
 - upload autenticado
-- headers básicos de segurança
-- rate limit em rotas sensíveis
+- headers basicos de seguranca
+- rate limit em rotas sensiveis
 - superadmin sem fallback inseguro
 
 ## Deploy
 
-Modelos já preparados:
+Modelos ja preparados:
 
 - VPS tradicional com Nginx
 - Easypanel com monorepo separado em `/backend` e `/frontend`
 
-## Evolução recomendada
+## Evolucao recomendada
 
 - worker separado para billing e lembretes
 - object storage para uploads
-- observabilidade de cron, webhook e integrações
-- ciclo formal de cobrança, inadimplência e suspensão
+- observabilidade de cron, webhook e integracoes
+- ciclo formal de cobranca, inadimplencia e suspensao

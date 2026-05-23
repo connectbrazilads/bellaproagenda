@@ -31,5 +31,6 @@ router.get('/:slug/profissionais-pacote/:pacoteId', ctrl.getProfissionaisPorPaco
 router.get('/:slug/datas-disponiveis', bookingLookupRateLimiter, ctrl.getDatasDisponiveisHandler);
 router.get('/:slug/horarios-disponiveis', bookingLookupRateLimiter, ctrl.getHorariosDisponiveisHandler);
 router.post('/:slug/agendamentos', bookingCreateRateLimiter, ctrl.criarAgendamento);
+router.post('/:slug/agendamentos/multi', bookingCreateRateLimiter, ctrl.criarAgendamentoMultiplo);
 
 module.exports = router;

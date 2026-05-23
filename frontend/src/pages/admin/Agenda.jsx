@@ -41,8 +41,8 @@ import {
 } from 'lucide-react';
 import { 
   getProfissionais, getAgendamentos, getServicos, getPacotes, getProdutos,
-  criarAgendamentoAdmin, updateAgendamentoAdmin, updateStatusAgendamento, deleteAgendamento, 
-  buscarClientes, addItemAgendamento, removeItemAgendamento, addProdutoAgendamento, removeProdutoAgendamento, updatePagamentoAgendamento, updateObservacaoAgendamento,
+  criarAgendamentoAdmin, criarAgendamentoAdminMultiplo, updateAgendamentoAdmin, updateStatusAgendamento, deleteAgendamento, 
+  buscarClientes, addItemAgendamento, addItemComandaAgendamento, removeItemAgendamento, addProdutoAgendamento, removeProdutoAgendamento, updatePagamentoAgendamento, updateObservacaoAgendamento,
   createBloqueio, getListaEspera, createListaEspera, deleteListaEspera, reagendarAgendamento, getCaixaStatusPagamento, reorderProfissionais,
   reabrirComandaAgendamento
 } from '../../services/api';
@@ -166,18 +166,25 @@ function isAgendamentoOnline(agendamento) {
 // Se??o visual BellaPro
 
 function ModalNovoAgendamento({ onClose, onSave, preData, preHora, preProf, prefillData }) {
-  const [form, setForm] = useState({ 
-    clienteNome: '', 
-    clienteTelefone: '', 
-    profissionalId: preProf || '', 
-    servicoIds: [], 
-    pacoteId: '', 
-    data: preData || formatDateInput(), 
+  const [modoReserva, setModoReserva] = useState('simples');
+  const [form, setForm] = useState({
+    clienteNome: '',
+    clienteTelefone: '',
+    profissionalId: preProf || '',
+    servicoIds: [],
+    pacoteId: '',
+    data: preData || formatDateInput(),
     hora: preHora || '',
     recorrente: false,
     semanas: 4,
-    encaixe: false
+    encaixe: false,
   });
+  const [multiItemForm, setMultiItemForm] = useState({
+    servicoId: '',
+    profissionalId: preProf || '',
+    hora: preHora || '',
+  });
+  const [multiItens, setMultiItens] = useState([]);
   const [servicos, setServicos] = useState([]);
   const [pacotes, setPacotes] = useState([]);
   const [profissionais, setProfissionais] = useState([]);
@@ -204,14 +211,40 @@ function ModalNovoAgendamento({ onClose, onSave, preData, preHora, preProf, pref
   }, [prefillData]);
 
   useEffect(() => {
-    getServicos().then(r => setServicos(r?.data || []));
-    getPacotes().then(r => setPacotes(r?.data || []));
-    getProfissionais().then(r => setProfissionais((r?.data || []).filter(p => p.ativo)));
+    setMultiItemForm((prev) => ({
+      ...prev,
+      profissionalId: prev.profissionalId || preProf || '',
+      hora: prev.hora || preHora || '',
+    }));
+  }, [preProf, preHora]);
+
+  useEffect(() => {
+    getServicos().then((r) => setServicos(r?.data || []));
+    getPacotes().then((r) => setPacotes(r?.data || []));
+    getProfissionais().then((r) => setProfissionais((r?.data || []).filter((p) => p.ativo)));
   }, []);
+
+  const hourOptions = useMemo(
+    () => Array.from({ length: (END_HOUR - START_HOUR) * 4 + 1 }, (_, i) => {
+      const totalMin = START_HOUR * 60 + i * 15;
+      const h = String(Math.floor(totalMin / 60)).padStart(2, '0');
+      const m = String(totalMin % 60).padStart(2, '0');
+      return `${h}:${m}`;
+    }),
+    []
+  );
+
+  const servicoMap = useMemo(
+    () => new Map((servicos || []).map((servico) => [servico.id, servico])),
+    [servicos]
+  );
+
+  const getServicoIdsProfissional = (profissional) =>
+    new Set((profissional?.servicosEfetivos || profissional?.servicos || []).map((item) => item.servicoId));
 
   const servicoIdsDoProfissionalSelecionado = useMemo(() => {
     const profissional = profissionais.find((p) => p.id === form.profissionalId);
-    return new Set((profissional?.servicosEfetivos || profissional?.servicos || []).map((item) => item.servicoId));
+    return getServicoIdsProfissional(profissional);
   }, [profissionais, form.profissionalId]);
 
   const servicoIdsDoPacoteSelecionado = useMemo(() => {
@@ -224,7 +257,7 @@ function ModalNovoAgendamento({ onClose, onSave, preData, preHora, preProf, pref
     if (servicosNecessarios.length === 0) return profissionais;
 
     return profissionais.filter((profissional) => {
-      const servicosDoProfissional = new Set((profissional.servicosEfetivos || profissional.servicos || []).map((item) => item.servicoId));
+      const servicosDoProfissional = getServicoIdsProfissional(profissional);
       return servicosNecessarios.every((servicoId) => servicosDoProfissional.has(servicoId));
     });
   }, [profissionais, form.servicoIds, form.pacoteId, servicoIdsDoPacoteSelecionado]);
@@ -243,9 +276,10 @@ function ModalNovoAgendamento({ onClose, onSave, preData, preHora, preProf, pref
 
   const servicosDisponiveisFiltrados = useMemo(() => {
     const termo = buscaServico.trim().toLowerCase();
-    if (!termo) return servicosDisponiveis;
-    return servicosDisponiveis.filter((servico) => String(servico.nome || '').toLowerCase().includes(termo));
-  }, [servicosDisponiveis, buscaServico]);
+    const origem = modoReserva === 'multi' ? servicos : servicosDisponiveis;
+    if (!termo) return origem;
+    return origem.filter((servico) => String(servico.nome || '').toLowerCase().includes(termo));
+  }, [buscaServico, modoReserva, servicos, servicosDisponiveis]);
 
   const pacotesDisponiveisFiltrados = useMemo(() => {
     const termo = buscaPacote.trim().toLowerCase();
@@ -259,14 +293,37 @@ function ModalNovoAgendamento({ onClose, onSave, preData, preHora, preProf, pref
     return profissionaisCompativeis.filter((profissional) => String(profissional.nome || '').toLowerCase().includes(termo));
   }, [profissionaisCompativeis, buscaProfissional]);
 
+  const profissionaisMultiCompativeis = useMemo(() => {
+    if (!multiItemForm.servicoId) return profissionais;
+    return profissionais.filter((profissional) => getServicoIdsProfissional(profissional).has(multiItemForm.servicoId));
+  }, [profissionais, multiItemForm.servicoId]);
+
+  const profissionaisMultiCompativeisFiltrados = useMemo(() => {
+    const termo = buscaProfissional.trim().toLowerCase();
+    if (!termo) return profissionaisMultiCompativeis;
+    return profissionaisMultiCompativeis.filter((profissional) => String(profissional.nome || '').toLowerCase().includes(termo));
+  }, [buscaProfissional, profissionaisMultiCompativeis]);
+
+  const totalMulti = useMemo(
+    () => multiItens.reduce((sum, item) => sum + Number(servicoMap.get(item.servicoId)?.preco || 0), 0),
+    [multiItens, servicoMap]
+  );
+
   useEffect(() => {
     if (!form.profissionalId) return;
-
     const profissionalAindaCompativel = profissionaisCompativeis.some((profissional) => profissional.id === form.profissionalId);
     if (!profissionalAindaCompativel) {
       setForm((prev) => ({ ...prev, profissionalId: '' }));
     }
   }, [form.profissionalId, profissionaisCompativeis]);
+
+  useEffect(() => {
+    if (!multiItemForm.profissionalId) return;
+    const profissionalAindaCompativel = profissionaisMultiCompativeis.some((profissional) => profissional.id === multiItemForm.profissionalId);
+    if (!profissionalAindaCompativel) {
+      setMultiItemForm((prev) => ({ ...prev, profissionalId: '' }));
+    }
+  }, [multiItemForm.profissionalId, profissionaisMultiCompativeis]);
 
   useEffect(() => {
     if (!form.profissionalId) return;
@@ -284,16 +341,25 @@ function ModalNovoAgendamento({ onClose, onSave, preData, preHora, preProf, pref
   }, [form.profissionalId, form.servicoIds, form.pacoteId, servicoIdsDoProfissionalSelecionado, servicoIdsDoPacoteSelecionado]);
 
   async function buscar(val) {
-    if (val.length < 2) { setSugestoes([]); return; }
+    if (val.length < 2) {
+      setSugestoes([]);
+      return;
+    }
     try {
       const res = await buscarClientes(val);
       setSugestoes(res?.data || []);
       setShowSug(true);
-    } catch (e) { console.error(e); }
+    } catch (e) {
+      console.error(e);
+    }
   }
 
-  function selecionar(c) {
-    setForm(f => ({ ...f, clienteNome: c.nome, clienteTelefone: c.telefone }));
+  function selecionar(cliente) {
+    setForm((prev) => ({
+      ...prev,
+      clienteNome: cliente.nome,
+      clienteTelefone: cliente.telefone,
+    }));
     setSugestoes([]);
     setShowSug(false);
   }
@@ -313,9 +379,10 @@ function ModalNovoAgendamento({ onClose, onSave, preData, preHora, preProf, pref
       try {
         const res = await getAgendamentos({ data: form.data });
         const doMesmoCliente = (res?.data?.agendamentos || []).filter((ag) => {
+          const mesmoGrupo = ag.grupoAtendimentoId && multiItens.some((item) => item.grupoAtendimentoId && item.grupoAtendimentoId === ag.grupoAtendimentoId);
           const mesmoTelefone = telefone && normalizePhone(ag.clienteTelefone) === telefone;
           const mesmoNome = !telefone && nome && ag.clienteNome?.trim().toLowerCase() === nome;
-          return ag.status !== 'cancelado' && (mesmoTelefone || mesmoNome);
+          return ag.status !== 'cancelado' && (mesmoGrupo || mesmoTelefone || mesmoNome);
         });
 
         setAgendamentosCliente(doMesmoCliente);
@@ -329,74 +396,148 @@ function ModalNovoAgendamento({ onClose, onSave, preData, preHora, preProf, pref
     }
 
     carregarDuplicidade();
-  }, [form.clienteNome, form.clienteTelefone, form.data]);
+  }, [form.clienteNome, form.clienteTelefone, form.data, multiItens]);
 
   function toggleServico(id) {
     if (form.profissionalId && !servicoIdsDoProfissionalSelecionado.has(id)) return;
 
-    setForm(f => ({
-      ...f,
-      servicoIds: f.servicoIds.includes(id) 
-        ? f.servicoIds.filter(x => x !== id) 
-        : [...f.servicoIds, id],
-      pacoteId: ''
+    setForm((prev) => ({
+      ...prev,
+      servicoIds: prev.servicoIds.includes(id)
+        ? prev.servicoIds.filter((servicoId) => servicoId !== id)
+        : [...prev.servicoIds, id],
+      pacoteId: '',
     }));
   }
 
-  async function salvar() {
-    if (!form.clienteNome || !form.clienteTelefone || !form.profissionalId || (form.servicoIds.length === 0 && !form.pacoteId) || !form.hora) {
-      alert('Preencha todos os campos obrigatorios');
+  function addMultiItem() {
+    if (!multiItemForm.servicoId || !multiItemForm.profissionalId || !multiItemForm.hora) {
+      window.alert('Selecione servico, profissional e horario para adicionar o item.');
       return;
     }
+
+    const servico = servicoMap.get(multiItemForm.servicoId);
+    if (!servico) {
+      window.alert('Servico invalido para este item.');
+      return;
+    }
+
+    const duplicado = multiItens.some((item) =>
+      item.servicoId === multiItemForm.servicoId
+      && item.profissionalId === multiItemForm.profissionalId
+      && item.hora === multiItemForm.hora
+    );
+
+    if (duplicado) {
+      window.alert('Este item ja foi adicionado na comanda.');
+      return;
+    }
+
+    setMultiItens((prev) => [
+      ...prev,
+      {
+        id: `${multiItemForm.servicoId}-${multiItemForm.profissionalId}-${multiItemForm.hora}-${prev.length}`,
+        servicoId: multiItemForm.servicoId,
+        profissionalId: multiItemForm.profissionalId,
+        hora: multiItemForm.hora,
+      },
+    ]);
+
+    setMultiItemForm((prev) => ({
+      ...prev,
+      servicoId: '',
+      hora: '',
+    }));
+    setBuscaServico('');
+  }
+
+  function removeMultiItem(id) {
+    setMultiItens((prev) => prev.filter((item) => item.id !== id));
+  }
+
+  async function salvar() {
+    if (!form.clienteNome || !form.clienteTelefone) {
+      window.alert('Preencha nome e telefone do cliente.');
+      return;
+    }
+
     try {
-      await criarAgendamentoAdmin(form);
+      if (modoReserva === 'multi') {
+        if (!form.data || multiItens.length === 0) {
+          window.alert('Escolha a data e adicione ao menos um item ao atendimento.');
+          return;
+        }
+
+        await criarAgendamentoAdminMultiplo({
+          clienteNome: form.clienteNome,
+          clienteTelefone: form.clienteTelefone,
+          data: form.data,
+          itens: multiItens.map((item) => ({
+            servicoId: item.servicoId,
+            profissionalId: item.profissionalId,
+            hora: item.hora,
+          })),
+        });
+      } else {
+        if (!form.profissionalId || (form.servicoIds.length === 0 && !form.pacoteId) || !form.hora) {
+          window.alert('Preencha todos os campos obrigatorios.');
+          return;
+        }
+
+        await criarAgendamentoAdmin(form);
+      }
+
       onSave();
-    } catch (e) { alert(e.response?.data?.error || 'Erro ao criar'); }
+    } catch (e) {
+      window.alert(e.response?.data?.error || 'Erro ao criar agendamento.');
+    }
   }
 
   return (
-    <motion.div 
+    <motion.div
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
-      className="fixed inset-0 bg-black/80 backdrop-blur-2xl z-[200] flex items-center justify-center overflow-y-auto overscroll-contain p-3 sm:p-4"
+      className="fixed inset-0 z-[200] flex items-center justify-center overflow-y-auto overscroll-contain bg-black/80 p-3 backdrop-blur-2xl sm:p-4"
     >
-      <motion.div 
+      <motion.div
         initial={{ scale: 0.9, y: 40, opacity: 0 }}
         animate={{ scale: 1, y: 0, opacity: 1 }}
         exit={{ scale: 0.9, y: 40, opacity: 0 }}
-        className="bg-white dark:bg-[#0c0c0e] rounded-t-[2rem] md:rounded-[3rem] w-full max-w-2xl h-[95dvh] md:h-auto md:max-h-[92dvh] overflow-y-auto modal-scrollbar p-4 sm:p-6 md:p-10 md:pr-6 xl:p-14 xl:pr-8 shadow-[0_50px_100px_-20px_rgba(0,0,0,0.6)] relative border border-gray-200 dark:border-white/5"
+        className="relative h-[95dvh] w-full max-w-2xl overflow-y-auto rounded-t-[2rem] border border-gray-200 bg-white p-4 shadow-[0_50px_100px_-20px_rgba(0,0,0,0.6)] dark:border-white/5 dark:bg-[#0c0c0e] md:h-auto md:max-h-[92dvh] md:rounded-[3rem] md:p-10 md:pr-6 xl:p-14 xl:pr-8"
       >
-        <div className="absolute top-0 left-0 w-full h-1.5 bg-gradient-to-r from-[#d48997] via-fuchsia-500 to-indigo-600" />
-        
-        <button 
-          onClick={onClose} 
-          className="absolute top-4 right-6 flex h-12 w-12 items-center justify-center rounded-full border border-gray-200 bg-white text-[#3b2a35] shadow-sm transition-all hover:scale-105 hover:text-red-500 active:scale-95 dark:border-white/10 dark:bg-white/10 dark:text-white md:top-5 md:right-10"
+        <div className="absolute left-0 top-0 h-1.5 w-full bg-gradient-to-r from-[#d48997] via-fuchsia-500 to-indigo-600" />
+
+        <button
+          onClick={onClose}
+          className="absolute right-6 top-4 flex h-12 w-12 items-center justify-center rounded-full border border-gray-200 bg-white text-[#3b2a35] shadow-sm transition-all hover:scale-105 hover:text-red-500 active:scale-95 dark:border-white/10 dark:bg-white/10 dark:text-white md:right-10 md:top-5"
         >
           <X size={24} />
         </button>
-        
-        <div className="mb-8 md:mb-12 pr-14 md:pr-16">
-          <div className="flex items-center gap-4 mb-3">
-            <div className="p-3 bg-[#d48997] rounded-2xl shadow-xl shadow-[#E29BA8]/20">
+
+        <div className="mb-8 pr-14 md:mb-12 md:pr-16">
+          <div className="mb-3 flex items-center gap-4">
+            <div className="rounded-2xl bg-[#d48997] p-3 shadow-xl shadow-[#E29BA8]/20">
               <CalendarIcon size={24} className="text-gray-900 dark:text-white" />
             </div>
             <div>
-              <h2 className="text-2xl md:text-3xl xl:text-4xl font-black uppercase tracking-tighter text-gray-900 dark:text-white leading-none">Nova Reserva</h2>
-              <p className="text-[#E29BA8] text-[10px] font-black uppercase tracking-[0.3em] mt-1">BellaPro Agenda</p>
+              <h2 className="text-2xl font-black uppercase tracking-tighter text-gray-900 dark:text-white md:text-3xl xl:text-4xl">
+                Nova Reserva
+              </h2>
+              <p className="mt-1 text-[10px] font-black uppercase tracking-[0.3em] text-[#E29BA8]">BellaPro Agenda</p>
             </div>
           </div>
         </div>
 
-        <div className="space-y-10">
-          <div className="rounded-[2rem] border border-gray-200 dark:border-white/5 bg-gray-50 dark:bg-white/5 p-2">
+        <div className="space-y-8">
+          <div className="rounded-[2rem] border border-gray-200 bg-gray-50 p-2 dark:border-white/5 dark:bg-white/5">
             <div className="flex gap-2">
               <button
                 type="button"
                 onClick={() => setAbaResumo('dados')}
                 className={cn(
                   'flex-1 rounded-[2rem] px-5 py-4 text-[10px] font-black uppercase tracking-[0.2em] transition-all',
-                  abaResumo === 'dados' ? 'bg-white dark:bg-[#d48997] text-[#d48997] dark:text-white shadow-xl' : 'text-gray-400'
+                  abaResumo === 'dados' ? 'bg-white text-[#d48997] shadow-xl dark:bg-[#d48997] dark:text-white' : 'text-gray-400'
                 )}
               >
                 Dados da Reserva
@@ -406,7 +547,7 @@ function ModalNovoAgendamento({ onClose, onSave, preData, preHora, preProf, pref
                 onClick={() => setAbaResumo('conflitos')}
                 className={cn(
                   'flex-1 rounded-[2rem] px-5 py-4 text-[10px] font-black uppercase tracking-[0.2em] transition-all',
-                  abaResumo === 'conflitos' ? 'bg-white dark:bg-bellapro-blush/90 text-bellapro-blush dark:text-white shadow-xl' : 'text-gray-400',
+                  abaResumo === 'conflitos' ? 'bg-white text-bellapro-blush shadow-xl dark:bg-bellapro-blush/90 dark:text-white' : 'text-gray-400',
                   agendamentosCliente.length > 0 && 'text-bellapro-blush dark:text-amber-300'
                 )}
               >
@@ -416,7 +557,7 @@ function ModalNovoAgendamento({ onClose, onSave, preData, preHora, preProf, pref
           </div>
 
           {abaResumo === 'conflitos' && (
-            <div className="rounded-[2rem] border border-amber-200 dark:border-bellapro-blush/20 bg-amber-50/80 dark:bg-bellapro-blush/10 p-4 sm:p-6 md:p-8 space-y-4">
+            <div className="space-y-4 rounded-[2rem] border border-amber-200 bg-amber-50/80 p-4 dark:border-bellapro-blush/20 dark:bg-bellapro-blush/10 sm:p-6 md:p-8">
               <div className="flex items-start justify-between gap-4">
                 <div>
                   <p className="text-[10px] font-black uppercase tracking-[0.3em] text-bellapro-blush">Cliente ja possui agenda no dia</p>
@@ -425,7 +566,7 @@ function ModalNovoAgendamento({ onClose, onSave, preData, preHora, preProf, pref
                   </h3>
                 </div>
                 {agendamentosCliente.length > 0 && (
-                  <span className="rounded-full bg-bellapro-blush text-white px-3 py-1 text-[10px] font-black uppercase tracking-widest">
+                  <span className="rounded-full bg-bellapro-blush px-3 py-1 text-[10px] font-black uppercase tracking-widest text-white">
                     Agenda
                   </span>
                 )}
@@ -434,14 +575,14 @@ function ModalNovoAgendamento({ onClose, onSave, preData, preHora, preProf, pref
               {agendamentosCliente.length > 0 ? (
                 <div className="space-y-3">
                   {agendamentosCliente.map((ag) => (
-                    <div key={ag.id} className="rounded-[1.75rem] bg-white dark:bg-black/20 border border-amber-100 dark:border-white/5 px-5 py-4 flex items-center justify-between gap-4">
+                    <div key={ag.id} className="flex items-center justify-between gap-4 rounded-[1.75rem] border border-amber-100 bg-white px-5 py-4 dark:border-white/5 dark:bg-black/20">
                       <div>
-                        <p className="text-sm font-black text-gray-900 dark:text-white uppercase">{ag.profissional?.nome}</p>
-                        <p className="text-[10px] font-black text-bellapro-blush uppercase tracking-[0.2em] mt-1">
+                        <p className="text-sm font-black uppercase text-gray-900 dark:text-white">{ag.profissional?.nome}</p>
+                        <p className="mt-1 text-[10px] font-black uppercase tracking-[0.2em] text-bellapro-blush">
                           {ag.inicioHora} - {getAgendamentoTitulo(ag)}
                         </p>
                       </div>
-                      <p className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em]">
+                      <p className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-400">
                         {formatDurationLabel(calculateAgendamentoDuration(ag))}
                       </p>
                     </div>
@@ -455,55 +596,60 @@ function ModalNovoAgendamento({ onClose, onSave, preData, preHora, preProf, pref
             </div>
           )}
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:p-8">
-            <div className="space-y-3 relative">
-              <label className="text-[9px] font-black uppercase tracking-[0.4em] text-gray-500 ml-6 flex items-center gap-2">
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-2 md:p-4">
+            <div className="relative space-y-3">
+              <label className="ml-6 flex items-center gap-2 text-[9px] font-black uppercase tracking-[0.4em] text-gray-500">
                 <Phone size={10} className="text-[#d48997]" /> WhatsApp / Telefone
               </label>
-              <input 
-                value={form.clienteTelefone} 
-                onChange={e => {
-                  const v = e.target.value.replace(/\D/g, '');
-                  setForm({...form, clienteTelefone: v});
-                  buscar(v);
-                }} 
+              <input
+                value={form.clienteTelefone}
+                onChange={(e) => {
+                  const valor = e.target.value.replace(/\D/g, '');
+                  setForm((prev) => ({ ...prev, clienteTelefone: valor }));
+                  buscar(valor);
+                }}
                 placeholder="(00) 00000-0000"
-                className="w-full bg-gray-50 dark:bg-white/5 border border-gray-100 dark:border-white/5 rounded-[2rem] px-8 py-5 outline-none text-gray-900 dark:text-white focus:ring-4 ring-[#E29BA8]/10 transition-all font-black text-sm" 
+                className="w-full rounded-[2rem] border border-gray-100 bg-gray-50 px-8 py-5 text-sm font-black text-gray-900 outline-none transition-all focus:ring-4 ring-[#E29BA8]/10 dark:border-white/5 dark:bg-white/5 dark:text-white"
               />
             </div>
-            <div className="space-y-3 relative">
-              <label className="text-[9px] font-black uppercase tracking-[0.4em] text-gray-500 ml-6 flex items-center gap-2">
+
+            <div className="relative space-y-3">
+              <label className="ml-6 flex items-center gap-2 text-[9px] font-black uppercase tracking-[0.4em] text-gray-500">
                 <User size={10} className="text-[#d48997]" /> Nome Completo
               </label>
-              <input 
-                value={form.clienteNome} 
-                onChange={e => {
-                  setForm({...form, clienteNome: e.target.value});
+              <input
+                value={form.clienteNome}
+                onChange={(e) => {
+                  setForm((prev) => ({ ...prev, clienteNome: e.target.value }));
                   buscar(e.target.value);
-                }} 
+                }}
                 placeholder="Identificacao do cliente..."
-                className="w-full bg-gray-50 dark:bg-white/5 border border-gray-100 dark:border-white/5 rounded-[2rem] px-8 py-5 outline-none text-gray-900 dark:text-white focus:ring-4 ring-[#E29BA8]/10 transition-all font-black text-sm" 
+                className="w-full rounded-[2rem] border border-gray-100 bg-gray-50 px-8 py-5 text-sm font-black text-gray-900 outline-none transition-all focus:ring-4 ring-[#E29BA8]/10 dark:border-white/5 dark:bg-white/5 dark:text-white"
               />
-              
+
               <AnimatePresence>
                 {showSug && sugestoes.length > 0 && (
-                  <motion.div 
+                  <motion.div
                     initial={{ opacity: 0, y: 15, scale: 0.95 }}
                     animate={{ opacity: 1, y: 0, scale: 1 }}
                     exit={{ opacity: 0, y: 15, scale: 0.95 }}
-                    className="absolute top-full left-0 right-0 mt-4 bg-white dark:bg-[#121214] border border-gray-100 dark:border-white/10 rounded-3xl shadow-[0_30px_60px_-12px_rgba(0,0,0,0.5)] z-[210] overflow-hidden backdrop-blur-3xl"
+                    className="absolute left-0 right-0 top-full z-[210] mt-4 overflow-hidden rounded-3xl border border-gray-100 bg-white shadow-[0_30px_60px_-12px_rgba(0,0,0,0.5)] backdrop-blur-3xl dark:border-white/10 dark:bg-[#121214]"
                   >
-                    {sugestoes.map((s) => (
-                      <button 
-                        key={s.id} 
-                        onClick={() => selecionar(s)}
-                        className="w-full text-left px-8 py-5 hover:bg-[#d48997] transition-all flex items-center justify-between group"
+                    {sugestoes.map((sugestao) => (
+                      <button
+                        key={sugestao.id}
+                        onClick={() => selecionar(sugestao)}
+                        className="group flex w-full items-center justify-between px-8 py-5 text-left transition-all hover:bg-[#d48997]"
                       >
                         <div>
-                          <p className="text-xs font-black text-gray-900 dark:text-white uppercase group-hover:text-gray-900 dark:text-white transition-colors tracking-tight">{s.nome}</p>
-                          <p className="text-[10px] text-gray-400 group-hover:text-gray-600 dark:text-white/60 font-bold tracking-[0.2em]">{s.telefone}</p>
+                          <p className="text-xs font-black uppercase tracking-tight text-gray-900 transition-colors group-hover:text-gray-900 dark:text-white">
+                            {sugestao.nome}
+                          </p>
+                          <p className="text-[10px] font-bold tracking-[0.2em] text-gray-400 group-hover:text-gray-600 dark:text-white/60">
+                            {sugestao.telefone}
+                          </p>
                         </div>
-                        <Check size={16} className="text-[#E29BA8] group-hover:text-gray-900 dark:text-white opacity-0 group-hover:opacity-100 transition-all" />
+                        <Check size={16} className="text-[#E29BA8] opacity-0 transition-all group-hover:opacity-100 group-hover:text-gray-900 dark:text-white" />
                       </button>
                     ))}
                   </motion.div>
@@ -512,192 +658,380 @@ function ModalNovoAgendamento({ onClose, onSave, preData, preHora, preProf, pref
             </div>
           </div>
 
-          <div className="flex p-2 bg-gray-100 dark:bg-white/5 rounded-[2rem] border border-gray-200 dark:border-white/5">
-             <button 
-               onClick={() => setIsPacote(false)} 
-               className={`flex-1 py-4 rounded-[2rem] text-[10px] font-black uppercase tracking-[0.2em] transition-all duration-500 ${!isPacote ? 'bg-white dark:bg-[#d48997] shadow-xl text-[#d48997] dark:text-white' : 'text-gray-400 hover:text-gray-600 dark:hover:text-gray-200'}`}
-             >
-               Servicos Individuais
-             </button>
-             <button 
-               onClick={() => setIsPacote(true)} 
-               className={`flex-1 py-4 rounded-[2rem] text-[10px] font-black uppercase tracking-[0.2em] transition-all duration-500 ${isPacote ? 'bg-white dark:bg-[#d48997] shadow-xl text-[#d48997] dark:text-white' : 'text-gray-400 hover:text-gray-600 dark:hover:text-gray-200'}`}
-             >
-               Pacotes Combo
-             </button>
-          </div>
-
-          <div className="grid grid-cols-1 gap-4 md:p-8">
-{isPacote ? (
-              <div className="space-y-3">
-                <label className="text-[9px] font-black uppercase tracking-[0.4em] text-gray-500 ml-6">Catalogo de Pacotes</label>
-                <div className="relative">
-                  <Search size={16} className="absolute left-5 top-1/2 -translate-y-1/2 text-gray-400" />
-                  <input
-                    value={buscaPacote}
-                    onChange={(e) => setBuscaPacote(e.target.value)}
-                    placeholder="Escreva para buscar um pacote"
-                    className="w-full rounded-[1.75rem] border border-gray-200 bg-white py-4 pl-12 pr-4 text-sm font-bold text-gray-700 outline-none dark:border-white/10 dark:bg-white/5 dark:text-white"
-                  />
-                </div>
-                <select 
-                  value={form.pacoteId} 
-                  onChange={e => setForm({...form, pacoteId: e.target.value, servicoIds: []})} 
-                  className="w-full bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/5 rounded-[2rem] px-8 py-5 outline-none text-gray-900 dark:text-white font-black text-sm appearance-none cursor-pointer"
-                >
-                  <option value="" className="dark:bg-gray-900">Escolha o combo...</option>
-                  {pacotesDisponiveisFiltrados.map((p) => <option key={p.id} value={p.id} className="dark:bg-gray-900">{p.nome} - R$ {p.preco}</option>)}
-                </select>
-              </div>
-            ) : (
-              <div className="space-y-4">
-                <label className="text-[9px] font-black uppercase tracking-[0.4em] text-gray-500 ml-6">Selecao Multi-Servico</label>
-                <div className="relative">
-                  <Search size={16} className="absolute left-5 top-1/2 -translate-y-1/2 text-gray-400" />
-                  <input
-                    value={buscaServico}
-                    onChange={(e) => setBuscaServico(e.target.value)}
-                    placeholder="Escreva para buscar um servico"
-                    className="w-full rounded-[1.75rem] border border-gray-200 bg-white py-4 pl-12 pr-4 text-sm font-bold text-gray-700 outline-none dark:border-white/10 dark:bg-white/5 dark:text-white"
-                  />
-                </div>
-                <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-3 md:gap-4 p-4 md:p-6 bg-gray-100 dark:bg-white/5 rounded-[2rem] md:rounded-[2rem] border border-gray-200 dark:border-white/5 max-h-56 overflow-y-auto custom-scrollbar shadow-inner">
-                  {servicosDisponiveisFiltrados.map((s) => (
-                    <button
-                      key={s.id}
-                      type="button"
-                      onClick={() => toggleServico(s.id)}
-                      className={`text-left px-5 py-4 rounded-2xl text-[10px] font-black uppercase tracking-tight border-2 transition-all duration-500 relative group overflow-hidden ${
-                        form.servicoIds.includes(s.id) 
-                        ? 'bg-[#d48997] border-[#d48997] text-white shadow-lg shadow-[#E29BA8]/30' 
-                        : 'bg-white dark:bg-[#1a1a1c] border-gray-200 dark:border-white/5 text-gray-600 hover:border-[#E29BA8]/40'
-                      }`}
-                    >
-                      {s.nome}
-                      {form.servicoIds.includes(s.id) && <Check size={10} className="absolute top-2 right-2" />}
-                    </button>
-                  ))}
-                  {servicosDisponiveisFiltrados.length === 0 && (
-                    <p className="col-span-full rounded-2xl border border-dashed border-gray-300 px-4 py-6 text-center text-sm font-bold text-gray-500 dark:border-white/10 dark:text-gray-400">
-                      Nenhum servico encontrado nessa busca.
-                    </p>
-                  )}
-                </div>
-              </div>
-            )}
-            
-            <div className="space-y-3">
-              <label className="text-[9px] font-black uppercase tracking-[0.4em] text-gray-500 ml-6">Artista Responsavel</label>
-              <div className="relative">
-                <Search size={16} className="absolute left-5 top-1/2 -translate-y-1/2 text-gray-400" />
-                <input
-                  value={buscaProfissional}
-                  onChange={(e) => setBuscaProfissional(e.target.value)}
-                  placeholder="Escreva para buscar o profissional"
-                  className="w-full rounded-[1.75rem] border border-gray-200 bg-white py-4 pl-12 pr-4 text-sm font-bold text-gray-700 outline-none dark:border-white/10 dark:bg-white/5 dark:text-white"
-                />
-              </div>
-              <select 
-                value={form.profissionalId} 
-                onChange={e => setForm({...form, profissionalId: e.target.value})} 
-                className="w-full bg-gray-50 dark:bg-white/5 border border-gray-100 dark:border-white/5 rounded-[2rem] px-8 py-5 outline-none text-gray-900 dark:text-white font-black text-sm appearance-none cursor-pointer"
-              >
-                <option value="" className="dark:bg-gray-900">Selecione o profissional...</option>
-                {profissionaisCompativeisFiltrados.map(p => <option key={p.id} value={p.id} className="dark:bg-gray-900">{p.nome}</option>)}
-              </select>
-              {(form.servicoIds.length > 0 || form.pacoteId) && profissionaisCompativeis.length === 0 && (
-                <p className="text-xs font-bold text-bellapro-blush ml-6">
-                  Nenhum profissional atende essa combinacao de servicos.
-                </p>
+          <div className="flex rounded-[2rem] border border-gray-200 bg-gray-100 p-2 dark:border-white/5 dark:bg-white/5">
+            <button
+              type="button"
+              onClick={() => setModoReserva('simples')}
+              className={cn(
+                'flex-1 rounded-[2rem] py-4 text-[10px] font-black uppercase tracking-[0.2em] transition-all duration-500',
+                modoReserva === 'simples' ? 'bg-white text-[#d48997] shadow-xl dark:bg-[#d48997] dark:text-white' : 'text-gray-400 hover:text-gray-600 dark:hover:text-gray-200'
               )}
-            </div>
+            >
+              Reserva Simples
+            </button>
+            <button
+              type="button"
+              onClick={() => setModoReserva('multi')}
+              className={cn(
+                'flex-1 rounded-[2rem] py-4 text-[10px] font-black uppercase tracking-[0.2em] transition-all duration-500',
+                modoReserva === 'multi' ? 'bg-white text-[#d48997] shadow-xl dark:bg-[#d48997] dark:text-white' : 'text-gray-400 hover:text-gray-600 dark:hover:text-gray-200'
+              )}
+            >
+              Multi-Profissional
+            </button>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:p-8">
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-2 md:p-4">
             <div className="space-y-3">
-              <label className="text-[9px] font-black uppercase tracking-[0.4em] text-gray-500 ml-6">Data</label>
-              <div className="relative w-full bg-gray-50 dark:bg-white/5 border border-gray-100 dark:border-white/5 rounded-[2rem] pl-16 pr-8 py-5">
+              <label className="ml-6 text-[9px] font-black uppercase tracking-[0.4em] text-gray-500">Data</label>
+              <div className="relative w-full rounded-[2rem] border border-gray-100 bg-gray-50 py-5 pl-16 pr-8 dark:border-white/5 dark:bg-white/5">
                 <CalendarIcon size={16} className="absolute left-8 top-1/2 -translate-y-1/2 text-[#E29BA8]" />
-                <span className="block font-black text-sm text-gray-900 dark:text-white tracking-[0.15em]">
+                <span className="block text-sm font-black tracking-[0.15em] text-gray-900 dark:text-white">
                   {formatDateBR(form.data)}
                 </span>
                 <input
                   type="date"
                   value={form.data}
-                  onChange={e => setForm({...form, data: e.target.value})}
-                  className="absolute inset-0 opacity-0 cursor-pointer"
+                  onChange={(e) => setForm((prev) => ({ ...prev, data: e.target.value }))}
+                  className="absolute inset-0 cursor-pointer opacity-0"
                   aria-label="Selecionar data"
                 />
               </div>
             </div>
-            <div className="space-y-3">
-              <label className="text-[9px] font-black uppercase tracking-[0.4em] text-gray-500 ml-6">Horario</label>
-              <div className="relative">
-                <Clock size={16} className="absolute left-8 top-1/2 -translate-y-1/2 text-[#E29BA8]" />
-                <select 
-                  value={form.hora} 
-                  onChange={e => setForm({...form, hora: e.target.value})} 
-                  className="w-full bg-gray-50 dark:bg-white/5 border border-gray-100 dark:border-white/5 rounded-[2rem] pl-16 pr-8 py-5 outline-none text-gray-900 dark:text-white font-black text-sm appearance-none cursor-pointer"
-                >
-                  <option value="">Selecione...</option>
-                  {Array.from({ length: (END_HOUR - START_HOUR) * 4 + 1 }, (_, i) => {
-                    const totalMin = START_HOUR * 60 + i * 15;
-                    const h = String(Math.floor(totalMin / 60)).padStart(2, '0');
-                    const m = String(totalMin % 60).padStart(2, '0');
-                    const time = `${h}:${m}`;
-                    return <option key={time} value={time}>{time}</option>;
-                  })}
-                </select>
-              </div>
-            </div>
-          </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:p-8">
-            <div className="flex items-center gap-4 bg-gray-50 dark:bg-white/5 p-4 sm:p-6 rounded-[2rem] border border-gray-100 dark:border-white/5">
-              <input 
-                type="checkbox" 
-                id="recorrente"
-                checked={form.recorrente}
-                onChange={e => setForm({...form, recorrente: e.target.checked})}
-                className="w-6 h-6 rounded-lg accent-[#d48997] cursor-pointer"
-              />
-              <label htmlFor="recorrente" className="text-xs font-black uppercase tracking-widest text-gray-600 dark:text-gray-300 cursor-pointer">Repetir Semanalmente</label>
-            </div>
-            
-            {form.recorrente && (
+            {modoReserva === 'simples' ? (
               <div className="space-y-3">
-                <label className="text-[9px] font-black uppercase tracking-[0.4em] text-gray-500 ml-6">Numero de Semanas</label>
-                <select 
-                  value={form.semanas}
-                  onChange={e => setForm({...form, semanas: Number(e.target.value)})}
-                  className="w-full bg-gray-50 dark:bg-white/5 border border-gray-100 dark:border-white/5 rounded-[2rem] px-8 py-5 outline-none text-gray-900 dark:text-white font-black text-sm"
-                >
-                  <option value={4}>4 Semanas (1 mes)</option>
-                  <option value={8}>8 Semanas (2 mes)</option>
-                  <option value={12}>12 Semanas (3 mes)</option>
-                </select>
+                <label className="ml-6 text-[9px] font-black uppercase tracking-[0.4em] text-gray-500">Horario</label>
+                <div className="relative">
+                  <Clock size={16} className="absolute left-8 top-1/2 -translate-y-1/2 text-[#E29BA8]" />
+                  <select
+                    value={form.hora}
+                    onChange={(e) => setForm((prev) => ({ ...prev, hora: e.target.value }))}
+                    className="w-full cursor-pointer appearance-none rounded-[2rem] border border-gray-100 bg-gray-50 py-5 pl-16 pr-8 text-sm font-black text-gray-900 outline-none dark:border-white/5 dark:bg-white/5 dark:text-white"
+                  >
+                    <option value="">Selecione...</option>
+                    {hourOptions.map((time) => (
+                      <option key={time} value={time}>
+                        {time}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+            ) : (
+              <div className="rounded-[2rem] border border-[#E29BA8]/20 bg-[#E29BA8]/5 px-5 py-4 text-sm font-bold text-[#8a4a58] dark:text-[#f0c1ca]">
+                Todos os itens criados neste modo ficam na mesma comanda e usam a data acima.
               </div>
             )}
           </div>
 
-          <div className="flex items-center gap-4 bg-gray-50 dark:bg-white/5 p-4 sm:p-6 rounded-[2rem] border border-gray-100 dark:border-white/5 mb-8">
-            <input 
-              type="checkbox" 
-              id="encaixe"
-              checked={form.encaixe}
-              onChange={e => setForm({...form, encaixe: e.target.checked})}
-              className="w-6 h-6 rounded-lg accent-[#d48997] cursor-pointer"
-            />
-            <label htmlFor="encaixe" className="text-xs font-black uppercase tracking-widest text-gray-600 dark:text-gray-300 cursor-pointer">Forcar Encaixe (Permitir Sobreposicao)</label>
-          </div>
+          {modoReserva === 'simples' ? (
+            <>
+              <div className="flex rounded-[2rem] border border-gray-200 bg-gray-100 p-2 dark:border-white/5 dark:bg-white/5">
+                <button
+                  onClick={() => setIsPacote(false)}
+                  className={cn(
+                    'flex-1 rounded-[2rem] py-4 text-[10px] font-black uppercase tracking-[0.2em] transition-all duration-500',
+                    !isPacote ? 'bg-white text-[#d48997] shadow-xl dark:bg-[#d48997] dark:text-white' : 'text-gray-400 hover:text-gray-600 dark:hover:text-gray-200'
+                  )}
+                >
+                  Servicos Individuais
+                </button>
+                <button
+                  onClick={() => setIsPacote(true)}
+                  className={cn(
+                    'flex-1 rounded-[2rem] py-4 text-[10px] font-black uppercase tracking-[0.2em] transition-all duration-500',
+                    isPacote ? 'bg-white text-[#d48997] shadow-xl dark:bg-[#d48997] dark:text-white' : 'text-gray-400 hover:text-gray-600 dark:hover:text-gray-200'
+                  )}
+                >
+                  Pacotes Combo
+                </button>
+              </div>
 
-          <motion.button 
+              <div className="grid grid-cols-1 gap-4 md:p-4">
+                {isPacote ? (
+                  <div className="space-y-3">
+                    <label className="ml-6 text-[9px] font-black uppercase tracking-[0.4em] text-gray-500">Catalogo de Pacotes</label>
+                    <div className="relative">
+                      <Search size={16} className="absolute left-5 top-1/2 -translate-y-1/2 text-gray-400" />
+                      <input
+                        value={buscaPacote}
+                        onChange={(e) => setBuscaPacote(e.target.value)}
+                        placeholder="Escreva para buscar um pacote"
+                        className="w-full rounded-[1.75rem] border border-gray-200 bg-white py-4 pl-12 pr-4 text-sm font-bold text-gray-700 outline-none dark:border-white/10 dark:bg-white/5 dark:text-white"
+                      />
+                    </div>
+                    <select
+                      value={form.pacoteId}
+                      onChange={(e) => setForm((prev) => ({ ...prev, pacoteId: e.target.value, servicoIds: [] }))}
+                      className="w-full cursor-pointer appearance-none rounded-[2rem] border border-gray-200 bg-gray-50 px-8 py-5 text-sm font-black text-gray-900 outline-none dark:border-white/5 dark:bg-white/5 dark:text-white"
+                    >
+                      <option value="" className="dark:bg-gray-900">Escolha o combo...</option>
+                      {pacotesDisponiveisFiltrados.map((pacote) => (
+                        <option key={pacote.id} value={pacote.id} className="dark:bg-gray-900">
+                          {pacote.nome} - R$ {pacote.preco}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                ) : (
+                  <div className="space-y-4">
+                    <label className="ml-6 text-[9px] font-black uppercase tracking-[0.4em] text-gray-500">Selecao Multi-Servico</label>
+                    <div className="relative">
+                      <Search size={16} className="absolute left-5 top-1/2 -translate-y-1/2 text-gray-400" />
+                      <input
+                        value={buscaServico}
+                        onChange={(e) => setBuscaServico(e.target.value)}
+                        placeholder="Escreva para buscar um servico"
+                        className="w-full rounded-[1.75rem] border border-gray-200 bg-white py-4 pl-12 pr-4 text-sm font-bold text-gray-700 outline-none dark:border-white/10 dark:bg-white/5 dark:text-white"
+                      />
+                    </div>
+                    <div className="grid max-h-56 grid-cols-1 gap-3 overflow-y-auto rounded-[2rem] border border-gray-200 bg-gray-100 p-4 shadow-inner custom-scrollbar dark:border-white/5 dark:bg-white/5 sm:grid-cols-2 xl:grid-cols-3 md:gap-4 md:p-6">
+                      {servicosDisponiveisFiltrados.map((servico) => (
+                        <button
+                          key={servico.id}
+                          type="button"
+                          onClick={() => toggleServico(servico.id)}
+                          className={cn(
+                            'relative overflow-hidden rounded-2xl border-2 px-5 py-4 text-left text-[10px] font-black uppercase tracking-tight transition-all duration-500',
+                            form.servicoIds.includes(servico.id)
+                              ? 'border-[#d48997] bg-[#d48997] text-white shadow-lg shadow-[#E29BA8]/30'
+                              : 'border-gray-200 bg-white text-gray-600 hover:border-[#E29BA8]/40 dark:border-white/5 dark:bg-[#1a1a1c]'
+                          )}
+                        >
+                          {servico.nome}
+                          {form.servicoIds.includes(servico.id) && <Check size={10} className="absolute right-2 top-2" />}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                <div className="space-y-3">
+                  <label className="ml-6 text-[9px] font-black uppercase tracking-[0.4em] text-gray-500">Artista Responsavel</label>
+                  <div className="relative">
+                    <Search size={16} className="absolute left-5 top-1/2 -translate-y-1/2 text-gray-400" />
+                    <input
+                      value={buscaProfissional}
+                      onChange={(e) => setBuscaProfissional(e.target.value)}
+                      placeholder="Escreva para buscar o profissional"
+                      className="w-full rounded-[1.75rem] border border-gray-200 bg-white py-4 pl-12 pr-4 text-sm font-bold text-gray-700 outline-none dark:border-white/10 dark:bg-white/5 dark:text-white"
+                    />
+                  </div>
+                  <select
+                    value={form.profissionalId}
+                    onChange={(e) => setForm((prev) => ({ ...prev, profissionalId: e.target.value }))}
+                    className="w-full cursor-pointer appearance-none rounded-[2rem] border border-gray-100 bg-gray-50 px-8 py-5 text-sm font-black text-gray-900 outline-none dark:border-white/5 dark:bg-white/5 dark:text-white"
+                  >
+                    <option value="" className="dark:bg-gray-900">Selecione o profissional...</option>
+                    {profissionaisCompativeisFiltrados.map((profissional) => (
+                      <option key={profissional.id} value={profissional.id} className="dark:bg-gray-900">
+                        {profissional.nome}
+                      </option>
+                    ))}
+                  </select>
+                  {(form.servicoIds.length > 0 || form.pacoteId) && profissionaisCompativeis.length === 0 && (
+                    <p className="ml-6 text-xs font-bold text-bellapro-blush">
+                      Nenhum profissional atende essa combinacao de servicos.
+                    </p>
+                  )}
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 gap-4 md:grid-cols-2 md:p-4">
+                <div className="flex items-center gap-4 rounded-[2rem] border border-gray-100 bg-gray-50 p-4 dark:border-white/5 dark:bg-white/5 sm:p-6">
+                  <input
+                    type="checkbox"
+                    id="recorrente"
+                    checked={form.recorrente}
+                    onChange={(e) => setForm((prev) => ({ ...prev, recorrente: e.target.checked }))}
+                    className="h-6 w-6 cursor-pointer rounded-lg accent-[#d48997]"
+                  />
+                  <label htmlFor="recorrente" className="cursor-pointer text-xs font-black uppercase tracking-widest text-gray-600 dark:text-gray-300">
+                    Repetir Semanalmente
+                  </label>
+                </div>
+
+                {form.recorrente && (
+                  <div className="space-y-3">
+                    <label className="ml-6 text-[9px] font-black uppercase tracking-[0.4em] text-gray-500">Numero de Semanas</label>
+                    <select
+                      value={form.semanas}
+                      onChange={(e) => setForm((prev) => ({ ...prev, semanas: Number(e.target.value) }))}
+                      className="w-full rounded-[2rem] border border-gray-100 bg-gray-50 px-8 py-5 text-sm font-black text-gray-900 outline-none dark:border-white/5 dark:bg-white/5 dark:text-white"
+                    >
+                      <option value={4}>4 Semanas (1 mes)</option>
+                      <option value={8}>8 Semanas (2 mes)</option>
+                      <option value={12}>12 Semanas (3 mes)</option>
+                    </select>
+                  </div>
+                )}
+              </div>
+
+              <div className="flex items-center gap-4 rounded-[2rem] border border-gray-100 bg-gray-50 p-4 dark:border-white/5 dark:bg-white/5">
+                <input
+                  type="checkbox"
+                  id="encaixe"
+                  checked={form.encaixe}
+                  onChange={(e) => setForm((prev) => ({ ...prev, encaixe: e.target.checked }))}
+                  className="h-6 w-6 cursor-pointer rounded-lg accent-[#d48997]"
+                />
+                <label htmlFor="encaixe" className="cursor-pointer text-xs font-black uppercase tracking-widest text-gray-600 dark:text-gray-300">
+                  Forcar Encaixe (Permitir Sobreposicao)
+                </label>
+              </div>
+            </>
+          ) : (
+            <>
+              <div className="space-y-4 rounded-[2rem] border border-gray-200 bg-gray-50 p-5 dark:border-white/5 dark:bg-white/5">
+                <div className="flex items-center justify-between gap-4">
+                  <div>
+                    <p className="text-[10px] font-black uppercase tracking-[0.3em] text-[#E29BA8]">Comanda do dia</p>
+                    <h3 className="mt-2 text-xl font-black uppercase tracking-tight text-gray-900 dark:text-white">
+                      Adicione os procedimentos por profissional
+                    </h3>
+                  </div>
+                  <Layers size={22} className="text-[#d48997]" />
+                </div>
+
+                <div className="space-y-3">
+                  <label className="ml-2 text-[9px] font-black uppercase tracking-[0.4em] text-gray-500">Servico do item</label>
+                  <div className="relative">
+                    <Search size={16} className="absolute left-5 top-1/2 -translate-y-1/2 text-gray-400" />
+                    <input
+                      value={buscaServico}
+                      onChange={(e) => setBuscaServico(e.target.value)}
+                      placeholder="Escreva para buscar um servico"
+                      className="w-full rounded-[1.75rem] border border-gray-200 bg-white py-4 pl-12 pr-4 text-sm font-bold text-gray-700 outline-none dark:border-white/10 dark:bg-white/5 dark:text-white"
+                    />
+                  </div>
+                  <div className="grid max-h-48 grid-cols-1 gap-3 overflow-y-auto rounded-[2rem] border border-gray-200 bg-white p-4 custom-scrollbar dark:border-white/5 dark:bg-[#121214] sm:grid-cols-2">
+                    {servicosDisponiveisFiltrados.map((servico) => (
+                      <button
+                        key={servico.id}
+                        type="button"
+                        onClick={() => setMultiItemForm((prev) => ({ ...prev, servicoId: servico.id }))}
+                        className={cn(
+                          'rounded-2xl border px-4 py-3 text-left text-[11px] font-black uppercase tracking-[0.14em] transition-all',
+                          multiItemForm.servicoId === servico.id
+                            ? 'border-[#d48997] bg-[#d48997] text-white shadow-lg shadow-[#E29BA8]/30'
+                            : 'border-gray-200 bg-gray-50 text-gray-700 dark:border-white/10 dark:bg-white/5 dark:text-white'
+                        )}
+                      >
+                        <span className="block">{servico.nome}</span>
+                        <span className={cn('mt-2 block text-[10px]', multiItemForm.servicoId === servico.id ? 'text-white/80' : 'text-gray-400')}>
+                          R$ {Number(servico.preco || 0).toFixed(2)}
+                        </span>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                  <div className="space-y-3">
+                    <label className="ml-2 text-[9px] font-black uppercase tracking-[0.4em] text-gray-500">Profissional do item</label>
+                    <select
+                      value={multiItemForm.profissionalId}
+                      onChange={(e) => setMultiItemForm((prev) => ({ ...prev, profissionalId: e.target.value }))}
+                      className="w-full cursor-pointer appearance-none rounded-[2rem] border border-gray-100 bg-white px-8 py-5 text-sm font-black text-gray-900 outline-none dark:border-white/5 dark:bg-white/5 dark:text-white"
+                    >
+                      <option value="">Selecione o profissional...</option>
+                      {profissionaisMultiCompativeisFiltrados.map((profissional) => (
+                        <option key={profissional.id} value={profissional.id} className="dark:bg-gray-900">
+                          {profissional.nome}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div className="space-y-3">
+                    <label className="ml-2 text-[9px] font-black uppercase tracking-[0.4em] text-gray-500">Horario do item</label>
+                    <select
+                      value={multiItemForm.hora}
+                      onChange={(e) => setMultiItemForm((prev) => ({ ...prev, hora: e.target.value }))}
+                      className="w-full cursor-pointer appearance-none rounded-[2rem] border border-gray-100 bg-white px-8 py-5 text-sm font-black text-gray-900 outline-none dark:border-white/5 dark:bg-white/5 dark:text-white"
+                    >
+                      <option value="">Selecione...</option>
+                      {hourOptions.map((time) => (
+                        <option key={time} value={time}>
+                          {time}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
+
+                <button
+                  type="button"
+                  onClick={addMultiItem}
+                  className="flex w-full items-center justify-center gap-3 rounded-[2rem] bg-[#d48997] px-6 py-5 text-sm font-black uppercase tracking-[0.22em] text-white shadow-xl shadow-[#E29BA8]/25 transition-all hover:bg-[#c97b8a]"
+                >
+                  <Plus size={18} /> Adicionar Item na Comanda
+                </button>
+              </div>
+
+              <div className="space-y-4 rounded-[2rem] border border-gray-200 bg-white p-5 dark:border-white/5 dark:bg-white/5">
+                <div className="flex items-center justify-between gap-4">
+                  <div>
+                    <p className="text-[10px] font-black uppercase tracking-[0.3em] text-[#E29BA8]">Resumo da comanda</p>
+                    <h3 className="mt-2 text-xl font-black uppercase tracking-tight text-gray-900 dark:text-white">
+                      {multiItens.length} item(ns) adicionados
+                    </h3>
+                  </div>
+                  <p className="text-lg font-black text-[#d48997]">
+                    {totalMulti.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
+                  </p>
+                </div>
+
+                {multiItens.length === 0 ? (
+                  <div className="rounded-[1.75rem] border border-dashed border-gray-300 px-5 py-8 text-center text-sm font-bold text-gray-500 dark:border-white/10 dark:text-gray-400">
+                    Adicione os procedimentos e profissionais para montar a comanda do atendimento.
+                  </div>
+                ) : (
+                  <div className="space-y-3">
+                    {multiItens.map((item, index) => {
+                      const servico = servicoMap.get(item.servicoId);
+                      const profissional = profissionais.find((entry) => entry.id === item.profissionalId);
+                      return (
+                        <div key={item.id} className="flex items-center justify-between gap-4 rounded-[1.5rem] border border-gray-100 bg-gray-50 px-4 py-4 dark:border-white/5 dark:bg-black/20">
+                          <div>
+                            <p className="text-[10px] font-black uppercase tracking-[0.24em] text-[#d48997]">Item {index + 1}</p>
+                            <p className="mt-2 text-sm font-black uppercase tracking-tight text-gray-900 dark:text-white">
+                              {servico?.nome || 'Servico'}
+                            </p>
+                            <p className="mt-1 text-[11px] font-bold uppercase tracking-[0.14em] text-gray-500 dark:text-gray-300">
+                              {profissional?.nome || 'Profissional'} · {item.hora}
+                            </p>
+                          </div>
+                          <div className="flex items-center gap-3">
+                            <p className="text-sm font-black text-gray-900 dark:text-white">
+                              {Number(servico?.preco || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
+                            </p>
+                            <button
+                              type="button"
+                              onClick={() => removeMultiItem(item.id)}
+                              className="rounded-full border border-gray-200 p-2 text-gray-500 transition hover:border-red-200 hover:text-red-500 dark:border-white/10 dark:text-white/70"
+                            >
+                              <Trash2 size={14} />
+                            </button>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+            </>
+          )}
+
+          <motion.button
             whileHover={{ scale: 1.02, y: -5 }}
             whileTap={{ scale: 0.98 }}
-            onClick={salvar} 
-            className="w-full py-8 bg-[#0a0a0a] dark:bg-white text-white dark:text-gray-950 rounded-[2rem] font-black text-xl shadow-[0_30px_60px_-15px_rgba(0,0,0,0.4)] transition-all uppercase tracking-[0.3em] flex items-center justify-center gap-4 group"
+            onClick={salvar}
+            className="group flex w-full items-center justify-center gap-4 rounded-[2rem] bg-[#0a0a0a] py-8 text-xl font-black uppercase tracking-[0.3em] text-white shadow-[0_30px_60px_-15px_rgba(0,0,0,0.4)] transition-all dark:bg-white dark:text-gray-950"
           >
-            Confirmar Reserva <Plus size={24} className="group-hover:rotate-90 transition-transform" />
+            {modoReserva === 'multi' ? 'Criar Comanda' : 'Confirmar Reserva'}
+            <Plus size={24} className="transition-transform group-hover:rotate-90" />
           </motion.button>
         </div>
       </motion.div>
@@ -840,6 +1174,13 @@ function ModalDetalhesAgendamento({ agendamento: initialAgendamento, allAgendame
   const [produtosBusca, setProdutosBusca] = useState('');
   const [servicosExpandido, setServicosExpandido] = useState(true);
   const [produtosExpandido, setProdutosExpandido] = useState(true);
+  const [profissionaisEquipe, setProfissionaisEquipe] = useState([]);
+  const [novoItemComanda, setNovoItemComanda] = useState({
+    servicoId: '',
+    profissionalId: '',
+    hora: '',
+    observacao: '',
+  });
 
   async function refreshCaixaPagamentoStatus() {
     try {
@@ -856,6 +1197,7 @@ function ModalDetalhesAgendamento({ agendamento: initialAgendamento, allAgendame
   useEffect(() => {
     getServicos().then(r => setServicos(r?.data || []));
     getProdutos().then(r => setProdutos(r?.data || []));
+    getProfissionais().then(r => setProfissionaisEquipe((r?.data || []).filter((item) => item.ativo)));
     refreshCaixaPagamentoStatus();
   }, []);
 
@@ -867,6 +1209,12 @@ function ModalDetalhesAgendamento({ agendamento: initialAgendamento, allAgendame
     setServicosExpandido(true);
     setProdutosExpandido(true);
     setPagamentoValorBase(String(getAgendamentoBasePrice(initialAgendamento)));
+    setNovoItemComanda({
+      servicoId: '',
+      profissionalId: '',
+      hora: '',
+      observacao: '',
+    });
   }, [initialAgendamento]);
 
   const servicosFiltrados = useMemo(() => {
@@ -900,6 +1248,13 @@ function ModalDetalhesAgendamento({ agendamento: initialAgendamento, allAgendame
     () => getAgendamentosMesmoClienteNoDia(allAgendamentos, agendamento, { excluirCancelados: true }),
     [allAgendamentos, agendamento]
   );
+
+  const profissionaisCompativeisNovoItem = useMemo(() => {
+    if (!novoItemComanda.servicoId) return profissionaisEquipe;
+    return profissionaisEquipe.filter((profissional) =>
+      (profissional?.servicosEfetivos || profissional?.servicos || []).some((item) => item.servicoId === novoItemComanda.servicoId)
+    );
+  }, [profissionaisEquipe, novoItemComanda.servicoId]);
 
   const grupoComandaPendente = useMemo(
     () => agendamentosMesmoClienteNoDia.filter((item) => item.statusPagamento !== 'pago'),
@@ -976,6 +1331,43 @@ function ModalDetalhesAgendamento({ agendamento: initialAgendamento, allAgendame
     } catch (e) { alert('Erro ao remover produto'); }
   }
 
+  async function handleAddItemNaComanda() {
+    if (!novoItemComanda.servicoId || !novoItemComanda.profissionalId || !novoItemComanda.hora) {
+      alert('Selecione servico, profissional e horario para incluir um novo item na comanda.');
+      return;
+    }
+
+    try {
+      const res = await addItemComandaAgendamento(agendamento.id, novoItemComanda);
+      if (res?.data) {
+        setNovoItemComanda({
+          servicoId: '',
+          profissionalId: '',
+          hora: '',
+          observacao: '',
+        });
+        onUpdate?.();
+        setAgendamento(res.data);
+      }
+    } catch (error) {
+      alert(error.response?.data?.error || 'Nao foi possivel adicionar o item na comanda.');
+    }
+  }
+
+  async function handleExcluirAgendamentoDaComanda(item) {
+    if (!window.confirm(`Remover ${getAgendamentoTitulo(item)} da comanda?`)) return;
+
+    try {
+      await deleteAgendamento(item.id);
+      if (item.id === agendamento.id) {
+        onClose?.();
+      }
+      onUpdate?.();
+    } catch (error) {
+      alert(error.response?.data?.error || 'Nao foi possivel remover este item da comanda.');
+    }
+  }
+
   async function handleCheckout(forma) {
     if (!pagamentoValorBaseValido) {
       alert('Informe um valor valido para o servico antes de finalizar a cobranca.');
@@ -999,7 +1391,7 @@ function ModalDetalhesAgendamento({ agendamento: initialAgendamento, allAgendame
       if (res?.data) {
         setAgendamento(res.data);
         setPagamentoValorBase(String(getAgendamentoBasePrice(res.data)));
-        onUpdate(res.data);
+        onUpdate?.();
       }
       setConcluidoSucesso(true);
     } catch (e) {
@@ -1222,6 +1614,31 @@ function ModalDetalhesAgendamento({ agendamento: initialAgendamento, allAgendame
                               {item.profissional?.nome || 'Equipe'} · {item.statusPagamento === 'pago' ? 'Pago' : 'Pendente'}
                             </p>
                           </div>
+                          <div className="flex items-center gap-2">
+                            <button
+                              type="button"
+                              onClick={() => setAgendamento(item)}
+                              className="rounded-xl border border-gray-200 px-3 py-2 text-[9px] font-black uppercase tracking-[0.16em] text-gray-500 transition hover:bg-white dark:border-white/10 dark:text-white/70"
+                            >
+                              Abrir
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => onAjustar?.(item)}
+                              className="rounded-xl border border-[#d48997]/20 px-3 py-2 text-[9px] font-black uppercase tracking-[0.16em] text-[#d48997] transition hover:bg-[#d48997]/10"
+                            >
+                              Ajustar
+                            </button>
+                            {agendamentosMesmoClienteNoDia.length > 1 && (
+                              <button
+                                type="button"
+                                onClick={() => handleExcluirAgendamentoDaComanda(item)}
+                                className="rounded-xl border border-red-200 px-3 py-2 text-[9px] font-black uppercase tracking-[0.16em] text-red-500 transition hover:bg-red-50"
+                              >
+                                Remover
+                              </button>
+                            )}
+                          </div>
                           <p className="text-sm font-black text-gray-900 dark:text-white">
                             {calculateAgendamentoTotal(item).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
                           </p>
@@ -1382,6 +1799,69 @@ function ModalDetalhesAgendamento({ agendamento: initialAgendamento, allAgendame
                         placeholder="Ex.: cliente pediu tonalidade rosa, teste de mecha, alergia, observacao da profissional..."
                         className="w-full rounded-[1.75rem] border border-gray-200 dark:border-white/5 bg-white dark:bg-[#111113] px-5 py-4 text-sm text-gray-900 dark:text-white outline-none placeholder:text-gray-400 dark:placeholder:text-gray-500"
                       />
+                   </section>
+
+                   <section className="rounded-[2rem] border border-gray-100 dark:border-white/5 bg-gray-50 dark:bg-white/5 p-4 sm:p-6">
+                      <div className="flex items-center justify-between gap-4 mb-4">
+                        <div>
+                          <h4 className="text-[11px] font-black text-gray-900 dark:text-white uppercase tracking-[0.3em]">
+                            Novo item da comanda
+                          </h4>
+                          <p className="mt-2 text-xs font-medium text-gray-500 dark:text-gray-400">
+                            Inclua outro servico com profissional e horario proprios, mantendo o mesmo checkout.
+                          </p>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={handleAddItemNaComanda}
+                          disabled={!novoItemComanda.servicoId || !novoItemComanda.profissionalId || !novoItemComanda.hora}
+                          className="shrink-0 rounded-2xl bg-[#d48997] px-4 py-3 text-[10px] font-black uppercase tracking-[0.2em] text-white transition-all hover:bg-[#c77787] disabled:cursor-not-allowed disabled:opacity-50"
+                        >
+                          Adicionar
+                        </button>
+                      </div>
+
+                      <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                        <select
+                          value={novoItemComanda.servicoId}
+                          onChange={(event) => setNovoItemComanda((prev) => ({ ...prev, servicoId: event.target.value, profissionalId: '' }))}
+                          className="w-full rounded-[1.75rem] border border-gray-200 dark:border-white/5 bg-white dark:bg-[#111113] px-5 py-4 text-sm text-gray-900 dark:text-white outline-none"
+                        >
+                          <option value="">Selecione o servico</option>
+                          {servicos.map((servico) => (
+                            <option key={servico.id} value={servico.id}>{servico.nome}</option>
+                          ))}
+                        </select>
+
+                        <select
+                          value={novoItemComanda.profissionalId}
+                          onChange={(event) => setNovoItemComanda((prev) => ({ ...prev, profissionalId: event.target.value }))}
+                          className="w-full rounded-[1.75rem] border border-gray-200 dark:border-white/5 bg-white dark:bg-[#111113] px-5 py-4 text-sm text-gray-900 dark:text-white outline-none"
+                        >
+                          <option value="">Selecione o profissional</option>
+                          {profissionaisCompativeisNovoItem.map((profissional) => (
+                            <option key={profissional.id} value={profissional.id}>{profissional.nome}</option>
+                          ))}
+                        </select>
+
+                        <input
+                          type="time"
+                          value={novoItemComanda.hora}
+                          onChange={(event) => setNovoItemComanda((prev) => ({ ...prev, hora: event.target.value }))}
+                          className="w-full rounded-[1.75rem] border border-gray-200 dark:border-white/5 bg-white dark:bg-[#111113] px-5 py-4 text-sm text-gray-900 dark:text-white outline-none"
+                        />
+
+                        <input
+                          value={novoItemComanda.observacao}
+                          onChange={(event) => setNovoItemComanda((prev) => ({ ...prev, observacao: event.target.value }))}
+                          placeholder="Observacao do novo item"
+                          className="w-full rounded-[1.75rem] border border-gray-200 dark:border-white/5 bg-white dark:bg-[#111113] px-5 py-4 text-sm text-gray-900 dark:text-white outline-none placeholder:text-gray-400"
+                        />
+                      </div>
+
+                      <p className="mt-4 text-[11px] font-bold leading-relaxed text-gray-500 dark:text-gray-400">
+                        O novo item entra na mesma comanda deste cliente, mas com profissional e horario proprios.
+                      </p>
                    </section>
 
                    <section>

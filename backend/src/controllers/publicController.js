@@ -12,6 +12,77 @@ async function findSalao(slug) {
   return await prisma.salao.findUnique({ where: { slug } });
 }
 
+function normalizarTelefone(valor = '') {
+  return String(valor || '').replace(/\D/g, '');
+}
+
+function calcularFimHora(inicioHora, duracaoMin) {
+  const [hora, minuto] = String(inicioHora || '').split(':').map(Number);
+  if (Number.isNaN(hora) || Number.isNaN(minuto)) return null;
+  const total = (hora * 60) + minuto + Number(duracaoMin || 0);
+  return `${String(Math.floor(total / 60)).padStart(2, '0')}:${String(total % 60).padStart(2, '0')}`;
+}
+
+async function findOrCreateClientePublico(salaoId, clienteNome, clienteTelefone) {
+  const numeroLimpo = normalizarTelefone(clienteTelefone);
+  const sufixo = numeroLimpo.slice(-9);
+
+  let cliente = await prisma.cliente.findFirst({
+    where: {
+      salaoId,
+      OR: [
+        { telefone: clienteTelefone },
+        { telefone: numeroLimpo },
+        ...(sufixo ? [{ telefone: { endsWith: sufixo } }] : []),
+      ],
+    },
+  });
+
+  if (!cliente) {
+    try {
+      cliente = await prisma.cliente.create({
+        data: {
+          salaoId,
+          nome: clienteNome,
+          telefone: numeroLimpo || clienteTelefone,
+        }
+      });
+    } catch (createErr) {
+      cliente = await prisma.cliente.findFirst({
+        where: {
+          salaoId,
+          ...(sufixo ? { telefone: { endsWith: sufixo } } : { telefone: clienteTelefone }),
+        },
+      });
+      if (!cliente) throw createErr;
+    }
+  }
+
+  return cliente;
+}
+
+async function createComandaPublica({
+  salaoId,
+  clienteId,
+  clienteNome,
+  clienteTelefone,
+  data,
+  origem = 'online',
+  observacao = null,
+}) {
+  return prisma.comanda.create({
+    data: {
+      salaoId,
+      clienteId: clienteId || null,
+      clienteNome,
+      clienteTelefone,
+      data,
+      origem,
+      observacao: observacao || null,
+    },
+  });
+}
+
 function formatarDataNotificacao(dataStr) {
   const [ano, mes, dia] = String(dataStr || '').split('-');
   if (!ano || !mes || !dia) return String(dataStr || '');
@@ -434,9 +505,21 @@ async function criarAgendamento(req, res) {
       }
     }
 
+    const comanda = await createComandaPublica({
+      salaoId: salao.id,
+      clienteId: cliente?.id,
+      clienteNome,
+      clienteTelefone,
+      data: new Date(data + 'T00:00:00'),
+      origem: 'online',
+      observacao,
+    });
+
     const agendamento = await prisma.agendamento.create({
       data: {
         salaoId: salao.id,
+        comandaId: comanda.id,
+        grupoAtendimentoId: comanda.id,
         profissionalId: chosenProfId,
         servicoId: sIds.length === 1 ? sIds[0] : null,
         pacoteId: pacoteId || null,
@@ -497,6 +580,181 @@ async function criarAgendamento(req, res) {
   }
 }
 
+async function criarAgendamentoMultiplo(req, res) {
+  const { slug } = req.params;
+  const { clienteNome, clienteTelefone, data, observacao, itens } = req.body;
+  const itensLista = Array.isArray(itens) ? itens : [];
+  const dataBase = String(data || '').slice(0, 10);
+
+  if (!clienteNome || !clienteTelefone || !dataBase || itensLista.length === 0) {
+    return res.status(400).json({ error: 'Cliente, data e itens sao obrigatorios.' });
+  }
+
+  if (itensLista.some((item) => !item?.servicoId || !item?.profissionalId || !item?.hora)) {
+    return res.status(400).json({ error: 'Cada item precisa ter servico, profissional e horario.' });
+  }
+
+  const salao = await findSalao(slug);
+  if (!salao) return res.status(404).json({ error: 'Salao nao encontrado' });
+
+  try {
+    const cliente = await findOrCreateClientePublico(salao.id, clienteNome, clienteTelefone);
+    const dataAgendamento = new Date(`${dataBase}T00:00:00`);
+    const comanda = await createComandaPublica({
+      salaoId: salao.id,
+      clienteId: cliente?.id,
+      clienteNome,
+      clienteTelefone,
+      data: dataAgendamento,
+      origem: 'online',
+      observacao,
+    });
+
+    const profissionaisIds = [...new Set(itensLista.map((item) => item.profissionalId))];
+    const servicosIds = [...new Set(itensLista.map((item) => item.servicoId))];
+
+    const [profissionaisDb, servicosDb] = await Promise.all([
+      prisma.profissional.findMany({
+        where: { salaoId: salao.id, ativo: true, id: { in: profissionaisIds } },
+        select: { id: true, nome: true },
+      }),
+      prisma.servico.findMany({
+        where: { salaoId: salao.id, id: { in: servicosIds } },
+        select: { id: true, nome: true, preco: true, duracaoMin: true },
+      }),
+    ]);
+
+    if (profissionaisDb.length !== profissionaisIds.length) {
+      return res.status(400).json({ error: 'Um ou mais profissionais nao foram encontrados.' });
+    }
+
+    if (servicosDb.length !== servicosIds.length) {
+      return res.status(400).json({ error: 'Um ou mais servicos nao foram encontrados.' });
+    }
+
+    const profissionaisMap = new Map(profissionaisDb.map((item) => [item.id, item]));
+    const servicosMap = new Map(servicosDb.map((item) => [item.id, item]));
+    const agendaLocalPorProfissional = new Map();
+    const itensPreparados = [];
+
+    for (let index = 0; index < itensLista.length; index += 1) {
+      const item = itensLista[index];
+      const profissional = profissionaisMap.get(item.profissionalId);
+      const servico = servicosMap.get(item.servicoId);
+
+      if (!profissional || !servico) {
+        return res.status(400).json({ error: `Item ${index + 1} invalido para este salao.` });
+      }
+
+      const profissionalCompativel = await profissionalAtendeTodosServicos(profissional.id, [servico.id], salao.id);
+      if (!profissionalCompativel) {
+        return res.status(400).json({ error: `${profissional.nome} nao atende o servico ${servico.nome}.` });
+      }
+
+      const fimHora = calcularFimHora(item.hora, servico.duracaoMin);
+      if (!fimHora) {
+        return res.status(400).json({ error: `Horario invalido no item ${index + 1}.` });
+      }
+
+      const slots = await getHorariosDisponiveis(profissional.id, null, dataBase, servico.duracaoMin, salao.id);
+      if (!slots.includes(item.hora)) {
+        return res.status(409).json({ error: `${profissional.nome} nao esta mais disponivel as ${item.hora} para ${servico.nome}.` });
+      }
+
+      const agendaLocal = agendaLocalPorProfissional.get(profissional.id) || [];
+      const inicioMin = Number(item.hora.split(':')[0]) * 60 + Number(item.hora.split(':')[1]);
+      const fimMin = Number(fimHora.split(':')[0]) * 60 + Number(fimHora.split(':')[1]);
+      const conflita = agendaLocal.some((slot) => inicioMin < slot.fimMin && fimMin > slot.inicioMin);
+      if (conflita) {
+        return res.status(400).json({ error: `Os itens de ${profissional.nome} estao com horarios sobrepostos.` });
+      }
+
+      agendaLocal.push({ inicioMin, fimMin });
+      agendaLocalPorProfissional.set(profissional.id, agendaLocal);
+
+      itensPreparados.push({
+        profissional,
+        servico,
+        hora: item.hora,
+        fimHora,
+      });
+    }
+
+    const agendamentos = await prisma.$transaction(
+      itensPreparados.map((item) =>
+        prisma.agendamento.create({
+          data: {
+            salaoId: salao.id,
+            comandaId: comanda.id,
+            grupoAtendimentoId: comanda.id,
+            profissionalId: item.profissional.id,
+            servicoId: item.servico.id,
+            clienteId: cliente?.id,
+            clienteNome,
+            clienteTelefone,
+            data: dataAgendamento,
+            inicioHora: item.hora,
+            fimHora: item.fimHora,
+            origem: 'online',
+            observacao,
+          },
+          include: {
+            servico: true,
+            profissional: true,
+            itens: true,
+          },
+        })
+      )
+    );
+
+    const nomesServicos = itensPreparados.map((item) => item.servico.nome).join(' + ');
+    const profissionalResumo = itensPreparados.map((item) => `${item.servico.nome}: ${item.profissional.nome}`).join(', ');
+
+    criarNotificacaoSalao({
+      salaoId: salao.id,
+      tipo: 'agendamento_online_novo',
+      titulo: 'Novo agendamento online',
+      mensagem: `${clienteNome} montou uma comanda online para ${formatarDataNotificacao(dataBase)}.`,
+      agendamentoId: agendamentos[0]?.id || null,
+      contexto: {
+        clienteNome,
+        clienteTelefone,
+        servicos: nomesServicos,
+        profissionais: profissionalResumo,
+        data: dataBase,
+      },
+    }).catch((e) => console.error('Erro notificacao interna:', e.message));
+
+    notificarClienteAgendamento({
+      clienteNome,
+      clienteTelefone,
+      servico: nomesServicos,
+      profissional: 'Equipe do salao',
+      data: dataBase,
+      hora: itensPreparados.map((item) => `${item.servico.nome} ${item.hora}`).join(' | '),
+      salao,
+    }).catch((e) => console.error('Erro notif cliente:', e.message));
+
+    notificarSalaoNovoAgendamento({
+      salao,
+      clienteNome,
+      clienteTelefone,
+      servico: nomesServicos,
+      profissional: profissionalResumo,
+      data: dataBase,
+      hora: itensPreparados.map((item) => item.hora).join(', '),
+    }).catch((e) => console.error('Erro notif salao:', e.message));
+
+    return res.status(201).json({
+      comandaId: comanda.id,
+      agendamentos,
+    });
+  } catch (error) {
+    console.error('Erro ao criar agendamento multiplo:', error);
+    return res.status(500).json({ error: 'Erro interno ao processar agendamento multiplo: ' + error.message });
+  }
+}
+
 module.exports = {
   getSalao,
   getServicos,
@@ -507,4 +765,5 @@ module.exports = {
   getDatasDisponiveisHandler,
   getHorariosDisponiveisHandler: getHorariosDisponiveisHandlerPublic,
   criarAgendamento,
+  criarAgendamentoMultiplo,
 };
