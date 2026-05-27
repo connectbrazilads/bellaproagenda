@@ -2278,8 +2278,9 @@ async function updateObservacaoAgendamento(req, res) {
 
 async function updateAgendamento(req, res) {
   const { id } = req.params;
-  const { data, hora, profissionalId } = req.body;
+  const { data, hora, profissionalId, valorBaseAjustado } = req.body;
   const profissionalIdFinal = getScopedProfessionalId(req, profissionalId);
+  const campoValorBaseAjustadoPresente = Object.prototype.hasOwnProperty.call(req.body, 'valorBaseAjustado');
   const agendamento = await getScopedAgendamento(req, id, {
     servico: true,
     pacote: true,
@@ -2297,6 +2298,23 @@ async function updateAgendamento(req, res) {
 
   if (!fimHora) {
     return res.status(400).json({ error: 'Nao foi possivel calcular o horario final do atendimento.' });
+  }
+
+  let valorBaseAjustadoNormalizado = agendamento?.valorBaseAjustado ?? null;
+  if (campoValorBaseAjustadoPresente) {
+    if (valorBaseAjustado === null || valorBaseAjustado === '') {
+      valorBaseAjustadoNormalizado = null;
+    } else {
+      const valorBaseAjustadoNumero = Number(valorBaseAjustado);
+      if (!Number.isFinite(valorBaseAjustadoNumero) || valorBaseAjustadoNumero < 0) {
+        return res.status(400).json({ error: 'Informe um valor ajustado valido para o servico.' });
+      }
+
+      const precoBaseOriginal = getAgendamentoPrecoBaseOriginal(agendamento);
+      valorBaseAjustadoNormalizado = Math.abs(valorBaseAjustadoNumero - precoBaseOriginal) < 0.001
+        ? null
+        : valorBaseAjustadoNumero;
+    }
   }
 
   if (agendamento.pacoteId) {
@@ -2333,6 +2351,7 @@ async function updateAgendamento(req, res) {
       inicioHora: hora,
       fimHora,
       profissionalId: profissionalIdFinal,
+      valorBaseAjustado: valorBaseAjustadoNormalizado,
     },
   });
 
@@ -2343,7 +2362,7 @@ async function updateAgendamento(req, res) {
     entidade: 'agendamento',
     entidadeId: id,
     mensagem: 'Agendamento ajustado na agenda',
-    contexto: { data, hora, profissionalId: profissionalIdFinal },
+    contexto: { data, hora, profissionalId: profissionalIdFinal, valorBaseAjustado: valorBaseAjustadoNormalizado },
     req,
   });
 

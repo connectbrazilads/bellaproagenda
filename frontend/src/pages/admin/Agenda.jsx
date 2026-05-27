@@ -1040,12 +1040,20 @@ function ModalNovoAgendamento({ onClose, onSave, preData, preHora, preProf, pref
 }
 
 function ModalAjusteAgendamento({ agendamento, profissionais, onClose, onSave }) {
+  const precoBaseOriginal = getAgendamentoOriginalBasePrice(agendamento);
   const [form, setForm] = useState({
     data: String(agendamento?.data || '').slice(0, 10),
     hora: agendamento?.inicioHora || '',
     profissionalId: agendamento?.profissionalId || '',
+    valorBaseAjustado: agendamento ? getAgendamentoBasePrice(agendamento).toFixed(2) : '',
   });
   const [saving, setSaving] = useState(false);
+  const valorBaseAjustadoNumero = Number(form.valorBaseAjustado);
+  const valorBaseAjustadoValido = form.valorBaseAjustado === ''
+    || (Number.isFinite(valorBaseAjustadoNumero) && valorBaseAjustadoNumero >= 0);
+  const valorBaseAjustadoAtivo = form.valorBaseAjustado !== ''
+    && valorBaseAjustadoValido
+    && Math.abs(valorBaseAjustadoNumero - precoBaseOriginal) >= 0.001;
 
   async function salvar(event) {
     event.preventDefault();
@@ -1053,10 +1061,17 @@ function ModalAjusteAgendamento({ agendamento, profissionais, onClose, onSave })
       window.alert('Informe dia, horario e profissional para ajustar o agendamento.');
       return;
     }
+    if (!valorBaseAjustadoValido) {
+      window.alert('Informe um valor valido para o servico.');
+      return;
+    }
 
     setSaving(true);
     try {
-      await onSave(form);
+      await onSave({
+        ...form,
+        valorBaseAjustado: form.valorBaseAjustado === '' ? null : valorBaseAjustadoNumero,
+      });
     } finally {
       setSaving(false);
     }
@@ -1135,6 +1150,41 @@ function ModalAjusteAgendamento({ agendamento, profissionais, onClose, onSave })
             ))}
           </select>
         </label>
+
+        <div className="mt-5 grid gap-4 sm:grid-cols-[minmax(0,1fr)_220px]">
+          <label className="space-y-3">
+            <span className="text-[10px] font-black uppercase tracking-[0.28em] text-gray-500">Valor do servico</span>
+            <input
+              type="number"
+              step="0.01"
+              min="0"
+              value={form.valorBaseAjustado}
+              onChange={(event) => setForm((prev) => ({ ...prev, valorBaseAjustado: event.target.value }))}
+              className="h-14 w-full rounded-[1.5rem] border border-gray-200 dark:border-white/5 bg-white dark:bg-[#111113] px-5 text-sm font-black text-gray-900 dark:text-white outline-none"
+            />
+          </label>
+
+          <div className="rounded-[1.5rem] border border-gray-200 dark:border-white/5 bg-[#f8f3f5] px-5 py-4 dark:bg-[#111113]">
+            <p className="text-[10px] font-black uppercase tracking-[0.22em] text-gray-500">Referencia</p>
+            <p className="mt-2 text-lg font-black text-gray-900 dark:text-white">
+              {precoBaseOriginal.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
+            </p>
+            <div className="mt-3 flex items-center justify-between gap-3">
+              <button
+                type="button"
+                onClick={() => setForm((prev) => ({ ...prev, valorBaseAjustado: precoBaseOriginal.toFixed(2) }))}
+                className="text-[10px] font-black uppercase tracking-[0.18em] text-[#c27a89] transition hover:text-[#a55e6e]"
+              >
+                Restaurar
+              </button>
+              {valorBaseAjustadoAtivo && (
+                <span className="text-[10px] font-black uppercase tracking-[0.18em] text-amber-500 dark:text-amber-200">
+                  Ajustado
+                </span>
+              )}
+            </div>
+          </div>
+        </div>
 
         <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:justify-end">
           <button
@@ -1782,7 +1832,7 @@ function ModalDetalhesAgendamento({ agendamento: initialAgendamento, allAgendame
                     tab === 'comanda' ? "bg-white dark:bg-[#d48997] shadow-2xl text-[#d48997] dark:text-white" : "text-gray-400"
                   )}
                 >
-                  <Plus size={14} /> Adicionar Itens
+                  <Plus size={14} /> Adicionar Itens a Comanda
                 </button>
                 {agendamento.statusPagamento === 'pago' ? (
                   <div className="flex-1 flex flex-col sm:flex-row gap-2">
