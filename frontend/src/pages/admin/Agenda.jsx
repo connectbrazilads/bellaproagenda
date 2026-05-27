@@ -1040,20 +1040,36 @@ function ModalNovoAgendamento({ onClose, onSave, preData, preHora, preProf, pref
 }
 
 function ModalAjusteAgendamento({ agendamento, profissionais, onClose, onSave }) {
+  function getAjusteRapidoDefaults(agendamentoAtual) {
+    const original = getAgendamentoOriginalBasePrice(agendamentoAtual);
+    const atual = getAgendamentoBasePrice(agendamentoAtual);
+    const diferencaAtual = Number((atual - original).toFixed(2));
+
+    return {
+      tipo: diferencaAtual >= 0 ? 'acrescimo' : 'desconto',
+      valor: Math.abs(diferencaAtual) > 0 ? String(Math.abs(diferencaAtual)) : '',
+    };
+  }
+
+  const ajusteInicial = getAjusteRapidoDefaults(agendamento);
   const precoBaseOriginal = getAgendamentoOriginalBasePrice(agendamento);
   const [form, setForm] = useState({
     data: String(agendamento?.data || '').slice(0, 10),
     hora: agendamento?.inicioHora || '',
     profissionalId: agendamento?.profissionalId || '',
-    valorBaseAjustado: agendamento ? getAgendamentoBasePrice(agendamento).toFixed(2) : '',
   });
+  const [ajusteTipo, setAjusteTipo] = useState(ajusteInicial.tipo);
+  const [ajusteValor, setAjusteValor] = useState(ajusteInicial.valor);
   const [saving, setSaving] = useState(false);
-  const valorBaseAjustadoNumero = Number(form.valorBaseAjustado);
-  const valorBaseAjustadoValido = form.valorBaseAjustado === ''
-    || (Number.isFinite(valorBaseAjustadoNumero) && valorBaseAjustadoNumero >= 0);
-  const valorBaseAjustadoAtivo = form.valorBaseAjustado !== ''
-    && valorBaseAjustadoValido
-    && Math.abs(valorBaseAjustadoNumero - precoBaseOriginal) >= 0.001;
+  const ajusteValorNumero = Number(ajusteValor);
+  const ajusteValorInformado = ajusteValor !== '';
+  const ajusteValorValido = !ajusteValorInformado
+    || (Number.isFinite(ajusteValorNumero) && ajusteValorNumero >= 0);
+  const ajusteAplicado = ajusteValorValido && ajusteValorInformado ? ajusteValorNumero : 0;
+  const precoBaseFinal = ajusteTipo === 'desconto'
+    ? Math.max(0, precoBaseOriginal - ajusteAplicado)
+    : precoBaseOriginal + ajusteAplicado;
+  const valorBaseAjustadoAtivo = ajusteAplicado >= 0.001;
 
   async function salvar(event) {
     event.preventDefault();
@@ -1061,8 +1077,8 @@ function ModalAjusteAgendamento({ agendamento, profissionais, onClose, onSave })
       window.alert('Informe dia, horario e profissional para ajustar o agendamento.');
       return;
     }
-    if (!valorBaseAjustadoValido) {
-      window.alert('Informe um valor valido para o servico.');
+    if (!ajusteValorValido) {
+      window.alert('Informe um valor valido para o ajuste do servico.');
       return;
     }
 
@@ -1070,7 +1086,7 @@ function ModalAjusteAgendamento({ agendamento, profissionais, onClose, onSave })
     try {
       await onSave({
         ...form,
-        valorBaseAjustado: form.valorBaseAjustado === '' ? null : valorBaseAjustadoNumero,
+        valorBaseAjustado: valorBaseAjustadoAtivo ? precoBaseFinal : null,
       });
     } finally {
       setSaving(false);
@@ -1152,27 +1168,68 @@ function ModalAjusteAgendamento({ agendamento, profissionais, onClose, onSave })
         </label>
 
         <div className="mt-5 grid gap-4 sm:grid-cols-[minmax(0,1fr)_220px]">
-          <label className="space-y-3">
-            <span className="text-[10px] font-black uppercase tracking-[0.28em] text-gray-500">Valor do servico</span>
+          <div className="space-y-3">
+            <div className="flex flex-wrap items-center justify-between gap-3">
+              <span className="text-[10px] font-black uppercase tracking-[0.28em] text-gray-500">Ajuste no servico</span>
+              <div className="flex flex-wrap items-center gap-2">
+                {[
+                  { id: 'desconto', label: 'Desconto' },
+                  { id: 'acrescimo', label: 'Acrescimo' },
+                ].map((tipo) => (
+                  <button
+                    key={tipo.id}
+                    type="button"
+                    onClick={() => setAjusteTipo(tipo.id)}
+                    className={cn(
+                      'rounded-xl border px-3 py-2 text-[10px] font-black uppercase tracking-[0.16em] transition-all',
+                      ajusteTipo === tipo.id
+                        ? 'border-[#d48997] bg-[#d48997] text-white'
+                        : 'border-gray-200 text-gray-500 hover:border-[#d48997]/30 dark:border-white/10 dark:text-white/70'
+                    )}
+                  >
+                    {tipo.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+
             <input
               type="number"
               step="0.01"
               min="0"
-              value={form.valorBaseAjustado}
-              onChange={(event) => setForm((prev) => ({ ...prev, valorBaseAjustado: event.target.value }))}
+              value={ajusteValor}
+              onChange={(event) => setAjusteValor(event.target.value)}
+              placeholder="0,00"
               className="h-14 w-full rounded-[1.5rem] border border-gray-200 dark:border-white/5 bg-white dark:bg-[#111113] px-5 text-sm font-black text-gray-900 dark:text-white outline-none"
             />
-          </label>
+
+            <div className="flex flex-wrap items-center justify-between gap-3 text-[10px] font-bold uppercase tracking-[0.16em]">
+              <span className="text-gray-400">
+                Original {precoBaseOriginal.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
+              </span>
+              {valorBaseAjustadoAtivo && (
+                <span className="text-[#d48997]">
+                  {ajusteTipo === 'acrescimo' ? 'Acrescimo' : 'Desconto'} {ajusteAplicado.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
+                </span>
+              )}
+            </div>
+          </div>
 
           <div className="rounded-[1.5rem] border border-gray-200 dark:border-white/5 bg-[#f8f3f5] px-5 py-4 dark:bg-[#111113]">
             <p className="text-[10px] font-black uppercase tracking-[0.22em] text-gray-500">Referencia</p>
             <p className="mt-2 text-lg font-black text-gray-900 dark:text-white">
               {precoBaseOriginal.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
             </p>
+            <p className="mt-3 text-[10px] font-bold uppercase tracking-[0.16em] text-gray-500">
+              Final {precoBaseFinal.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
+            </p>
             <div className="mt-3 flex items-center justify-between gap-3">
               <button
                 type="button"
-                onClick={() => setForm((prev) => ({ ...prev, valorBaseAjustado: precoBaseOriginal.toFixed(2) }))}
+                onClick={() => {
+                  setAjusteTipo('desconto');
+                  setAjusteValor('');
+                }}
                 className="text-[10px] font-black uppercase tracking-[0.18em] text-[#c27a89] transition hover:text-[#a55e6e]"
               >
                 Restaurar
