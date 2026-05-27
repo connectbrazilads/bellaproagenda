@@ -1125,7 +1125,7 @@ function ModalAjusteAgendamento({ agendamento, profissionais, onClose, onSave })
 
         <div className="mb-8">
           <p className="text-[10px] font-black uppercase tracking-[0.3em] text-[#E29BA8]">Ajuste rapido</p>
-          <h2 className="mt-3 text-3xl font-black uppercase tracking-tight text-gray-900 dark:text-white">Aditar servico</h2>
+          <h2 className="mt-3 text-3xl font-black uppercase tracking-tight text-gray-900 dark:text-white">Editar servico</h2>
           <p className="mt-3 text-sm text-gray-500 dark:text-gray-400">
             {agendamento?.clienteNome} · {getAgendamentoTitulo(agendamento)}
           </p>
@@ -1293,6 +1293,8 @@ function ModalDetalhesAgendamento({ agendamento: initialAgendamento, allAgendame
   const [loading, setLoading] = useState(false);
   const [savingObservacao, setSavingObservacao] = useState(false);
   const [tab, setTab] = useState('comanda');
+  const [showMoreActions, setShowMoreActions] = useState(false);
+  const [activeComandaSection, setActiveComandaSection] = useState('itens');
   const [pagamentoForma, setPagamentoForma] = useState('');
   const [pagamentoTaxa, setPagamentoTaxa] = useState('0');
   const [pagamentoAjusteTipo, setPagamentoAjusteTipo] = useState(() => getCheckoutDiscountDefaults(initialAgendamento).tipo);
@@ -1334,6 +1336,12 @@ function ModalDetalhesAgendamento({ agendamento: initialAgendamento, allAgendame
 
   useEffect(() => {
     setAgendamento(initialAgendamento);
+    setTab('comanda');
+    setShowMoreActions(false);
+    setActiveComandaSection('itens');
+    setConcluidoSucesso(false);
+    setPagamentoForma('');
+    setPagamentoTaxa('0');
     setObservacaoDraft(initialAgendamento?.observacao || '');
     setServicosBusca('');
     setProdutosBusca('');
@@ -1588,8 +1596,771 @@ function ModalDetalhesAgendamento({ agendamento: initialAgendamento, allAgendame
     return totalGrupoComanda;
   };
 
+  async function handleAtualizarStatus(status) {
+    if (!agendamento?.id) return;
+    if (status === 'cancelado' && !window.confirm('Deseja cancelar este agendamento?')) return;
+
+    setShowMoreActions(false);
+    await updateStatusAgendamento(agendamento.id, status);
+    onUpdate?.();
+    onClose?.();
+  }
+
+  function handleAbrirAgendamentoGrupo(item) {
+    const descontoPadrao = getCheckoutDiscountDefaults(item);
+    setPagamentoAjusteTipo(descontoPadrao.tipo);
+    setPagamentoDescontoModo(descontoPadrao.modo);
+    setPagamentoDesconto(descontoPadrao.valor);
+    setPagamentoAjusteObservacao(item?.ajusteObservacao || '');
+    setObservacaoDraft(item?.observacao || '');
+    setAgendamento(item);
+    setTab('comanda');
+    setShowMoreActions(false);
+    setConcluidoSucesso(false);
+  }
+
+  function toggleComandaSection(sectionId) {
+    setActiveComandaSection((current) => (current === sectionId ? '' : sectionId));
+  }
+
+  function goToPagamento() {
+    refreshCaixaPagamentoStatus();
+    setShowMoreActions(false);
+    setTab('pagamento');
+  }
+
+  function enviarComprovanteWhatsapp({ reenvio = false } = {}) {
+    const total = calculateTotal();
+    const itens = [
+      agendamento.servico?.nome || agendamento.pacote?.nome,
+      ...itensExtras.map((item) => item.servico?.nome || item.nome),
+      ...(agendamento.produtos?.map((item) => `${item.quantidade}x ${item.produto?.nome}`) || []),
+    ].filter(Boolean).join(', ');
+
+    const mensagem = encodeURIComponent(
+      `${reenvio ? '*REENVIO DE COMPROVANTE*' : '*COMPROVANTE DE ATENDIMENTO*'}\n\n`
+      + `Ola, *${agendamento.clienteNome}*!\n`
+      + `${reenvio ? 'Segue o seu comprovante de atendimento.' : 'Seu atendimento foi finalizado com sucesso.'}\n\n`
+      + `*Detalhes:*\n${itens}\n`
+      + `*Valor Total:* R$ ${total.toFixed(2)}\n\n`
+      + 'Agradecemos a preferencia!'
+    );
+
+    window.open(`https://wa.me/55${agendamento.clienteTelefone.replace(/\D/g, '')}?text=${mensagem}`, '_blank');
+  }
+
+  function renderSimplifiedModal() {
+    return (
+      <motion.div
+        initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+        className="fixed inset-0 bg-black/90 backdrop-blur-3xl z-[200] flex items-center justify-center overflow-y-auto overscroll-contain p-3 sm:p-4"
+      >
+        <motion.div
+          initial={{ scale: 0.95, y: 50, opacity: 0 }} animate={{ scale: 1, y: 0, opacity: 1 }} exit={{ scale: 0.95, y: 50, opacity: 0 }}
+          className="bg-white dark:bg-[#0c0c0e] rounded-t-[2rem] md:rounded-[3rem] xl:rounded-[4rem] w-full max-w-5xl h-[95dvh] md:max-h-[92dvh] flex flex-col shadow-[0_60px_120px_-20px_rgba(0,0,0,0.7)] border border-gray-200 dark:border-white/5 overflow-hidden"
+        >
+          <div className="px-5 py-5 md:px-10 md:py-8 border-b border-gray-100 dark:border-white/5 flex items-start justify-between gap-4 bg-white dark:bg-[#0c0c0e]/80 backdrop-blur-3xl">
+            <div className="flex items-start gap-4 min-w-0">
+              <div className="w-16 h-16 bg-gradient-to-br from-[#d48997] to-indigo-700 rounded-[2rem] flex items-center justify-center text-white shadow-2xl shadow-[#E29BA8]/40 relative shrink-0">
+                <User size={30} />
+                <div className="absolute -bottom-1 -right-1 w-5 h-5 bg-[#E29BA8] border-4 border-white dark:border-[#0c0c0e] rounded-full" />
+              </div>
+              <div className="min-w-0">
+                <h2 className="text-2xl md:text-4xl font-black text-gray-900 dark:text-white uppercase tracking-tighter leading-none break-words">{agendamento.clienteNome}</h2>
+                <div className="flex flex-wrap items-center gap-3 mt-2">
+                  <span className="text-[10px] font-black text-[#E29BA8] uppercase tracking-[0.3em]">Gestao de Agenda BellaPro</span>
+                  {isAgendamentoOnline(agendamento) && (
+                    <span className="rounded-full border border-[#14b8a6]/25 bg-[#14b8a6]/12 px-3 py-1 text-[9px] font-black uppercase tracking-[0.24em] text-[#0f9a8c] dark:text-[#6ee7d8]">
+                      Online
+                    </span>
+                  )}
+                  <div className="w-1.5 h-1.5 rounded-full bg-gray-200 dark:bg-white/20" />
+                  <span className="text-[10px] font-black text-gray-400 uppercase tracking-[0.3em]">{formatDateBR(agendamento.data)} - {agendamento.inicioHora} - {agendamento.profissional?.nome}</span>
+                </div>
+              </div>
+            </div>
+            <button
+              onClick={onClose}
+              className="w-14 h-14 rounded-full bg-gray-50 dark:bg-white/5 flex items-center justify-center text-gray-400 hover:text-red-500 transition-all hover:scale-110 active:scale-95 group shrink-0"
+            >
+              <X size={24} className="group-hover:rotate-90 transition-transform" />
+            </button>
+          </div>
+
+          <div className="border-b border-gray-100 bg-bellapro-blush/5 px-5 py-4 dark:border-white/5 md:px-10">
+            <div className="flex flex-wrap items-start justify-between gap-4">
+              <div className="flex flex-wrap items-center gap-3">
+                <div className={cn('px-3 py-1.5 rounded-xl text-[8px] font-black uppercase tracking-[0.2em] border', STATUS_CONFIG[agendamento.status]?.bg, STATUS_CONFIG[agendamento.status]?.text, STATUS_CONFIG[agendamento.status]?.border)}>
+                  {STATUS_CONFIG[agendamento.status]?.label || agendamento.status}
+                </div>
+                <div className={cn('px-3 py-1.5 rounded-xl text-[8px] font-black uppercase tracking-[0.2em] border', agendamento.statusPagamento === 'pago' ? 'bg-[#E29BA8]/10 text-[#E29BA8] border-[#E29BA8]/20' : 'bg-bellapro-blush/10 text-bellapro-blush border-bellapro-blush/20')}>
+                  {agendamento.statusPagamento === 'pago' ? 'Pagamento ok' : 'Pagamento pendente'}
+                </div>
+              </div>
+
+              <div className="flex flex-wrap items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowMoreActions(false);
+                    setTab('comanda');
+                  }}
+                  className="rounded-2xl bg-[#d48997] px-4 py-3 text-[10px] font-black uppercase tracking-[0.18em] text-white transition hover:bg-[#c77787]"
+                >
+                  Abrir comanda
+                </button>
+                <button
+                  type="button"
+                  onClick={goToPagamento}
+                  className={cn(
+                    'rounded-2xl px-4 py-3 text-[10px] font-black uppercase tracking-[0.18em] transition',
+                    agendamento.statusPagamento === 'pago'
+                      ? 'border border-[#E29BA8]/20 bg-[#E29BA8]/10 text-[#d48997]'
+                      : 'bg-[#0f172a] text-white hover:bg-[#1e293b]'
+                  )}
+                >
+                  {agendamento.statusPagamento === 'pago' ? 'Pagamento' : 'Ir para pagamento'}
+                </button>
+                <div className="relative">
+                  <button
+                    type="button"
+                    onClick={() => setShowMoreActions((current) => !current)}
+                    className="inline-flex items-center gap-2 rounded-2xl border border-gray-200 bg-white px-4 py-3 text-[10px] font-black uppercase tracking-[0.18em] text-gray-700 transition hover:bg-gray-50 dark:border-white/10 dark:bg-white/5 dark:text-white/80 dark:hover:bg-white/10"
+                  >
+                    <MoreVertical size={14} />
+                    Mais acoes
+                  </button>
+
+                  {showMoreActions && (
+                    <div className="absolute right-0 top-full z-20 mt-2 w-56 rounded-[1.5rem] border border-gray-200 bg-white p-2 shadow-[0_24px_70px_-32px_rgba(0,0,0,0.55)] dark:border-white/10 dark:bg-[#151219]">
+                      <div className="space-y-1">
+                        {agendamento.status === 'confirmado' && (
+                          <button type="button" onClick={() => handleAtualizarStatus('em_atendimento')} className="w-full rounded-xl px-3 py-3 text-left text-[10px] font-black uppercase tracking-[0.16em] text-gray-700 transition hover:bg-gray-100 dark:text-white/80 dark:hover:bg-white/10">
+                            Iniciar atendimento
+                          </button>
+                        )}
+                        {(agendamento.status === 'confirmado' || agendamento.status === 'em_atendimento') && (
+                          <button type="button" onClick={() => handleAtualizarStatus('concluido')} className="w-full rounded-xl px-3 py-3 text-left text-[10px] font-black uppercase tracking-[0.16em] text-gray-700 transition hover:bg-gray-100 dark:text-white/80 dark:hover:bg-white/10">
+                            Concluir atendimento
+                          </button>
+                        )}
+                        {agendamento.status !== 'cancelado' && (
+                          <>
+                            <button type="button" onClick={() => { setShowMoreActions(false); setTab('ajustes'); }} className="w-full rounded-xl px-3 py-3 text-left text-[10px] font-black uppercase tracking-[0.16em] text-gray-700 transition hover:bg-gray-100 dark:text-white/80 dark:hover:bg-white/10">
+                              Ver ajustes
+                            </button>
+                            <button type="button" onClick={() => { setShowMoreActions(false); onAjustar?.(agendamento); }} className="w-full rounded-xl px-3 py-3 text-left text-[10px] font-black uppercase tracking-[0.16em] text-gray-700 transition hover:bg-gray-100 dark:text-white/80 dark:hover:bg-white/10">
+                              Editar servico
+                            </button>
+                            <button type="button" onClick={() => { setShowMoreActions(false); onReagendar?.(agendamento); }} className="w-full rounded-xl px-3 py-3 text-left text-[10px] font-black uppercase tracking-[0.16em] text-gray-700 transition hover:bg-gray-100 dark:text-white/80 dark:hover:bg-white/10">
+                              Reagendar
+                            </button>
+                            <button type="button" onClick={() => handleAtualizarStatus('cancelado')} className="w-full rounded-xl px-3 py-3 text-left text-[10px] font-black uppercase tracking-[0.16em] text-red-500 transition hover:bg-red-50 dark:hover:bg-red-500/10">
+                              Cancelar atendimento
+                            </button>
+                          </>
+                        )}
+                        {agendamento.statusPagamento === 'pago' && (
+                          <button type="button" onClick={async () => { setShowMoreActions(false); await handleReabrirComanda(); }} className="w-full rounded-xl px-3 py-3 text-left text-[10px] font-black uppercase tracking-[0.16em] text-amber-600 transition hover:bg-amber-50 dark:text-amber-300 dark:hover:bg-amber-500/10">
+                            Reabrir comanda
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+
+            <div className="mt-5 grid gap-3 md:grid-cols-3">
+              <div className="rounded-[1.5rem] border border-gray-200 bg-white px-4 py-4 dark:border-white/10 dark:bg-white/[0.04]">
+                <p className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-400">Servico</p>
+                <p className="mt-2 text-sm font-black uppercase text-gray-900 dark:text-white">{getAgendamentoTitulo(agendamento)}</p>
+              </div>
+              <div className="rounded-[1.5rem] border border-gray-200 bg-white px-4 py-4 dark:border-white/10 dark:bg-white/[0.04]">
+                <p className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-400">Profissional</p>
+                <p className="mt-2 text-sm font-black uppercase text-gray-900 dark:text-white">{agendamento.profissional?.nome || 'Equipe'}</p>
+              </div>
+              <div className="rounded-[1.5rem] border border-[#E29BA8]/20 bg-[#E29BA8]/8 px-4 py-4 dark:bg-[#E29BA8]/10">
+                <p className="text-[10px] font-black uppercase tracking-[0.2em] text-[#b96a79] dark:text-[#efbac2]">Total atual</p>
+                <p className="mt-2 text-lg font-black text-[#d48997] dark:text-white">{Number(calculateTotal()).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</p>
+              </div>
+            </div>
+          </div>
+
+          <div className="flex-1 overflow-y-auto bg-white dark:bg-[#060608]">
+            <div className="mx-auto w-full max-w-4xl p-5 md:p-8 xl:p-10">
+              <div className="sticky top-0 z-[1] mb-6 rounded-[2rem] bg-white/95 px-1 py-1 backdrop-blur dark:bg-[#060608]/95">
+                <div className="grid grid-cols-1 gap-2 rounded-[2rem] border border-gray-100 bg-gray-50 p-2 dark:border-white/10 dark:bg-white/5 sm:grid-cols-3">
+                  {[
+                    { id: 'comanda', label: 'Comanda', icon: Plus },
+                    { id: 'ajustes', label: 'Ajustes', icon: Scissors },
+                    { id: 'pagamento', label: 'Pagamento', icon: CreditCard },
+                  ].map((item) => (
+                    <button
+                      key={item.id}
+                      type="button"
+                      onClick={() => {
+                        if (item.id === 'pagamento') {
+                          goToPagamento();
+                          return;
+                        }
+                        setShowMoreActions(false);
+                        setTab(item.id);
+                      }}
+                      className={cn(
+                        'flex items-center justify-center gap-3 rounded-[1.5rem] px-4 py-4 text-[10px] font-black uppercase tracking-[0.18em] transition-all',
+                        tab === item.id
+                          ? 'bg-white text-[#d48997] shadow-lg dark:bg-[#d48997] dark:text-white'
+                          : 'text-gray-400 dark:text-white/55'
+                      )}
+                    >
+                      <item.icon size={14} />
+                      {item.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {tab === 'comanda' ? (
+                <div className="space-y-4">
+                  <section className="rounded-[2rem] border border-gray-100 bg-gray-50 p-4 dark:border-white/10 dark:bg-white/[0.04]">
+                    <button type="button" onClick={() => toggleComandaSection('itens')} className="flex w-full items-center justify-between gap-4 text-left">
+                      <div>
+                        <p className="text-[11px] font-black uppercase tracking-[0.3em] text-gray-900 dark:text-white">Itens da comanda</p>
+                        <p className="mt-2 text-sm text-gray-500 dark:text-white/55">Veja o que ja esta no atendimento e remova apenas se precisar.</p>
+                      </div>
+                      <div className="rounded-2xl border border-gray-200 bg-white p-3 dark:border-white/10 dark:bg-white/5">
+                        {activeComandaSection === 'itens' ? <Minimize2 size={16} /> : <Maximize2 size={16} />}
+                      </div>
+                    </button>
+
+                    {activeComandaSection === 'itens' && (
+                      <div className="mt-5 space-y-3">
+                        <div className="rounded-[1.5rem] border border-[#E29BA8]/20 bg-white px-4 py-4 dark:bg-white/[0.04]">
+                          <div className="flex items-start justify-between gap-3">
+                            <div>
+                              <p className="text-[10px] font-black uppercase tracking-[0.18em] text-[#E29BA8]">Servico principal</p>
+                              <p className="mt-2 text-sm font-black uppercase text-gray-900 dark:text-white">{getAgendamentoTitulo(agendamento)}</p>
+                            </div>
+                            <p className="text-sm font-black text-[#d48997]">{precoBaseCheckout.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</p>
+                          </div>
+                        </div>
+
+                        {itensExtras.map((item) => (
+                          <div key={item.id} className="flex flex-col gap-3 rounded-[1.5rem] border border-gray-100 bg-white px-4 py-4 dark:border-white/10 dark:bg-white/[0.04] sm:flex-row sm:items-center sm:justify-between">
+                            <div>
+                              <p className="text-[10px] font-black uppercase tracking-[0.18em] text-gray-400">Servico extra</p>
+                              <p className="mt-1 text-sm font-black uppercase text-gray-900 dark:text-white">{item.servico?.nome || item.nome}</p>
+                            </div>
+                            <div className="flex items-center gap-3">
+                              <p className="text-sm font-black text-gray-900 dark:text-white">{Number(item.preco || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</p>
+                              <button type="button" onClick={() => handleRemoveItem(item.id)} className="rounded-xl border border-red-200 px-3 py-2 text-[9px] font-black uppercase tracking-[0.16em] text-red-500 transition hover:bg-red-50">
+                                Remover
+                              </button>
+                            </div>
+                          </div>
+                        ))}
+
+                        {(agendamento.produtos || []).map((item) => (
+                          <div key={item.id} className="flex flex-col gap-3 rounded-[1.5rem] border border-gray-100 bg-white px-4 py-4 dark:border-white/10 dark:bg-white/[0.04] sm:flex-row sm:items-center sm:justify-between">
+                            <div>
+                              <p className="text-[10px] font-black uppercase tracking-[0.18em] text-gray-400">Produto</p>
+                              <p className="mt-1 text-sm font-black uppercase text-gray-900 dark:text-white">{item.produto?.nome || item.nome} x{item.quantidade}</p>
+                            </div>
+                            <div className="flex items-center gap-3">
+                              <p className="text-sm font-black text-gray-900 dark:text-white">{Number((item.preco || 0) * (item.quantidade || 0)).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</p>
+                              <button type="button" onClick={() => handleRemoveProduto(item.id)} className="rounded-xl border border-red-200 px-3 py-2 text-[9px] font-black uppercase tracking-[0.16em] text-red-500 transition hover:bg-red-50">
+                                Remover
+                              </button>
+                            </div>
+                          </div>
+                        ))}
+
+                        {itensExtras.length === 0 && (agendamento.produtos || []).length === 0 && (
+                          <div className="rounded-[1.5rem] border border-dashed border-gray-200 px-4 py-4 text-sm text-gray-500 dark:border-white/10 dark:text-white/55">
+                            Esta comanda ainda tem apenas o servico principal.
+                          </div>
+                        )}
+
+                        {agendamentosMesmoClienteNoDia.length > 1 && (
+                          <div className="rounded-[1.5rem] border border-gray-100 bg-white px-4 py-4 dark:border-white/10 dark:bg-white/[0.04]">
+                            <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+                              <div>
+                                <p className="text-[10px] font-black uppercase tracking-[0.18em] text-[#E29BA8]">Comanda agrupada</p>
+                                <p className="mt-1 text-sm font-black uppercase text-gray-900 dark:text-white">{agendamentosMesmoClienteNoDia.length} procedimentos no dia</p>
+                              </div>
+                              <p className="text-sm font-black text-[#d48997]">{calculateGroupedAgendamentosTotal(agendamentosMesmoClienteNoDia).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</p>
+                            </div>
+                            <div className="mt-4 space-y-2">
+                              {agendamentosMesmoClienteNoDia.map((item) => (
+                                <div key={item.id} className="flex flex-col gap-3 rounded-[1.25rem] bg-gray-50 px-4 py-3 dark:bg-white/[0.04] lg:flex-row lg:items-center lg:justify-between">
+                                  <div>
+                                    <p className="text-[10px] font-black uppercase tracking-[0.16em] text-gray-900 dark:text-white">{item.inicioHora} · {getAgendamentoTitulo(item)}</p>
+                                    <p className="mt-1 text-[10px] font-bold uppercase tracking-[0.16em] text-gray-400">{item.profissional?.nome || 'Equipe'} · {item.statusPagamento === 'pago' ? 'Pago' : 'Pendente'}</p>
+                                  </div>
+                                  <div className="flex flex-wrap items-center gap-2">
+                                    <button type="button" onClick={() => handleAbrirAgendamentoGrupo(item)} className="rounded-xl border border-gray-200 px-3 py-2 text-[9px] font-black uppercase tracking-[0.16em] text-gray-500 transition hover:bg-white dark:border-white/10 dark:text-white/70">
+                                      Abrir
+                                    </button>
+                                    <button type="button" onClick={() => onAjustar?.(item)} className="rounded-xl border border-[#d48997]/20 px-3 py-2 text-[9px] font-black uppercase tracking-[0.16em] text-[#d48997] transition hover:bg-[#d48997]/10">
+                                      Ajustar
+                                    </button>
+                                    <button type="button" onClick={() => handleExcluirAgendamentoDaComanda(item)} className="rounded-xl border border-red-200 px-3 py-2 text-[9px] font-black uppercase tracking-[0.16em] text-red-500 transition hover:bg-red-50">
+                                      Remover
+                                    </button>
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    )}
+                  </section>
+
+                  <section className="rounded-[2rem] border border-gray-100 bg-gray-50 p-4 dark:border-white/10 dark:bg-white/[0.04]">
+                    <button type="button" onClick={() => toggleComandaSection('observacao')} className="flex w-full items-center justify-between gap-4 text-left">
+                      <div>
+                        <p className="text-[11px] font-black uppercase tracking-[0.3em] text-gray-900 dark:text-white">Observacoes</p>
+                        <p className="mt-2 text-sm text-gray-500 dark:text-white/55">Use este campo para deixar instrucoes simples para a equipe.</p>
+                      </div>
+                      <div className="rounded-2xl border border-gray-200 bg-white p-3 dark:border-white/10 dark:bg-white/5">
+                        {activeComandaSection === 'observacao' ? <Minimize2 size={16} /> : <Maximize2 size={16} />}
+                      </div>
+                    </button>
+
+                    {activeComandaSection === 'observacao' && (
+                      <div className="mt-5 space-y-4">
+                        <textarea
+                          value={observacaoDraft}
+                          onChange={(event) => setObservacaoDraft(event.target.value)}
+                          rows={4}
+                          placeholder="Ex.: cliente pediu tonalidade rosa, teste de mecha, alergia ou preferencia de atendimento."
+                          className="w-full rounded-[1.75rem] border border-gray-200 bg-white px-5 py-4 text-sm text-gray-900 outline-none placeholder:text-gray-400 dark:border-white/10 dark:bg-[#111113] dark:text-white dark:placeholder:text-gray-500"
+                        />
+                        <div className="flex justify-end">
+                          <button type="button" onClick={handleSalvarObservacao} disabled={savingObservacao} className="rounded-2xl bg-[#E29BA8] px-5 py-3 text-[10px] font-black uppercase tracking-[0.2em] text-white transition hover:bg-[#d48997] disabled:opacity-60">
+                            {savingObservacao ? 'Salvando' : 'Salvar observacao'}
+                          </button>
+                        </div>
+                      </div>
+                    )}
+                  </section>
+
+                  <section className="rounded-[2rem] border border-gray-100 bg-gray-50 p-4 dark:border-white/10 dark:bg-white/[0.04]">
+                    <button type="button" onClick={() => toggleComandaSection('novo-item')} className="flex w-full items-center justify-between gap-4 text-left">
+                      <div>
+                        <p className="text-[11px] font-black uppercase tracking-[0.3em] text-gray-900 dark:text-white">Adicionar atendimento</p>
+                        <p className="mt-2 text-sm text-gray-500 dark:text-white/55">Inclua outro servico com horario e profissional proprios na mesma comanda.</p>
+                      </div>
+                      <div className="rounded-2xl border border-gray-200 bg-white p-3 dark:border-white/10 dark:bg-white/5">
+                        {activeComandaSection === 'novo-item' ? <Minimize2 size={16} /> : <Maximize2 size={16} />}
+                      </div>
+                    </button>
+
+                    {activeComandaSection === 'novo-item' && (
+                      <div className="mt-5 space-y-4">
+                        <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                          <select
+                            value={novoItemComanda.servicoId}
+                            onChange={(event) => setNovoItemComanda((prev) => ({ ...prev, servicoId: event.target.value, profissionalId: '' }))}
+                            className="w-full rounded-[1.75rem] border border-gray-200 bg-white px-5 py-4 text-sm text-gray-900 outline-none dark:border-white/10 dark:bg-[#111113] dark:text-white"
+                          >
+                            <option value="">Selecione o servico</option>
+                            {servicos.map((servico) => (
+                              <option key={servico.id} value={servico.id}>{servico.nome}</option>
+                            ))}
+                          </select>
+
+                          <select
+                            value={novoItemComanda.profissionalId}
+                            onChange={(event) => setNovoItemComanda((prev) => ({ ...prev, profissionalId: event.target.value }))}
+                            className="w-full rounded-[1.75rem] border border-gray-200 bg-white px-5 py-4 text-sm text-gray-900 outline-none dark:border-white/10 dark:bg-[#111113] dark:text-white"
+                          >
+                            <option value="">Selecione o profissional</option>
+                            {profissionaisCompativeisNovoItem.map((profissional) => (
+                              <option key={profissional.id} value={profissional.id}>{profissional.nome}</option>
+                            ))}
+                          </select>
+
+                          <input
+                            type="time"
+                            value={novoItemComanda.hora}
+                            onChange={(event) => setNovoItemComanda((prev) => ({ ...prev, hora: event.target.value }))}
+                            className="w-full rounded-[1.75rem] border border-gray-200 bg-white px-5 py-4 text-sm text-gray-900 outline-none dark:border-white/10 dark:bg-[#111113] dark:text-white"
+                          />
+
+                          <input
+                            value={novoItemComanda.observacao}
+                            onChange={(event) => setNovoItemComanda((prev) => ({ ...prev, observacao: event.target.value }))}
+                            placeholder="Observacao do novo item"
+                            className="w-full rounded-[1.75rem] border border-gray-200 bg-white px-5 py-4 text-sm text-gray-900 outline-none placeholder:text-gray-400 dark:border-white/10 dark:bg-[#111113] dark:text-white"
+                          />
+                        </div>
+                        <div className="flex justify-end">
+                          <button type="button" onClick={handleAddItemNaComanda} disabled={!novoItemComanda.servicoId || !novoItemComanda.profissionalId || !novoItemComanda.hora} className="rounded-2xl bg-[#d48997] px-5 py-3 text-[10px] font-black uppercase tracking-[0.2em] text-white transition hover:bg-[#c77787] disabled:cursor-not-allowed disabled:opacity-50">
+                            Adicionar a comanda
+                          </button>
+                        </div>
+                      </div>
+                    )}
+                  </section>
+
+                  <section className="rounded-[2rem] border border-gray-100 bg-gray-50 p-4 dark:border-white/10 dark:bg-white/[0.04]">
+                    <button type="button" onClick={() => toggleComandaSection('servicos')} className="flex w-full items-center justify-between gap-4 text-left">
+                      <div>
+                        <p className="text-[11px] font-black uppercase tracking-[0.3em] text-gray-900 dark:text-white">Adicionar servico rapido</p>
+                        <p className="mt-2 text-sm text-gray-500 dark:text-white/55">Escolha um servico da lista para incluir sem preencher outro formulario.</p>
+                      </div>
+                      <div className="rounded-2xl border border-gray-200 bg-white p-3 dark:border-white/10 dark:bg-white/5">
+                        {activeComandaSection === 'servicos' ? <Minimize2 size={16} /> : <Maximize2 size={16} />}
+                      </div>
+                    </button>
+
+                    {activeComandaSection === 'servicos' && (
+                      <div className="mt-5 space-y-4">
+                        <div className="flex items-center gap-3 rounded-[1.75rem] border border-gray-200 bg-white px-4 py-3 dark:border-white/10 dark:bg-[#111113]">
+                          <Search size={16} className="text-gray-400" />
+                          <input
+                            value={servicosBusca}
+                            onChange={(event) => setServicosBusca(event.target.value)}
+                            placeholder="Buscar servico por nome"
+                            className="w-full bg-transparent text-sm text-gray-900 outline-none placeholder:text-gray-400 dark:text-white"
+                          />
+                        </div>
+
+                        {servicosFiltrados.length > 0 ? (
+                          <div className="space-y-3">
+                            {servicosFiltrados.map((servico) => (
+                              <div key={servico.id} className="flex flex-col gap-3 rounded-[1.5rem] border border-gray-100 bg-white px-4 py-4 dark:border-white/10 dark:bg-white/[0.04] sm:flex-row sm:items-center sm:justify-between">
+                                <div>
+                                  <p className="text-sm font-black uppercase text-gray-900 dark:text-white">{servico.nome}</p>
+                                  <p className="mt-1 text-[10px] font-bold uppercase tracking-[0.16em] text-gray-400">{formatDurationLabel(servico.duracaoMin)} · {Number(servico.preco || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</p>
+                                </div>
+                                <button type="button" onClick={() => handleAddItem(servico.id)} className="rounded-2xl border border-[#d48997]/20 px-4 py-3 text-[10px] font-black uppercase tracking-[0.18em] text-[#d48997] transition hover:bg-[#d48997]/10">
+                                  Adicionar
+                                </button>
+                              </div>
+                            ))}
+                          </div>
+                        ) : (
+                          <div className="rounded-[1.5rem] border border-dashed border-gray-200 px-4 py-4 text-sm text-gray-500 dark:border-white/10 dark:text-white/55">
+                            Nenhum servico encontrado com esse filtro.
+                          </div>
+                        )}
+                      </div>
+                    )}
+                  </section>
+
+                  <section className="rounded-[2rem] border border-gray-100 bg-gray-50 p-4 dark:border-white/10 dark:bg-white/[0.04]">
+                    <button type="button" onClick={() => toggleComandaSection('produtos')} className="flex w-full items-center justify-between gap-4 text-left">
+                      <div>
+                        <p className="text-[11px] font-black uppercase tracking-[0.3em] text-gray-900 dark:text-white">Adicionar produto</p>
+                        <p className="mt-2 text-sm text-gray-500 dark:text-white/55">Inclua consumo, bebida ou produto vendido no mesmo atendimento.</p>
+                      </div>
+                      <div className="rounded-2xl border border-gray-200 bg-white p-3 dark:border-white/10 dark:bg-white/5">
+                        {activeComandaSection === 'produtos' ? <Minimize2 size={16} /> : <Maximize2 size={16} />}
+                      </div>
+                    </button>
+
+                    {activeComandaSection === 'produtos' && (
+                      <div className="mt-5 space-y-4">
+                        <div className="flex items-center gap-3 rounded-[1.75rem] border border-gray-200 bg-white px-4 py-3 dark:border-white/10 dark:bg-[#111113]">
+                          <Search size={16} className="text-gray-400" />
+                          <input
+                            value={produtosBusca}
+                            onChange={(event) => setProdutosBusca(event.target.value)}
+                            placeholder="Buscar produto por nome"
+                            className="w-full bg-transparent text-sm text-gray-900 outline-none placeholder:text-gray-400 dark:text-white"
+                          />
+                        </div>
+
+                        {produtosFiltrados.length > 0 ? (
+                          <div className="space-y-3">
+                            {produtosFiltrados.map((produto) => (
+                              <div key={produto.id} className="flex flex-col gap-3 rounded-[1.5rem] border border-gray-100 bg-white px-4 py-4 dark:border-white/10 dark:bg-white/[0.04] sm:flex-row sm:items-center sm:justify-between">
+                                <div>
+                                  <p className="text-sm font-black uppercase text-gray-900 dark:text-white">{produto.nome}</p>
+                                  <p className="mt-1 text-[10px] font-bold uppercase tracking-[0.16em] text-gray-400">{Number(produto.preco || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</p>
+                                </div>
+                                <button type="button" onClick={() => handleAddProduto(produto.id)} className="rounded-2xl border border-[#d48997]/20 px-4 py-3 text-[10px] font-black uppercase tracking-[0.18em] text-[#d48997] transition hover:bg-[#d48997]/10">
+                                  Adicionar
+                                </button>
+                              </div>
+                            ))}
+                          </div>
+                        ) : (
+                          <div className="rounded-[1.5rem] border border-dashed border-gray-200 px-4 py-4 text-sm text-gray-500 dark:border-white/10 dark:text-white/55">
+                            Nenhum produto encontrado com esse filtro.
+                          </div>
+                        )}
+                      </div>
+                    )}
+                  </section>
+                </div>
+              ) : tab === 'ajustes' ? (
+                <div className="space-y-4">
+                  <section className="rounded-[2rem] border border-gray-100 bg-gray-50 p-5 dark:border-white/10 dark:bg-white/[0.04]">
+                    <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+                      <div>
+                        <p className="text-[11px] font-black uppercase tracking-[0.3em] text-[#E29BA8]">Resumo do servico</p>
+                        <h3 className="mt-2 text-xl font-black uppercase text-gray-900 dark:text-white">{getAgendamentoTitulo(agendamento)}</h3>
+                        <p className="mt-3 text-sm text-gray-500 dark:text-white/55">Veja o valor atual e abra a edicao somente quando realmente precisar mudar o servico.</p>
+                      </div>
+                      <button type="button" onClick={() => onAjustar?.(agendamento)} className="rounded-2xl bg-[#d48997] px-5 py-3 text-[10px] font-black uppercase tracking-[0.18em] text-white transition hover:bg-[#c77787]">
+                        Editar servico
+                      </button>
+                    </div>
+
+                    <div className="mt-5 grid gap-3 md:grid-cols-3">
+                      <div className="rounded-[1.5rem] border border-gray-200 bg-white px-4 py-4 dark:border-white/10 dark:bg-[#111113]">
+                        <p className="text-[10px] font-black uppercase tracking-[0.18em] text-gray-400">Original</p>
+                        <p className="mt-2 text-lg font-black text-gray-900 dark:text-white">{precoBaseOriginal.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</p>
+                      </div>
+                      <div className="rounded-[1.5rem] border border-gray-200 bg-white px-4 py-4 dark:border-white/10 dark:bg-[#111113]">
+                        <p className="text-[10px] font-black uppercase tracking-[0.18em] text-gray-400">Ajuste aplicado</p>
+                        <p className="mt-2 text-lg font-black text-gray-900 dark:text-white">
+                          {valorBaseAjustadoAtivo
+                            ? `${pagamentoAjusteTipo === 'acrescimo' ? 'Acrescimo' : 'Desconto'} ${ajusteAplicado.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}`
+                            : 'Sem ajuste'}
+                        </p>
+                      </div>
+                      <div className="rounded-[1.5rem] border border-[#E29BA8]/20 bg-[#E29BA8]/8 px-4 py-4 dark:bg-[#E29BA8]/10">
+                        <p className="text-[10px] font-black uppercase tracking-[0.18em] text-[#b96a79] dark:text-[#efbac2]">Valor final</p>
+                        <p className="mt-2 text-lg font-black text-[#d48997] dark:text-white">{precoBaseCheckout.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</p>
+                      </div>
+                    </div>
+                  </section>
+
+                  <section className="rounded-[2rem] border border-gray-100 bg-gray-50 p-5 dark:border-white/10 dark:bg-white/[0.04]">
+                    <p className="text-[11px] font-black uppercase tracking-[0.3em] text-gray-900 dark:text-white">Dados do atendimento</p>
+                    <div className="mt-5 grid gap-3 md:grid-cols-2">
+                      <div className="rounded-[1.5rem] border border-gray-200 bg-white px-4 py-4 dark:border-white/10 dark:bg-[#111113]">
+                        <p className="text-[10px] font-black uppercase tracking-[0.18em] text-gray-400">Horario</p>
+                        <p className="mt-2 text-sm font-black uppercase text-gray-900 dark:text-white">{formatDateBR(agendamento.data)} · {agendamento.inicioHora}</p>
+                      </div>
+                      <div className="rounded-[1.5rem] border border-gray-200 bg-white px-4 py-4 dark:border-white/10 dark:bg-[#111113]">
+                        <p className="text-[10px] font-black uppercase tracking-[0.18em] text-gray-400">Status</p>
+                        <p className="mt-2 text-sm font-black uppercase text-gray-900 dark:text-white">{STATUS_CONFIG[agendamento.status]?.label || agendamento.status} · {agendamento.statusPagamento === 'pago' ? 'Pago' : 'Pendente'}</p>
+                      </div>
+                    </div>
+                  </section>
+
+                  <section className="rounded-[2rem] border border-gray-100 bg-gray-50 p-5 dark:border-white/10 dark:bg-white/[0.04]">
+                    <p className="text-[11px] font-black uppercase tracking-[0.3em] text-gray-900 dark:text-white">Observacoes</p>
+                    <div className="mt-5 grid gap-3 md:grid-cols-2">
+                      <div className="rounded-[1.5rem] border border-gray-200 bg-white px-4 py-4 dark:border-white/10 dark:bg-[#111113]">
+                        <p className="text-[10px] font-black uppercase tracking-[0.18em] text-[#E29BA8]">Do agendamento</p>
+                        <p className="mt-2 text-sm leading-6 text-gray-600 dark:text-gray-300 whitespace-pre-wrap">{agendamento.observacao?.trim() || 'Nenhuma observacao registrada para este atendimento.'}</p>
+                      </div>
+                      <div className="rounded-[1.5rem] border border-gray-200 bg-white px-4 py-4 dark:border-white/10 dark:bg-[#111113]">
+                        <p className="text-[10px] font-black uppercase tracking-[0.18em] text-[#E29BA8]">Do ajuste</p>
+                        <p className="mt-2 text-sm leading-6 text-gray-600 dark:text-gray-300 whitespace-pre-wrap">{pagamentoAjusteObservacao.trim() || 'Nenhuma observacao registrada para este ajuste.'}</p>
+                      </div>
+                    </div>
+                  </section>
+                </div>
+              ) : (
+                <div className="space-y-8 py-2">
+                  {concluidoSucesso ? (
+                    <div className="mx-auto flex max-w-xl flex-col items-center justify-center p-5 text-center">
+                      <div className="mb-8 flex h-24 w-24 items-center justify-center rounded-[2rem] bg-[#E29BA8] text-white shadow-2xl shadow-[#E29BA8]/20">
+                        <CheckCircle2 size={48} />
+                      </div>
+                      <h2 className="text-2xl font-black uppercase tracking-tighter text-gray-900 dark:text-white sm:text-4xl">Pagamento concluido</h2>
+                      <p className="mt-4 text-base font-medium text-gray-500">O atendimento foi fechado e os valores ja foram para o financeiro.</p>
+                      <div className="mt-8 w-full space-y-3">
+                        <button type="button" onClick={() => enviarComprovanteWhatsapp()} className="w-full rounded-[2rem] bg-[#25D366] py-5 text-[11px] font-black uppercase tracking-[0.2em] text-white transition hover:scale-[1.01]">
+                          Enviar comprovante no WhatsApp
+                        </button>
+                        <button type="button" onClick={onClose} className="w-full rounded-[2rem] bg-gray-100 py-5 text-[11px] font-black uppercase tracking-[0.2em] text-gray-500 transition hover:bg-gray-200 dark:bg-white/5 dark:text-white/70 dark:hover:bg-white/10">
+                          Voltar para agenda
+                        </button>
+                      </div>
+                    </div>
+                  ) : agendamento.statusPagamento === 'pago' ? (
+                    <div className="mx-auto max-w-2xl space-y-4">
+                      <div className="rounded-[2rem] border border-[#E29BA8]/20 bg-[#E29BA8]/8 p-5 dark:bg-[#E29BA8]/10">
+                        <p className="text-[11px] font-black uppercase tracking-[0.3em] text-[#b96a79] dark:text-[#efbac2]">Pagamento confirmado</p>
+                        <p className="mt-3 text-2xl font-black text-[#d48997] dark:text-white">{Number(calculateTotal()).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</p>
+                        <p className="mt-2 text-sm text-gray-600 dark:text-white/55">Se precisar mudar algo, reabra a comanda e depois refaça o fechamento.</p>
+                      </div>
+                      <div className="grid gap-3 sm:grid-cols-2">
+                        <button type="button" onClick={() => enviarComprovanteWhatsapp({ reenvio: true })} className="rounded-[2rem] bg-[#25D366] px-5 py-5 text-[11px] font-black uppercase tracking-[0.2em] text-white transition hover:scale-[1.01]">
+                          Reenviar comprovante
+                        </button>
+                        <button type="button" onClick={handleReabrirComanda} className="rounded-[2rem] border border-amber-300 bg-amber-50 px-5 py-5 text-[11px] font-black uppercase tracking-[0.2em] text-amber-700 transition hover:bg-amber-100 dark:border-amber-300/20 dark:bg-amber-500/10 dark:text-amber-200">
+                          Reabrir comanda
+                        </button>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="mx-auto max-w-2xl space-y-6">
+                      {!caixaPagamentoStatus.aberto && (
+                        <div className="rounded-[2rem] border border-amber-300/30 bg-amber-400/10 px-5 py-4 text-sm font-semibold text-amber-100">
+                          {caixaPagamentoStatus.mensagem || 'Abra o caixa antes de registrar pagamentos.'}
+                        </div>
+                      )}
+
+                      <div className="rounded-[2rem] border border-gray-100 bg-gray-50 p-5 dark:border-white/10 dark:bg-white/[0.04]">
+                        <p className="text-[11px] font-black uppercase tracking-[0.3em] text-gray-900 dark:text-white">Forma de pagamento</p>
+                        <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2">
+                          {[
+                            { label: 'PIX', forma: 'PIX', icon: Smartphone, color: 'text-[#E29BA8]' },
+                            { label: 'Cartao de Credito', forma: 'Cartao de Credito', icon: CreditCard, color: 'text-[#E29BA8]' },
+                            { label: 'Cartao de Debito', forma: 'Cartao de Debito', icon: CreditCard, color: 'text-indigo-500' },
+                            { label: 'Dinheiro', forma: 'Dinheiro', icon: Banknote, color: 'text-bellapro-blush' },
+                          ].map((item) => (
+                            <button
+                              key={item.forma}
+                              type="button"
+                              onClick={() => setPagamentoForma(item.forma)}
+                              className={cn(
+                                'rounded-[1.5rem] border p-4 text-left transition-all',
+                                pagamentoForma === item.forma
+                                  ? 'border-[#d48997] bg-[#d48997] text-white shadow-lg'
+                                  : 'border-gray-200 bg-white hover:border-[#E29BA8]/30 dark:border-white/10 dark:bg-[#111113]'
+                              )}
+                            >
+                              <div className="flex items-center gap-3">
+                                <div className={cn('flex h-11 w-11 items-center justify-center rounded-2xl bg-white dark:bg-gray-800', pagamentoForma === item.forma ? 'text-gray-900 dark:text-white bg-white/10' : item.color)}>
+                                  <item.icon size={20} />
+                                </div>
+                                <div>
+                                  <p className="text-sm font-black uppercase tracking-[0.16em]">{item.label}</p>
+                                  <p className={cn('mt-1 text-[10px] font-bold uppercase tracking-[0.16em]', pagamentoForma === item.forma ? 'text-white/75' : 'text-gray-400')}>Toque para selecionar</p>
+                                </div>
+                              </div>
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+
+                      <div className="rounded-[2rem] border border-gray-100 bg-gray-50 p-5 dark:border-white/10 dark:bg-white/[0.04]">
+                        <p className="text-[11px] font-black uppercase tracking-[0.3em] text-gray-900 dark:text-white">Ajuste e fechamento</p>
+                        <div className="mt-4 space-y-4">
+                          <div>
+                            <div className="mb-2 flex flex-wrap items-center justify-between gap-3">
+                              <p className="text-[10px] font-black uppercase tracking-[0.18em] text-gray-400">Ajuste no servico</p>
+                              <div className="flex flex-wrap gap-2">
+                                {[
+                                  { id: 'desconto', label: 'Desconto' },
+                                  { id: 'acrescimo', label: 'Acrescimo' },
+                                ].map((tipo) => (
+                                  <button
+                                    key={tipo.id}
+                                    type="button"
+                                    onClick={() => setPagamentoAjusteTipo(tipo.id)}
+                                    className={cn(
+                                      'rounded-xl border px-3 py-2 text-[10px] font-black uppercase tracking-[0.16em] transition-all',
+                                      pagamentoAjusteTipo === tipo.id
+                                        ? 'border-[#d48997] bg-[#d48997] text-white'
+                                        : 'border-gray-200 text-gray-500 hover:border-[#d48997]/30 dark:border-white/10 dark:text-white/70'
+                                    )}
+                                  >
+                                    {tipo.label}
+                                  </button>
+                                ))}
+                                {[
+                                  { id: 'valor', label: 'R$' },
+                                  { id: 'percentual', label: '%' },
+                                ].map((modo) => (
+                                  <button
+                                    key={modo.id}
+                                    type="button"
+                                    onClick={() => setPagamentoDescontoModo(modo.id)}
+                                    className={cn(
+                                      'rounded-xl border px-3 py-2 text-[10px] font-black uppercase tracking-[0.16em] transition-all',
+                                      pagamentoDescontoModo === modo.id
+                                        ? 'border-[#d48997] bg-[#d48997] text-white'
+                                        : 'border-gray-200 text-gray-500 hover:border-[#d48997]/30 dark:border-white/10 dark:text-white/70'
+                                    )}
+                                  >
+                                    {modo.label}
+                                  </button>
+                                ))}
+                              </div>
+                            </div>
+                            <input
+                              type="number"
+                              value={pagamentoDesconto}
+                              onChange={(e) => setPagamentoDesconto(e.target.value)}
+                              min="0"
+                              max={pagamentoDescontoModo === 'percentual' ? '100' : undefined}
+                              step={pagamentoDescontoModo === 'percentual' ? '1' : '0.01'}
+                              placeholder={pagamentoDescontoModo === 'percentual' ? '0' : '0,00'}
+                              className="w-full rounded-2xl border border-gray-200 bg-white px-5 py-4 text-sm font-black text-gray-900 outline-none dark:border-white/10 dark:bg-[#111113] dark:text-white"
+                            />
+                            <div className="mt-2 flex flex-wrap items-center justify-between gap-3 text-[10px] font-bold uppercase tracking-[0.16em]">
+                              <span className="text-gray-400">Original {precoBaseOriginal.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</span>
+                              {valorBaseAjustadoAtivo && (
+                                <span className="text-bellapro-blush">
+                                  {pagamentoAjusteTipo === 'acrescimo' ? 'Acrescimo' : 'Desconto'} {pagamentoDescontoModo === 'percentual'
+                                    ? `${Number.isFinite(descontoDigitado) ? descontoDigitado : 0}%`
+                                    : ajusteAplicado.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
+                                </span>
+                              )}
+                            </div>
+                            <p className="mt-2 text-[10px] font-bold uppercase tracking-[0.16em] text-gray-400">
+                              Final do servico {precoBaseCheckout.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
+                            </p>
+                          </div>
+
+                          <div>
+                            <p className="mb-2 text-[10px] font-black uppercase tracking-[0.18em] text-gray-400">Observacao do ajuste</p>
+                            <textarea
+                              value={pagamentoAjusteObservacao}
+                              onChange={(e) => setPagamentoAjusteObservacao(e.target.value)}
+                              rows={3}
+                              placeholder="Ex.: desconto por cortesia, acrescimo por horario especial..."
+                              className="w-full resize-none rounded-2xl border border-gray-200 bg-white px-5 py-4 text-sm font-medium text-gray-900 outline-none dark:border-white/10 dark:bg-[#111113] dark:text-white"
+                            />
+                          </div>
+
+                          <div>
+                            <p className="mb-2 text-[10px] font-black uppercase tracking-[0.18em] text-gray-400">Taxa da maquininha</p>
+                            <input
+                              type="number"
+                              value={pagamentoTaxa}
+                              onChange={(e) => setPagamentoTaxa(e.target.value)}
+                              min="0"
+                              step="0.01"
+                              className="w-full rounded-2xl border border-gray-200 bg-white px-5 py-4 text-sm font-black text-gray-900 outline-none dark:border-white/10 dark:bg-[#111113] dark:text-white"
+                            />
+                          </div>
+
+                          <div className="rounded-[1.5rem] border border-[#E29BA8]/20 bg-[#E29BA8]/8 px-4 py-4 dark:bg-[#E29BA8]/10">
+                            <p className="text-[10px] font-black uppercase tracking-[0.18em] text-[#b96a79] dark:text-[#efbac2]">Total para cobrar</p>
+                            <p className="mt-2 text-2xl font-black text-[#d48997] dark:text-white">{Number(calculateTotal()).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</p>
+                          </div>
+
+                          <button
+                            type="button"
+                            onClick={() => handleCheckout(pagamentoForma)}
+                            disabled={!pagamentoForma || loading || agendamento.statusPagamento === 'pago' || !caixaPagamentoStatus.aberto || !pagamentoDescontoValido}
+                            className="w-full rounded-[2rem] bg-[#E29BA8] py-5 text-[11px] font-black uppercase tracking-[0.2em] text-white transition hover:bg-[#d48997] disabled:cursor-not-allowed disabled:opacity-40"
+                          >
+                            {loading ? 'Processando...' : 'Finalizar cobranca'}
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+          </div>
+        </motion.div>
+      </motion.div>
+    );
+  }
+
   if (!agendamento) return null;
 
+  return renderSimplifiedModal();
+
+  /*
   return (
     <motion.div 
       initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
@@ -2370,6 +3141,7 @@ function ModalDetalhesAgendamento({ agendamento: initialAgendamento, allAgendame
       </motion.div>
     </motion.div>
   );
+  */
 }
 
 function ModalBloqueioPeriodo({ onClose, onSave, data, horaInicial, profissionalNome }) {
