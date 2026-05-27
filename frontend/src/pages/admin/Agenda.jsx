@@ -1071,6 +1071,14 @@ function ModalAjusteAgendamento({ agendamento, profissionais, onClose, onSave })
     : precoBaseOriginal + ajusteAplicado;
   const valorBaseAjustadoAtivo = ajusteAplicado >= 0.001;
 
+  function dismissActiveField(event) {
+    event?.preventDefault?.();
+    const activeElement = document.activeElement;
+    if (activeElement instanceof HTMLElement) {
+      activeElement.blur();
+    }
+  }
+
   async function salvar(event) {
     event.preventDefault();
     if (!form.data || !form.hora || !form.profissionalId) {
@@ -1117,7 +1125,7 @@ function ModalAjusteAgendamento({ agendamento, profissionais, onClose, onSave })
 
         <div className="mb-8">
           <p className="text-[10px] font-black uppercase tracking-[0.3em] text-[#E29BA8]">Ajuste rapido</p>
-          <h2 className="mt-3 text-3xl font-black uppercase tracking-tight text-gray-900 dark:text-white">Editar agenda</h2>
+          <h2 className="mt-3 text-3xl font-black uppercase tracking-tight text-gray-900 dark:text-white">Aditar servico</h2>
           <p className="mt-3 text-sm text-gray-500 dark:text-gray-400">
             {agendamento?.clienteNome} · {getAgendamentoTitulo(agendamento)}
           </p>
@@ -1179,6 +1187,7 @@ function ModalAjusteAgendamento({ agendamento, profissionais, onClose, onSave })
                   <button
                     key={tipo.id}
                     type="button"
+                    onMouseDown={dismissActiveField}
                     onClick={() => setAjusteTipo(tipo.id)}
                     className={cn(
                       'rounded-xl border px-3 py-2 text-[10px] font-black uppercase tracking-[0.16em] transition-all',
