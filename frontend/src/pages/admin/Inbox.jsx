@@ -22,6 +22,7 @@ import {
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import {
+  API_BASE_URL,
   getConversas,
   getMensagens,
   atualizarConversa,
@@ -32,8 +33,6 @@ import {
 } from '../../services/api';
 import { cn } from '../../lib/utils';
 import useElementWidth from '../../hooks/useElementWidth';
-
-const API_BASE_URL = import.meta.env.VITE_API_URL?.trim() || '/api';
 
 const FILTROS = [
   { label: 'Chats', icon: <MessageSquare size={14} />, params: { status: 'aberta' } },

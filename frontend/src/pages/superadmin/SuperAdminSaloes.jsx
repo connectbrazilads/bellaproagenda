@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import {
+  API_BASE_URL,
   saCriarSalao,
   saDeleteSalao,
   saEnviarComunicado,
@@ -228,7 +229,7 @@ export default function SuperAdminSaloes() {
   }
 
   function exportCsv() {
-    window.open('/api/superadmin/saloes/exportar', '_blank');
+    window.open(`${API_BASE_URL}/superadmin/saloes/exportar`, '_blank');
   }
 
   function copy(text) {

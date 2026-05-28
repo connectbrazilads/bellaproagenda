@@ -1,9 +1,14 @@
 import axios from 'axios';
 
-const apiBaseUrl = import.meta.env.VITE_API_URL?.trim() || '/api';
+const currentHostname = typeof window !== 'undefined' ? window.location.hostname : 'localhost';
+const fallbackApiBaseUrl = currentHostname === 'localhost' || currentHostname === '127.0.0.1'
+  ? '/api'
+  : 'https://api.bellaproagenda.com.br/api';
+
+export const API_BASE_URL = import.meta.env.VITE_API_URL?.trim() || fallbackApiBaseUrl;
 
 const api = axios.create({
-  baseURL: apiBaseUrl,
+  baseURL: API_BASE_URL,
   withCredentials: true,
 });
 
