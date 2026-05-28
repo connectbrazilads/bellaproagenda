@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { ChevronLeft, MapPin, Phone, Scissors, Sparkles, Tag, User } from 'lucide-react';
 import { getProfissionaisPublicos, getSalaoPublico } from '../../services/api';
@@ -65,12 +65,12 @@ export default function BookingPage({ slug }) {
     setStep((current) => current - 1);
   }
 
-  function set(field, value) {
+  const set = useCallback((field, value) => {
     setBooking((current) => ({
       ...current,
       [field]: typeof value === 'function' ? value(current[field]) : value,
     }));
-  }
+  }, []);
 
   if (agendamentoCriado) {
     return <StepSucesso agendamento={agendamentoCriado} salao={salao} cor={cor} />;

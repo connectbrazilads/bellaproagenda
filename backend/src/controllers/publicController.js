@@ -4,12 +4,37 @@ const { notificarClienteAgendamento, notificarSalaoNovoAgendamento } = require('
 const { criarNotificacaoSalao } = require('../services/notificationCenterService');
 const {
   getServicoIdsDoPacote,
-  getServicoIdsDoProfissional,
   profissionalAtendeTodosServicos,
 } = require('../lib/profissionalServicoValidation');
 
 async function findSalao(slug) {
   return await prisma.salao.findUnique({ where: { slug } });
+}
+
+function buildProfissionalServicoWhere(servicoId) {
+  return {
+    OR: [
+      { servicos: { some: { servicoId } } },
+      {
+        servicoCategorias: {
+          some: {
+            categoria: {
+              servicos: {
+                some: { id: servicoId },
+              },
+            },
+          },
+        },
+      },
+    ],
+  };
+}
+
+function buildProfissionalServicoComboWhere(servicoIds = []) {
+  const ids = [...new Set((servicoIds || []).filter(Boolean))];
+  return {
+    AND: ids.map((servicoId) => buildProfissionalServicoWhere(servicoId)),
+  };
 }
 
 function normalizarTelefone(valor = '') {
@@ -163,6 +188,7 @@ async function getProfissionaisPorServico(req, res) {
     where: {
       salaoId: salao.id,
       ativo: true,
+      ...buildProfissionalServicoWhere(servicoId),
     },
     orderBy: { nome: 'asc' },
     select: {
@@ -178,26 +204,10 @@ async function getProfissionaisPorServico(req, res) {
           },
         },
       },
-      servicos: { select: { servicoId: true } },
-      servicoCategorias: {
-        select: {
-          categoria: {
-            select: {
-              servicos: {
-                select: { id: true },
-              },
-            },
-          },
-        },
-      },
     },
   });
 
-  const compativeis = profissionais
-    .filter((profissional) => getServicoIdsDoProfissional(profissional).includes(servicoId))
-    .map(({ servicos, servicoCategorias, ...profissional }) => profissional);
-
-  res.json(compativeis);
+  res.json(profissionais);
 }
 
 async function getProfissionaisPorPacote(req, res) {
@@ -209,7 +219,11 @@ async function getProfissionaisPorPacote(req, res) {
   if (!servicoIdsDoPacote) return res.status(404).json({ error: 'Pacote nÃ£o encontrado' });
 
   const profissionais = await prisma.profissional.findMany({
-    where: { salaoId: salao.id, ativo: true },
+    where: {
+      salaoId: salao.id,
+      ativo: true,
+      ...buildProfissionalServicoComboWhere(servicoIdsDoPacote),
+    },
     orderBy: { nome: 'asc' },
     select: {
       id: true,
@@ -224,29 +238,10 @@ async function getProfissionaisPorPacote(req, res) {
           },
         },
       },
-      servicos: { select: { servicoId: true } },
-      servicoCategorias: {
-        select: {
-          categoria: {
-            select: {
-              servicos: {
-                select: { id: true },
-              },
-            },
-          },
-        },
-      },
     },
   });
 
-  const compativeis = profissionais
-    .filter((profissional) => {
-      const ids = new Set(getServicoIdsDoProfissional(profissional));
-      return servicoIdsDoPacote.every((servicoId) => ids.has(servicoId));
-    })
-    .map(({ servicos, servicoCategorias, ...profissional }) => profissional);
-
-  res.json(compativeis);
+  res.json(profissionais);
 }
 
 function normalizarIdsServico(servicoId, servicoIds) {

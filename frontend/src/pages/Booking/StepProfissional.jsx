@@ -4,6 +4,8 @@ import { User, Star, Zap, Users, CheckCircle2 } from 'lucide-react';
 import { getProfissionaisPorServico, getProfissionaisPorPacote } from '../../services/api';
 import { cn } from '../../lib/utils';
 
+const CARREGAMENTO_MAX_MS = 12000;
+
 function buildSyntheticTeamSelection(multiItens) {
   return {
     id: 'multi',
@@ -19,25 +21,53 @@ export default function StepProfissional({ booking, set, next, cor }) {
   const [avisoFlexivel, setAvisoFlexivel] = useState(false);
   const [profissionaisPorServico, setProfissionaisPorServico] = useState({});
   const [multiSelecionado, setMultiSelecionado] = useState({});
+  const [erroCarregamento, setErroCarregamento] = useState('');
+  const [tentativa, setTentativa] = useState(0);
+  const servicosKey = useMemo(
+    () => (booking.servicos || []).map((item) => `${item.id}:${item.isPacote ? '1' : '0'}`).join('|'),
+    [booking.servicos]
+  );
+
+  function comTimeout(promise, label) {
+    let timerId;
+    const timeout = new Promise((_, reject) => {
+      timerId = setTimeout(() => reject(new Error(label)), CARREGAMENTO_MAX_MS);
+    });
+
+    return Promise.race([promise, timeout]).finally(() => clearTimeout(timerId));
+  }
 
   useEffect(() => {
     const selecionados = booking.servicos || [];
+    let cancelado = false;
+
     if (selecionados.length === 0) {
       setLoading(false);
       return;
     }
 
     setLoading(true);
+    setErroCarregamento('');
 
     const carregarProfissionais = async () => {
-      const respostas = await Promise.all(
+      const respostas = await Promise.allSettled(
         selecionados.map((item) => {
           const fetcher = item.isPacote ? getProfissionaisPorPacote : getProfissionaisPorServico;
-          return fetcher(booking.slug, item.id);
+          return comTimeout(
+            fetcher(booking.slug, item.id),
+            `A busca de especialistas para ${item.nome || 'este servico'} demorou demais.`
+          );
         })
       );
 
-      const listas = respostas.map((resposta) => resposta.data || []);
+      if (cancelado) return;
+
+      const rejeitado = respostas.find((resultado) => resultado.status === 'rejected');
+      if (rejeitado) {
+        throw rejeitado.reason || new Error('Nao foi possivel carregar especialistas no momento.');
+      }
+
+      const listas = respostas.map((resposta) => resposta.value?.data || []);
       const idsComuns = listas.reduce((acc, lista, index) => {
         const ids = new Set(lista.map((profissional) => profissional.id));
         if (index === 0) return ids;
@@ -81,12 +111,21 @@ export default function StepProfissional({ booking, set, next, cor }) {
     };
 
     carregarProfissionais()
-      .catch(() => {
+      .catch((error) => {
+        if (cancelado) return;
         setProfissionais([]);
         setProfissionaisPorServico({});
+        setAvisoFlexivel(false);
+        setErroCarregamento(error?.message || 'Nao foi possivel carregar especialistas no momento.');
       })
-      .finally(() => setLoading(false));
-  }, [booking.slug, booking.servicos, set]);
+      .finally(() => {
+        if (!cancelado) setLoading(false);
+      });
+
+    return () => {
+      cancelado = true;
+    };
+  }, [booking.slug, servicosKey, set, tentativa]);
 
   const servicosSelecionados = booking.servicos || [];
   const multiItensProntos = useMemo(() => servicosSelecionados.map((servico) => {
@@ -137,6 +176,30 @@ export default function StepProfissional({ booking, set, next, cor }) {
       <div className="flex flex-col items-center justify-center space-y-4 py-20">
         <div className="h-12 w-12 animate-spin rounded-full border-4 border-gray-100 border-t-purple-600" />
         <p className="text-[10px] font-black uppercase tracking-[0.3em] text-gray-400">Buscando especialistas</p>
+      </div>
+    );
+  }
+
+  if (erroCarregamento) {
+    return (
+      <div className="space-y-6 py-20 text-center">
+        <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-[2rem] bg-rose-50 text-rose-300">
+          <Users size={40} />
+        </div>
+        <div>
+          <p className="text-xl font-black uppercase tracking-tight text-gray-900">Nao conseguimos carregar</p>
+          <p className="mx-auto mt-2 max-w-xs text-sm text-gray-400">
+            {erroCarregamento}
+          </p>
+        </div>
+        <button
+          type="button"
+          onClick={() => setTentativa((current) => current + 1)}
+          style={{ backgroundColor: cor }}
+          className="rounded-[2rem] px-6 py-4 text-sm font-black uppercase tracking-[0.2em] text-white shadow-xl"
+        >
+          Tentar novamente
+        </button>
       </div>
     );
   }
