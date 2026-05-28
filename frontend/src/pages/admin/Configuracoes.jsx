@@ -32,6 +32,7 @@ import {
   getUsuarios,
   getWhatsappStatus,
   updateAdminSalao,
+  updateUsuario,
   updateSenha,
 } from '../../services/api';
 import ImageUpload from '../../components/ImageUpload';
@@ -58,6 +59,7 @@ const TABS = [
 const AVAILABLE_PERMISSIONS = [
   'dashboard',
   'agenda',
+  'agenda.ver_colegas',
   'inbox',
   'clientes',
   'profissionais',
@@ -589,6 +591,7 @@ function SecaoUsuarios() {
   const [usuarios, setUsuarios] = useState([]);
   const [profissionais, setProfissionais] = useState([]);
   const [form, setForm] = useState(INITIAL_USER);
+  const [editingUserId, setEditingUserId] = useState(null);
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState('');
 
@@ -614,6 +617,27 @@ function SecaoUsuarios() {
     }));
   }
 
+  function handleStartEdit(usuario) {
+    setEditingUserId(usuario.id);
+    setMessage('');
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+    setForm({
+      nome: usuario.nome || '',
+      email: usuario.email || '',
+      senha: '',
+      role: usuario.role || 'profissional',
+      profissionalId: usuario.profissionalId || '',
+      permissions: [...(usuario.permissions || DEFAULT_ROLE_PERMISSIONS[usuario.role] || [])],
+      actionPermissions: [...(usuario.actionPermissions || DEFAULT_ROLE_ACTION_PERMISSIONS[usuario.role] || [])],
+    });
+  }
+
+  function handleCancelEdit() {
+    setEditingUserId(null);
+    setMessage('');
+    setForm(INITIAL_USER);
+  }
+
   function togglePermission(permission) {
     setForm((prev) => ({
       ...prev,
@@ -637,12 +661,18 @@ function SecaoUsuarios() {
     setSaving(true);
     setMessage('');
     try {
-      await createUsuario(form);
-      setMessage('Acesso criado com sucesso.');
+      if (editingUserId) {
+        await updateUsuario(editingUserId, form);
+        setMessage('Acesso atualizado com sucesso.');
+      } else {
+        await createUsuario(form);
+        setMessage('Acesso criado com sucesso.');
+      }
+      setEditingUserId(null);
       setForm(INITIAL_USER);
       await loadData();
     } catch (error) {
-      setMessage(error.response?.data?.error || 'Não foi possível criar o acesso.');
+      setMessage(error.response?.data?.error || (editingUserId ? 'Não foi possível atualizar o acesso.' : 'Não foi possível criar o acesso.'));
     } finally {
       setSaving(false);
     }
@@ -652,6 +682,9 @@ function SecaoUsuarios() {
     if (!window.confirm('Deseja remover este acesso?')) return;
     try {
       await deleteUsuario(id);
+      if (editingUserId === id) {
+        handleCancelEdit();
+      }
       await loadData();
     } catch {
       setMessage('Não foi possível remover o acesso.');
@@ -660,7 +693,7 @@ function SecaoUsuarios() {
 
   return (
     <div className="space-y-8">
-      <SectionCard title="Gestão de acessos" icon={<Users size={18} />}>
+      <SectionCard title={editingUserId ? 'Editar acesso' : 'Gestão de acessos'} icon={<Users size={18} />}>
         <form onSubmit={handleSubmit} className="space-y-8">
           <div className="grid gap-4 sm:p-6 md:grid-cols-2">
             <Field
@@ -679,11 +712,12 @@ function SecaoUsuarios() {
 
           <div className="grid gap-4 sm:p-6 md:grid-cols-3">
             <Field
-              label="Senha inicial"
+              label={editingUserId ? 'Nova senha' : 'Senha inicial'}
               value={form.senha}
               onChange={(value) => setForm((prev) => ({ ...prev, senha: value }))}
               type="password"
               icon={<Lock size={15} />}
+              helper={editingUserId ? 'Opcional. Deixe em branco para manter a senha atual.' : 'Senha para o novo acesso.'}
             />
 
             <SelectField
@@ -717,6 +751,12 @@ function SecaoUsuarios() {
             activeClassName="border-[#e29ba8]/36 bg-[#e29ba8]/10 text-[#f6c6cd]"
           />
 
+          {form.permissions.includes('agenda.ver_colegas') && (
+            <p className="rounded-[1.2rem] border border-[#e29ba8]/18 bg-[#e29ba8]/10 px-4 py-3 text-xs text-[#f3c8d1]">
+              Para marcar nos colegas, habilite também a ação <strong>Criar atendimentos</strong>.
+            </p>
+          )}
+
           <PermissionGrid
             title="Ações liberadas"
             items={AVAILABLE_ACTIONS}
@@ -728,7 +768,18 @@ function SecaoUsuarios() {
 
           <div className="flex flex-col gap-4 border-t border-gray-200 dark:border-white/5 pt-6 lg:flex-row lg:items-center lg:justify-between">
             <InlineMessage text={message} />
-            <PrimaryButton type="submit" loading={saving} label="Criar acesso" />
+            <div className="flex flex-wrap gap-3">
+              {editingUserId && (
+                <button
+                  type="button"
+                  onClick={handleCancelEdit}
+                  className="rounded-[1.3rem] border border-[#e29ba8]/20 bg-white/[0.04] px-5 py-3 text-[10px] font-black uppercase tracking-[0.22em] text-white/78 transition hover:border-[#e29ba8]/32 hover:text-gray-900 dark:text-white"
+                >
+                  Cancelar edição
+                </button>
+              )}
+              <PrimaryButton type="submit" loading={saving} label={editingUserId ? 'Salvar alterações' : 'Criar acesso'} />
+            </div>
           </div>
         </form>
       </SectionCard>
@@ -760,13 +811,22 @@ function SecaoUsuarios() {
                     {usuario.permissions?.length || 0} abas · {usuario.actionPermissions?.length || 0} ações
                   </td>
                   <td className="px-5 py-4 text-right">
-                    <button
-                      type="button"
-                      onClick={() => handleDelete(usuario.id)}
-                      className="rounded-xl border border-red-300/16 bg-red-400/10 px-3 py-2 text-[10px] font-black uppercase tracking-[0.16em] text-red-200 transition hover:bg-red-400/14"
-                    >
-                      Remover
-                    </button>
+                    <div className="flex items-center justify-end gap-2">
+                      <button
+                        type="button"
+                        onClick={() => handleStartEdit(usuario)}
+                        className="rounded-xl border border-white/10 bg-white/[0.04] px-3 py-2 text-[10px] font-black uppercase tracking-[0.16em] text-white/80 transition hover:border-[#e29ba8]/24 hover:text-white"
+                      >
+                        Editar
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => handleDelete(usuario.id)}
+                        className="rounded-xl border border-red-300/16 bg-red-400/10 px-3 py-2 text-[10px] font-black uppercase tracking-[0.16em] text-red-200 transition hover:bg-red-400/14"
+                      >
+                        Remover
+                      </button>
+                    </div>
                   </td>
                 </tr>
               ))}
