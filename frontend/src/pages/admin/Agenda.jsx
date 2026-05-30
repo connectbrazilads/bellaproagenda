@@ -1694,45 +1694,47 @@ function ModalDetalhesAgendamento({ agendamento: initialAgendamento, allAgendame
                   {STATUS_CONFIG[agendamento.status]?.label || agendamento.status}
                 </div>
                 <div className={cn('px-3 py-1.5 rounded-xl text-[8px] font-black uppercase tracking-[0.2em] border', agendamento.statusPagamento === 'pago' ? 'bg-[#E29BA8]/10 text-[#E29BA8] border-[#E29BA8]/20' : 'bg-bellapro-blush/10 text-bellapro-blush border-bellapro-blush/20')}>
-                  {agendamento.statusPagamento === 'pago' ? 'Pagamento ok' : 'Pagamento pendente'}
+                  {agendamento.statusPagamento === 'pago' ? 'Pagamento ok' : 'Pag. pendente'}
                 </div>
               </div>
 
-              <div className="flex flex-wrap items-center gap-2">
-                <button
-                  type="button"
-                  onClick={() => {
-                    setShowMoreActions(false);
-                    setTab('comanda');
-                  }}
-                  className="rounded-2xl bg-[#d48997] px-4 py-3 text-[10px] font-black uppercase tracking-[0.18em] text-white transition hover:bg-[#c77787]"
-                >
-                  Abrir comanda
-                </button>
-                <button
-                  type="button"
-                  onClick={goToPagamento}
-                  className={cn(
-                    'rounded-2xl px-4 py-3 text-[10px] font-black uppercase tracking-[0.18em] transition',
-                    agendamento.statusPagamento === 'pago'
-                      ? 'border border-[#E29BA8]/20 bg-[#E29BA8]/10 text-[#d48997]'
-                      : 'bg-[#0f172a] text-white hover:bg-[#1e293b]'
-                  )}
-                >
-                  {agendamento.statusPagamento === 'pago' ? 'Pagamento' : 'Ir para pagamento'}
-                </button>
-                <div className="relative">
+              <div className="grid grid-cols-1 sm:flex sm:flex-wrap items-center gap-2">
+                <div className="grid grid-cols-2 gap-2 sm:flex sm:flex-wrap">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setShowMoreActions(false);
+                      setTab('comanda');
+                    }}
+                    className="w-full sm:w-auto rounded-2xl bg-[#d48997] px-3 py-3 text-[9px] sm:text-[10px] font-black uppercase tracking-[0.18em] text-white transition hover:bg-[#c77787]"
+                  >
+                    Abrir comanda
+                  </button>
+                  <button
+                    type="button"
+                    onClick={goToPagamento}
+                    className={cn(
+                      'w-full sm:w-auto rounded-2xl px-3 py-3 text-[9px] sm:text-[10px] font-black uppercase tracking-[0.18em] transition',
+                      agendamento.statusPagamento === 'pago'
+                        ? 'border border-[#E29BA8]/20 bg-[#E29BA8]/10 text-[#d48997]'
+                        : 'bg-[#0f172a] text-white hover:bg-[#1e293b]'
+                    )}
+                  >
+                    {agendamento.statusPagamento === 'pago' ? 'Pagamento' : 'Ir para pagamento'}
+                  </button>
+                </div>
+                <div className="relative w-full sm:w-auto">
                   <button
                     type="button"
                     onClick={() => setShowMoreActions((current) => !current)}
-                    className="inline-flex items-center gap-2 rounded-2xl border border-gray-200 bg-white px-4 py-3 text-[10px] font-black uppercase tracking-[0.18em] text-gray-700 transition hover:bg-gray-50 dark:border-white/10 dark:bg-white/5 dark:text-white/80 dark:hover:bg-white/10"
+                    className="w-full justify-center sm:w-auto inline-flex items-center gap-2 rounded-2xl border border-gray-200 bg-white px-4 py-3 text-[10px] font-black uppercase tracking-[0.18em] text-gray-700 transition hover:bg-gray-50 dark:border-white/10 dark:bg-white/5 dark:text-white/80 dark:hover:bg-white/10"
                   >
                     <MoreVertical size={14} />
                     Mais acoes
                   </button>
 
                   {showMoreActions && (
-                    <div className="absolute right-0 top-full z-20 mt-2 w-56 rounded-[1.5rem] border border-gray-200 bg-white p-2 shadow-[0_24px_70px_-32px_rgba(0,0,0,0.55)] dark:border-white/10 dark:bg-[#151219]">
+                    <div className="absolute left-0 sm:left-auto sm:right-0 top-full z-[100] mt-2 w-56 rounded-[1.5rem] border border-gray-200 bg-white p-2 shadow-[0_24px_70px_-32px_rgba(0,0,0,0.55)] dark:border-white/10 dark:bg-[#151219]">
                       <div className="space-y-1">
                         {agendamento.status === 'confirmado' && (
                           <button type="button" onClick={() => handleAtualizarStatus('em_atendimento')} className="w-full rounded-xl px-3 py-3 text-left text-[10px] font-black uppercase tracking-[0.16em] text-gray-700 transition hover:bg-gray-100 dark:text-white/80 dark:hover:bg-white/10">
