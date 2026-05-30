@@ -312,7 +312,8 @@ const PROFISSIONAL_INCLUDE = {
   },
 };
 
-function serializeProfissional(profissional) {
+function serializeProfissional(profissional, requesterPid = null) {
+  const isColleague = requesterPid && profissional.id !== requesterPid;
   const servicosMap = new Map();
 
   for (const vinculo of profissional?.servicos || []) {
@@ -320,8 +321,8 @@ function serializeProfissional(profissional) {
     servicosMap.set(vinculo.servicoId, {
       servicoId: vinculo.servicoId,
       inherited: false,
-      comissaoPercent: vinculo.comissaoPercent ?? null,
-      comissaoValor: vinculo.comissaoValor ?? null,
+      comissaoPercent: isColleague ? null : (vinculo.comissaoPercent ?? null),
+      comissaoValor: isColleague ? null : (vinculo.comissaoValor ?? null),
       servico: vinculo.servico,
     });
   }
@@ -333,10 +334,10 @@ function serializeProfissional(profissional) {
       servicosMap.set(servico.id, {
         servicoId: servico.id,
         inherited: true,
-        categoriaServicoId: categoria?.id || null,
-        categoriaServicoNome: categoria?.nome || null,
-        comissaoPercent: null,
-        comissaoValor: null,
+        categoriaId: categoria.id,
+        categoriaNome: categoria.nome,
+        comissaoPercent: isColleague ? null : (vinculoCategoria.comissaoPercent ?? null),
+        comissaoValor: isColleague ? null : (vinculoCategoria.comissaoValor ?? null),
         servico,
       });
     }
@@ -344,6 +345,7 @@ function serializeProfissional(profissional) {
 
   return {
     ...profissional,
+    comissaoPercent: isColleague ? null : profissional.comissaoPercent,
     servicosEfetivos: [...servicosMap.values()].sort((a, b) =>
       String(a?.servico?.nome || '').localeCompare(String(b?.servico?.nome || ''))
     ),
@@ -813,7 +815,8 @@ async function getProfissionais(req, res) {
       horarios: { orderBy: { diaSemana: 'asc' } },
     },
   });
-  res.json(profissionais.map(serializeProfissional));
+  const requesterPid = isScopedProfessional(req) ? req.user.profissionalId : null;
+  res.json(profissionais.map(p => serializeProfissional(p, requesterPid)));
 }
 
 async function createProfissional(req, res) {
@@ -888,7 +891,8 @@ async function createProfissional(req, res) {
     contexto: { nome: profissional.nome },
     req,
   });
-  res.status(201).json(serializeProfissional(profissional));
+  const requesterPid = isScopedProfessional(req) ? req.user.profissionalId : null;
+  res.status(201).json(serializeProfissional(profissional, requesterPid));
 }
 
 async function updateProfissional(req, res) {
@@ -970,7 +974,8 @@ async function updateProfissional(req, res) {
     contexto: { nome: profissional.nome },
     req,
   });
-  res.json(serializeProfissional(profissional));
+  const requesterPid = isScopedProfessional(req) ? req.user.profissionalId : null;
+  res.json(serializeProfissional(profissional, requesterPid));
 }
 
 async function reorderProfissionais(req, res) {

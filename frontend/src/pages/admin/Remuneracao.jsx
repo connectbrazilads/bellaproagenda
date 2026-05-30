@@ -305,7 +305,7 @@ export default function Remuneracao() {
 
   const role = localStorage.getItem('salao_user_role');
   const myPid = localStorage.getItem('salao_user_pid');
-  const isScopedProfessional = role === 'profissional' && !!myPid;
+  const isScopedProfessional = String(role).toLowerCase() === 'profissional' && !!myPid;
 
   useEffect(() => {
     fetchProfissionais();
@@ -327,7 +327,12 @@ export default function Remuneracao() {
   async function fetchProfissionais() {
     try {
       const res = await getProfissionais();
-      setProfissionais((res.data || []).filter((item) => item.ativo !== false));
+      const ativos = (res.data || []).filter((item) => item.ativo !== false);
+      if (isScopedProfessional) {
+        setProfissionais(ativos.filter(p => p.id === myPid));
+      } else {
+        setProfissionais(ativos);
+      }
     } catch (err) {
       console.error(err);
       toast.error('Nao foi possivel carregar os profissionais.');
