@@ -448,33 +448,42 @@ export default function Inbox() {
               <span className="text-xs font-black">{conversas.length}</span>
             </div>
           </div>
-          <div className="grid grid-cols-3 gap-2">
-            <QuickMetric label="Abertas" value={totalAbertas} />
-            <QuickMetric label="IA" value={totalIa} />
-            <QuickMetric label="Humano" value={totalHumano} />
+          <div className="flex items-center gap-2 overflow-x-auto hide-scrollbar">
+            <div className="flex items-center gap-1.5 rounded-full border border-gray-100 bg-white px-3 py-1.5 dark:border-white/10 dark:bg-white/5">
+               <span className="text-[10px] font-black uppercase text-gray-400 tracking-wider">Abertas</span>
+               <span className="text-[11px] font-black text-gray-900 dark:text-white">{totalAbertas}</span>
+            </div>
+            <div className="flex items-center gap-1.5 rounded-full border border-[#d48997]/20 bg-[#d48997]/5 px-3 py-1.5 dark:bg-[#d48997]/10">
+               <span className="text-[10px] font-black uppercase text-[#d48997] tracking-wider">IA</span>
+               <span className="text-[11px] font-black text-[#d48997]">{totalIa}</span>
+            </div>
+            <div className="flex items-center gap-1.5 rounded-full border border-emerald-500/20 bg-emerald-500/5 px-3 py-1.5 dark:bg-emerald-500/10">
+               <span className="text-[10px] font-black uppercase text-emerald-600 dark:text-emerald-400 tracking-wider">Humano</span>
+               <span className="text-[11px] font-black text-emerald-600 dark:text-emerald-400">{totalHumano}</span>
+            </div>
           </div>
           
           <div className="relative group">
-            <Search className="absolute left-5 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 group-focus-within:text-[#d48997] transition-colors" />
+            <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 group-focus-within:text-[#d48997] transition-colors" />
             <input 
               type="text" 
-              placeholder="Escreva para buscar nome ou telefone"
+              placeholder="Escreva para buscar..."
               value={search}
               onChange={e => setSearch(e.target.value)}
-              className="w-full rounded-2xl border border-gray-200 bg-white px-6 py-4 pl-14 text-sm font-bold text-[#3b2a35] outline-none transition-all shadow-sm placeholder:text-[#9f848d] focus:ring-4 focus:ring-[#E29BA8]/5 dark:border-white/10 dark:bg-gray-950/50 dark:text-white dark:placeholder:text-gray-500"
+              className="w-full rounded-[1.25rem] border border-gray-200 bg-white px-4 py-3.5 pl-11 text-sm font-bold text-[#3b2a35] outline-none transition-all shadow-sm placeholder:text-gray-400 focus:ring-4 focus:ring-[#E29BA8]/5 dark:border-white/10 dark:bg-gray-950/50 dark:text-white dark:placeholder:text-gray-500"
             />
           </div>
 
-          <div className="grid grid-cols-2 gap-3">
+          <div className="flex items-center gap-2 overflow-x-auto hide-scrollbar -mx-4 px-4 pb-1">
             {FILTROS.map((f, i) => (
               <button
                 key={i}
                 onClick={() => { setFiltro(i); setSelecionada(null); setErro(''); }}
                 className={cn(
-                  "flex items-center justify-center gap-2 py-4 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all border",
+                  "flex items-center gap-2 px-4 py-2.5 rounded-full text-[9px] font-black uppercase tracking-widest transition-all whitespace-nowrap border border-transparent",
                   filtro === i 
-                  ? "bg-[#d48997] text-white shadow-xl shadow-[#E29BA8]/20 border-[#E29BA8]" 
-                  : "bg-white dark:bg-gray-950/50 text-gray-400 border-gray-100 dark:border-white/10 hover:border-[#E29BA8]/20 dark:hover:border-[#8c4a57]/30"
+                  ? "bg-[#d48997] text-white shadow-md shadow-[#E29BA8]/20" 
+                  : "bg-gray-50 dark:bg-gray-950/50 text-gray-500 hover:text-gray-900 border-gray-100 hover:border-gray-200 dark:text-gray-400 dark:hover:text-white dark:border-white/5 dark:hover:border-white/10"
                 )}
               >
                 {f.icon}
@@ -551,71 +560,66 @@ export default function Inbox() {
         ) : (
           <>
             {/* Chat Header */}
-            <header className="z-10 flex min-h-20 flex-shrink-0 flex-col gap-4 border-b border-gray-200 dark:border-white/5 bg-white/95 px-4 py-4 shadow-sm backdrop-blur-2xl dark:bg-[#1a1720] md:flex-row md:items-center md:justify-between md:px-6">
-              <div className="flex items-center gap-4 md:gap-5 min-w-0">
-                <button onClick={() => setMobileChat(false)} className="md:hidden p-3 bg-gray-50 rounded-xl">
-                  <ChevronLeft size={20} />
+            <header className="z-10 flex min-h-16 flex-shrink-0 flex-col gap-3 border-b border-gray-100 dark:border-white/5 bg-white/95 px-4 py-3 shadow-sm backdrop-blur-2xl dark:bg-[#1a1720] md:flex-row md:items-center md:justify-between md:px-6">
+              <div className="flex items-center gap-3 md:gap-4 min-w-0">
+                <button onClick={() => setMobileChat(false)} className="md:hidden p-2.5 bg-gray-50 dark:bg-white/5 text-gray-600 dark:text-gray-300 rounded-full">
+                  <ChevronLeft size={18} />
                 </button>
-                <ContatoAvatar conversa={selecionada} className="h-14 w-14" fallbackClassName="text-xl" />
+                <ContatoAvatar conversa={selecionada} className="h-11 w-11" fallbackClassName="text-lg" />
                 <div className="min-w-0">
-                  <h3 className="truncate text-lg font-black tracking-tight text-gray-900 dark:text-white">{getConversaTitulo(selecionada)}</h3>
-                  <p className="mt-1 truncate text-sm font-semibold text-gray-500 dark:text-gray-400">{getConversaSubtitulo(selecionada)}</p>
-                  <div className="mt-2 flex items-center gap-3">
-                    <span className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-emerald-500">
-                      <div className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse shadow-[0_0_8px_rgba(16,185,129,0.5)]"></div> Ativo
-                    </span>
-                    <div className="w-px h-3 bg-gray-200 dark:bg-white/10" />
-                    <span className="text-[10px] font-black uppercase tracking-widest text-gray-400">
-                      {selecionada.atendimento === 'humano' ? 'Em atendimento humano' : 'IA ativa'}
-                    </span>
+                  <h3 className="truncate text-base font-black tracking-tight text-gray-900 dark:text-white leading-tight">{getConversaTitulo(selecionada)}</h3>
+                  <div className="mt-1 flex items-center gap-2 overflow-x-auto hide-scrollbar">
+                     <p className="truncate text-[11px] font-semibold text-gray-500 dark:text-gray-400">{getConversaSubtitulo(selecionada)}</p>
+                     <div className="w-1 h-1 shrink-0 rounded-full bg-gray-300 dark:bg-gray-600" />
+                     <span className="flex items-center gap-1.5 text-[9px] font-black uppercase tracking-widest text-emerald-500 shrink-0">
+                       <div className="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse"></div> Ativo
+                     </span>
+                     <div className="w-1 h-1 shrink-0 rounded-full bg-gray-300 dark:bg-gray-600" />
+                     <span className="text-[9px] font-black uppercase tracking-widest text-gray-400 flex items-center gap-1 shrink-0">
+                       {selecionada.atendimento === 'humano' ? <User size={10} /> : <Bot size={10} />}
+                       {selecionada.atendimento === 'humano' ? 'Humano' : 'IA'}
+                     </span>
+                     <div className="w-1 h-1 shrink-0 rounded-full bg-gray-300 dark:bg-gray-600" />
+                     <span className="text-[9px] font-black uppercase tracking-widest text-gray-400 flex items-center gap-1 shrink-0">
+                       <Clock size={10} /> {formatarHora(selecionada.updatedAt) || '--:--'}
+                     </span>
                   </div>
                 </div>
               </div>
 
-              <div className={cn("flex items-center gap-3 self-stretch md:self-auto", isTightPanel && "flex-col items-stretch md:flex-row")}>
-                {showInlineContext ? (
-                  <button
-                    type="button"
-                    onClick={() => navigate(`/admin/agenda?novoAgendamento=1&telefone=${selecionada.telefone}&nome=${encodeURIComponent(selecionada.nomeCliente || '')}`)}
-                    className="flex h-14 items-center justify-center rounded-[1.5rem] border border-gray-200 bg-white px-4 text-[10px] font-black uppercase tracking-widest text-[#6f5561] transition-all hover:border-[#d48997]/30 hover:text-[#d48997] dark:border-white/10 dark:bg-white/5 dark:text-gray-200"
-                  >
-                    Agendar
-                  </button>
-                ) : null}
+              <div className="flex items-center gap-2 self-stretch md:self-auto overflow-x-auto hide-scrollbar pb-1 md:pb-0">
+                <button
+                  type="button"
+                  onClick={() => navigate(`/admin/agenda?novoAgendamento=1&telefone=${selecionada.telefone}&nome=${encodeURIComponent(selecionada.nomeCliente || '')}`)}
+                  className="flex h-9 items-center justify-center rounded-full border border-gray-200 bg-white px-4 text-[9px] font-black uppercase tracking-widest text-gray-600 transition-all hover:border-[#d48997]/30 hover:bg-[#d48997]/5 hover:text-[#d48997] dark:border-white/10 dark:bg-white/5 dark:text-gray-300 dark:hover:border-[#d48997]/30 whitespace-nowrap shrink-0"
+                >
+                  <Calendar size={12} className="mr-2" /> Agendar
+                </button>
                 <motion.button 
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
                   onClick={selecionada.atendimento === 'ia' ? assumir : soltarIA}
                   className={cn(
-                    "flex-1 md:flex-none px-4 md:px-6 py-4 rounded-[1.5rem] text-[10px] font-black uppercase tracking-widest transition-all shadow-sm flex items-center justify-center gap-3",
+                    "h-9 px-4 rounded-full text-[9px] font-black uppercase tracking-widest transition-all shadow-sm flex items-center justify-center gap-2 whitespace-nowrap shrink-0",
                     selecionada.atendimento === 'ia' 
-                    ? "bg-[#d48997] text-white" 
-                    : "bg-emerald-600 text-white"
+                    ? "bg-[#d48997] text-white hover:bg-[#b96a79]" 
+                    : "bg-emerald-600 text-white hover:bg-emerald-700"
                   )}
                 >
-                  {selecionada.atendimento === 'ia' ? <Zap size={14} className="text-yellow-400 fill-yellow-400" /> : <Bot size={14} />}
-                  {actionLabel}
+                  {selecionada.atendimento === 'ia' ? <Zap size={12} /> : <Bot size={12} />}
+                  <span className="hidden sm:inline">{actionLabel}</span>
+                  <span className="sm:hidden">{selecionada.atendimento === 'ia' ? 'Assumir' : 'Devolver IA'}</span>
                 </motion.button>
-                <div className="hidden md:block w-px h-10 bg-gray-100 dark:bg-white/5" />
+                <div className="hidden md:block w-px h-5 bg-gray-200 dark:bg-white/10 mx-1 shrink-0" />
                 <button 
                   onClick={fechar}
-                  className="w-14 h-14 shrink-0 flex items-center justify-center bg-gray-50 dark:bg-white/5 rounded-2xl hover:bg-red-500 hover:text-gray-900 dark:text-white transition-all text-gray-400 shadow-sm"
+                  title="Arquivar conversa"
+                  className="w-9 h-9 shrink-0 flex items-center justify-center bg-gray-50 dark:bg-white/5 rounded-full hover:bg-gray-200 dark:hover:bg-white/10 transition-all text-gray-400 dark:text-gray-400 hover:text-gray-700 dark:hover:text-white shadow-sm"
                 >
-                  <Archive size={20} />
+                  <Archive size={14} />
                 </button>
               </div>
             </header>
-
-            {showInlineContext ? (
-              <section className="border-b border-gray-100 bg-white/78 px-4 py-3 backdrop-blur-xl dark:border-white/5 dark:bg-white/[0.03] md:px-6">
-                <div className={cn("grid gap-2", isUltraTightPanel ? "grid-cols-2" : "grid-cols-4")}>
-                  <SideInfo icon={<Calendar />} label="Criada em" value={inicioConversa ? new Date(inicioConversa).toLocaleDateString('pt-BR') : '--/--/----'} />
-                  <SideInfo icon={<Clock />} label="Ultima acao" value={formatarHora(selecionada.updatedAt) || '--:--'} />
-                  <SideInfo icon={<Bot />} label="Modo" value={selecionada.atendimento === 'humano' ? 'Humano' : 'IA'} />
-                  <SideInfo icon={<Archive />} label="Status" value={selecionada.status === 'fechada' ? 'Arquivada' : 'Aberta'} />
-                </div>
-              </section>
-            ) : null}
 
             {/* Messages Canvas */}
             <div 
@@ -641,10 +645,10 @@ export default function Inbox() {
             </div>
 
             {/* Smart Input Bar */}
-            <footer className="border-t border-gray-100 bg-white/85 p-4 backdrop-blur-3xl dark:border-white/5 dark:bg-gray-900/80 md:p-5">
+            <footer className="border-t border-gray-100 bg-white/95 p-3 backdrop-blur-2xl dark:border-white/5 dark:bg-[#1a1720] md:p-4 shrink-0">
               <form 
                 onSubmit={enviar}
-                className="group flex items-end gap-2 rounded-[1.75rem] border border-gray-100 bg-gray-50 p-2 shadow-inner transition-all focus-within:ring-4 focus-within:ring-[#E29BA8]/5 dark:border-white/10 dark:bg-gray-950/50"
+                className="group relative flex items-end gap-1.5 rounded-[1.5rem] border border-gray-200 bg-white p-1.5 shadow-sm transition-all focus-within:border-[#d48997]/40 focus-within:ring-4 focus-within:ring-[#d48997]/5 dark:border-white/10 dark:bg-[#100e13]"
               >
                 <input
                   ref={fileInputRef}
@@ -653,30 +657,33 @@ export default function Inbox() {
                   className="hidden"
                   onChange={selecionarArquivo}
                 />
-                <button
-                  type="button"
-                  onClick={() => fileInputRef.current?.click()}
-                  disabled={enviandoAlgo}
-                  className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl border border-transparent bg-white text-[#7d6470] transition-all hover:border-[#d48997]/20 hover:text-[#d48997] disabled:opacity-50 dark:bg-white/5 dark:text-gray-300"
-                >
-                  <Paperclip size={18} />
-                </button>
-                <button
-                  type="button"
-                  onClick={alternarGravacaoAudio}
-                  disabled={enviandoMidia}
-                  className={cn(
-                    'flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl transition-all disabled:opacity-50',
-                    gravandoAudio
-                      ? 'bg-red-500 text-white shadow-lg shadow-red-500/20'
-                      : 'border border-transparent bg-white text-[#7d6470] hover:border-[#d48997]/20 hover:text-[#d48997] dark:bg-white/5 dark:text-gray-300'
-                  )}
-                >
-                  <Mic size={18} />
-                </button>
-                <div className="relative flex-1 rounded-[1.3rem] bg-white px-4 py-3 dark:bg-black/20">
+                <div className="flex shrink-0 items-center gap-0.5 pb-1 pl-1">
+                  <button
+                    type="button"
+                    onClick={() => fileInputRef.current?.click()}
+                    disabled={enviandoAlgo}
+                    className="flex h-9 w-9 items-center justify-center rounded-full text-gray-400 transition-all hover:bg-gray-100 hover:text-gray-700 disabled:opacity-50 dark:hover:bg-white/5 dark:hover:text-white"
+                  >
+                    <Paperclip size={18} />
+                  </button>
+                  <button
+                    type="button"
+                    onClick={alternarGravacaoAudio}
+                    disabled={enviandoMidia}
+                    className={cn(
+                      'flex h-9 w-9 items-center justify-center rounded-full transition-all disabled:opacity-50',
+                      gravandoAudio
+                        ? 'bg-red-500 text-white shadow-md shadow-red-500/20'
+                        : 'text-gray-400 hover:bg-gray-100 hover:text-gray-700 dark:hover:bg-white/5 dark:hover:text-white'
+                    )}
+                  >
+                    <Mic size={18} />
+                  </button>
+                </div>
+                
+                <div className="relative flex-1 flex flex-col justify-center min-w-0">
                   {showSnippets && snippets.length > 0 && (
-                    <div className="absolute bottom-full mb-2 left-0 w-full max-w-sm bg-white dark:bg-gray-900 border border-gray-200 dark:border-white/10 rounded-2xl shadow-2xl overflow-hidden z-50">
+                    <div className="absolute bottom-full mb-3 left-0 w-full max-w-sm bg-white dark:bg-gray-900 border border-gray-200 dark:border-white/10 rounded-2xl shadow-2xl overflow-hidden z-[100]">
                       <div className="bg-gray-50 dark:bg-white/5 px-4 py-2 text-[10px] font-black uppercase tracking-widest text-gray-500 border-b border-gray-100 dark:border-white/5">
                         Respostas rapidas
                       </div>
@@ -699,6 +706,7 @@ export default function Inbox() {
                       </div>
                     </div>
                   )}
+                  
                   <textarea
                     ref={inputRef}
                     rows={1}
@@ -712,7 +720,7 @@ export default function Inbox() {
                         setShowSnippets(false);
                       }
                       e.target.style.height = 'auto';
-                      e.target.style.height = Math.min(e.target.scrollHeight, 180) + 'px';
+                      e.target.style.height = Math.min(e.target.scrollHeight, 140) + 'px';
                     }}
                     onKeyDown={e => {
                       if (e.key === 'Enter' && !e.shiftKey) {
@@ -728,24 +736,24 @@ export default function Inbox() {
                         enviar();
                       }
                     }}
-                    placeholder="Escreva uma mensagem..."
-                    className="w-full bg-transparent border-none outline-none py-3 text-sm font-bold text-gray-700 dark:text-gray-200 resize-none max-h-48 placeholder:text-[#9f848d] dark:placeholder:text-gray-500"
+                    placeholder={gravandoAudio ? `Gravando áudio ${formatarDuracaoCurta(duracaoGravacao)}...` : "Mensagem... (Use / para respostas rápidas)"}
+                    className="w-full bg-transparent border-none outline-none py-2.5 px-2 text-sm text-gray-800 dark:text-gray-200 resize-none max-h-36 placeholder:text-gray-400 dark:placeholder:text-gray-600"
                   />
-                  <div className="mt-2 flex items-center justify-between gap-3 text-[10px] font-black uppercase tracking-[0.18em] text-gray-400">
-                    <span>
-                      {gravandoAudio ? `Gravando ${formatarDuracaoCurta(duracaoGravacao)}` : (isUltraTightPanel ? 'Digite /' : 'Digite / para resposta rapida')}
-                    </span>
-                    {enviandoMidia ? <span>Enviando arquivo...</span> : null}
-                  </div>
+                  {enviandoMidia && (
+                    <div className="absolute top-0 right-0 h-full flex items-center pr-2">
+                       <span className="text-[10px] font-black uppercase text-[#d48997] animate-pulse">Enviando arquivo...</span>
+                    </div>
+                  )}
                 </div>
+                
                 <motion.button 
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
                   type="submit"
                   disabled={!texto.trim() || enviandoAlgo || gravandoAudio}
-                  className="flex h-12 w-12 items-center justify-center rounded-2xl bg-[#d48997] text-white transition-all hover:bg-[#b96a79] disabled:bg-gray-200 dark:disabled:bg-white/5"
+                  className="mb-1 mr-1 flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[#d48997] text-white transition-all hover:bg-[#b96a79] disabled:bg-gray-200 dark:disabled:bg-white/10"
                 >
-                  {enviandoAlgo ? <div className="h-5 w-5 animate-spin rounded-full border-2 border-white/30 border-t-white" /> : <Send size={18} />}
+                  {enviandoAlgo ? <div className="h-4 w-4 animate-spin rounded-full border-2 border-white/30 border-t-white" /> : <Send size={16} className="-ml-0.5" />}
                 </motion.button>
               </form>
             </footer>
