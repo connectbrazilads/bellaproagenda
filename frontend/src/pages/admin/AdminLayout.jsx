@@ -139,6 +139,34 @@ function getAlertaAgendaDestino(alerta) {
   return `/admin/agenda${query ? `?${query}` : ''}`;
 }
 
+class AdminErrorBoundary extends React.Component {
+  constructor(props) {
+    super(props);
+    this.state = { hasError: false };
+  }
+  static getDerivedStateFromError(error) {
+    return { hasError: true };
+  }
+  componentDidCatch(error, errorInfo) {
+    console.error("AdminErrorBoundary caught an error:", error, errorInfo);
+  }
+  render() {
+    if (this.state.hasError) {
+      return (
+        <div className="flex-1 flex flex-col items-center justify-center p-6 text-center">
+          <div className="w-16 h-16 bg-red-100 dark:bg-red-900/30 text-red-500 rounded-full flex items-center justify-center mb-4">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
+          </div>
+          <h2 className="text-lg font-bold text-slate-800 dark:text-white mb-2">Ops! Algo deu errado.</h2>
+          <p className="text-sm text-slate-500 dark:text-slate-400 max-w-md mb-6">Nao foi possivel carregar esta tela. Tente recarregar a pagina ou voltar para o inicio.</p>
+          <button onClick={() => window.location.href = '/admin'} className="px-5 py-2.5 bg-slate-900 dark:bg-white text-white dark:text-slate-900 rounded-xl text-sm font-bold shadow-lg">Voltar ao Inicio</button>
+        </div>
+      );
+    }
+    return this.props.children;
+  }
+}
+
 export default function AdminLayout() {
   const [menuOpen, setMenuOpen] = useState(false);
   const [collapsed, setCollapsed] = useState(false);
@@ -249,7 +277,7 @@ export default function AdminLayout() {
 
     window.setTimeout(() => {
       navigate(to);
-    }, 0);
+    }, 300);
   }
 
   function canAccessPath(path) {
@@ -773,7 +801,9 @@ export default function AdminLayout() {
         <div
           className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden px-4 pb-8 pt-[calc(var(--admin-mobile-header-height,73px)+1rem)] md:px-5 md:pb-10 md:pt-6 lg:px-6 lg:pt-7 xl:px-8 xl:pb-12 xl:pt-8 2xl:px-10 2xl:pt-10 custom-scrollbar"
         >
-          <Outlet />
+          <AdminErrorBoundary>
+            <Outlet />
+          </AdminErrorBoundary>
         </div>
       </main>
 

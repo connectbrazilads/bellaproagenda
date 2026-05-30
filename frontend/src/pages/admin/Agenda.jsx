@@ -3268,6 +3268,13 @@ function ModalBloqueioPeriodo({ onClose, onSave, data, horaInicial, profissional
 }
 
 export default function Agenda() {
+  const [isMounting, setIsMounting] = useState(true);
+  
+  useEffect(() => {
+    const timer = setTimeout(() => setIsMounting(false), 50);
+    return () => clearTimeout(timer);
+  }, []);
+
   const location = useLocation();
   const [profissionais, setProfissionais] = useState([]);
   const [agendamentos, setAgendamentos] = useState([]);
@@ -3543,6 +3550,12 @@ export default function Agenda() {
     await deleteListaEspera(id);
     carregar();
   }
+
+  if (isMounting) return (
+    <div className="h-full flex items-center justify-center bg-gray-50 dark:bg-[#0a0a0c]">
+      <div className="w-10 h-10 border-4 border-[#ecd5d9] border-t-[#d48997] rounded-full animate-spin"></div>
+    </div>
+  );
 
   if (loading) return (
     <div className="h-full flex items-center justify-center bg-gray-50 dark:bg-[#0a0a0c]">

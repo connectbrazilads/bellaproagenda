@@ -1,6 +1,7 @@
 export const ALL_PERMISSIONS = [
   'dashboard',
   'agenda',
+  'agenda.ver_colegas',
   'inbox',
   'clientes',
   'profissionais',
@@ -90,6 +91,7 @@ export const DEFAULT_ROLE_ACTION_PERMISSIONS = {
 export const PERMISSION_LABELS = {
   dashboard: 'Dashboard',
   agenda: 'Atendimento',
+  'agenda.ver_colegas': 'Ver agenda de colegas',
   inbox: 'Inbox',
   clientes: 'Clientes',
   profissionais: 'Profissionais',

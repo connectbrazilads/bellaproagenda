@@ -14,6 +14,7 @@ const {
   sanitizeActionPermissions,
   getEffectivePermissions,
   getEffectiveActionPermissions,
+  hasPermission,
 } = require('../lib/permissions');
 const { createAuditLog } = require('../lib/audit');
 const { validateStrongPassword } = require('../lib/security');
@@ -43,6 +44,32 @@ function getScopedProfessionalId(req, requestedProfessionalId) {
 
 function professionalScopeFilter(req) {
   return isScopedProfessional(req) ? { profissionalId: req.user.profissionalId } : {};
+}
+
+function canViewColleagueAgenda(req) {
+  return isScopedProfessional(req) && hasPermission(req.user, 'agenda.ver_colegas');
+}
+
+function agendaScopeFilter(req) {
+  return isScopedProfessional(req) && !canViewColleagueAgenda(req)
+    ? { profissionalId: req.user.profissionalId }
+    : {};
+}
+
+function getAgendaProfessionalId(req, requestedProfessionalId, { defaultToSelf = false } = {}) {
+  if (!isScopedProfessional(req)) {
+    return requestedProfessionalId || null;
+  }
+
+  if (!canViewColleagueAgenda(req)) {
+    return req.user.profissionalId;
+  }
+
+  if (requestedProfessionalId) {
+    return requestedProfessionalId;
+  }
+
+  return defaultToSelf ? req.user.profissionalId : null;
 }
 
 async function getCaixaAberto(salaoId) {
@@ -235,11 +262,17 @@ async function cleanupEmptyComanda(comandaId) {
   }
 }
 
-async function getAllowedServicoIds(req) {
+async function getAllowedServicoIds(req, profissionalId = null) {
   if (!isScopedProfessional(req)) return null;
 
+  const targetProfessionalId = canViewColleagueAgenda(req)
+    ? (profissionalId || req.user.profissionalId)
+    : req.user.profissionalId;
+
+  if (!targetProfessionalId) return null;
+
   const profissional = await prisma.profissional.findFirst({
-    where: { id: req.user.profissionalId, salaoId: req.user.salaoId },
+    where: { id: targetProfessionalId, salaoId: req.user.salaoId },
     select: {
       servicos: { select: { servicoId: true } },
       servicoCategorias: {
@@ -322,7 +355,7 @@ async function getScopedAgendamento(req, id, include) {
     where: {
       id,
       salaoId: req.user.salaoId,
-      ...professionalScopeFilter(req),
+      ...agendaScopeFilter(req),
     },
     include,
   });
@@ -335,7 +368,7 @@ async function getAgendamentosMesmoClienteNoDia(req, agendamento, include) {
   const candidatos = await prisma.agendamento.findMany({
     where: {
       salaoId: req.user.salaoId,
-      ...professionalScopeFilter(req),
+      ...agendaScopeFilter(req),
       status: { not: 'cancelado' },
       data: { gte: inicio, lte: fim },
     },
@@ -769,7 +802,7 @@ async function getProfissionais(req, res) {
   const profissionais = await prisma.profissional.findMany({
     where: {
       salaoId: req.user.salaoId,
-      ...(isScopedProfessional(req) ? { id: req.user.profissionalId } : {}),
+      ...(isScopedProfessional(req) && !canViewColleagueAgenda(req) ? { id: req.user.profissionalId } : {}),
     },
     orderBy: [
       { displayOrder: 'asc' },
@@ -1108,7 +1141,9 @@ async function setHorarios(req, res) {
 // ─── SERVIÇOS ────────────────────────────────────────────────────────────────
 
 async function getServicos(req, res) {
-  const allowedServicoIds = await getAllowedServicoIds(req);
+  const allowedServicoIds = isScopedProfessional(req) && !canViewColleagueAgenda(req)
+    ? await getAllowedServicoIds(req)
+    : null;
   const servicos = await prisma.servico.findMany({
     where: {
       salaoId: req.user.salaoId,
@@ -1287,7 +1322,7 @@ async function getPacotes(req, res) {
     include: { servicos: { include: { servico: { select: { id: true, nome: true } } } } },
   });
 
-  if (!isScopedProfessional(req)) {
+  if (!isScopedProfessional(req) || canViewColleagueAgenda(req)) {
     return res.json(pacotes);
   }
 
@@ -1345,7 +1380,7 @@ async function deletePacote(req, res) {
 // ─── BLOQUEIOS ───────────────────────────────────────────────────────────────
 
 async function getBloqueios(req, res) {
-  const profissionalId = getScopedProfessionalId(req, req.query.profissionalId);
+  const profissionalId = getAgendaProfessionalId(req, req.query.profissionalId);
   const bloqueios = await prisma.bloqueio.findMany({
     where: {
       profissional: { salaoId: req.user.salaoId },
@@ -1359,7 +1394,7 @@ async function getBloqueios(req, res) {
 
 async function createBloqueio(req, res) {
   const { data, inicioHora, fimHora, motivo } = req.body;
-  const profissionalId = getScopedProfessionalId(req, req.body.profissionalId);
+  const profissionalId = getAgendaProfessionalId(req, req.body.profissionalId, { defaultToSelf: true });
   let inicioHoraNormalizado = typeof inicioHora === 'string' && inicioHora.trim() ? inicioHora.trim() : null;
   let fimHoraNormalizado = typeof fimHora === 'string' && fimHora.trim() ? fimHora.trim() : null;
   
@@ -1394,7 +1429,7 @@ async function deleteBloqueio(req, res) {
       id: req.params.id, 
       profissional: {
         salaoId: req.user.salaoId,
-        ...(isScopedProfessional(req) ? { id: req.user.profissionalId } : {}),
+        ...(isScopedProfessional(req) && !canViewColleagueAgenda(req) ? { id: req.user.profissionalId } : {}),
       } 
     }
   });
@@ -1587,7 +1622,7 @@ async function findOrCreateCliente(salaoId, nome, telefone) {
 
 async function criarAgendamentoAdmin(req, res) {
   const { servicoId, servicoIds, pacoteId, clienteNome, clienteTelefone, data, hora, observacao, recorrente, semanas } = req.body;
-  const profissionalId = getScopedProfessionalId(req, req.body.profissionalId);
+  const profissionalId = getAgendaProfessionalId(req, req.body.profissionalId, { defaultToSelf: true });
 
   const sIds = servicoIds ? (Array.isArray(servicoIds) ? servicoIds : [servicoIds]) : (servicoId ? [servicoId] : []);
   if (!profissionalId || (sIds.length === 0 && !pacoteId) || !clienteNome || !clienteTelefone || !data || !hora) {
@@ -1739,7 +1774,7 @@ async function criarAgendamentoAdminMultiplo(req, res) {
     observacao,
   });
 
-  const profissionaisIds = [...new Set(itensLista.map((item) => getScopedProfessionalId(req, item.profissionalId)))];
+  const profissionaisIds = [...new Set(itensLista.map((item) => getAgendaProfessionalId(req, item.profissionalId, { defaultToSelf: true })))];
   const servicosIds = [...new Set(itensLista.map((item) => item.servicoId))];
 
   const [profissionaisDb, servicosDb] = await Promise.all([
@@ -1774,7 +1809,7 @@ async function criarAgendamentoAdminMultiplo(req, res) {
 
   for (let index = 0; index < itensLista.length; index += 1) {
     const item = itensLista[index];
-    const profissionalId = getScopedProfessionalId(req, item.profissionalId);
+    const profissionalId = getAgendaProfessionalId(req, item.profissionalId, { defaultToSelf: true });
     const profissional = profissionaisMap.get(profissionalId);
     const servico = servicosMap.get(item.servicoId);
 
@@ -1898,7 +1933,7 @@ async function criarAgendamentoAdminMultiplo(req, res) {
 
 async function getAgendamentos(req, res) {
   const { data, status } = req.query;
-  const profissionalId = getScopedProfessionalId(req, req.query.profissionalId);
+  const profissionalId = getAgendaProfessionalId(req, req.query.profissionalId);
 
   await normalizarAgendamentosPagosConcluidos(req.user.salaoId);
 
@@ -1930,7 +1965,7 @@ async function getAgendamentos(req, res) {
         data: { gte: new Date(data + 'T00:00:00'), lte: new Date(data + 'T23:59:59') },
         profissional: {
           salaoId: req.user.salaoId,
-          ...(isScopedProfessional(req) ? { id: req.user.profissionalId } : {}),
+          ...(isScopedProfessional(req) && !canViewColleagueAgenda(req) ? { id: req.user.profissionalId } : {}),
         }
       },
       include: { profissional: { select: { id: true, nome: true } } }
@@ -1981,7 +2016,7 @@ async function getListaEspera(req, res) {
     where: {
       salaoId: req.user.salaoId,
       ...(status ? { status } : {}),
-      ...professionalScopeFilter(req),
+      ...agendaScopeFilter(req),
     },
     orderBy: [{ status: 'asc' }, { createdAt: 'desc' }],
     include: {
@@ -1994,7 +2029,7 @@ async function getListaEspera(req, res) {
 
 async function createListaEspera(req, res) {
   const { clienteNome, clienteTelefone, servicoId, profissionalId, dataDesejada, periodo, observacao } = req.body;
-  const profissionalEscopado = getScopedProfessionalId(req, profissionalId);
+  const profissionalEscopado = getAgendaProfessionalId(req, profissionalId, { defaultToSelf: true });
 
   if (!clienteNome || !clienteTelefone) {
     return res.status(400).json({ error: 'Nome e telefone são obrigatórios' });
@@ -2038,7 +2073,7 @@ async function updateListaEspera(req, res) {
     where: {
       id,
       salaoId: req.user.salaoId,
-      ...professionalScopeFilter(req),
+      ...agendaScopeFilter(req),
     },
   });
   if (!item) return res.status(404).json({ error: 'Item da lista de espera não encontrado' });
@@ -2066,7 +2101,7 @@ async function deleteListaEspera(req, res) {
     where: {
       id,
       salaoId: req.user.salaoId,
-      ...professionalScopeFilter(req),
+      ...agendaScopeFilter(req),
     },
   });
   res.json({ ok: true });
@@ -2698,7 +2733,7 @@ async function updatePagamentoAgendamento(req, res) {
     where: {
       id: { in: idsSolicitados },
       salaoId: req.user.salaoId,
-      ...professionalScopeFilter(req),
+      ...agendaScopeFilter(req),
       status: { not: 'cancelado' },
     },
     include: {
@@ -2871,7 +2906,7 @@ async function reabrirComandaAgendamento(req, res) {
     where: {
       id: { in: idsSolicitados },
       salaoId: req.user.salaoId,
-      ...professionalScopeFilter(req),
+      ...agendaScopeFilter(req),
       status: { not: 'cancelado' },
     },
     include: {
@@ -2993,7 +3028,7 @@ async function addItemAgendamento(req, res) {
   const agendamento = await getScopedAgendamento(req, id);
   if (!agendamento) return res.status(404).json({ error: 'Agendamento nÃ£o encontrado' });
 
-  const allowedServicoIds = await getAllowedServicoIds(req);
+  const allowedServicoIds = await getAllowedServicoIds(req, agendamento.profissionalId);
   if (allowedServicoIds && !allowedServicoIds.includes(servicoId)) {
     return res.status(403).json({ error: 'VocÃª sÃ³ pode adicionar serviÃ§os vinculados ao seu perfil' });
   }
@@ -3049,7 +3084,7 @@ async function addItemComandaAgendamento(req, res) {
     return res.status(400).json({ error: 'Informe servico, profissional e horario para adicionar o item.' });
   }
 
-  const profissionalIdFinal = getScopedProfessionalId(req, profissionalId);
+  const profissionalIdFinal = getAgendaProfessionalId(req, profissionalId, { defaultToSelf: true });
   const [servico, profissional] = await Promise.all([
     prisma.servico.findFirst({
       where: { id: servicoId, salaoId: req.user.salaoId },

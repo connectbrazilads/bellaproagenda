@@ -1,6 +1,7 @@
 const ALL_PERMISSIONS = [
   'dashboard',
   'agenda',
+  'agenda.ver_colegas',
   'inbox',
   'clientes',
   'profissionais',

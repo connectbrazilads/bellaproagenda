@@ -41,8 +41,8 @@ Start-Process powershell -ArgumentList "-NoExit", "-Command", "Set-Location '$PS
 
 Start-Sleep -Seconds 5
 
-Write-Host "Iniciando Cloudflare Tunnel para http://127.0.0.1:5173 ..."
-Start-Process powershell -ArgumentList "-NoExit", "-Command", "cloudflared tunnel --url http://127.0.0.1:5173" -WindowStyle Normal
+Write-Host "Iniciando Cloudflare Tunnel para http://127.0.0.1:5174 ..."
+Start-Process powershell -ArgumentList "-NoExit", "-Command", "cloudflared tunnel --url http://127.0.0.1:5174" -WindowStyle Normal
 
 Write-Host ""
 Write-Host "  Frontend local : http://127.0.0.1:5173"
