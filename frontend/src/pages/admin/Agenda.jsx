@@ -1789,6 +1789,7 @@ function ModalDetalhesAgendamento({ agendamento: initialAgendamento, allAgendame
                 <p className="mt-2 text-lg font-black text-[#d48997] dark:text-white">{Number(calculateTotal()).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</p>
               </div>
             </div>
+            </div>
 
             <div className="mx-auto w-full max-w-4xl p-5 md:p-8 xl:p-10">
               <div className="sticky top-0 z-[10] mb-6 rounded-[2rem] bg-white/95 px-1 py-1 backdrop-blur dark:bg-[#060608]/95">
