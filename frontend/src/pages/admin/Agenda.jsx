@@ -1659,7 +1659,7 @@ function ModalDetalhesAgendamento({ agendamento: initialAgendamento, allAgendame
           initial={{ scale: 0.95, y: 50, opacity: 0 }} animate={{ scale: 1, y: 0, opacity: 1 }} exit={{ scale: 0.95, y: 50, opacity: 0 }}
           className="bg-white dark:bg-[#0c0c0e] rounded-t-[2rem] md:rounded-[3rem] xl:rounded-[4rem] w-full max-w-5xl h-[95dvh] md:max-h-[92dvh] flex flex-col shadow-[0_60px_120px_-20px_rgba(0,0,0,0.7)] border border-gray-200 dark:border-white/5 overflow-hidden"
         >
-          <div className="px-5 py-5 md:px-10 md:py-8 border-b border-gray-100 dark:border-white/5 flex items-start justify-between gap-4 bg-white dark:bg-[#0c0c0e]/80 backdrop-blur-3xl">
+          <div className="px-5 py-5 md:px-10 md:py-8 border-b border-gray-100 dark:border-white/5 flex items-start justify-between gap-4 bg-white dark:bg-[#0c0c0e]/80 backdrop-blur-3xl shrink-0 z-10">
             <div className="flex items-start gap-4 min-w-0">
               <div className="w-16 h-16 bg-gradient-to-br from-[#d48997] to-indigo-700 rounded-[2rem] flex items-center justify-center text-white shadow-2xl shadow-[#E29BA8]/40 relative shrink-0">
                 <User size={30} />
@@ -1687,9 +1687,10 @@ function ModalDetalhesAgendamento({ agendamento: initialAgendamento, allAgendame
             </button>
           </div>
 
-          <div className="border-b border-gray-100 bg-bellapro-blush/5 px-5 py-4 dark:border-white/5 md:px-10">
-            <div className="flex flex-wrap items-start justify-between gap-4">
-              <div className="flex flex-wrap items-center gap-3">
+          <div className="flex-1 overflow-y-auto bg-white dark:bg-[#060608]">
+            <div className="border-b border-gray-100 bg-bellapro-blush/5 px-5 py-4 dark:border-white/5 md:px-10">
+              <div className="flex flex-wrap items-start justify-between gap-4">
+                <div className="flex flex-wrap items-center gap-3">
                 <div className={cn('px-3 py-1.5 rounded-xl text-[8px] font-black uppercase tracking-[0.2em] border', STATUS_CONFIG[agendamento.status]?.bg, STATUS_CONFIG[agendamento.status]?.text, STATUS_CONFIG[agendamento.status]?.border)}>
                   {STATUS_CONFIG[agendamento.status]?.label || agendamento.status}
                 </div>
@@ -1788,12 +1789,10 @@ function ModalDetalhesAgendamento({ agendamento: initialAgendamento, allAgendame
                 <p className="mt-2 text-lg font-black text-[#d48997] dark:text-white">{Number(calculateTotal()).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</p>
               </div>
             </div>
-          </div>
 
-          <div className="flex-1 overflow-y-auto bg-white dark:bg-[#060608]">
             <div className="mx-auto w-full max-w-4xl p-5 md:p-8 xl:p-10">
-              <div className="sticky top-0 z-[1] mb-6 rounded-[2rem] bg-white/95 px-1 py-1 backdrop-blur dark:bg-[#060608]/95">
-                <div className="grid grid-cols-1 gap-2 rounded-[2rem] border border-gray-100 bg-gray-50 p-2 dark:border-white/10 dark:bg-white/5 sm:grid-cols-3">
+              <div className="sticky top-0 z-[10] mb-6 rounded-[2rem] bg-white/95 px-1 py-1 backdrop-blur dark:bg-[#060608]/95">
+                <div className="grid grid-cols-3 gap-1 rounded-[2rem] border border-gray-100 bg-gray-50 p-1 dark:border-white/10 dark:bg-white/5 sm:gap-2 sm:p-2">
                   {[
                     { id: 'comanda', label: 'Comanda', icon: Plus },
                     { id: 'ajustes', label: 'Ajustes', icon: Scissors },
@@ -1811,14 +1810,14 @@ function ModalDetalhesAgendamento({ agendamento: initialAgendamento, allAgendame
                         setTab(item.id);
                       }}
                       className={cn(
-                        'flex items-center justify-center gap-3 rounded-[1.5rem] px-4 py-4 text-[10px] font-black uppercase tracking-[0.18em] transition-all',
+                        'flex items-center justify-center gap-1.5 sm:gap-3 rounded-[1.5rem] px-2 py-3 sm:px-4 sm:py-4 text-[9px] sm:text-[10px] font-black uppercase tracking-[0.18em] transition-all',
                         tab === item.id
-                          ? 'bg-white text-[#d48997] shadow-lg dark:bg-[#d48997] dark:text-white'
-                          : 'text-gray-400 dark:text-white/55'
+                          ? 'bg-white text-[#d48997] shadow-sm dark:bg-[#1a1a1c] dark:text-white'
+                          : 'text-gray-400 hover:bg-white/50 hover:text-gray-900 dark:text-white/40 dark:hover:bg-white/5 dark:hover:text-white'
                       )}
                     >
-                      <item.icon size={14} />
-                      {item.label}
+                      <item.icon size={14} className="shrink-0" />
+                      <span className="truncate">{item.label}</span>
                     </button>
                   ))}
                 </div>
