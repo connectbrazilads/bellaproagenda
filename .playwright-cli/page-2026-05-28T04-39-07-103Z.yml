@@ -1,0 +1,11 @@
+- generic [ref=e11]:
+  - generic [ref=e12]:
+    - button [ref=e107] [cursor=pointer]:
+      - img [ref=e108]
+    - generic [ref=e110]:
+      - paragraph [ref=e111]: Passo 2 de 6
+      - generic [ref=e112]:
+        - heading "Profissional" [level=2] [ref=e1113]
+        - img "Logo Estetica Veri Rangel" [ref=e115]
+  - paragraph [ref=e1117]: Buscando especialistas
+  - paragraph [ref=e1103]: Experiência BellaPro · Estetica Veri Rangel

@@ -1,0 +1,786 @@
+- generic [ref=e14]:
+  - generic [ref=e15]:
+    - button [ref=e110] [cursor=pointer]:
+      - img [ref=e111]
+    - generic [ref=e113]:
+      - paragraph [ref=e114]: Passo 1 de 6
+      - generic [ref=e115]:
+        - heading "Serviço" [level=2] [ref=e116]
+        - img "Logo Estetica Veri Rangel" [ref=e118]
+  - generic [ref=e124]:
+    - generic [ref=e125]:
+      - button "Alongamento cilios Experiencia premium de beleza personalizada. R$ 130,00 90 min" [active] [ref=e126] [cursor=pointer]:
+        - img [ref=e1109]
+        - generic [ref=e127]:
+          - generic [ref=e128]:
+            - img [ref=e130]
+            - generic [ref=e132]:
+              - heading "Alongamento cilios" [level=3] [ref=e133]
+              - paragraph [ref=e134]: Experiencia premium de beleza personalizada.
+          - generic [ref=e135]:
+            - paragraph [ref=e136]: R$ 130,00
+            - generic [ref=e137]:
+              - img [ref=e138]
+              - text: 90 min
+      - button "Aplicação coloração Aplicação cliente trazendo coloração R$ 80,00 30 min" [ref=e141] [cursor=pointer]:
+        - generic [ref=e142]:
+          - generic [ref=e143]:
+            - img [ref=e145]
+            - generic [ref=e147]:
+              - heading "Aplicação coloração" [level=3] [ref=e148]
+              - paragraph [ref=e149]: Aplicação cliente trazendo coloração
+          - generic [ref=e150]:
+            - paragraph [ref=e151]: R$ 80,00
+            - generic [ref=e152]:
+              - img [ref=e153]
+              - text: 30 min
+      - button "Avaliação micro Experiencia premium de beleza personalizada. R$ 0,00 15 min" [ref=e156] [cursor=pointer]:
+        - generic [ref=e157]:
+          - generic [ref=e158]:
+            - img [ref=e160]
+            - generic [ref=e162]:
+              - heading "Avaliação micro" [level=3] [ref=e163]
+              - paragraph [ref=e164]: Experiencia premium de beleza personalizada.
+          - generic [ref=e165]:
+            - paragraph [ref=e166]: R$ 0,00
+            - generic [ref=e167]:
+              - img [ref=e168]
+              - text: 15 min
+      - button "Axila Experiencia premium de beleza personalizada. R$ 30,00 30 min" [ref=e171] [cursor=pointer]:
+        - generic [ref=e172]:
+          - generic [ref=e173]:
+            - img [ref=e175]
+            - generic [ref=e177]:
+              - heading "Axila" [level=3] [ref=e178]
+              - paragraph [ref=e179]: Experiencia premium de beleza personalizada.
+          - generic [ref=e180]:
+            - paragraph [ref=e181]: R$ 30,00
+            - generic [ref=e182]:
+              - img [ref=e183]
+              - text: 30 min
+      - button "Banho de gel Experiencia premium de beleza personalizada. R$ 150,00 120 min" [ref=e186] [cursor=pointer]:
+        - generic [ref=e187]:
+          - generic [ref=e188]:
+            - img [ref=e190]
+            - generic [ref=e192]:
+              - heading "Banho de gel" [level=3] [ref=e193]
+              - paragraph [ref=e194]: Experiencia premium de beleza personalizada.
+          - generic [ref=e195]:
+            - paragraph [ref=e196]: R$ 150,00
+            - generic [ref=e197]:
+              - img [ref=e198]
+              - text: 120 min
+      - button "Barriga Experiencia premium de beleza personalizada. R$ 30,00 30 min" [ref=e201] [cursor=pointer]:
+        - generic [ref=e202]:
+          - generic [ref=e203]:
+            - img [ref=e205]
+            - generic [ref=e207]:
+              - heading "Barriga" [level=3] [ref=e208]
+              - paragraph [ref=e209]: Experiencia premium de beleza personalizada.
+          - generic [ref=e210]:
+            - paragraph [ref=e211]: R$ 30,00
+            - generic [ref=e212]:
+              - img [ref=e213]
+              - text: 30 min
+      - button "Blindagem unhas Experiencia premium de beleza personalizada. R$ 120,00 90 min" [ref=e216] [cursor=pointer]:
+        - generic [ref=e217]:
+          - generic [ref=e218]:
+            - img [ref=e220]
+            - generic [ref=e222]:
+              - heading "Blindagem unhas" [level=3] [ref=e223]
+              - paragraph [ref=e224]: Experiencia premium de beleza personalizada.
+          - generic [ref=e225]:
+            - paragraph [ref=e226]: R$ 120,00
+            - generic [ref=e227]:
+              - img [ref=e228]
+              - text: 90 min
+      - button "Botox capilar Experiencia premium de beleza personalizada. R$ 120,00 60 min" [ref=e231] [cursor=pointer]:
+        - generic [ref=e232]:
+          - generic [ref=e233]:
+            - img [ref=e235]
+            - generic [ref=e237]:
+              - heading "Botox capilar" [level=3] [ref=e238]
+              - paragraph [ref=e239]: Experiencia premium de beleza personalizada.
+          - generic [ref=e240]:
+            - paragraph [ref=e241]: R$ 120,00
+            - generic [ref=e242]:
+              - img [ref=e243]
+              - text: 60 min
+      - button "Brow lamination Experiencia premium de beleza personalizada. R$ 130,00 90 min" [ref=e246] [cursor=pointer]:
+        - generic [ref=e247]:
+          - generic [ref=e248]:
+            - img [ref=e250]
+            - generic [ref=e252]:
+              - heading "Brow lamination" [level=3] [ref=e253]
+              - paragraph [ref=e254]: Experiencia premium de beleza personalizada.
+          - generic [ref=e255]:
+            - paragraph [ref=e256]: R$ 130,00
+            - generic [ref=e257]:
+              - img [ref=e258]
+              - text: 90 min
+      - button "Buço Experiencia premium de beleza personalizada. R$ 15,00 15 min" [ref=e261] [cursor=pointer]:
+        - generic [ref=e262]:
+          - generic [ref=e263]:
+            - img [ref=e265]
+            - generic [ref=e267]:
+              - heading "Buço" [level=3] [ref=e268]
+              - paragraph [ref=e269]: Experiencia premium de beleza personalizada.
+          - generic [ref=e270]:
+            - paragraph [ref=e271]: R$ 15,00
+            - generic [ref=e272]:
+              - img [ref=e273]
+              - text: 15 min
+      - button "Corte feminino Experiencia premium de beleza personalizada. R$ 80,00 60 min" [ref=e276] [cursor=pointer]:
+        - generic [ref=e277]:
+          - generic [ref=e278]:
+            - img [ref=e280]
+            - generic [ref=e286]:
+              - heading "Corte feminino" [level=3] [ref=e287]
+              - paragraph [ref=e288]: Experiencia premium de beleza personalizada.
+          - generic [ref=e289]:
+            - paragraph [ref=e290]: R$ 80,00
+            - generic [ref=e291]:
+              - img [ref=e292]
+              - text: 60 min
+      - button "Corte franja Experiencia premium de beleza personalizada. R$ 15,00 15 min" [ref=e295] [cursor=pointer]:
+        - generic [ref=e296]:
+          - generic [ref=e297]:
+            - img [ref=e299]
+            - generic [ref=e305]:
+              - heading "Corte franja" [level=3] [ref=e306]
+              - paragraph [ref=e307]: Experiencia premium de beleza personalizada.
+          - generic [ref=e308]:
+            - paragraph [ref=e309]: R$ 15,00
+            - generic [ref=e310]:
+              - img [ref=e311]
+              - text: 15 min
+      - button "Corte+hidrataçao Experiencia premium de beleza personalizada. R$ 120,00 60 min" [ref=e314] [cursor=pointer]:
+        - generic [ref=e315]:
+          - generic [ref=e316]:
+            - img [ref=e318]
+            - generic [ref=e324]:
+              - heading "Corte+hidrataçao" [level=3] [ref=e325]
+              - paragraph [ref=e326]: Experiencia premium de beleza personalizada.
+          - generic [ref=e327]:
+            - paragraph [ref=e328]: R$ 120,00
+            - generic [ref=e329]:
+              - img [ref=e330]
+              - text: 60 min
+      - button "Corte infantil Experiencia premium de beleza personalizada. R$ 60,00 30 min" [ref=e333] [cursor=pointer]:
+        - generic [ref=e334]:
+          - generic [ref=e335]:
+            - img [ref=e337]
+            - generic [ref=e343]:
+              - heading "Corte infantil" [level=3] [ref=e344]
+              - paragraph [ref=e345]: Experiencia premium de beleza personalizada.
+          - generic [ref=e346]:
+            - paragraph [ref=e347]: R$ 60,00
+            - generic [ref=e348]:
+              - img [ref=e349]
+              - text: 30 min
+      - button "Corte masculino Experiencia premium de beleza personalizada. R$ 35,00 30 min" [ref=e352] [cursor=pointer]:
+        - generic [ref=e353]:
+          - generic [ref=e354]:
+            - img [ref=e356]
+            - generic [ref=e362]:
+              - heading "Corte masculino" [level=3] [ref=e363]
+              - paragraph [ref=e364]: Experiencia premium de beleza personalizada.
+          - generic [ref=e365]:
+            - paragraph [ref=e366]: R$ 35,00
+            - generic [ref=e367]:
+              - img [ref=e368]
+              - text: 30 min
+      - button "Depilação a laser Experiencia premium de beleza personalizada. R$ 0,00 15 min" [ref=e371] [cursor=pointer]:
+        - generic [ref=e372]:
+          - generic [ref=e373]:
+            - img [ref=e375]
+            - generic [ref=e377]:
+              - heading "Depilação a laser" [level=3] [ref=e378]
+              - paragraph [ref=e379]: Experiencia premium de beleza personalizada.
+          - generic [ref=e380]:
+            - paragraph [ref=e381]: R$ 0,00
+            - generic [ref=e382]:
+              - img [ref=e383]
+              - text: 15 min
+      - button "Designer +hena Experiencia premium de beleza personalizada. R$ 65,00 30 min" [ref=e386] [cursor=pointer]:
+        - generic [ref=e387]:
+          - generic [ref=e388]:
+            - img [ref=e390]
+            - generic [ref=e392]:
+              - heading "Designer +hena" [level=3] [ref=e393]
+              - paragraph [ref=e394]: Experiencia premium de beleza personalizada.
+          - generic [ref=e395]:
+            - paragraph [ref=e396]: R$ 65,00
+            - generic [ref=e397]:
+              - img [ref=e398]
+              - text: 30 min
+      - button "Designer sobrancelha Experiencia premium de beleza personalizada. R$ 40,00 30 min" [ref=e401] [cursor=pointer]:
+        - generic [ref=e402]:
+          - generic [ref=e403]:
+            - img [ref=e405]
+            - generic [ref=e407]:
+              - heading "Designer sobrancelha" [level=3] [ref=e408]
+              - paragraph [ref=e409]: Experiencia premium de beleza personalizada.
+          - generic [ref=e410]:
+            - paragraph [ref=e411]: R$ 40,00
+            - generic [ref=e412]:
+              - img [ref=e413]
+              - text: 30 min
+      - button "Escova modelada ou baby liss Experiencia premium de beleza personalizada. R$ 80,00 60 min" [ref=e416] [cursor=pointer]:
+        - generic [ref=e417]:
+          - generic [ref=e418]:
+            - img [ref=e420]
+            - generic [ref=e422]:
+              - heading "Escova modelada ou baby liss" [level=3] [ref=e423]
+              - paragraph [ref=e424]: Experiencia premium de beleza personalizada.
+          - generic [ref=e425]:
+            - paragraph [ref=e426]: R$ 80,00
+            - generic [ref=e427]:
+              - img [ref=e428]
+              - text: 60 min
+      - button "Escova pacote Experiencia premium de beleza personalizada. R$ 54,00 30 min" [ref=e431] [cursor=pointer]:
+        - generic [ref=e432]:
+          - generic [ref=e433]:
+            - img [ref=e435]
+            - generic [ref=e437]:
+              - heading "Escova pacote" [level=3] [ref=e438]
+              - paragraph [ref=e439]: Experiencia premium de beleza personalizada.
+          - generic [ref=e440]:
+            - paragraph [ref=e441]: R$ 54,00
+            - generic [ref=e442]:
+              - img [ref=e443]
+              - text: 30 min
+      - button "Escova progressiva Experiencia premium de beleza personalizada. R$ 250,00 60 min" [ref=e446] [cursor=pointer]:
+        - generic [ref=e447]:
+          - generic [ref=e448]:
+            - img [ref=e450]
+            - generic [ref=e452]:
+              - heading "Escova progressiva" [level=3] [ref=e453]
+              - paragraph [ref=e454]: Experiencia premium de beleza personalizada.
+          - generic [ref=e455]:
+            - paragraph [ref=e456]: R$ 250,00
+            - generic [ref=e457]:
+              - img [ref=e458]
+              - text: 60 min
+      - button "Escova simples Experiencia premium de beleza personalizada. R$ 60,00 30 min" [ref=e461] [cursor=pointer]:
+        - generic [ref=e462]:
+          - generic [ref=e463]:
+            - img [ref=e465]
+            - generic [ref=e467]:
+              - heading "Escova simples" [level=3] [ref=e468]
+              - paragraph [ref=e469]: Experiencia premium de beleza personalizada.
+          - generic [ref=e470]:
+            - paragraph [ref=e471]: R$ 60,00
+            - generic [ref=e472]:
+              - img [ref=e473]
+              - text: 30 min
+      - button "Esmaltação em gel manicure Experiencia premium de beleza personalizada. R$ 65,00 90 min" [ref=e476] [cursor=pointer]:
+        - generic [ref=e477]:
+          - generic [ref=e478]:
+            - img [ref=e480]
+            - generic [ref=e482]:
+              - heading "Esmaltação em gel manicure" [level=3] [ref=e483]
+              - paragraph [ref=e484]: Experiencia premium de beleza personalizada.
+          - generic [ref=e485]:
+            - paragraph [ref=e486]: R$ 65,00
+            - generic [ref=e487]:
+              - img [ref=e488]
+              - text: 90 min
+      - button "Esmaltação em gel pés Experiencia premium de beleza personalizada. R$ 70,00 90 min" [ref=e491] [cursor=pointer]:
+        - generic [ref=e492]:
+          - generic [ref=e493]:
+            - img [ref=e495]
+            - generic [ref=e497]:
+              - heading "Esmaltação em gel pés" [level=3] [ref=e498]
+              - paragraph [ref=e499]: Experiencia premium de beleza personalizada.
+          - generic [ref=e500]:
+            - paragraph [ref=e501]: R$ 70,00
+            - generic [ref=e502]:
+              - img [ref=e503]
+              - text: 90 min
+      - button "Hidratação Experiencia premium de beleza personalizada. R$ 90,00 60 min" [ref=e506] [cursor=pointer]:
+        - generic [ref=e507]:
+          - generic [ref=e508]:
+            - img [ref=e510]
+            - generic [ref=e512]:
+              - heading "Hidratação" [level=3] [ref=e513]
+              - paragraph [ref=e514]: Experiencia premium de beleza personalizada.
+          - generic [ref=e515]:
+            - paragraph [ref=e516]: R$ 90,00
+            - generic [ref=e517]:
+              - img [ref=e518]
+              - text: 60 min
+      - button "Lash lifiting Experiencia premium de beleza personalizada. R$ 69,90 90 min" [ref=e521] [cursor=pointer]:
+        - generic [ref=e522]:
+          - generic [ref=e523]:
+            - img [ref=e525]
+            - generic [ref=e527]:
+              - heading "Lash lifiting" [level=3] [ref=e528]
+              - paragraph [ref=e529]: Experiencia premium de beleza personalizada.
+          - generic [ref=e530]:
+            - paragraph [ref=e531]: R$ 69,90
+            - generic [ref=e532]:
+              - img [ref=e533]
+              - text: 90 min
+      - button "Lavado e secado Experiencia premium de beleza personalizada. R$ 45,00 30 min" [ref=e536] [cursor=pointer]:
+        - generic [ref=e537]:
+          - generic [ref=e538]:
+            - img [ref=e540]
+            - generic [ref=e542]:
+              - heading "Lavado e secado" [level=3] [ref=e543]
+              - paragraph [ref=e544]: Experiencia premium de beleza personalizada.
+          - generic [ref=e545]:
+            - paragraph [ref=e546]: R$ 45,00
+            - generic [ref=e547]:
+              - img [ref=e548]
+              - text: 30 min
+      - button "Lavado e secado pós química Experiencia premium de beleza personalizada. R$ 0,00 30 min" [ref=e551] [cursor=pointer]:
+        - generic [ref=e552]:
+          - generic [ref=e553]:
+            - img [ref=e555]
+            - generic [ref=e557]:
+              - heading "Lavado e secado pós química" [level=3] [ref=e558]
+              - paragraph [ref=e559]: Experiencia premium de beleza personalizada.
+          - generic [ref=e560]:
+            - paragraph [ref=e561]: R$ 0,00
+            - generic [ref=e562]:
+              - img [ref=e563]
+              - text: 30 min
+      - button "Limpeza/Bonificação Experiencia premium de beleza personalizada. R$ 130,00 60 min" [ref=e566] [cursor=pointer]:
+        - generic [ref=e567]:
+          - generic [ref=e568]:
+            - img [ref=e570]
+            - generic [ref=e572]:
+              - heading "Limpeza/Bonificação" [level=3] [ref=e573]
+              - paragraph [ref=e574]: Experiencia premium de beleza personalizada.
+          - generic [ref=e575]:
+            - paragraph [ref=e576]: R$ 130,00
+            - generic [ref=e577]:
+              - img [ref=e578]
+              - text: 60 min
+      - button "Limpeza pele Experiencia premium de beleza personalizada. R$ 150,00 90 min" [ref=e581] [cursor=pointer]:
+        - generic [ref=e582]:
+          - generic [ref=e583]:
+            - img [ref=e585]
+            - generic [ref=e587]:
+              - heading "Limpeza pele" [level=3] [ref=e588]
+              - paragraph [ref=e589]: Experiencia premium de beleza personalizada.
+          - generic [ref=e590]:
+            - paragraph [ref=e591]: R$ 150,00
+            - generic [ref=e592]:
+              - img [ref=e593]
+              - text: 90 min
+      - button "Limpeza pele com peeling Experiencia premium de beleza personalizada. R$ 180,00 90 min" [ref=e596] [cursor=pointer]:
+        - generic [ref=e597]:
+          - generic [ref=e598]:
+            - img [ref=e600]
+            - generic [ref=e602]:
+              - heading "Limpeza pele com peeling" [level=3] [ref=e603]
+              - paragraph [ref=e604]: Experiencia premium de beleza personalizada.
+          - generic [ref=e605]:
+            - paragraph [ref=e606]: R$ 180,00
+            - generic [ref=e607]:
+              - img [ref=e608]
+              - text: 90 min
+      - button "Luzes masculina Experiencia premium de beleza personalizada. R$ 150,00 60 min" [ref=e611] [cursor=pointer]:
+        - generic [ref=e612]:
+          - generic [ref=e613]:
+            - img [ref=e615]
+            - generic [ref=e617]:
+              - heading "Luzes masculina" [level=3] [ref=e618]
+              - paragraph [ref=e619]: Experiencia premium de beleza personalizada.
+          - generic [ref=e620]:
+            - paragraph [ref=e621]: R$ 150,00
+            - generic [ref=e622]:
+              - img [ref=e623]
+              - text: 60 min
+      - button "Make noiva ou debutante Experiencia premium de beleza personalizada. R$ 180,09 90 min" [ref=e626] [cursor=pointer]:
+        - generic [ref=e627]:
+          - generic [ref=e628]:
+            - img [ref=e630]
+            - generic [ref=e632]:
+              - heading "Make noiva ou debutante" [level=3] [ref=e633]
+              - paragraph [ref=e634]: Experiencia premium de beleza personalizada.
+          - generic [ref=e635]:
+            - paragraph [ref=e636]: R$ 180,09
+            - generic [ref=e637]:
+              - img [ref=e638]
+              - text: 90 min
+      - button "Manicure +aplicação postiça Experiencia premium de beleza personalizada. R$ 55,00 90 min" [ref=e641] [cursor=pointer]:
+        - generic [ref=e642]:
+          - generic [ref=e643]:
+            - img [ref=e645]
+            - generic [ref=e647]:
+              - heading "Manicure +aplicação postiça" [level=3] [ref=e648]
+              - paragraph [ref=e649]: Experiencia premium de beleza personalizada.
+          - generic [ref=e650]:
+            - paragraph [ref=e651]: R$ 55,00
+            - generic [ref=e652]:
+              - img [ref=e653]
+              - text: 90 min
+      - button "Manicure pacote Experiencia premium de beleza personalizada. R$ 31,50 60 min" [ref=e656] [cursor=pointer]:
+        - generic [ref=e657]:
+          - generic [ref=e658]:
+            - img [ref=e660]
+            - generic [ref=e662]:
+              - heading "Manicure pacote" [level=3] [ref=e663]
+              - paragraph [ref=e664]: Experiencia premium de beleza personalizada.
+          - generic [ref=e665]:
+            - paragraph [ref=e666]: R$ 31,50
+            - generic [ref=e667]:
+              - img [ref=e668]
+              - text: 60 min
+      - button "Manicure simples Experiencia premium de beleza personalizada. R$ 35,00 60 min" [ref=e671] [cursor=pointer]:
+        - generic [ref=e672]:
+          - generic [ref=e673]:
+            - img [ref=e675]
+            - generic [ref=e677]:
+              - heading "Manicure simples" [level=3] [ref=e678]
+              - paragraph [ref=e679]: Experiencia premium de beleza personalizada.
+          - generic [ref=e680]:
+            - paragraph [ref=e681]: R$ 35,00
+            - generic [ref=e682]:
+              - img [ref=e683]
+              - text: 60 min
+      - button "Manutenção alongamento Experiencia premium de beleza personalizada. R$ 110,00 150 min" [ref=e686] [cursor=pointer]:
+        - generic [ref=e687]:
+          - generic [ref=e688]:
+            - img [ref=e690]
+            - generic [ref=e692]:
+              - heading "Manutenção alongamento" [level=3] [ref=e693]
+              - paragraph [ref=e694]: Experiencia premium de beleza personalizada.
+          - generic [ref=e695]:
+            - paragraph [ref=e696]: R$ 110,00
+            - generic [ref=e697]:
+              - img [ref=e698]
+              - text: 150 min
+      - button "Manutenção cílios Experiencia premium de beleza personalizada. R$ 90,00 90 min" [ref=e701] [cursor=pointer]:
+        - generic [ref=e702]:
+          - generic [ref=e703]:
+            - img [ref=e705]
+            - generic [ref=e707]:
+              - heading "Manutenção cílios" [level=3] [ref=e708]
+              - paragraph [ref=e709]: Experiencia premium de beleza personalizada.
+          - generic [ref=e710]:
+            - paragraph [ref=e711]: R$ 90,00
+            - generic [ref=e712]:
+              - img [ref=e713]
+              - text: 90 min
+      - button "Manutenção mega hair Retirada , preparação e colocação R$ 500,00 180 min" [ref=e716] [cursor=pointer]:
+        - generic [ref=e717]:
+          - generic [ref=e718]:
+            - img [ref=e720]
+            - generic [ref=e722]:
+              - heading "Manutenção mega hair" [level=3] [ref=e723]
+              - paragraph [ref=e724]: Retirada , preparação e colocação
+          - generic [ref=e725]:
+            - paragraph [ref=e726]: R$ 500,00
+            - generic [ref=e727]:
+              - img [ref=e728]
+              - text: 180 min
+      - button "Mãos e pés simples Experiencia premium de beleza personalizada. R$ 75,00 120 min" [ref=e731] [cursor=pointer]:
+        - generic [ref=e732]:
+          - generic [ref=e733]:
+            - img [ref=e735]
+            - generic [ref=e737]:
+              - heading "Mãos e pés simples" [level=3] [ref=e738]
+              - paragraph [ref=e739]: Experiencia premium de beleza personalizada.
+          - generic [ref=e740]:
+            - paragraph [ref=e741]: R$ 75,00
+            - generic [ref=e742]:
+              - img [ref=e743]
+              - text: 120 min
+      - button "Massagem drenagem Experiencia premium de beleza personalizada. R$ 110,00 60 min" [ref=e746] [cursor=pointer]:
+        - generic [ref=e747]:
+          - generic [ref=e748]:
+            - img [ref=e750]
+            - generic [ref=e752]:
+              - heading "Massagem drenagem" [level=3] [ref=e753]
+              - paragraph [ref=e754]: Experiencia premium de beleza personalizada.
+          - generic [ref=e755]:
+            - paragraph [ref=e756]: R$ 110,00
+            - generic [ref=e757]:
+              - img [ref=e758]
+              - text: 60 min
+      - button "Micropigmentação Experiencia premium de beleza personalizada. R$ 380,00 120 min" [ref=e761] [cursor=pointer]:
+        - generic [ref=e762]:
+          - generic [ref=e763]:
+            - img [ref=e765]
+            - generic [ref=e767]:
+              - heading "Micropigmentação" [level=3] [ref=e768]
+              - paragraph [ref=e769]: Experiencia premium de beleza personalizada.
+          - generic [ref=e770]:
+            - paragraph [ref=e771]: R$ 380,00
+            - generic [ref=e772]:
+              - img [ref=e773]
+              - text: 120 min
+      - button "Nadegas Experiencia premium de beleza personalizada. R$ 40,00 30 min" [ref=e776] [cursor=pointer]:
+        - generic [ref=e777]:
+          - generic [ref=e778]:
+            - img [ref=e780]
+            - generic [ref=e782]:
+              - heading "Nadegas" [level=3] [ref=e783]
+              - paragraph [ref=e784]: Experiencia premium de beleza personalizada.
+          - generic [ref=e785]:
+            - paragraph [ref=e786]: R$ 40,00
+            - generic [ref=e787]:
+              - img [ref=e788]
+              - text: 30 min
+      - button "Pedicure pacote Experiencia premium de beleza personalizada. R$ 31,50 60 min" [ref=e791] [cursor=pointer]:
+        - generic [ref=e792]:
+          - generic [ref=e793]:
+            - img [ref=e795]
+            - generic [ref=e797]:
+              - heading "Pedicure pacote" [level=3] [ref=e798]
+              - paragraph [ref=e799]: Experiencia premium de beleza personalizada.
+          - generic [ref=e800]:
+            - paragraph [ref=e801]: R$ 31,50
+            - generic [ref=e802]:
+              - img [ref=e803]
+              - text: 60 min
+      - button "Pedicure simples Experiencia premium de beleza personalizada. R$ 40,00 60 min" [ref=e806] [cursor=pointer]:
+        - generic [ref=e807]:
+          - generic [ref=e808]:
+            - img [ref=e810]
+            - generic [ref=e812]:
+              - heading "Pedicure simples" [level=3] [ref=e813]
+              - paragraph [ref=e814]: Experiencia premium de beleza personalizada.
+          - generic [ref=e815]:
+            - paragraph [ref=e816]: R$ 40,00
+            - generic [ref=e817]:
+              - img [ref=e818]
+              - text: 60 min
+      - button "Penteado noiva ou debutante Experiencia premium de beleza personalizada. R$ 180,00 90 min" [ref=e821] [cursor=pointer]:
+        - generic [ref=e822]:
+          - generic [ref=e823]:
+            - img [ref=e825]
+            - generic [ref=e827]:
+              - heading "Penteado noiva ou debutante" [level=3] [ref=e828]
+              - paragraph [ref=e829]: Experiencia premium de beleza personalizada.
+          - generic [ref=e830]:
+            - paragraph [ref=e831]: R$ 180,00
+            - generic [ref=e832]:
+              - img [ref=e833]
+              - text: 90 min
+      - button "Pintura unhas Experiencia premium de beleza personalizada. R$ 20,00 30 min" [ref=e836] [cursor=pointer]:
+        - generic [ref=e837]:
+          - generic [ref=e838]:
+            - img [ref=e840]
+            - generic [ref=e842]:
+              - heading "Pintura unhas" [level=3] [ref=e843]
+              - paragraph [ref=e844]: Experiencia premium de beleza personalizada.
+          - generic [ref=e845]:
+            - paragraph [ref=e846]: R$ 20,00
+            - generic [ref=e847]:
+              - img [ref=e848]
+              - text: 30 min
+      - button "Plástica nos pés Experiencia premium de beleza personalizada. R$ 70,00 90 min" [ref=e851] [cursor=pointer]:
+        - generic [ref=e852]:
+          - generic [ref=e853]:
+            - img [ref=e855]
+            - generic [ref=e857]:
+              - heading "Plástica nos pés" [level=3] [ref=e858]
+              - paragraph [ref=e859]: Experiencia premium de beleza personalizada.
+          - generic [ref=e860]:
+            - paragraph [ref=e861]: R$ 70,00
+            - generic [ref=e862]:
+              - img [ref=e863]
+              - text: 90 min
+      - button "Queixo Experiencia premium de beleza personalizada. R$ 15,00 15 min" [ref=e866] [cursor=pointer]:
+        - generic [ref=e867]:
+          - generic [ref=e868]:
+            - img [ref=e870]
+            - generic [ref=e872]:
+              - heading "Queixo" [level=3] [ref=e873]
+              - paragraph [ref=e874]: Experiencia premium de beleza personalizada.
+          - generic [ref=e875]:
+            - paragraph [ref=e876]: R$ 15,00
+            - generic [ref=e877]:
+              - img [ref=e878]
+              - text: 15 min
+      - button "Raiz de coloração Raiz até 5cm R$ 120,00 30 min" [ref=e881] [cursor=pointer]:
+        - generic [ref=e882]:
+          - generic [ref=e883]:
+            - img [ref=e885]
+            - generic [ref=e887]:
+              - heading "Raiz de coloração" [level=3] [ref=e888]
+              - paragraph [ref=e889]: Raiz até 5cm
+          - generic [ref=e890]:
+            - paragraph [ref=e891]: R$ 120,00
+            - generic [ref=e892]:
+              - img [ref=e893]
+              - text: 30 min
+      - button "Raiz mechas Raiz mechas R$ 300,00 60 min" [ref=e896] [cursor=pointer]:
+        - generic [ref=e897]:
+          - generic [ref=e898]:
+            - img [ref=e900]
+            - generic [ref=e902]:
+              - heading "Raiz mechas" [level=3] [ref=e903]
+              - paragraph [ref=e904]: Raiz mechas
+          - generic [ref=e905]:
+            - paragraph [ref=e906]: R$ 300,00
+            - generic [ref=e907]:
+              - img [ref=e908]
+              - text: 60 min
+      - button "Recepção Salário e passagem R$ 453,25 60 min" [ref=e911] [cursor=pointer]:
+        - generic [ref=e912]:
+          - generic [ref=e913]:
+            - img [ref=e915]
+            - generic [ref=e917]:
+              - heading "Recepção" [level=3] [ref=e918]
+              - paragraph [ref=e919]: Salário e passagem
+          - generic [ref=e920]:
+            - paragraph [ref=e921]: R$ 453,25
+            - generic [ref=e922]:
+              - img [ref=e923]
+              - text: 60 min
+      - button "Refectocil Experiencia premium de beleza personalizada. R$ 85,00 60 min" [ref=e926] [cursor=pointer]:
+        - generic [ref=e927]:
+          - generic [ref=e928]:
+            - img [ref=e930]
+            - generic [ref=e932]:
+              - heading "Refectocil" [level=3] [ref=e933]
+              - paragraph [ref=e934]: Experiencia premium de beleza personalizada.
+          - generic [ref=e935]:
+            - paragraph [ref=e936]: R$ 85,00
+            - generic [ref=e937]:
+              - img [ref=e938]
+              - text: 60 min
+      - button "Remoção alongamento Experiencia premium de beleza personalizada. R$ 30,00 30 min" [ref=e941] [cursor=pointer]:
+        - generic [ref=e942]:
+          - generic [ref=e943]:
+            - img [ref=e945]
+            - generic [ref=e947]:
+              - heading "Remoção alongamento" [level=3] [ref=e948]
+              - paragraph [ref=e949]: Experiencia premium de beleza personalizada.
+          - generic [ref=e950]:
+            - paragraph [ref=e951]: R$ 30,00
+            - generic [ref=e952]:
+              - img [ref=e953]
+              - text: 30 min
+      - button "Reparo unhas Experiencia premium de beleza personalizada. R$ 0,00 30 min" [ref=e956] [cursor=pointer]:
+        - generic [ref=e957]:
+          - generic [ref=e958]:
+            - img [ref=e960]
+            - generic [ref=e962]:
+              - heading "Reparo unhas" [level=3] [ref=e963]
+              - paragraph [ref=e964]: Experiencia premium de beleza personalizada.
+          - generic [ref=e965]:
+            - paragraph [ref=e966]: R$ 0,00
+            - generic [ref=e967]:
+              - img [ref=e968]
+              - text: 30 min
+      - button "Retirada cílios Experiencia premium de beleza personalizada. R$ 30,00 30 min" [ref=e971] [cursor=pointer]:
+        - generic [ref=e972]:
+          - generic [ref=e973]:
+            - img [ref=e975]
+            - generic [ref=e977]:
+              - heading "Retirada cílios" [level=3] [ref=e978]
+              - paragraph [ref=e979]: Experiencia premium de beleza personalizada.
+          - generic [ref=e980]:
+            - paragraph [ref=e981]: R$ 30,00
+            - generic [ref=e982]:
+              - img [ref=e983]
+              - text: 30 min
+      - button "Retirada esmaltação em gel Experiencia premium de beleza personalizada. R$ 15,00 30 min" [ref=e986] [cursor=pointer]:
+        - generic [ref=e987]:
+          - generic [ref=e988]:
+            - img [ref=e990]
+            - generic [ref=e992]:
+              - heading "Retirada esmaltação em gel" [level=3] [ref=e993]
+              - paragraph [ref=e994]: Experiencia premium de beleza personalizada.
+          - generic [ref=e995]:
+            - paragraph [ref=e996]: R$ 15,00
+            - generic [ref=e997]:
+              - img [ref=e998]
+              - text: 30 min
+      - button "Retirada mega hair Experiencia premium de beleza personalizada. R$ 150,00 60 min" [ref=e1001] [cursor=pointer]:
+        - generic [ref=e1002]:
+          - generic [ref=e1003]:
+            - img [ref=e1005]
+            - generic [ref=e1007]:
+              - heading "Retirada mega hair" [level=3] [ref=e1008]
+              - paragraph [ref=e1009]: Experiencia premium de beleza personalizada.
+          - generic [ref=e1010]:
+            - paragraph [ref=e1011]: R$ 150,00
+            - generic [ref=e1012]:
+              - img [ref=e1013]
+              - text: 60 min
+      - button "Retoque de micro Experiencia premium de beleza personalizada. R$ 100,00 60 min" [ref=e1016] [cursor=pointer]:
+        - generic [ref=e1017]:
+          - generic [ref=e1018]:
+            - img [ref=e1020]
+            - generic [ref=e1022]:
+              - heading "Retoque de micro" [level=3] [ref=e1023]
+              - paragraph [ref=e1024]: Experiencia premium de beleza personalizada.
+          - generic [ref=e1025]:
+            - paragraph [ref=e1026]: R$ 100,00
+            - generic [ref=e1027]:
+              - img [ref=e1028]
+              - text: 60 min
+      - button "Rosto com cera Experiencia premium de beleza personalizada. R$ 95,00 30 min" [ref=e1031] [cursor=pointer]:
+        - generic [ref=e1032]:
+          - generic [ref=e1033]:
+            - img [ref=e1035]
+            - generic [ref=e1037]:
+              - heading "Rosto com cera" [level=3] [ref=e1038]
+              - paragraph [ref=e1039]: Experiencia premium de beleza personalizada.
+          - generic [ref=e1040]:
+            - paragraph [ref=e1041]: R$ 95,00
+            - generic [ref=e1042]:
+              - img [ref=e1043]
+              - text: 30 min
+      - button "Semi definitiva Experiencia premium de beleza personalizada. R$ 380,00 60 min" [ref=e1046] [cursor=pointer]:
+        - generic [ref=e1047]:
+          - generic [ref=e1048]:
+            - img [ref=e1050]
+            - generic [ref=e1052]:
+              - heading "Semi definitiva" [level=3] [ref=e1053]
+              - paragraph [ref=e1054]: Experiencia premium de beleza personalizada.
+          - generic [ref=e1055]:
+            - paragraph [ref=e1056]: R$ 380,00
+            - generic [ref=e1057]:
+              - img [ref=e1058]
+              - text: 60 min
+      - button "Sobrancelha e buço simples Experiencia premium de beleza personalizada. R$ 40,00 30 min" [ref=e1061] [cursor=pointer]:
+        - generic [ref=e1062]:
+          - generic [ref=e1063]:
+            - img [ref=e1065]
+            - generic [ref=e1067]:
+              - heading "Sobrancelha e buço simples" [level=3] [ref=e1068]
+              - paragraph [ref=e1069]: Experiencia premium de beleza personalizada.
+          - generic [ref=e1070]:
+            - paragraph [ref=e1071]: R$ 40,00
+            - generic [ref=e1072]:
+              - img [ref=e1073]
+              - text: 30 min
+      - button "Tonalização loiros Tonalização e secado R$ 150,00 90 min" [ref=e1076] [cursor=pointer]:
+        - generic [ref=e1077]:
+          - generic [ref=e1078]:
+            - img [ref=e1080]
+            - generic [ref=e1082]:
+              - heading "Tonalização loiros" [level=3] [ref=e1083]
+              - paragraph [ref=e1084]: Tonalização e secado
+          - generic [ref=e1085]:
+            - paragraph [ref=e1086]: R$ 150,00
+            - generic [ref=e1087]:
+              - img [ref=e1088]
+              - text: 90 min
+      - button "Virilha + perianal Experiencia premium de beleza personalizada. R$ 60,00 30 min" [ref=e1091] [cursor=pointer]:
+        - generic [ref=e1092]:
+          - generic [ref=e1093]:
+            - img [ref=e1095]
+            - generic [ref=e1097]:
+              - heading "Virilha + perianal" [level=3] [ref=e1098]
+              - paragraph [ref=e1099]: Experiencia premium de beleza personalizada.
+          - generic [ref=e1100]:
+            - paragraph [ref=e1101]: R$ 60,00
+            - generic [ref=e1102]:
+              - img [ref=e1103]
+              - text: 30 min
+    - generic [ref=e1111]:
+      - generic [ref=e1112]:
+        - paragraph [ref=e1113]: Investimento Total
+        - paragraph [ref=e1114]: R$ 130,00
+      - button "Continuar" [ref=e1115] [cursor=pointer]
+  - paragraph [ref=e1106]: Experiência BellaPro · Estetica Veri Rangel

@@ -1,0 +1,7 @@
+- generic [ref=e5]:
+  - generic:
+    - generic:
+      - img "BellaPro Agenda"
+  - generic [ref=e7]:
+    - paragraph [ref=e8]: Carregando interface
+    - paragraph [ref=e9]: Preparando a proxima experiencia BellaPro.

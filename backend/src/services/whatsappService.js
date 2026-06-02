@@ -11,7 +11,15 @@ async function enviarMensagem(telefone, mensagem, salao = null) {
   try {
     await sendEvolutionText(salao, telefone, mensagem);
   } catch (err) {
+    const responseData = err?.response?.data;
+    const responseStatus = err?.response?.status;
     console.error('WhatsApp erro:', err.message);
+    if (responseStatus) console.error('  Status:', responseStatus);
+    if (responseData) console.error('  Response:', JSON.stringify(responseData).substring(0, 500));
+    console.error('  Telefone:', telefone);
+    console.error('  Salao:', salao?.slug || salao?.id || 'desconhecido');
+    console.error('  Instance:', salao?.evolutionInstance || process.env.EVOLUTION_INSTANCE || 'n/a');
+    console.error('  URL:', salao?.evolutionUrl || process.env.EVOLUTION_API_URL || 'n/a');
   }
 }
 
