@@ -1,4 +1,4 @@
-﻿import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import {
   Activity,
@@ -92,6 +92,7 @@ export default function Profissionais() {
   const [novaCategoria, setNovaCategoria] = useState('');
   const [form, setForm] = useState(EMPTY_FORM);
   const [modalOpen, setModalOpen] = useState(false);
+  const [actionMenuModal, setActionMenuModal] = useState(null);
   const [activeTab, setActiveTab] = useState('geral');
   const [editingId, setEditingId] = useState(null);
   const [saving, setSaving] = useState(false);
@@ -129,7 +130,7 @@ export default function Profissionais() {
     setModalOpen(true);
   }
 
-  function openEdit(profissional) {
+  function openEdit(profissional, tab = 'geral') {
     setForm({
       nome: profissional.nome || '',
       bio: profissional.bio || '',
@@ -164,7 +165,7 @@ export default function Profissionais() {
       bonusMetaPercent: profissional.bonusMetaPercent || 0,
     });
     setEditingId(profissional.id);
-    setActiveTab('geral');
+    setActiveTab(tab);
     setModalOpen(true);
   }
 
@@ -403,17 +404,6 @@ export default function Profissionais() {
                     <Activity size={12} className="text-gray-900 dark:text-white" />
                   </span>
                 </div>
-
-                <div className="flex flex-col gap-2">
-                  <button onClick={() => openEdit(profissional)} className="rounded-2xl border border-gray-200 dark:border-white/5 bg-white/[0.04] p-3 text-gray-500 dark:text-white/66 transition hover:text-gray-900 dark:text-white">
-                    <Edit3 size={16} />
-                  </button>
-                  {!isScopedProfessional && (
-                    <button onClick={() => handleDelete(profissional.id)} className="rounded-2xl border border-gray-200 dark:border-white/5 bg-white/[0.04] p-3 text-gray-500 dark:text-white/66 transition hover:text-red-200">
-                      <Trash2 size={16} />
-                    </button>
-                  )}
-                </div>
               </div>
 
               <div className="mt-4 sm:mt-5">
@@ -456,15 +446,14 @@ export default function Profissionais() {
               </div>
 
               <div className="mt-4 sm:mt-6 grid grid-cols-2 gap-2 sm:gap-3">
-                <button onClick={() => openSchedules(profissional)} className="rounded-xl sm:rounded-[1.3rem] bg-gradient-to-r from-[#E29BA8] to-[#d48997] text-[#111116] px-3 py-3 sm:px-4 sm:py-4 text-[9px] sm:text-[10px] font-black uppercase tracking-[0.22em]">
-                  <span className="inline-flex items-center gap-2">
-                    <Calendar size={14} />
-                    Escala
-                  </span>
+                <button onClick={() => setActionMenuModal(profissional)} className="rounded-xl sm:rounded-[1.3rem] border border-gray-200 dark:border-white/5 bg-white/[0.04] px-3 py-3 sm:px-4 sm:py-4 text-[9px] sm:text-[10px] font-black uppercase tracking-[0.22em] text-gray-600 dark:text-white/74 flex items-center justify-center gap-2 transition hover:bg-white/[0.08] hover:text-gray-900 dark:hover:text-white">
+                  <Edit3 size={14} />
+                  Editar
                 </button>
-                <div className="rounded-xl sm:rounded-[1.3rem] border border-gray-200 dark:border-white/5 bg-white/[0.04] px-3 py-3 sm:px-4 sm:py-4 text-center text-[9px] sm:text-[10px] font-black uppercase tracking-[0.22em] text-gray-600 dark:text-white/74 flex items-center justify-center">
-                  ProduÃ§Ã£o
-                </div>
+                <button onClick={() => openSchedules(profissional)} className="rounded-xl sm:rounded-[1.3rem] bg-gradient-to-r from-[#E29BA8] to-[#d48997] text-[#111116] px-3 py-3 sm:px-4 sm:py-4 text-[9px] sm:text-[10px] font-black uppercase tracking-[0.22em] flex items-center justify-center gap-2">
+                  <Calendar size={14} />
+                  Escala
+                </button>
               </div>
             </motion.article>
           ))}
@@ -752,6 +741,52 @@ export default function Profissionais() {
                   </button>
                 </div>
               </form>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {actionMenuModal && (
+        <div className="fixed inset-0 z-[120] flex items-center justify-center bg-black/82 p-4 backdrop-blur-md">
+          <div className="w-full max-w-sm rounded-[2rem] border border-gray-200 dark:border-white/5 bg-white dark:bg-[#1a171f] p-6 shadow-2xl">
+            <div className="flex items-center justify-between mb-6">
+              <h3 className="text-2xl font-brand-display text-gray-900 dark:text-white">Opções</h3>
+              <button onClick={() => setActionMenuModal(null)} className="rounded-2xl border border-gray-200 dark:border-white/5 bg-white/[0.04] p-3 text-gray-600 dark:text-white/60 transition hover:text-gray-900 dark:text-white">
+                <X size={18} />
+              </button>
+            </div>
+            
+            <div className="flex flex-col gap-3">
+              <button onClick={() => { openEdit(actionMenuModal, 'geral'); setActionMenuModal(null); }} className="flex items-center gap-3 rounded-[1.2rem] border border-gray-200 dark:border-white/5 bg-white/[0.02] p-4 text-left transition hover:bg-white/[0.06]">
+                <User size={18} className="text-gray-500 dark:text-white/60" />
+                <div>
+                  <p className="text-sm font-bold text-gray-900 dark:text-white">Perfil Geral</p>
+                  <p className="text-[11px] text-gray-500 dark:text-white/40">Nome, biografia, foto e comissão</p>
+                </div>
+              </button>
+              
+              <button onClick={() => { openEdit(actionMenuModal, 'servicos'); setActionMenuModal(null); }} className="flex items-center gap-3 rounded-[1.2rem] border border-gray-200 dark:border-white/5 bg-white/[0.02] p-4 text-left transition hover:bg-white/[0.06]">
+                <Scissors size={18} className="text-[#e29ba8]" />
+                <div>
+                  <p className="text-sm font-bold text-gray-900 dark:text-white">Serviços e Preços</p>
+                  <p className="text-[11px] text-gray-500 dark:text-white/40">O que este profissional atende</p>
+                </div>
+              </button>
+
+              <button onClick={() => { openEdit(actionMenuModal, 'banco'); setActionMenuModal(null); }} className="flex items-center gap-3 rounded-[1.2rem] border border-gray-200 dark:border-white/5 bg-white/[0.02] p-4 text-left transition hover:bg-white/[0.06]">
+                <CreditCard size={18} className="text-blue-400" />
+                <div>
+                  <p className="text-sm font-bold text-gray-900 dark:text-white">Dados Financeiros</p>
+                  <p className="text-[11px] text-gray-500 dark:text-white/40">Banco, PIX e repasses</p>
+                </div>
+              </button>
+
+              {!isScopedProfessional && (
+                <button onClick={() => { handleDelete(actionMenuModal.id); setActionMenuModal(null); }} className="mt-2 flex items-center justify-center gap-2 rounded-[1.2rem] border border-red-500/20 bg-red-500/10 p-4 text-left transition hover:bg-red-500/20">
+                  <Trash2 size={16} className="text-red-400" />
+                  <span className="text-sm font-bold text-red-400">Excluir profissional</span>
+                </button>
+              )}
             </div>
           </div>
         </div>
