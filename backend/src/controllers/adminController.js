@@ -35,7 +35,7 @@ const {
 const { notificarClienteAgendamento } = require('../services/whatsappService');
 
 function isScopedProfessional(req) {
-  return req.user?.role === 'profissional' && !!req.user?.profissionalId;
+  return String(req.user?.role).toLowerCase() === 'profissional' && !!req.user?.profissionalId;
 }
 
 function getScopedProfessionalId(req, requestedProfessionalId) {

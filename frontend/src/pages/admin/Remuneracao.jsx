@@ -288,9 +288,13 @@ function SummaryCard({ label, value, tone = 'default', icon }) {
 }
 
 export default function Remuneracao() {
+  const role = localStorage.getItem('salao_user_role');
+  const myPid = localStorage.getItem('salao_user_pid');
+  const isScopedProfessional = String(role).toLowerCase() === 'profissional' && !!myPid;
+
   const [dataInicio, setDataInicio] = useState(format(new Date(), 'yyyy-MM-01'));
   const [dataFim, setDataFim] = useState(format(new Date(), 'yyyy-MM-dd'));
-  const [profissionalId, setProfissionalId] = useState('');
+  const [profissionalId, setProfissionalId] = useState(isScopedProfessional ? myPid : '');
   const [profissionais, setProfissionais] = useState([]);
   const [agendamentos, setAgendamentos] = useState([]);
   const [lancamentos, setLancamentos] = useState([]);
@@ -302,10 +306,6 @@ export default function Remuneracao() {
   const [formLancamento, setFormLancamento] = useState(FORM_INICIAL);
   const [caixaStatus, setCaixaStatus] = useState(null);
   const [loadingCaixaStatus, setLoadingCaixaStatus] = useState(false);
-
-  const role = localStorage.getItem('salao_user_role');
-  const myPid = localStorage.getItem('salao_user_pid');
-  const isScopedProfessional = String(role).toLowerCase() === 'profissional' && !!myPid;
 
   useEffect(() => {
     fetchProfissionais();
