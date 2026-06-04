@@ -1,182 +1,89 @@
-# BellaPro Agenda
+﻿# 💅 BellaPro Agenda
 
-Plataforma SaaS multi-tenant para operação de salões de beleza, com:
+**A plataforma SaaS definitiva para salões de beleza, barbearias e clínicas de estética.**
 
-- landing e agendamento público por `slug`
-- painel administrativo do salão
-- painel superadmin da plataforma
-- WhatsApp + IA
-- billing SaaS com faturas via PIX
+O BellaPro Agenda não é apenas um sistema de agendamentos. É uma solução completa e inteligente (multi-tenant) desenhada para automatizar e escalar a operação de negócios de beleza. Com integração nativa de Inteligência Artificial e WhatsApp, o BellaPro coloca o seu salão no piloto automático.
 
-## Documentação
+---
 
-A documentação técnica e operacional está em [docs/README.md](./docs/README.md).
+## 🌟 Visão Geral
 
-Leituras principais:
+Seja você um salão de bairro ou uma rede de clínicas, o BellaPro Agenda oferece todas as ferramentas para atrair clientes, gerenciar profissionais, controlar o caixa e reduzir faltas, tudo em uma interface moderna e intuitiva. 
 
-- [Arquitetura](./docs/architecture.md)
-- [Runtime](./docs/runtime.md)
-- [Segurança](./docs/security.md)
-- [Deploy em VPS](./docs/deploy-vps.md)
-- [Checklist](./docs/checklist.md)
+### O que o BellaPro faz pelo seu negócio?
+- **Página de Agendamento Pública:** Uma landing page personalizada (seusalao.bellapro.com) onde seus clientes podem agendar horários 24 horas por dia.
+- **Atendimento Mágico com IA + WhatsApp:** Responda clientes, tire dúvidas e confirme agendamentos automaticamente usando Inteligência Artificial integrada ao WhatsApp do salão.
+- **Gestão de Equipe e Comissões:** Controle a escala, serviços e a remuneração de cada profissional com transparência e segurança.
+- **Painel Financeiro e PDV:** Fluxo de caixa, controle de vales/descontos e visão clara da saúde financeira do negócio.
+- **Gestão SaaS (Superadmin):** Para quem administra a plataforma, controle total de assinantes, planos e cobranças recorrentes (Billing SaaS com faturas via PIX).
 
-## Stack
+---
 
-- Frontend: React + Vite + Tailwind
-- Backend: Node.js + Express
-- Banco: PostgreSQL + Prisma
-- Integrações: Evolution API, Gemini, Nodemailer
+## 🚀 Principais Funcionalidades
 
-## Como rodar localmente
+### Para o Salão (Painel Admin)
+- **Agenda Inteligente:** Visão diária, semanal e mensal. Filtro por profissional e status do atendimento.
+- **Gestão de Profissionais:** Cadastro de carreiras, serviços, comissões, horários de trabalho e relatórios de produtividade.
+- **Financeiro Simplificado:** Controle de contas a pagar/receber, fechamento de caixa diário e gestão de repasses.
+- **Inbox Centralizado:** Converse com seus clientes pelo WhatsApp diretamente pelo painel do salão.
+- **Notificações:** Alertas automáticos de cobrança, confirmação e lembretes para reduzir os *no-shows* (faltas).
 
-### Backend
+### Para o Cliente Final
+- **Agendamento Online 24/7:** Escolha do serviço, profissional e horário sem precisar ligar ou mandar mensagem.
+- **Lembretes via WhatsApp:** O cliente recebe a confirmação e lembretes amigáveis para não esquecer do horário.
 
-```bash
+### Para o Dono da Plataforma (Painel Superadmin)
+- **Billing Automatizado:** Cobrança recorrente dos salões via PIX, com suspensão automática de inadimplentes.
+- **Gestão de Planos:** Criação de pacotes (ex: Básico, Pro, Elite) com limites de profissionais e funcionalidades.
+
+---
+
+## 💡 Diferenciais Tecnológicos
+
+- **Inteligência Artificial (Gemini):** O bot não apenas responde, mas *entende* o contexto do cliente, os horários disponíveis e os serviços oferecidos.
+- **Arquitetura Multi-tenant Robusta:** Dados de cada salão são isolados com segurança total.
+- **Design Premium:** Interfaces limpas, responsivas (mobile-first) e focadas na melhor experiência de uso (UX/UI).
+
+---
+
+## 💻 Documentação Técnica
+
+Para desenvolvedores e administradores de sistema, o BellaPro é construído com tecnologias modernas: **React, Vite, Node.js, Express, PostgreSQL e Prisma**.
+
+Toda a documentação técnica, arquitetura e guias de instalação/deploy foram movidos para a pasta /docs. 
+
+Acesse os guias técnicos abaixo:
+- 🏗️ [Arquitetura e Stack](./docs/architecture.md)
+- ⚙️ [Configuração e Runtime](./docs/runtime.md)
+- 🔒 [Hardening e Segurança](./docs/security.md)
+- 🚀 [Guia de Deploy (VPS e Easypanel)](./docs/deploy-vps.md)
+- ✅ [Checklist de Lançamento](./docs/checklist.md)
+
+### Como rodar localmente (Resumo)
+
+**1. Backend:**
+\\\ash
 cd backend
 npm install
 cp .env.example .env
 npx prisma db push
 node prisma/seed.js
 npm run dev
-```
+\\\
+*(O backend rodará em http://localhost:3001)*
 
-Backend padrão: `http://localhost:3001`
-
-Variáveis obrigatórias no `backend/.env`:
-
-- `DATABASE_URL`
-- `JWT_SECRET`
-- `WEBHOOK_SECRET`
-- `SUPERADMIN_EMAIL`
-- `SUPERADMIN_SENHA`
-- `APP_URL`
-- `CORS_ORIGINS`
-
-Variáveis recomendadas:
-
-- `NODE_ENV=production` em deploy
-- `TRUST_PROXY=1` atrás de proxy reverso
-- `EMAIL_HOST`
-- `EMAIL_PORT`
-- `EMAIL_USER`
-- `EMAIL_PASS`
-- `EMAIL_FROM`
-
-### Frontend
-
-```bash
+**2. Frontend:**
+\\\ash
 cd frontend
 npm install
 cp .env.example .env
 npm run dev
-```
+\\\
+*(O frontend rodará em http://localhost:5173)*
 
-Frontend padrão: `http://localhost:5173`
+> **Acessos Padrão (após o seed):**
+> - Painel admin: \dmin@salao.com\ / \dmin123\
+> - Superadmin: Conforme definido nas variáveis \SUPERADMIN_EMAIL\ e \SUPERADMIN_SENHA\.
 
-Variáveis do `frontend/.env`:
-
-- `VITE_API_URL`
-- `VITE_WEBHOOK_SECRET`
-
-## Acessos após seed
-
-- Painel admin: `http://localhost:5173/admin/login`
-  - `admin@salao.com`
-  - `admin123`
-- Superadmin:
-  - definido por `SUPERADMIN_EMAIL`
-  - definido por `SUPERADMIN_SENHA`
-
-## Billing SaaS
-
-O sistema agora possui billing centralizado no superadmin:
-
-- configuração global de PIX
-- preços dos planos no superadmin
-- geração automática de faturas mensais por plano
-- painel de faturas para o salão
-- alerta no dashboard do salão quando houver cobrança pendente
-
-Observação importante:
-
-- a geração automática depende do schema mais recente
-- após atualizar o backend em produção, rode `npx prisma db push`
-
-## Segurança
-
-Estado atual de hardening relevante:
-
-- cookies `httpOnly` para sessão admin e superadmin
-- webhook protegido por `?token=WEBHOOK_SECRET`
-- superadmin obrigatório no boot, sem fallback inseguro
-- upload autenticado
-- rate limit nas rotas sensíveis
-- hash de token de reset de senha
-- isolamento por tenant em rotas críticas
-
-## Importação de clientes
-
-Hoje o sistema importa clientes por CSV na área de migração.
-
-Formato aceito:
-
-- `nome`
-- `apelido`
-- `telefone`
-- `email`
-- `instagram`
-- `cpf`
-- `rg`
-- `sexo`
-- `dataNascimento`
-- `endereco`
-- `numero`
-- `complemento`
-- `bairro`
-- `cep`
-- `cidade`
-- `estado`
-
-## Deploy
-
-### VPS tradicional
-
-Use:
-
-- [docs/deploy-vps.md](./docs/deploy-vps.md)
-
-### Easypanel
-
-Resumo prático:
-
-- backend com build path `/backend`
-- frontend com build path `/frontend`
-- `Dockerfile` em ambos
-- backend exposto na porta `3001`
-- frontend apontando para `VITE_API_URL`
-- depois do deploy, rodar `npx prisma db push` no backend
-
-## Estrutura
-
-```text
-backend/
-  prisma/
-  src/
-    controllers/
-    routes/
-    services/
-    lib/
-
-frontend/
-  src/
-    assets/
-    components/
-    pages/
-    services/
-
-docs/
-  architecture.md
-  runtime.md
-  security.md
-  deploy-vps.md
-```
+---
+*BellaPro Agenda - Desenvolvido para escalar a beleza.*
