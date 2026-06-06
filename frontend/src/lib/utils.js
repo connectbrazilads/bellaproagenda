@@ -95,11 +95,11 @@ export function normalizePhone(value = '') {
 export function isSameClientDayAgendamento(base, candidate) {
   if (!base || !candidate) return false;
 
-  if (base.comandaId && candidate.comandaId) {
+  if (base.comandaId || candidate.comandaId) {
     return base.comandaId === candidate.comandaId;
   }
 
-  if (base.grupoAtendimentoId && candidate.grupoAtendimentoId) {
+  if (base.grupoAtendimentoId || candidate.grupoAtendimentoId) {
     return base.grupoAtendimentoId === candidate.grupoAtendimentoId;
   }
 

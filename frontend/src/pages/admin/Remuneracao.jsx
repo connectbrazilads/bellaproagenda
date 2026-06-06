@@ -99,9 +99,13 @@ function LancamentoModal({
           <div className="mb-8 flex items-start justify-between gap-4">
             <div>
               <p className="text-[10px] font-black uppercase tracking-[0.28em] text-[#d48997]">Remuneracao</p>
-              <h2 className="mt-2 text-3xl font-black tracking-tighter text-gray-900 dark:text-white">Novo vale ou desconto</h2>
+              <h2 className="mt-2 text-3xl font-black tracking-tighter text-gray-900 dark:text-white">
+                {form.tipo === 'bonificacao' ? 'Nova bonificação' : 'Novo vale ou desconto'}
+              </h2>
               <p className="mt-3 text-sm text-gray-500 dark:text-white/58">
-                Registre um adiantamento para o profissional ou um desconto que sera abatido nas proximas comissoes.
+                {form.tipo === 'bonificacao'
+                  ? 'Registre uma bonificação extra para o profissional que será somada ao próximo repasse.'
+                  : 'Registre um adiantamento para o profissional ou um desconto que será abatido nas próximas comissões.'}
               </p>
             </div>
             <button
@@ -156,6 +160,7 @@ function LancamentoModal({
               >
                 <option value="adiantamento">Adiantamento / Vale</option>
                 <option value="desconto">Desconto</option>
+                <option value="bonificacao">Bonificação</option>
               </select>
             </Field>
 
@@ -227,7 +232,7 @@ function LancamentoModal({
                   onChange={(event) => setForm((prev) => ({ ...prev, descricao: event.target.value }))}
                   rows={4}
                   className="w-full rounded-[1.25rem] border border-gray-200 bg-gray-50 px-4 py-4 text-sm font-medium text-gray-900 outline-none focus:border-[#d48997] dark:border-white/10 dark:bg-white/5 dark:text-white"
-                  placeholder="Ex.: vale para urgencia, desconto por quebra de material, etc."
+                  placeholder={form.tipo === 'bonificacao' ? 'Ex.: bonus por meta batida, bonificacao de feriado, etc.' : 'Ex.: vale para urgencia, desconto por quebra de material, etc.'}
                 />
               </Field>
             </div>
@@ -247,7 +252,7 @@ function LancamentoModal({
               onClick={() => onSave(isScopedProfessional ? { ...form, profissionalId: myPid } : form)}
               className="flex-1 rounded-[1.4rem] bg-[#d48997] px-6 py-4 text-[11px] font-black uppercase tracking-[0.22em] text-white shadow-xl shadow-[#d48997]/25 transition hover:bg-[#c77888] disabled:cursor-not-allowed disabled:opacity-60"
             >
-              {saving ? 'Salvando...' : 'Registrar lancamento'}
+              {saving ? 'Salvando...' : form.tipo === 'bonificacao' ? 'Registrar bonificacao' : 'Registrar lancamento'}
             </button>
           </div>
         </motion.div>
@@ -467,6 +472,7 @@ export default function Remuneracao() {
           totalPendente: 0,
           totalVales: 0,
           totalDescontos: 0,
+          totalBonificacoes: 0,
           totalSaldo: 0,
           bonusEstimado: 0,
           atendimentos: 0,
@@ -514,6 +520,8 @@ export default function Remuneracao() {
         prof.totalVales += saldoAberto;
       } else if (lancamento.tipo === 'desconto') {
         prof.totalDescontos += saldoAberto;
+      } else if (lancamento.tipo === 'bonificacao') {
+        prof.totalBonificacoes += saldoAberto;
       }
 
       prof.lancamentos.push({
@@ -526,7 +534,7 @@ export default function Remuneracao() {
       if (Number(prof.metaMensal || 0) > 0 && prof.totalBruto >= Number(prof.metaMensal || 0)) {
         prof.bonusEstimado = Number(prof.bonusMetaValor || 0) + ((prof.totalBruto * Number(prof.bonusMetaPercent || 0)) / 100);
       }
-      prof.totalSaldo = prof.totalPendente - prof.totalVales - prof.totalDescontos;
+      prof.totalSaldo = prof.totalPendente + prof.totalBonificacoes - prof.totalVales - prof.totalDescontos;
       prof.lancamentos.sort((a, b) => new Date(b.data) - new Date(a.data));
     });
 
@@ -544,6 +552,7 @@ export default function Remuneracao() {
       acc.totalPendente += Number(prof.totalPendente || 0);
       acc.totalVales += Number(prof.totalVales || 0);
       acc.totalDescontos += Number(prof.totalDescontos || 0);
+      acc.totalBonificacoes += Number(prof.totalBonificacoes || 0);
       acc.totalSaldo += Number(prof.totalSaldo || 0);
       return acc;
     }, {
@@ -551,6 +560,7 @@ export default function Remuneracao() {
       totalPendente: 0,
       totalVales: 0,
       totalDescontos: 0,
+      totalBonificacoes: 0,
       totalSaldo: 0,
     });
   }, [profissionaisAgrupados]);
@@ -571,29 +581,50 @@ export default function Remuneracao() {
           </div>
 
           {!isScopedProfessional && (
-            <button
-              type="button"
-              onClick={() => {
-                setFormLancamento((prev) => ({
-                  ...prev,
-                  profissionalId: profissionalId || prev.profissionalId,
-                  data: format(new Date(), 'yyyy-MM-dd'),
-                }));
-                setShowModal(true);
-              }}
-              className="inline-flex min-h-[56px] items-center justify-center gap-3 rounded-full bg-[#d48997] px-7 text-sm font-black uppercase tracking-[0.24em] text-white shadow-xl shadow-[#d48997]/25 transition hover:bg-[#c77888]"
-            >
-              <PlusCircle size={18} />
-              Novo vale / desconto
-            </button>
+            <div className="flex flex-wrap gap-3">
+              <button
+                type="button"
+                onClick={() => {
+                  setFormLancamento((prev) => ({
+                    ...prev,
+                    tipo: 'bonificacao',
+                    profissionalId: profissionalId || prev.profissionalId,
+                    data: format(new Date(), 'yyyy-MM-dd'),
+                  }));
+                  setShowModal(true);
+                }}
+                className="inline-flex min-h-[56px] items-center justify-center gap-3 rounded-full bg-emerald-600 px-7 text-sm font-black uppercase tracking-[0.24em] text-white shadow-xl shadow-emerald-600/25 transition hover:bg-emerald-700"
+              >
+                <PlusCircle size={18} />
+                Bonificar
+              </button>
+
+              <button
+                type="button"
+                onClick={() => {
+                  setFormLancamento((prev) => ({
+                    ...prev,
+                    tipo: 'adiantamento',
+                    profissionalId: profissionalId || prev.profissionalId,
+                    data: format(new Date(), 'yyyy-MM-dd'),
+                  }));
+                  setShowModal(true);
+                }}
+                className="inline-flex min-h-[56px] items-center justify-center gap-3 rounded-full bg-[#d48997] px-7 text-sm font-black uppercase tracking-[0.24em] text-white shadow-xl shadow-[#d48997]/25 transition hover:bg-[#c77888]"
+              >
+                <PlusCircle size={18} />
+                Novo vale / desconto
+              </button>
+            </div>
           )}
         </div>
       </header>
 
-      <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-5">
+      <section className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
         <SummaryCard label="Comissao a receber" value={resumoGeral.totalPendente} tone="rose" icon={<DollarSign size={18} />} />
         <SummaryCard label="Vales em aberto" value={resumoGeral.totalVales} tone="amber" icon={<Wallet size={18} />} />
         <SummaryCard label="Descontos em aberto" value={resumoGeral.totalDescontos} tone="amber" icon={<MinusCircle size={18} />} />
+        <SummaryCard label="Bonificacoes" value={resumoGeral.totalBonificacoes} tone="default" icon={<PlusCircle size={18} className="text-emerald-500" />} />
         <SummaryCard label="Saldo liquido" value={resumoGeral.totalSaldo} tone={resumoGeral.totalSaldo >= 0 ? 'default' : 'rose'} icon={<CreditCard size={18} />} />
         <SummaryCard label="Volume bruto" value={resumoGeral.totalBruto} tone="ink" icon={<Users size={18} />} />
       </section>
@@ -734,10 +765,11 @@ export default function Remuneracao() {
                       className="border-t border-gray-100 dark:border-white/5"
                     >
                       <div className="space-y-8 p-6 md:p-8">
-                        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+                        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
                           <SummaryCard label="Comissao a receber" value={prof.totalPendente} tone="rose" icon={<DollarSign size={16} />} />
                           <SummaryCard label="Vales" value={prof.totalVales} tone="amber" icon={<Wallet size={16} />} />
                           <SummaryCard label="Descontos" value={prof.totalDescontos} tone="amber" icon={<MinusCircle size={16} />} />
+                          <SummaryCard label="Bonificacoes" value={prof.totalBonificacoes} tone="default" icon={<PlusCircle size={16} className="text-emerald-500" />} />
                           <SummaryCard label="Saldo liquido" value={prof.totalSaldo} tone={prof.totalSaldo >= 0 ? 'default' : 'rose'} icon={<CreditCard size={16} />} />
                         </div>
 
@@ -869,10 +901,12 @@ export default function Remuneracao() {
                                             'rounded-full px-3 py-1 text-[10px] font-black uppercase tracking-[0.18em]',
                                             lancamento.tipo === 'adiantamento'
                                               ? 'bg-amber-400/12 text-amber-200'
-                                              : 'bg-rose-400/12 text-rose-300'
+                                              : lancamento.tipo === 'desconto'
+                                                ? 'bg-rose-400/12 text-rose-300'
+                                                : 'bg-emerald-400/12 text-emerald-300'
                                           )}
                                         >
-                                          {lancamento.tipo === 'adiantamento' ? 'Vale' : 'Desconto'}
+                                          {lancamento.tipo === 'adiantamento' ? 'Vale' : lancamento.tipo === 'desconto' ? 'Desconto' : 'Bonificação'}
                                         </span>
                                       </td>
                                       <td className="px-4 py-4 text-sm text-gray-600 dark:text-white/68">
@@ -885,7 +919,7 @@ export default function Remuneracao() {
                                         {formatMoney(lancamento.valorCompensado)}
                                       </td>
                                       <td className="px-4 py-4 text-right">
-                                        <span className={cn('text-sm font-black', lancamento.saldoAberto > 0 ? 'text-amber-200' : 'text-[#d48997]')}>
+                                        <span className={cn('text-sm font-black', lancamento.tipo === 'bonificacao' ? 'text-emerald-300' : lancamento.saldoAberto > 0 ? 'text-amber-200' : 'text-[#d48997]')}>
                                           {formatMoney(lancamento.saldoAberto)}
                                         </span>
                                       </td>

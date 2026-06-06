@@ -160,11 +160,11 @@ function isSameCalendarDay(a, b) {
 function isSameClientRecord(base, candidate) {
   if (!base || !candidate) return false;
 
-  if (base.comandaId && candidate.comandaId) {
+  if (base.comandaId || candidate.comandaId) {
     return base.comandaId === candidate.comandaId;
   }
 
-  if (base.grupoAtendimentoId && candidate.grupoAtendimentoId) {
+  if (base.grupoAtendimentoId || candidate.grupoAtendimentoId) {
     return base.grupoAtendimentoId === candidate.grupoAtendimentoId;
   }
 
@@ -186,10 +186,10 @@ function isSameClientRecord(base, candidate) {
 
 function isSameAttendanceGroup(base, candidate) {
   if (!base || !candidate) return false;
-  if (base.comandaId && candidate.comandaId) {
+  if (base.comandaId || candidate.comandaId) {
     return base.comandaId === candidate.comandaId;
   }
-  if (base.grupoAtendimentoId && candidate.grupoAtendimentoId) {
+  if (base.grupoAtendimentoId || candidate.grupoAtendimentoId) {
     return base.grupoAtendimentoId === candidate.grupoAtendimentoId;
   }
   return isSameCalendarDay(base.data, candidate.data) && isSameClientRecord(base, candidate);
@@ -4683,7 +4683,7 @@ async function createLancamentoRemuneracao(req, res) {
     return res.status(400).json({ error: 'Selecione um profissional.' });
   }
 
-  if (!['adiantamento', 'desconto'].includes(tipoNormalizado)) {
+  if (!['adiantamento', 'desconto', 'bonificacao'].includes(tipoNormalizado)) {
     return res.status(400).json({ error: 'Tipo de lancamento invalido.' });
   }
 
@@ -4695,7 +4695,7 @@ async function createLancamentoRemuneracao(req, res) {
     return res.status(400).json({ error: 'Informe se o valor saiu do caixa ou da conta.' });
   }
 
-  if (tipoNormalizado === 'desconto') {
+  if (tipoNormalizado === 'desconto' || tipoNormalizado === 'bonificacao') {
     origemNormalizada = null;
   }
 
@@ -4849,28 +4849,43 @@ async function updateComissaoPaga(req, res) {
 
   let saldoParaCompensar = totalComissao;
   let totalCompensado = 0;
+  let totalBonificado = 0;
   const operacoesLancamentos = [];
 
   for (const lancamento of lancamentosAbertos) {
     const saldoAberto = calcularSaldoLancamento(lancamento);
-    if (saldoAberto <= 0 || saldoParaCompensar <= 0) continue;
+    if (saldoAberto <= 0) continue;
 
-    const valorCompensar = Math.min(saldoAberto, saldoParaCompensar);
-    totalCompensado += valorCompensar;
-    saldoParaCompensar -= valorCompensar;
+    if (lancamento.tipo === 'bonificacao') {
+      totalBonificado += saldoAberto;
+      operacoesLancamentos.push(
+        prisma.profissionalLancamento.update({
+          where: { id: lancamento.id },
+          data: {
+            valorCompensado: lancamento.valor,
+            compensadoEm: agora,
+          },
+        })
+      );
+    } else {
+      if (saldoParaCompensar <= 0) continue;
+      const valorCompensar = Math.min(saldoAberto, saldoParaCompensar);
+      totalCompensado += valorCompensar;
+      saldoParaCompensar -= valorCompensar;
 
-    const novoValorCompensado = Number(lancamento.valorCompensado || 0) + valorCompensar;
-    const totalmenteCompensado = (Number(lancamento.valor || 0) - novoValorCompensado) <= 0.0001;
+      const novoValorCompensado = Number(lancamento.valorCompensado || 0) + valorCompensar;
+      const totalmenteCompensado = (Number(lancamento.valor || 0) - novoValorCompensado) <= 0.0001;
 
-    operacoesLancamentos.push(
-      prisma.profissionalLancamento.update({
-        where: { id: lancamento.id },
-        data: {
-          valorCompensado: novoValorCompensado,
-          compensadoEm: totalmenteCompensado ? agora : lancamento.compensadoEm,
-        },
-      })
-    );
+      operacoesLancamentos.push(
+        prisma.profissionalLancamento.update({
+          where: { id: lancamento.id },
+          data: {
+            valorCompensado: novoValorCompensado,
+            compensadoEm: totalmenteCompensado ? agora : lancamento.compensadoEm,
+          },
+        })
+      );
+    }
   }
 
   await prisma.$transaction([
@@ -4885,18 +4900,21 @@ async function updateComissaoPaga(req, res) {
     ...operacoesLancamentos,
   ]);
 
+  const valorLiquidoRepasse = totalComissao + totalBonificado - totalCompensado;
+
   await createAuditLog({
     salaoId,
     usuarioId: req.user.id,
     acao: 'remuneracao.liquidar',
     entidade: 'profissional',
     entidadeId: profissionalIdAlvo,
-    mensagem: 'Repasse de comissao liquidado com compensacao de vales e descontos',
+    mensagem: 'Repasse de comissao liquidado com compensacao de vales, descontos e bonificacoes',
     contexto: {
       ids: agendamentosPendentes.map((item) => item.id),
       totalComissao,
       totalCompensado,
-      valorLiquidoRepasse: totalComissao - totalCompensado,
+      totalBonificado,
+      valorLiquidoRepasse,
     },
     req,
   });
@@ -4906,7 +4924,8 @@ async function updateComissaoPaga(req, res) {
     profissionalId: profissionalIdAlvo,
     totalComissao,
     totalCompensado,
-    valorLiquidoRepasse: totalComissao - totalCompensado,
+    totalBonificado,
+    valorLiquidoRepasse,
   });
 }
 

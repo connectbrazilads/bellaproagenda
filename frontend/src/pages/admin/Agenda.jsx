@@ -2186,7 +2186,22 @@ function ModalDetalhesAgendamento({ agendamento: initialAgendamento, allAgendame
                       <div className="rounded-[2rem] border border-[#E29BA8]/20 bg-[#E29BA8]/8 p-5 dark:bg-[#E29BA8]/10">
                         <p className="text-[11px] font-black uppercase tracking-[0.3em] text-[#b96a79] dark:text-[#efbac2]">Pagamento confirmado</p>
                         <p className="mt-3 text-2xl font-black text-[#d48997] dark:text-white">{Number(calculateTotal()).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</p>
-                        <p className="mt-2 text-sm text-gray-600 dark:text-white/55">Se precisar mudar algo, reabra a comanda e depois refaça o fechamento.</p>
+                        {agendamento.pagamentos && agendamento.pagamentos.length > 0 && (
+                          <div className="mt-3 flex flex-wrap gap-2">
+                            {agendamento.pagamentos.map((pag, idx) => (
+                              <span key={idx} className="inline-flex items-center gap-1.5 rounded-xl bg-white/60 dark:bg-white/10 px-3 py-1.5 text-[10px] font-black uppercase tracking-[0.12em] text-[#d48997] dark:text-white border border-[#E29BA8]/20">
+                                {pag.forma === 'PIX' ? '⚡ PIX' 
+                                 : pag.forma === 'Dinheiro' ? '💵 Dinheiro' 
+                                 : pag.forma === 'Cartao de Credito' ? '💳 Crédito' 
+                                 : pag.forma === 'Cartao de Debito' ? '💳 Débito' 
+                                 : pag.forma === 'Cartao Parcelado' ? '💳 Parcelado' 
+                                 : `💳 ${pag.forma}`}
+                                {agendamento.pagamentos.length > 1 && ` (${Number(pag.valor).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })})`}
+                              </span>
+                            ))}
+                          </div>
+                        )}
+                        <p className="mt-3 text-sm text-gray-600 dark:text-white/55">Se precisar mudar algo, reabra a comanda e depois refaça o fechamento.</p>
                       </div>
                       <div className="grid gap-3 sm:grid-cols-2">
                         <button type="button" onClick={() => enviarComprovanteWhatsapp({ reenvio: true })} className="rounded-[2rem] bg-[#25D366] px-5 py-5 text-[11px] font-black uppercase tracking-[0.2em] text-white transition hover:scale-[1.01]">
@@ -2210,6 +2225,7 @@ function ModalDetalhesAgendamento({ agendamento: initialAgendamento, allAgendame
                         <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2">
                           {[
                             { label: 'PIX', forma: 'PIX', icon: Smartphone, color: 'text-[#E29BA8]' },
+                            { label: 'Cartão Parcelado', forma: 'Cartao Parcelado', icon: CreditCard, color: 'text-rose-500' },
                             { label: 'Cartao de Credito', forma: 'Cartao de Credito', icon: CreditCard, color: 'text-[#E29BA8]' },
                             { label: 'Cartao de Debito', forma: 'Cartao de Debito', icon: CreditCard, color: 'text-indigo-500' },
                             { label: 'Dinheiro', forma: 'Dinheiro', icon: Banknote, color: 'text-bellapro-blush' },
