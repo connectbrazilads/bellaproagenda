@@ -2191,7 +2191,7 @@ async function executarConclusaoAgendamento(agId, salaoId) {
 
   // 4. Baixar sessões de pacote
   let saldoRestante = null;
-  if (ag.pacoteId && ag.clienteId) {
+  if (ag.pacoteId && ag.clienteId && ag.servicoId) {
     const cp = await prisma.clientePacote.findFirst({
       where: { clienteId: ag.clienteId, pacoteId: ag.pacoteId, sessoesRestantes: { gt: 0 } }
     });
@@ -3514,6 +3514,138 @@ async function getClientePacotes(req, res) {
     res.json(pacotes);
   } catch (error) {
     res.status(500).json({ error: 'Erro ao buscar pacotes do cliente' });
+  }
+}
+
+async function venderPacoteCliente(req, res) {
+  const { clienteId } = req.params;
+  const { pacoteId, sessoesRestantes, precoPago, formaPagamento, profissionalId } = req.body;
+  const salaoId = req.user.salaoId;
+
+  if (!pacoteId || !sessoesRestantes || precoPago === undefined || !formaPagamento) {
+    return res.status(400).json({ error: 'Campos obrigatórios ausentes: pacoteId, sessoesRestantes, precoPago, formaPagamento.' });
+  }
+
+  try {
+    // 1. Validar se o caixa está aberto (já que haverá movimentação de dinheiro no salão)
+    const caixaAberto = await getCaixaAberto(salaoId);
+    if (!caixaAberto) {
+      return res.status(400).json({ error: 'Abra o caixa antes de registrar vendas de pacotes.' });
+    }
+
+    // 2. Verificar se o cliente existe
+    const cliente = await prisma.cliente.findFirst({
+      where: { id: clienteId, salaoId }
+    });
+    if (!cliente) {
+      return res.status(404).json({ error: 'Cliente não encontrado' });
+    }
+
+    // 3. Verificar se o pacote existe
+    const pacote = await prisma.pacote.findFirst({
+      where: { id: pacoteId, salaoId }
+    });
+    if (!pacote) {
+      return res.status(404).json({ error: 'Pacote não encontrado' });
+    }
+
+    // 4. Se profissionalId não for informado, pega o primeiro profissional ativo marcado como caixa, ou cria um dedicado "Caixa (PDV)"
+    let finalProfId = profissionalId;
+    if (!finalProfId) {
+      let profCaixa = await prisma.profissional.findFirst({ where: { salaoId, caixa: true } });
+      if (!profCaixa) {
+        profCaixa = await prisma.profissional.create({
+          data: {
+            salaoId,
+            nome: 'Caixa (PDV)',
+            caixa: true,
+            comissaoPercent: 0,
+            ativo: true,
+          }
+        });
+      }
+      finalProfId = profCaixa.id;
+    }
+
+    // 5. Criar registro de ClientePacote
+    const clientePacote = await prisma.clientePacote.create({
+      data: {
+        clienteId,
+        pacoteId,
+        sessoesRestantes: Number(sessoesRestantes),
+      },
+      include: {
+        pacote: true
+      }
+    });
+
+    // 6. Criar comanda fictícia e agendamento fictício para registrar na contabilidade e sessão do caixa
+    const agora = new Date();
+    const horaAtual = `${String(agora.getHours()).padStart(2, '0')}:${String(agora.getMinutes()).padStart(2, '0')}`;
+    const dataOperacional = new Date(agora.toISOString().split('T')[0] + 'T00:00:00');
+
+    const comanda = await createComanda({
+      salaoId,
+      clienteId,
+      clienteNome: cliente.nome,
+      clienteTelefone: cliente.telefone,
+      data: dataOperacional,
+      origem: 'pdv',
+      observacao: `Venda do Pacote: ${pacote.nome}`,
+    });
+
+    await prisma.agendamento.create({
+      data: {
+        salaoId,
+        comandaId: comanda.id,
+        grupoAtendimentoId: createGrupoAtendimentoId(),
+        profissionalId: finalProfId,
+        servicoId: null, // indica que é a compra do pacote em si
+        pacoteId: pacote.id,
+        clienteId,
+        clienteNome: cliente.nome,
+        clienteTelefone: cliente.telefone,
+        data: dataOperacional,
+        inicioHora: horaAtual,
+        fimHora: horaAtual,
+        status: 'concluido',
+        statusPagamento: 'pago',
+        formaPagamento,
+        valorBaseAjustado: Number(precoPago),
+        origem: 'pdv',
+        observacao: `Compra de Pacote: ${pacote.nome} (${sessoesRestantes} sessões)`,
+        pagamentos: {
+          create: {
+            forma: formaPagamento,
+            valor: Number(precoPago)
+          }
+        }
+      }
+    });
+
+    // 7. Criar Log de Auditoria
+    await createAuditLog({
+      salaoId,
+      usuarioId: req.user.id,
+      acao: 'clientes.vender_pacote',
+      entidade: 'clientePacote',
+      entidadeId: clientePacote.id,
+      mensagem: `Pacote ${pacote.nome} vendido para o cliente ${cliente.nome} (${sessoesRestantes} sessões por R$ ${precoPago})`,
+      contexto: {
+        clienteId,
+        pacoteId,
+        sessoesRestantes,
+        precoPago,
+        formaPagamento,
+        profissionalId: finalProfId
+      },
+      req
+    });
+
+    res.status(201).json(clientePacote);
+  } catch (error) {
+    console.error('Erro ao vender pacote:', error);
+    res.status(500).json({ error: 'Erro interno ao registrar venda de pacote: ' + error.message });
   }
 }
 
@@ -4940,6 +5072,7 @@ module.exports = {
   importarClientesCSV,
   getHistoricoCliente,
   getClientePacotes,
+  venderPacoteCliente,
   getRelatorio,
   getFinanceiro,
   getDashboardExecutivo,

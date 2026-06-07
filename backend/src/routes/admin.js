@@ -75,6 +75,7 @@ router.put('/clientes/:id', requirePermission('clientes'), ctrl.updateCliente);
 router.get('/clientes/buscar', requireAnyPermission(['clientes', 'agenda']), ctrl.buscarClientes);
 router.get('/clientes/historico', requirePermission('clientes'), ctrl.getHistoricoCliente);
 router.get('/clientes/:clienteId/pacotes', requireAnyPermission(['clientes', 'agenda']), ctrl.getClientePacotes);
+router.post('/clientes/:clienteId/pacotes', requirePermission('clientes'), ctrl.venderPacoteCliente);
 
 router.get('/produtos', requireAnyPermission(['produtos', 'agenda']), ctrl.getProdutos);
 router.post('/produtos', requirePermission('produtos'), ctrl.createProduto);

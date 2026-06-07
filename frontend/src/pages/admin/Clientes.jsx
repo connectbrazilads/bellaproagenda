@@ -13,6 +13,7 @@ import {
   Star,
   Users,
   X,
+  Package,
 } from 'lucide-react';
 import {
   createCliente,
@@ -20,6 +21,10 @@ import {
   getClientes,
   getHistoricoCliente,
   updateCliente,
+  getClientePacotes,
+  venderPacoteCliente,
+  getPacotes,
+  getProfissionais,
 } from '../../services/api';
 import { calculateAgendamentoTotal, cn } from '../../lib/utils';
 import useElementWidth from '../../hooks/useElementWidth';
@@ -89,6 +94,102 @@ export default function Clientes() {
   const [novoCliente, setNovoCliente] = useState(EMPTY_CLIENTE);
   const [clienteEdicao, setClienteEdicao] = useState(null);
   const [salvandoEdicao, setSalvandoEdicao] = useState(false);
+  const [pacotesCliente, setPacotesCliente] = useState([]);
+  const [loadingPacotes, setLoadingPacotes] = useState(false);
+  const [modalVendaOpen, setModalVendaOpen] = useState(false);
+  const [pacotesDisponiveis, setPacotesDisponiveis] = useState([]);
+  const [profissionais, setProfissionais] = useState([]);
+  const [vendaForm, setVendaForm] = useState({
+    pacoteId: '',
+    sessoesRestantes: 10,
+    precoPago: '',
+    formaPagamento: 'PIX',
+    profissionalId: ''
+  });
+  const [salvandoVenda, setSalvandoVenda] = useState(false);
+
+  // Carrega pacotes do cliente quando expandir
+  useEffect(() => {
+    if (expandido) {
+      const cliente = clientes.find((c) => c.id === expandido || c.telefone === expandido);
+      if (cliente) {
+        carregarPacotesCliente(cliente.id);
+      }
+    } else {
+      setPacotesCliente([]);
+    }
+  }, [expandido, clientes]);
+
+  async function carregarPacotesCliente(clienteId) {
+    setLoadingPacotes(true);
+    try {
+      const res = await getClientePacotes(clienteId);
+      setPacotesCliente(res.data || []);
+    } catch (err) {
+      console.error('Erro ao buscar pacotes do cliente:', err);
+    } finally {
+      setLoadingPacotes(false);
+    }
+  }
+
+  async function abrirVendaPacote() {
+    setVendaForm({
+      pacoteId: '',
+      sessoesRestantes: 10,
+      precoPago: '',
+      formaPagamento: 'PIX',
+      profissionalId: ''
+    });
+    setModalVendaOpen(true);
+    try {
+      const [pacotesRes, profRes] = await Promise.all([getPacotes(), getProfissionais()]);
+      setPacotesDisponiveis(pacotesRes.data || []);
+      setProfissionais(profRes.data || []);
+    } catch (err) {
+      console.error('Erro ao carregar dados para venda de pacote:', err);
+    }
+  }
+
+  function handleSelectPacote(pacoteId) {
+    const pkg = pacotesDisponiveis.find(p => p.id === pacoteId);
+    setVendaForm(prev => ({
+      ...prev,
+      pacoteId,
+      precoPago: pkg ? String(pkg.preco) : '',
+      sessoesRestantes: pkg ? (pkg.itens?.length || 10) : 10
+    }));
+  }
+
+  async function handleSalvarVenda(e) {
+    e.preventDefault();
+    if (!vendaForm.pacoteId || !vendaForm.sessoesRestantes || !vendaForm.precoPago || !vendaForm.formaPagamento) {
+      alert('Preencha todos os campos obrigatórios.');
+      return;
+    }
+    setSalvandoVenda(true);
+    try {
+      const cliente = clientes.find((c) => c.id === expandido || c.telefone === expandido);
+      if (!cliente) return;
+      await venderPacoteCliente(cliente.id, {
+        pacoteId: vendaForm.pacoteId,
+        sessoesRestantes: Number(vendaForm.sessoesRestantes),
+        precoPago: Number(vendaForm.precoPago),
+        formaPagamento: vendaForm.formaPagamento,
+        profissionalId: vendaForm.profissionalId || null
+      });
+      alert('Pacote vendido com sucesso!');
+      setModalVendaOpen(false);
+      await Promise.all([
+        carregarPacotesCliente(cliente.id),
+        carregarClientes()
+      ]);
+    } catch (err) {
+      alert(err.response?.data?.error || 'Erro ao registrar venda de pacote.');
+    } finally {
+      setSalvandoVenda(false);
+    }
+  }
+
   const pageWidth = useElementWidth(pageRef, typeof window !== 'undefined' ? window.innerWidth : 1440);
   const isCompactPage = pageWidth < 1260;
   const isTightPage = pageWidth < 980;
@@ -744,6 +845,56 @@ export default function Clientes() {
                 </section>
 
                 <section className="space-y-3.5">
+                  <div className="flex items-center justify-between">
+                    <h3 className="flex items-center gap-2 text-xs font-semibold text-gray-905 dark:text-white normal-case">
+                      <Package className="h-4 w-4 text-[#d48997]" />
+                      <span>Pacotes Adquiridos</span>
+                    </h3>
+                    <button
+                      type="button"
+                      onClick={abrirVendaPacote}
+                      className="inline-flex items-center gap-1 text-[11px] font-semibold text-[#d48997] hover:underline"
+                    >
+                      <Plus className="h-3 w-3" />
+                      <span>Vender Pacote</span>
+                    </button>
+                  </div>
+
+                  <div className="space-y-2.5">
+                    {loadingPacotes ? (
+                      <div className="flex justify-center py-4">
+                        <div className="h-5 w-5 animate-spin rounded-full border-2 border-[#d48997]/20 border-t-[#d48997]" />
+                      </div>
+                    ) : pacotesCliente.length ? (
+                      pacotesCliente.map((cp) => (
+                        <div
+                          key={cp.id}
+                          className="flex gap-4 rounded-2xl border border-black/[0.04] bg-white dark:bg-white/[0.01] dark:border-white/5 p-4 items-center justify-between"
+                        >
+                          <div className="min-w-0">
+                            <p className="truncate text-sm font-semibold text-gray-905 dark:text-white">
+                              {cp.pacote?.nome}
+                            </p>
+                            <p className="text-[10px] font-medium text-gray-400 dark:text-gray-500 mt-0.5">
+                              Adquirido em {new Date(cp.dataCompra).toLocaleDateString()}
+                            </p>
+                          </div>
+                          <div className="shrink-0 text-right">
+                            <span className="inline-flex items-center rounded-lg bg-[#d48997]/10 border border-[#d48997]/20 px-2 py-1 text-[11px] font-bold text-[#d48997]">
+                              {cp.sessoesRestantes} sessões
+                            </span>
+                          </div>
+                        </div>
+                      ))
+                    ) : (
+                      <div className="rounded-xl border border-dashed border-black/[0.06] dark:border-white/10 px-4 py-6 text-center text-xs text-gray-400">
+                        Nenhum pacote ativo cadastrado para este cliente.
+                      </div>
+                    )}
+                  </div>
+                </section>
+
+                <section className="space-y-3.5">
                   <h3 className="flex items-center gap-2 text-xs font-semibold text-gray-905 dark:text-white normal-case">
                     <History className="h-4 w-4 text-[#d48997]" />
                     <span>Histórico de Agendamentos</span>
@@ -793,6 +944,158 @@ export default function Clientes() {
                 </section>
               </div>
             </motion.aside>
+          </div>
+        )}
+      </AnimatePresence>
+
+      {/* Modal Vender Pacote */}
+      <AnimatePresence>
+        {modalVendaOpen && (
+          <div className="fixed inset-0 z-[230] flex items-center justify-center p-4">
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setModalVendaOpen(false)}
+              className="absolute inset-0 bg-black/40 backdrop-blur-sm dark:bg-black/60"
+            />
+
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95, y: 10 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 10 }}
+              className="relative z-10 w-full max-w-md overflow-hidden rounded-2xl border border-black/[0.04] dark:border-white/[0.04] bg-white dark:bg-[#18181b] shadow-xl"
+            >
+              <form onSubmit={handleSalvarVenda} className="flex flex-col">
+                {/* Modal Header */}
+                <div className="flex items-center justify-between border-b border-black/[0.04] dark:border-white/5 px-6 py-4">
+                  <div>
+                    <span className="text-[9px] font-semibold uppercase tracking-wider text-[#d48997]">
+                      Registrar Venda
+                    </span>
+                    <h2 className="mt-0.5 font-serif text-lg font-normal text-gray-900 dark:text-white">
+                      Vender Pacote
+                    </h2>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setModalVendaOpen(false)}
+                    className="rounded-full border border-black/[0.04] dark:border-white/10 p-2 text-gray-400 hover:text-red-500 transition shadow-sm"
+                  >
+                    <X className="h-4 w-4" />
+                  </button>
+                </div>
+
+                {/* Modal Body */}
+                <div className="px-6 py-5 space-y-4 text-gray-800 dark:text-gray-100">
+                  <div>
+                    <span className="mb-2 block text-[10px] font-medium text-gray-405">
+                      Selecione o Pacote <span className="text-rose-500">*</span>
+                    </span>
+                    <select
+                      value={vendaForm.pacoteId}
+                      onChange={(e) => handleSelectPacote(e.target.value)}
+                      required
+                      className="h-11 w-full rounded-xl border border-black/[0.08] dark:border-white/10 bg-white dark:bg-[#111113] px-3 text-sm text-gray-900 dark:text-white outline-none focus:border-[#d48997] focus:ring-2 focus:ring-[#d48997]/10 transition-all"
+                    >
+                      <option value="">Selecione um pacote...</option>
+                      {pacotesDisponiveis.map((p) => (
+                        <option key={p.id} value={p.id}>
+                          {p.nome} ({Number(p.preco).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })})
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <span className="mb-2 block text-[10px] font-medium text-gray-405">
+                        Sessões Incluídas <span className="text-rose-500">*</span>
+                      </span>
+                      <input
+                        type="number"
+                        min="1"
+                        value={vendaForm.sessoesRestantes}
+                        onChange={(e) => setVendaForm(prev => ({ ...prev, sessoesRestantes: Number(e.target.value || 0) }))}
+                        required
+                        className="h-11 w-full rounded-xl border border-black/[0.08] dark:border-white/10 bg-white dark:bg-[#111113] px-4 text-sm text-gray-900 dark:text-white outline-none focus:border-[#d48997] focus:ring-2 focus:ring-[#d48997]/10 transition-all"
+                      />
+                    </div>
+
+                    <div>
+                      <span className="mb-2 block text-[10px] font-medium text-gray-405">
+                        Preço Pago (R$) <span className="text-rose-500">*</span>
+                      </span>
+                      <input
+                        type="number"
+                        min="0"
+                        step="0.01"
+                        value={vendaForm.precoPago}
+                        onChange={(e) => setVendaForm(prev => ({ ...prev, precoPago: e.target.value }))}
+                        required
+                        className="h-11 w-full rounded-xl border border-black/[0.08] dark:border-white/10 bg-white dark:bg-[#111113] px-4 text-sm text-gray-900 dark:text-white outline-none focus:border-[#d48997] focus:ring-2 focus:ring-[#d48997]/10 transition-all"
+                        placeholder="0,00"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <span className="mb-2 block text-[10px] font-medium text-gray-405">
+                        Forma de Pagamento <span className="text-rose-500">*</span>
+                      </span>
+                      <select
+                        value={vendaForm.formaPagamento}
+                        onChange={(e) => setVendaForm(prev => ({ ...prev, formaPagamento: e.target.value }))}
+                        required
+                        className="h-11 w-full rounded-xl border border-black/[0.08] dark:border-white/10 bg-white dark:bg-[#111113] px-3 text-sm text-gray-900 dark:text-white outline-none focus:border-[#d48997] focus:ring-2 focus:ring-[#d48997]/10 transition-all"
+                      >
+                        <option value="PIX">PIX</option>
+                        <option value="Dinheiro">Dinheiro</option>
+                        <option value="Cartao de Credito">Cartão de Crédito</option>
+                        <option value="Cartao de Debito">Cartão de Débito</option>
+                      </select>
+                    </div>
+
+                    <div>
+                      <span className="mb-2 block text-[10px] font-medium text-gray-405">
+                        Profissional Vendedor
+                      </span>
+                      <select
+                        value={vendaForm.profissionalId}
+                        onChange={(e) => setVendaForm(prev => ({ ...prev, profissionalId: e.target.value }))}
+                        className="h-11 w-full rounded-xl border border-black/[0.08] dark:border-white/10 bg-white dark:bg-[#111113] px-3 text-sm text-gray-900 dark:text-white outline-none focus:border-[#d48997] focus:ring-2 focus:ring-[#d48997]/10 transition-all"
+                      >
+                        <option value="">Selecione o profissional...</option>
+                        {profissionais.map((p) => (
+                          <option key={p.id} value={p.id}>
+                            {p.nome}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Modal Footer */}
+                <div className="flex items-center justify-end gap-3 border-t border-black/[0.04] dark:border-white/5 bg-gray-50/50 dark:bg-white/[0.01] px-6 py-4">
+                  <button
+                    type="button"
+                    onClick={() => setModalVendaOpen(false)}
+                    className="h-10 rounded-xl border border-black/[0.08] dark:border-white/10 px-4 text-xs font-semibold text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 transition"
+                  >
+                    Cancelar
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={salvandoVenda}
+                    className="h-10 rounded-xl bg-[#d48997] hover:bg-[#c97b8a] px-5 text-xs font-semibold text-white transition disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    {salvandoVenda ? 'Processando...' : 'Confirmar Venda'}
+                  </button>
+                </div>
+              </form>
+            </motion.div>
           </div>
         )}
       </AnimatePresence>
