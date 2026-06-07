@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
-import { Boxes, Clock, DollarSign, Droplets, Edit3, Package, Plus, Scissors, Search, Tag, Trash2, TrendingUp } from 'lucide-react';
+import { Boxes, Clock, DollarSign, Droplets, Edit3, Package, Plus, Scissors, Search, Tag, Trash2, TrendingUp, X } from 'lucide-react';
 import {
   createCategoriaServico,
   createServico,
@@ -106,7 +106,7 @@ export default function Servicos() {
   }
 
   async function handleDelete(id) {
-    if (!window.confirm('Deseja excluir este servico?')) return;
+    if (!window.confirm('Deseja excluir este serviço?')) return;
     await deleteServico(id);
     await loadData();
   }
@@ -122,7 +122,7 @@ export default function Servicos() {
   }
 
   async function handleDeleteCategoriaServico(categoriaId) {
-    if (!window.confirm('Deseja excluir esta categoria de servicos? Os servicos continuam existindo, apenas ficam sem categoria.')) return;
+    if (!window.confirm('Deseja excluir esta categoria de serviços? Os serviços continuam existindo, apenas ficam sem categoria.')) return;
     await deleteCategoriaServico(categoriaId);
     setCategoriasServicos((prev) => prev.filter((categoria) => categoria.id !== categoriaId));
     setServicos((prev) =>
@@ -178,82 +178,87 @@ export default function Servicos() {
   });
 
   return (
-    <motion.div ref={pageRef} initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} className="max-w-6xl mx-auto space-y-8 lg:space-y-10 pb-20">
-      <header className={cn('flex flex-col gap-5 border-b border-slate-200/50 dark:border-white/5 pb-8', !isCompactPage && 'md:flex-row md:items-end md:justify-between')}>
+    <motion.div ref={pageRef} initial={{ opacity: 0, y: 15 }} animate={{ opacity: 1, y: 0 }} className="max-w-6xl mx-auto space-y-8 pb-20 px-4">
+      {/* Header */}
+      <header className={cn('flex flex-col gap-5 border-b border-black/[0.03] dark:border-white/[0.03] pb-6', !isCompactPage && 'md:flex-row md:items-end md:justify-between')}>
         <div>
-          <div className="flex items-center gap-3">
-            <span className="h-2 w-2 rounded-full bg-[#e29ba8]" />
-            <p className="brand-kicker text-[#efbac2]">Portfolio de servicos</p>
+          <div className="flex items-center gap-2.5 mb-2.5">
+            <Scissors className="h-4 w-4 text-[#d48997]" />
+            <span className="text-[10px] font-semibold text-[#d48997] tracking-wide">Portfólio de serviços</span>
           </div>
-          <h1 className="mt-4 text-3xl sm:text-5xl font-brand-display text-gray-900 dark:text-white leading-none">
-            Catalogo <span className="brand-text-gradient">BellaPro</span>
+          <h1 className="text-2xl sm:text-3xl font-serif font-normal text-gray-900 dark:text-white tracking-wide leading-tight mb-2">
+            Catálogo <span className="text-[#d48997]">BellaPro</span>
           </h1>
-          <p className="mt-4 max-w-xl text-base text-gray-400 dark:text-white/58">
-            Estruture o menu do salao com preco, duracao, margem e baixa automatica de estoque.
+          <p className="text-sm text-gray-400 dark:text-gray-500 leading-relaxed max-w-xl">
+            Estruture o menu do salão com preço, duração, margem e baixa automática de estoque.
           </p>
         </div>
-
-        <button onClick={openCreate} className="inline-flex items-center justify-center gap-3 rounded-[1.5rem] bg-gradient-to-r from-[#E29BA8] to-[#d48997] text-slate-950 px-6 py-4 text-[10px] font-black uppercase tracking-[0.24em] shadow-[0_16px_35px_-12px_rgba(222,151,165,0.65)] hover:shadow-[0_20px_45px_-12px_rgba(222,151,165,0.85)] transition-all duration-300 hover:scale-[1.02]">
-          <Plus size={16} strokeWidth={2.5} />
-          Novo servico
-        </button>
+        <motion.button
+          whileHover={{ scale: 1.02, y: -1 }}
+          whileTap={{ scale: 0.98 }}
+          onClick={openCreate}
+          className="inline-flex items-center justify-center gap-2 rounded-xl bg-[#d48997] hover:bg-[#c97b8a] text-white px-5 py-2.5 text-xs font-semibold shadow-sm transition-all"
+        >
+          <Plus size={16} /> Novo serviço
+        </motion.button>
       </header>
 
+      {/* Search + Categories */}
       <div className="grid gap-5 xl:grid-cols-[minmax(0,1fr)_360px]">
         <div className="relative max-w-md">
-          <Search size={18} className="absolute left-5 top-1/2 -translate-y-1/2 text-gray-400 dark:text-white/30" />
+          <Search size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" />
           <input
             type="text"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            placeholder="Pesquisar servicos..."
-            className="w-full rounded-[1.35rem] border border-slate-200/60 dark:border-white/5 bg-white/40 dark:bg-white/[0.04] px-5 py-4 pl-12 text-sm font-semibold text-gray-900 dark:text-white outline-none transition placeholder:text-gray-400 dark:placeholder:text-white/25 focus:border-[#e29ba8]/32 focus:bg-white/60 dark:focus:bg-white/[0.06] premium-focus-input"
+            placeholder="Pesquisar serviços..."
+            className="h-11 w-full rounded-xl border border-black/[0.08] dark:border-white/10 bg-white dark:bg-[#111113] pl-11 pr-4 text-sm text-gray-900 dark:text-white outline-none focus:border-[#d48997] focus:ring-2 focus:ring-[#d48997]/10 transition-all placeholder:text-gray-400"
           />
         </div>
 
-        <div className="rounded-[2rem] border border-slate-200/60 dark:border-white/5 bg-white/70 dark:bg-[#18161d]/35 p-5 shadow-[0_20px_45px_-28px_rgba(140,107,117,0.12)]">
+        <div className="rounded-2xl border border-black/[0.04] dark:border-white/[0.04] bg-white/60 dark:bg-white/[0.02] backdrop-blur-md p-5 shadow-sm">
           <div className="flex items-start gap-3">
-            <span className="flex h-11 w-11 items-center justify-center rounded-[1rem] border border-[#e29ba8]/20 bg-[#e29ba8]/10 text-[#d48997]">
+            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#d48997]/10 text-[#d48997] border border-[#d48997]/20 shrink-0">
               <Tag size={16} />
-            </span>
+            </div>
             <div>
-              <p className="text-[10px] font-black uppercase tracking-[0.2em] text-[#efbac2]">Categorias de servicos</p>
-              <p className="mt-2 text-sm text-gray-500 dark:text-white/56">
-                Agrupe cabelo, barbeiro, manicure e outras frentes para liberar tudo de uma vez no cadastro do profissional.
+              <p className="text-[10px] font-semibold text-[#d48997]">Categorias de serviços</p>
+              <p className="mt-1 text-xs text-gray-400 dark:text-gray-500 leading-relaxed">
+                Agrupe serviços por especialidade para facilitar o cadastro dos profissionais.
               </p>
             </div>
           </div>
 
-          <div className="mt-5 flex flex-col gap-3 sm:flex-row">
+          <div className="mt-4 flex flex-col gap-3 sm:flex-row">
             <input
               type="text"
               value={novaCategoriaServico}
               onChange={(event) => setNovaCategoriaServico(event.target.value)}
               placeholder="Ex.: Cabeleireiro"
-              className="flex-1 rounded-[1.2rem] border border-slate-200/60 dark:border-white/5 bg-white/60 dark:bg-white/[0.04] px-4 py-3 text-sm font-semibold text-gray-900 dark:text-white outline-none placeholder:text-gray-400 dark:placeholder:text-white/25 focus:border-[#e29ba8]/32 premium-focus-input"
+              className="flex-1 h-11 rounded-xl border border-black/[0.08] dark:border-white/10 bg-white dark:bg-[#111113] px-4 text-sm text-gray-900 dark:text-white outline-none focus:border-[#d48997] focus:ring-2 focus:ring-[#d48997]/10 transition-all placeholder:text-gray-400"
             />
             <button
               type="button"
               onClick={handleCreateCategoriaServico}
-              className="rounded-[1.2rem] bg-gradient-to-r from-[#E29BA8] to-[#d48997] px-5 py-3 text-[10px] font-black uppercase tracking-[0.22em] text-slate-950 shadow-[0_16px_35px_-18px_rgba(222,151,165,0.7)]"
+              className="rounded-xl bg-[#d48997]/10 hover:bg-[#d48997]/15 px-4 py-2.5 text-xs font-semibold text-[#d48997] transition shrink-0"
             >
               Criar categoria
             </button>
           </div>
 
-          <div className="mt-4 flex flex-wrap gap-2">
+          <div className="mt-3 flex flex-wrap gap-2">
             {categoriasServicos.map((categoria) => (
               <div
                 key={categoria.id}
-                className="inline-flex items-center gap-2 rounded-full border border-slate-200/60 dark:border-white/5 bg-white/70 dark:bg-white/[0.05] px-3 py-2"
+                className="inline-flex items-center gap-2 rounded-full border border-black/[0.04] dark:border-white/[0.04] bg-white dark:bg-white/5 px-3 py-1.5"
               >
-                <span className="text-[10px] font-black uppercase tracking-[0.16em] text-gray-600 dark:text-white/64">
+                <span className="text-[10px] font-semibold text-gray-600 dark:text-gray-300">
                   {categoria.nome} ({(categoria.servicos || []).length})
                 </span>
                 <button
                   type="button"
                   onClick={() => handleDeleteCategoriaServico(categoria.id)}
-                  className="text-gray-400 transition hover:text-red-500 dark:text-white/34 dark:hover:text-red-200"
+                  className="text-gray-400 transition hover:text-red-500"
                   aria-label={`Excluir categoria ${categoria.nome}`}
                 >
                   <Trash2 size={12} />
@@ -261,75 +266,89 @@ export default function Servicos() {
               </div>
             ))}
             {categoriasServicos.length === 0 && (
-              <span className="text-sm text-gray-400 dark:text-white/38">Nenhuma categoria criada ainda.</span>
+              <span className="text-xs text-gray-400 dark:text-gray-500">Nenhuma categoria criada ainda.</span>
             )}
           </div>
         </div>
       </div>
 
-      <div className={cn('grid gap-6 sm:p-0 md:grid-cols-2', showThreeCards && 'xl:grid-cols-3')}>
+      {/* Service Cards */}
+      <div className={cn('grid gap-4', showThreeCards ? 'md:grid-cols-2 xl:grid-cols-3' : 'md:grid-cols-2')}>
         <AnimatePresence>
           {filteredServicos.map((servico) => (
             <motion.article
               key={servico.id}
               layout
-              initial={{ opacity: 0, y: 20 }}
+              initial={{ opacity: 0, y: 15 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.96 }}
-              className="rounded-[2.2rem] border border-slate-200/60 dark:border-white/5 bg-white/80 dark:bg-[#18161d]/30 backdrop-blur-2xl p-5 sm:p-6 shadow-[0_20px_45px_-28px_rgba(140,107,117,0.12)] hover:border-[#e29ba8]/20 transition-all duration-300 group"
+              className="rounded-2xl border border-black/[0.04] dark:border-white/[0.04] bg-white/60 dark:bg-white/[0.02] backdrop-blur-md p-5 shadow-sm hover:border-[#e29ba8]/30 dark:hover:border-[#e29ba8]/20 transition-all duration-300 group"
             >
               <div className="flex items-start justify-between gap-4">
-                <div className="flex h-16 w-16 items-center justify-center rounded-[1.5rem] bg-[#e29ba8]/10 text-[#d48997] border border-[#e29ba8]/20 transition-all group-hover:rotate-6">
-                  <Scissors size={24} strokeWidth={2.5} />
+                <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-[#d48997]/10 text-[#d48997] border border-[#d48997]/20 transition-all group-hover:rotate-6 shrink-0">
+                  <Scissors size={20} />
                 </div>
                 <div className="flex gap-2">
-                  <button onClick={() => openEdit(servico)} className="rounded-2xl border border-slate-200/50 dark:border-white/5 bg-white/50 dark:bg-white/[0.04] p-3 text-gray-500 dark:text-white/66 transition hover:text-gray-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-white/[0.08]">
-                    <Edit3 size={16} />
+                  <button onClick={() => openEdit(servico)} className="rounded-xl border border-black/[0.04] dark:border-white/10 bg-gray-50 dark:bg-white/5 p-2.5 text-gray-400 transition hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-white/10">
+                    <Edit3 size={14} />
                   </button>
-                  <button onClick={() => handleDelete(servico.id)} className="rounded-2xl border border-slate-200/50 dark:border-white/5 bg-white/50 dark:bg-white/[0.04] p-3 text-gray-500 dark:text-white/66 transition hover:text-red-600 dark:hover:text-red-400 hover:bg-slate-100 dark:hover:bg-white/[0.08]">
-                    <Trash2 size={16} />
+                  <button onClick={() => handleDelete(servico.id)} className="rounded-xl border border-black/[0.04] dark:border-white/10 bg-gray-50 dark:bg-white/5 p-2.5 text-gray-400 transition hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10">
+                    <Trash2 size={14} />
                   </button>
                 </div>
               </div>
 
-              <div className="mt-5">
-                <div className="flex flex-wrap items-center gap-3">
-                  <h2 className="text-3xl font-brand-display text-gray-900 dark:text-white leading-none">{servico.nome}</h2>
+              <div className="mt-4">
+                <div className="flex flex-wrap items-center gap-2">
+                  <h2 className="text-lg font-serif font-normal text-gray-900 dark:text-white leading-tight">{servico.nome}</h2>
                   {!servico.ativo && (
-                    <span className="rounded-full border border-slate-200 dark:border-white/5 bg-slate-100 dark:bg-white/8 px-3 py-1.5 text-[9px] font-black uppercase tracking-[0.16em] text-gray-500 dark:text-white/54">
+                    <span className="rounded-full border border-black/[0.04] dark:border-white/10 bg-gray-50 dark:bg-white/5 px-2.5 py-0.5 text-[9px] font-semibold text-gray-500 dark:text-gray-400">
                       Inativo
                     </span>
                   )}
                   {servico.categoria?.nome && (
-                    <span className="rounded-full border border-[#e29ba8]/20 bg-[#e29ba8]/10 px-3 py-1.5 text-[9px] font-black uppercase tracking-[0.16em] text-[#d48997]">
+                    <span className="rounded-full border border-[#d48997]/25 bg-[#d48997]/10 px-2.5 py-0.5 text-[9px] font-semibold text-[#d48997]">
                       {servico.categoria.nome}
                     </span>
                   )}
                 </div>
-                <p className="mt-3 text-sm leading-relaxed text-gray-400 dark:text-white/56 min-h-[40px]">
-                  {servico.descricao || 'Servico ainda sem descricao detalhada.'}
+                <p className="mt-2 text-xs text-gray-400 dark:text-gray-500 leading-relaxed min-h-[32px]">
+                  {servico.descricao || 'Serviço ainda sem descrição detalhada.'}
                 </p>
               </div>
 
-              <div className="mt-6 grid grid-cols-2 gap-4">
-                <InfoPill icon={<Clock size={15} />} label="Duracao" value={formatDurationLabel(servico.duracaoMin)} />
-                <InfoPill
-                  icon={<DollarSign size={15} />}
-                  label="Preco"
-                  value={Number(servico.preco || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
-                  tone="emerald"
-                />
+              <div className="mt-5 grid grid-cols-2 gap-3">
+                <div className="rounded-xl border border-black/[0.04] dark:border-white/[0.04] bg-black/[0.01] dark:bg-white/[0.01] p-3">
+                  <div className="flex items-center gap-2">
+                    <Clock size={14} className="text-[#d48997]" />
+                    <div>
+                      <p className="text-[9px] font-medium text-gray-400 dark:text-gray-500">Duração</p>
+                      <p className="text-sm font-semibold text-gray-900 dark:text-white">{formatDurationLabel(servico.duracaoMin)}</p>
+                    </div>
+                  </div>
+                </div>
+                <div className="rounded-xl border border-emerald-500/15 bg-emerald-500/[0.02] p-3">
+                  <div className="flex items-center gap-2">
+                    <DollarSign size={14} className="text-emerald-600 dark:text-emerald-400" />
+                    <div>
+                      <p className="text-[9px] font-medium text-gray-400 dark:text-gray-500">Preço</p>
+                      <p className="text-sm font-semibold text-emerald-600 dark:text-emerald-400">
+                        {Number(servico.preco || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
+                      </p>
+                    </div>
+                  </div>
+                </div>
               </div>
 
               {(servico.consumos || []).length > 0 && (
-                <div className="mt-6 rounded-[1.8rem] border border-[#e29ba8]/14 bg-[#e29ba8]/06 p-4">
-                  <div className="mb-3 flex items-center gap-2">
-                    <Droplets size={14} className="text-[#efbac2]" />
-                    <p className="text-[10px] font-black uppercase tracking-[0.2em] text-[#efbac2]">Baixa automatica</p>
+                <div className="mt-4 rounded-xl border border-[#d48997]/15 bg-[#d48997]/5 p-3">
+                  <div className="mb-2 flex items-center gap-2">
+                    <Droplets size={12} className="text-[#d48997]" />
+                    <p className="text-[9px] font-semibold text-[#d48997]">Baixa automática</p>
                   </div>
-                  <div className="flex flex-wrap gap-2">
+                  <div className="flex flex-wrap gap-1.5">
                     {servico.consumos.map((consumo) => (
-                      <span key={consumo.produtoId} className="rounded-full border border-slate-200/50 dark:border-white/5 bg-white/80 dark:bg-white/[0.05] px-3 py-2 text-[10px] font-black uppercase tracking-[0.16em] text-gray-600 dark:text-white/64 shadow-sm">
+                      <span key={consumo.produtoId} className="rounded-full border border-black/[0.04] dark:border-white/[0.04] bg-white dark:bg-white/5 px-2.5 py-1 text-[9px] font-semibold text-gray-600 dark:text-gray-300">
                         {consumo.quantidade}x {consumo.produto?.nome}
                       </span>
                     ))}
@@ -341,95 +360,121 @@ export default function Servicos() {
         </AnimatePresence>
 
         {filteredServicos.length === 0 && (
-          <div className="col-span-full rounded-[2.2rem] border border-dashed border-slate-300 dark:border-white/5 bg-white/40 dark:bg-white/[0.03] px-6 py-20 text-center">
-            <Package size={44} className="mx-auto text-gray-400 dark:text-white/18" />
-            <p className="mt-5 text-[10px] font-black uppercase tracking-[0.24em] text-gray-400 dark:text-white/38">Nenhum servico encontrado</p>
+          <div className="col-span-full rounded-2xl border border-dashed border-black/[0.06] dark:border-white/10 bg-white/40 dark:bg-white/[0.01] px-8 py-16 text-center shadow-sm">
+            <Package size={40} className="mx-auto text-gray-300 dark:text-gray-600" />
+            <h2 className="mt-4 font-serif font-normal text-xl text-gray-905 dark:text-white">Nenhum serviço encontrado</h2>
+            <p className="mx-auto mt-2 max-w-sm text-xs leading-relaxed text-gray-400 dark:text-gray-500">
+              Cadastre o primeiro serviço ou refine sua busca.
+            </p>
           </div>
         )}
       </div>
 
+      {/* Modal */}
       {modalOpen && (
-        <div className="fixed inset-0 z-[120] flex items-center justify-center overflow-y-auto overscroll-contain bg-black/70 p-3 backdrop-blur-md sm:p-4">
-          <div className="flex max-h-[calc(100dvh-1.5rem)] w-full max-w-3xl flex-col overflow-hidden rounded-[2.2rem] border border-slate-200/60 bg-white/95 shadow-[0_40px_90px_-40px_rgba(0,0,0,0.6)] dark:border-white/5 dark:bg-[#1a171f]/95 backdrop-blur-2xl">
-            <div className="mb-0 flex shrink-0 items-start justify-between gap-4 border-b border-slate-200/60 px-4 py-4 dark:border-white/5 sm:px-6 sm:py-6 md:px-8">
+        <div className="fixed inset-0 z-[120] flex items-center justify-center overflow-y-auto overscroll-contain bg-black/60 backdrop-blur-md p-3 sm:p-4">
+          <div className="flex max-h-[calc(100dvh-1.5rem)] w-full max-w-3xl flex-col overflow-hidden rounded-3xl border border-black/[0.04] bg-white shadow-xl dark:border-white/10 dark:bg-[#0c0c0e]/95">
+            <div className="flex shrink-0 items-start justify-between gap-4 border-b border-black/[0.03] dark:border-white/5 px-5 py-5 sm:px-8">
               <div>
-                <p className="brand-kicker text-[#efbac2]">Precificacao e estoque</p>
-                <h2 className="mt-2 text-2xl sm:text-4xl font-brand-display text-gray-900 dark:text-white leading-none">{editingId ? 'Editar' : 'Novo'} servico</h2>
+                <p className="text-[10px] font-semibold text-[#d48997]">Precificação e estoque</p>
+                <h2 className="mt-1 font-serif font-normal text-xl sm:text-2xl text-gray-905 dark:text-white">{editingId ? 'Editar' : 'Novo'} serviço</h2>
               </div>
-              <button onClick={() => setModalOpen(false)} className="rounded-2xl border border-slate-200/50 dark:border-white/5 bg-white/50 dark:bg-white/[0.04] px-4 py-3 text-[10px] font-black uppercase tracking-[0.18em] text-gray-600 dark:text-white/64 hover:text-gray-900 dark:hover:text-white">
-                Fechar
+              <button onClick={() => setModalOpen(false)} className="rounded-full border border-black/[0.04] dark:border-white/10 p-2 text-gray-400 hover:text-red-500 transition shadow-sm">
+                <X className="h-4 w-4" />
               </button>
             </div>
 
             <form onSubmit={handleSubmit} className="flex min-h-0 flex-1 flex-col overflow-hidden">
-              <div className="min-h-0 flex-1 space-y-6 overflow-y-auto px-4 pb-4 pt-4 custom-scrollbar sm:px-6 sm:pb-6 sm:pt-6 md:px-8 md:pb-8">
-                <div className="grid gap-4 sm:p-0 md:grid-cols-2">
-                  <Field label="Nome do servico" value={form.nome} onChange={(value) => setForm((prev) => ({ ...prev, nome: value }))} required />
-                  <Field label="Preco de venda" type="number" value={form.preco} onChange={(value) => setForm((prev) => ({ ...prev, preco: value }))} required icon={<DollarSign size={14} />} />
+              <div className="min-h-0 flex-1 space-y-5 overflow-y-auto px-5 pb-5 pt-5 custom-scrollbar sm:px-8">
+                <div className="grid gap-4 md:grid-cols-2">
+                  <label>
+                    <span className="mb-2 block text-[10px] font-medium text-gray-400 dark:text-gray-500">Nome do serviço</span>
+                    <input value={form.nome} onChange={(e) => setForm((prev) => ({ ...prev, nome: e.target.value }))} required className="h-11 w-full rounded-xl border border-black/[0.08] dark:border-white/10 bg-white px-4 text-sm text-gray-900 outline-none focus:border-[#d48997] focus:ring-2 focus:ring-[#d48997]/10 dark:bg-[#111113] dark:text-white transition-all placeholder:text-gray-400" />
+                  </label>
+                  <label>
+                    <span className="mb-2 block text-[10px] font-medium text-gray-400 dark:text-gray-500">Preço de venda</span>
+                    <input type="number" value={form.preco} onChange={(e) => setForm((prev) => ({ ...prev, preco: e.target.value }))} required className="h-11 w-full rounded-xl border border-black/[0.08] dark:border-white/10 bg-white px-4 text-sm text-gray-900 outline-none focus:border-[#d48997] focus:ring-2 focus:ring-[#d48997]/10 dark:bg-[#111113] dark:text-white transition-all" />
+                  </label>
                 </div>
 
-                <Field label="Descricao" value={form.descricao} onChange={(value) => setForm((prev) => ({ ...prev, descricao: value }))} placeholder="Descricao curta do servico para o cliente" />
+                <label>
+                  <span className="mb-2 block text-[10px] font-medium text-gray-400 dark:text-gray-500">Descrição</span>
+                  <input value={form.descricao} onChange={(e) => setForm((prev) => ({ ...prev, descricao: e.target.value }))} placeholder="Descrição curta do serviço para o cliente" className="h-11 w-full rounded-xl border border-black/[0.08] dark:border-white/10 bg-white px-4 text-sm text-gray-900 outline-none focus:border-[#d48997] focus:ring-2 focus:ring-[#d48997]/10 dark:bg-[#111113] dark:text-white transition-all placeholder:text-gray-400" />
+                </label>
 
-                <div className="grid gap-4 sm:p-0 md:grid-cols-2">
-                  <DurationField hours={horas} minutes={minutos} onHoursChange={(value) => updateDuration(value, minutos)} onMinutesChange={(value) => updateDuration(horas, value)} />
-                  <Field label="Custo dos insumos" type="number" value={form.custoProduto} onChange={(value) => setForm((prev) => ({ ...prev, custoProduto: value }))} icon={<TrendingUp size={14} />} />
+                <div className="grid gap-4 md:grid-cols-2">
+                  <div>
+                    <span className="mb-2 block text-[10px] font-medium text-gray-400 dark:text-gray-500">Duração</span>
+                    <div className="grid grid-cols-2 gap-2 rounded-xl border border-black/[0.08] dark:border-white/10 bg-white dark:bg-[#111113] p-2">
+                      <select value={horas} onChange={(e) => updateDuration(e.target.value, minutos)} className="rounded-lg border border-black/[0.04] dark:border-white/5 bg-gray-50 dark:bg-white/5 px-3 py-2.5 text-sm text-gray-900 dark:text-white outline-none">
+                        {Array.from({ length: 9 }, (_, i) => (
+                          <option key={i} value={i}>{i}h</option>
+                        ))}
+                      </select>
+                      <select value={minutos} onChange={(e) => updateDuration(horas, e.target.value)} className="rounded-lg border border-black/[0.04] dark:border-white/5 bg-gray-50 dark:bg-white/5 px-3 py-2.5 text-sm text-gray-900 dark:text-white outline-none">
+                        {[0, 15, 30, 45].map((v) => (
+                          <option key={v} value={v}>{v}min</option>
+                        ))}
+                      </select>
+                    </div>
+                  </div>
+                  <label>
+                    <span className="mb-2 block text-[10px] font-medium text-gray-400 dark:text-gray-500">Custo dos insumos</span>
+                    <input type="number" value={form.custoProduto} onChange={(e) => setForm((prev) => ({ ...prev, custoProduto: e.target.value }))} className="h-11 w-full rounded-xl border border-black/[0.08] dark:border-white/10 bg-white px-4 text-sm text-gray-900 outline-none focus:border-[#d48997] focus:ring-2 focus:ring-[#d48997]/10 dark:bg-[#111113] dark:text-white transition-all" />
+                  </label>
                 </div>
 
-                <div className="space-y-2">
-                  <label className="block text-[10px] font-black uppercase tracking-[0.22em] text-gray-500 dark:text-white/42">Categoria do servico</label>
+                <div>
+                  <span className="mb-2 block text-[10px] font-medium text-gray-400 dark:text-gray-500">Categoria do serviço</span>
                   <select
                     value={form.categoriaId}
-                    onChange={(event) => setForm((prev) => ({ ...prev, categoriaId: event.target.value }))}
-                    className="w-full rounded-[1.35rem] border border-slate-200 dark:border-white/5 bg-white/40 dark:bg-white/[0.04] px-5 py-4 text-sm font-semibold text-gray-900 dark:text-white outline-none transition focus:border-[#e29ba8]/32 focus:bg-white/60 dark:focus:bg-white/[0.06] premium-focus-input"
+                    onChange={(e) => setForm((prev) => ({ ...prev, categoriaId: e.target.value }))}
+                    className="h-11 w-full appearance-none rounded-xl border border-black/[0.08] dark:border-white/10 bg-white dark:bg-[#111113] px-4 text-sm text-gray-900 dark:text-white outline-none focus:border-[#d48997] focus:ring-2 focus:ring-[#d48997]/10 transition-all"
                   >
                     <option value="">Sem categoria</option>
-                    {categoriasServicos.map((categoria) => (
-                      <option key={categoria.id} value={categoria.id}>
-                        {categoria.nome}
-                      </option>
+                    {categoriasServicos.map((c) => (
+                      <option key={c.id} value={c.id}>{c.nome}</option>
                     ))}
                   </select>
-                  <p className="text-xs text-gray-400 dark:text-white/38">
-                    Profissionais marcados com esta categoria recebem este servico automaticamente.
-                  </p>
+                  <p className="mt-1.5 text-[10px] text-gray-400 dark:text-gray-500">Profissionais marcados com esta categoria recebem este serviço automaticamente.</p>
                 </div>
 
-                <div className="rounded-[2rem] border border-slate-200/60 dark:border-white/5 bg-white/40 dark:bg-black/14 p-4 sm:p-6 shadow-sm">
-                  <div className="mb-5 flex items-center gap-3">
-                    <Boxes size={16} className="text-[#efbac2]" />
+                <div className="rounded-2xl border border-black/[0.04] dark:border-white/[0.04] bg-white/40 dark:bg-white/[0.01] p-5 shadow-sm">
+                  <div className="mb-4 flex items-center gap-3">
+                    <Boxes size={16} className="text-[#d48997]" />
                     <div>
-                      <p className="text-[10px] font-black uppercase tracking-[0.2em] text-[#efbac2]">Consumo de produtos</p>
-                      <p className="mt-1 text-sm text-gray-500 dark:text-white/52">Defina o que sai automaticamente do estoque quando o servico for concluido.</p>
+                      <p className="text-[10px] font-semibold text-[#d48997]">Consumo de produtos</p>
+                      <p className="mt-0.5 text-xs text-gray-400 dark:text-gray-500">Defina o que sai do estoque quando o serviço for concluído.</p>
                     </div>
                   </div>
 
-                  <div className="space-y-3 max-h-60 overflow-y-auto pr-2 custom-scrollbar">
+                  <div className="space-y-2 max-h-60 overflow-y-auto pr-2 custom-scrollbar">
                     {produtosDisponiveis.map((produto) => {
                       const selected = form.consumosProdutos.find((item) => item.produtoId === produto.id);
                       return (
-                        <div key={produto.id} className={cn('rounded-[1.5rem] border p-4 transition-all', selected ? 'border-[#e29ba8]/28 bg-[#e29ba8]/08' : 'border-slate-200 dark:border-white/5 bg-white/30 dark:bg-white/[0.03]')}>
+                        <div key={produto.id} className={cn('rounded-xl border p-3.5 transition-all', selected ? 'border-[#d48997]/30 bg-[#d48997]/5' : 'border-black/[0.04] dark:border-white/[0.04] bg-white dark:bg-white/[0.01]')}>
                           <div className={cn('flex flex-col gap-3', !isCompactPage && 'md:flex-row md:items-center md:justify-between')}>
                             <button type="button" onClick={() => toggleProduto(produto.id)} className="text-left outline-none">
                               <p className="text-sm font-semibold text-gray-900 dark:text-white leading-tight">{produto.nome}</p>
-                              <p className="mt-1 text-xs text-gray-400 dark:text-white/42">Estoque atual: {produto.estoque}</p>
+                              <p className="mt-0.5 text-[10px] text-gray-400 dark:text-gray-500">Estoque atual: {produto.estoque}</p>
                             </button>
 
-                            <div className="flex items-center gap-3">
+                            <div className="flex items-center gap-2">
                               {selected && (
                                 <input
                                   type="number"
                                   min="1"
                                   value={selected.quantidade}
-                                  onChange={(event) => updateConsumo(produto.id, event.target.value)}
-                                  className="w-24 rounded-[1rem] border border-slate-200 dark:border-white/5 bg-white/70 dark:bg-[#332832] px-3 py-2 text-sm text-gray-900 dark:text-white outline-none focus:border-[#e29ba8]/28 premium-focus-input"
+                                  onChange={(e) => updateConsumo(produto.id, e.target.value)}
+                                  className="w-20 h-9 rounded-lg border border-black/[0.08] dark:border-white/10 bg-white dark:bg-[#111113] px-3 text-sm text-gray-900 dark:text-white outline-none focus:border-[#d48997]"
                                 />
                               )}
                               <button
                                 type="button"
                                 onClick={() => toggleProduto(produto.id)}
                                 className={cn(
-                                  'rounded-[1rem] px-4 py-3 text-[10px] font-black uppercase tracking-[0.18em] transition-all',
-                                  selected ? 'bg-[#de97a5] text-white' : 'border border-slate-200 dark:border-white/5 bg-white/40 dark:bg-white/[0.04] text-gray-600 dark:text-white/72 hover:text-gray-900 dark:hover:text-white'
+                                  'rounded-lg px-3 py-2 text-[10px] font-semibold transition-all',
+                                  selected ? 'bg-[#d48997] text-white' : 'border border-black/[0.04] dark:border-white/10 bg-gray-50 dark:bg-white/5 text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'
                                 )}
                               >
                                 {selected ? 'Vinculado' : 'Usar'}
@@ -440,28 +485,28 @@ export default function Servicos() {
                       );
                     })}
                     {produtosDisponiveis.length === 0 && (
-                      <p className="text-xs text-gray-400 dark:text-white/30 text-center py-4">Nenhum produto cadastrado no estoque.</p>
+                      <p className="text-xs text-gray-400 dark:text-gray-500 text-center py-4">Nenhum produto cadastrado no estoque.</p>
                     )}
                   </div>
                 </div>
 
                 {editingId && (
-                  <label className="flex items-center gap-4 rounded-[1.6rem] border border-slate-200/60 dark:border-white/5 bg-white/30 dark:bg-white/[0.03] p-5 cursor-pointer select-none">
-                    <input type="checkbox" checked={form.ativo} onChange={(event) => setForm((prev) => ({ ...prev, ativo: event.target.checked }))} className="h-4 w-4 accent-[#de97a5]" />
+                  <label className="flex items-center gap-4 rounded-xl border border-black/[0.04] dark:border-white/[0.04] bg-white/40 dark:bg-white/[0.01] p-4 cursor-pointer select-none">
+                    <input type="checkbox" checked={form.ativo} onChange={(e) => setForm((prev) => ({ ...prev, ativo: e.target.checked }))} className="h-4 w-4 accent-[#d48997]" />
                     <div>
-                      <p className="text-sm font-semibold text-gray-900 dark:text-white">Servico ativo</p>
-                      <p className="mt-1 text-xs text-gray-400 dark:text-white/42">Desative sem excluir caso queira esconder do catalogo.</p>
+                      <p className="text-sm font-semibold text-gray-900 dark:text-white">Serviço ativo</p>
+                      <p className="mt-0.5 text-[10px] text-gray-400 dark:text-gray-500">Desative sem excluir caso queira esconder do catálogo.</p>
                     </div>
                   </label>
                 )}
               </div>
 
-              <div className="sticky bottom-0 flex shrink-0 flex-col gap-3 border-t border-slate-200 bg-white/95 px-4 py-4 backdrop-blur dark:border-white/5 dark:bg-[#1a171f]/95 sm:px-6 md:flex-row md:px-8">
-                <button type="button" onClick={() => setModalOpen(false)} className="rounded-[1.4rem] border border-slate-200/50 dark:border-white/5 bg-white/30 dark:bg-white/[0.04] px-6 py-4 text-[10px] font-black uppercase tracking-[0.22em] text-gray-500 dark:text-white/66 hover:text-gray-900 dark:hover:text-white">
+              <div className="sticky bottom-0 flex shrink-0 flex-col gap-3 border-t border-black/[0.03] bg-white/95 dark:bg-[#0c0c0e]/95 backdrop-blur px-5 py-4 dark:border-white/5 sm:px-8 sm:flex-row sm:justify-end">
+                <button type="button" onClick={() => setModalOpen(false)} className="inline-flex items-center justify-center rounded-xl border border-black/[0.04] dark:border-white/10 bg-gray-50 hover:bg-gray-100 dark:bg-white/5 dark:text-white px-5 py-2.5 text-xs font-semibold text-gray-500 transition">
                   Cancelar
                 </button>
-                <button type="submit" disabled={saving} className="flex-1 inline-flex items-center justify-center gap-3 rounded-[1.4rem] bg-gradient-to-r from-[#E29BA8] to-[#d48997] text-slate-950 px-6 py-4 text-[10px] font-black uppercase tracking-[0.24em] shadow-[0_16px_35px_-12px_rgba(222,151,165,0.65)] transition-all duration-300 hover:scale-[1.02] disabled:opacity-55">
-                  {saving ? 'Processando...' : editingId ? 'Salvar servico' : 'Criar servico'}
+                <button type="submit" disabled={saving} className="inline-flex items-center justify-center rounded-xl bg-[#d48997] hover:bg-[#c97b8a] text-white px-5 py-2.5 text-xs font-semibold shadow-sm transition disabled:opacity-70">
+                  {saving ? 'Processando...' : editingId ? 'Salvar serviço' : 'Criar serviço'}
                 </button>
               </div>
             </form>
@@ -469,67 +514,5 @@ export default function Servicos() {
         </div>
       )}
     </motion.div>
-  );
-}
-
-function Field({ label, value, onChange, type = 'text', placeholder, icon, required = false }) {
-  return (
-    <div className="space-y-2">
-      <label className="block text-[10px] font-black uppercase tracking-[0.22em] text-gray-500 dark:text-white/42">{label}</label>
-      <div className="relative">
-        {icon && <span className="absolute left-5 top-1/2 -translate-y-1/2 text-gray-400 dark:text-white/28">{icon}</span>}
-        <input
-          type={type}
-          value={value}
-          onChange={(event) => onChange(event.target.value)}
-          required={required}
-          placeholder={placeholder}
-          className={cn(
-            'w-full rounded-[1.35rem] border border-slate-200 dark:border-white/5 bg-white/40 dark:bg-white/[0.04] px-5 py-4 text-sm font-semibold text-gray-900 dark:text-white outline-none transition placeholder:text-gray-400 dark:placeholder:text-white/25 focus:border-[#e29ba8]/32 focus:bg-white/60 dark:focus:bg-white/[0.06] premium-focus-input',
-            icon && 'pl-14'
-          )}
-        />
-      </div>
-    </div>
-  );
-}
-
-function DurationField({ hours, minutes, onHoursChange, onMinutesChange }) {
-  return (
-    <div className="space-y-2">
-      <label className="block text-[10px] font-black uppercase tracking-[0.22em] text-gray-500 dark:text-white/42">Duracao</label>
-      <div className="grid grid-cols-2 gap-3 rounded-[1.35rem] border border-slate-200 dark:border-white/5 bg-white/40 dark:bg-white/[0.04] p-3">
-        <select value={hours} onChange={(event) => onHoursChange(event.target.value)} className="rounded-[1rem] border border-slate-200 dark:border-white/5 bg-white dark:bg-[#1a171f] px-4 py-3 text-sm text-gray-900 dark:text-white outline-none focus:border-[#e29ba8]/28 focus:bg-white/60 dark:focus:bg-[#1a171f] premium-focus-input">
-          {Array.from({ length: 9 }, (_, index) => (
-            <option key={index} value={index} className="bg-white dark:bg-[#1a171f] text-gray-900 dark:text-white">
-              {index}h
-            </option>
-          ))}
-        </select>
-        <select value={minutes} onChange={(event) => onMinutesChange(event.target.value)} className="rounded-[1rem] border border-slate-200 dark:border-white/5 bg-white dark:bg-[#1a171f] px-4 py-3 text-sm text-gray-900 dark:text-white outline-none focus:border-[#e29ba8]/28 focus:bg-white/60 dark:focus:bg-[#1a171f] premium-focus-input">
-          {[0, 15, 30, 45].map((value) => (
-            <option key={value} value={value} className="bg-white dark:bg-[#1a171f] text-gray-900 dark:text-white">
-              {value}min
-            </option>
-          ))}
-        </select>
-      </div>
-    </div>
-  );
-}
-
-function InfoPill({ icon, label, value, tone = 'rose' }) {
-  return (
-    <div className={cn('rounded-[1.75rem] border px-5 py-5', tone === 'emerald' ? 'border-emerald-200/50 dark:border-emerald-500/10 bg-emerald-500/[0.02]' : 'border-slate-200/50 dark:border-white/5 bg-white/30 dark:bg-black/14')}>
-      <div className="flex items-center gap-3">
-        <span className={cn('flex h-11 w-11 items-center justify-center rounded-xl border', tone === 'emerald' ? 'bg-emerald-400/12 text-emerald-600 dark:text-emerald-200 border-emerald-400/20' : 'bg-[#e29ba8]/10 text-[#d48997] border-[#e29ba8]/20')}>
-          {icon}
-        </span>
-        <div>
-          <p className="text-[9px] font-black uppercase tracking-[0.2em] text-gray-500 dark:text-white/40">{label}</p>
-          <p className="mt-1 text-sm font-semibold text-gray-900 dark:text-white leading-none">{value}</p>
-        </div>
-      </div>
-    </div>
   );
 }

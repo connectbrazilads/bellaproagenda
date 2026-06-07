@@ -18,7 +18,8 @@ import {
   Mic,
   Paperclip,
   Film,
-  Download
+  Download,
+  X
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import {
@@ -62,9 +63,9 @@ function getMensagemResumo(mensagem) {
   if (!mensagem) return 'Iniciando conversa...';
 
   if (mensagem.tipo === 'imagem') return mensagem.conteudo || 'Imagem recebida';
-  if (mensagem.tipo === 'audio') return mensagem.conteudo || 'Audio recebido';
+  if (mensagem.tipo === 'audio') return mensagem.conteudo || 'Áudio recebido';
   if (mensagem.tipo === 'anexo') return mensagem.conteudo || `Anexo${mensagem.nomeArquivo ? `: ${mensagem.nomeArquivo}` : ' recebido'}`;
-  if (mensagem.tipo === 'video') return mensagem.conteudo || 'Video recebido';
+  if (mensagem.tipo === 'video') return mensagem.conteudo || 'Vídeo recebido';
 
   return mensagem.conteudo || 'Iniciando conversa...';
 }
@@ -73,7 +74,7 @@ function isDescricaoGenericaDeMidia(mensagem) {
   if (!mensagem?.tipo || mensagem.tipo === 'texto') return false;
 
   const conteudo = String(mensagem.conteudo || '').trim().toLowerCase();
-  return ['imagem recebida', 'audio recebido', 'video recebido', 'anexo recebido'].includes(conteudo);
+  return ['imagem recebida', 'audio recebido', 'video recebido', 'anexo recebido', 'áudio recebido', 'vídeo recebido'].includes(conteudo);
 }
 
 function buildInboxStreamUrl() {
@@ -103,17 +104,17 @@ function ContatoAvatar({ conversa, className = '', fallbackClassName = '', showB
 
   return (
     <div className={cn('relative flex-shrink-0', className)}>
-      <div className={cn('flex h-full w-full items-center justify-center overflow-hidden rounded-2xl bg-gray-100 text-[#d48997] shadow-inner dark:bg-gray-950 dark:text-[#efbac2]', fallbackClassName)}>
+      <div className={cn('flex h-full w-full items-center justify-center overflow-hidden rounded-xl bg-gray-50 dark:bg-zinc-800 text-[#d48997] border border-black/[0.04] dark:border-white/[0.04]', fallbackClassName)}>
         {conversa?.avatarUrl ? (
           <img src={conversa.avatarUrl} alt={getConversaTitulo(conversa)} className="h-full w-full object-cover" />
         ) : (
-          <span className="font-black uppercase">{fallback}</span>
+          <span className="font-semibold text-sm uppercase">{fallback}</span>
         )}
       </div>
       {showBadge ? (
         <div
           className={cn(
-            'absolute -bottom-1 -right-1 flex h-6 w-6 items-center justify-center rounded-full border-4 border-white text-[8px] shadow-lg dark:border-gray-900',
+            'absolute -bottom-1 -right-1 flex h-5 w-5 items-center justify-center rounded-full border-2 border-white dark:border-zinc-900 text-[8px] shadow-sm',
             conversa?.atendimento === 'humano' ? 'bg-emerald-500 text-white' : 'bg-[#d48997] text-white'
           )}
         >
@@ -158,9 +159,9 @@ export default function Inbox() {
     setErro('');
     try {
       const r = await getConversas(FILTROS[filtro].params);
-      setConversas(r.data);
+      setConversas(r.data || []);
     } catch {
-      setErro('Nao foi possivel carregar as conversas agora.');
+      setErro('Não foi possível carregar as conversas agora.');
     } finally {
       if (!silent) setLoadingConversas(false);
     }
@@ -171,9 +172,9 @@ export default function Inbox() {
     if (!silent) setLoadingMensagens(true);
     try {
       const r = await getMensagens(selecionada.id);
-      setMensagens(r.data);
+      setMensagens(r.data || []);
     } catch {
-      setErro('Nao foi possivel carregar as mensagens desta conversa.');
+      setErro('Não foi possível carregar as mensagens desta conversa.');
     } finally {
       if (!silent) setLoadingMensagens(false);
     }
@@ -307,7 +308,7 @@ export default function Inbox() {
       if (inputRef.current) inputRef.current.style.height = 'auto';
       await refreshInbox();
     } catch (error) {
-      setErro(error?.response?.data?.error || 'Nao foi possivel enviar a mensagem agora.');
+      setErro(error?.response?.data?.error || 'Não foi possível enviar a mensagem agora.');
     } finally {
       setEnviando(false);
     }
@@ -324,7 +325,7 @@ export default function Inbox() {
       const mediaUrl = uploadResponse.data?.url;
 
       if (!mediaUrl) {
-        throw new Error('Nao foi possivel gerar a URL do arquivo.');
+        throw new Error('Não foi possível gerar a URL do arquivo.');
       }
 
       await responderConversaMidia(selecionada.id, {
@@ -340,7 +341,7 @@ export default function Inbox() {
 
       await refreshInbox();
     } catch (error) {
-      setErro(error?.response?.data?.error || error?.message || 'Nao foi possivel enviar o arquivo agora.');
+      setErro(error?.response?.data?.error || error?.message || 'Não foi possível enviar o arquivo agora.');
     } finally {
       setEnviandoMidia(false);
       if (fileInputRef.current) {
@@ -362,7 +363,7 @@ export default function Inbox() {
     }
 
     if (!navigator.mediaDevices?.getUserMedia || typeof MediaRecorder === 'undefined') {
-      setErro('Seu navegador nao suporta gravacao de audio nesta tela.');
+      setErro('Seu navegador não suporta gravação de áudio nesta tela.');
       return;
     }
 
@@ -407,7 +408,7 @@ export default function Inbox() {
       setDuracaoGravacao(0);
       setErro('');
     } catch {
-      setErro('Nao foi possivel acessar o microfone agora.');
+      setErro('Não foi possível acessar o microfone agora.');
       encerrarCapturaAudio();
       setGravandoAudio(false);
     }
@@ -417,73 +418,74 @@ export default function Inbox() {
     (c.nomeCliente || '').toLowerCase().includes(search.toLowerCase()) || 
     (c.telefone || '').includes(search)
   );
+  
   const inicioConversa = mensagens[0]?.createdAt || selecionada?.updatedAt || null;
   const isCompactPanel = panelWidth < 1380;
   const isTightPanel = panelWidth < 1180;
-  const isUltraTightPanel = panelWidth < 980;
+  
   const showContextSidebar = Boolean(selecionada && panelWidth >= 1520);
-  const showInlineContext = Boolean(selecionada && !showContextSidebar);
   const actionLabel = selecionada?.atendimento === 'ia'
-    ? (isTightPanel ? 'ASSUMIR' : 'ASSUMIR ATENDIMENTO')
-    : (isTightPanel ? 'VOLTAR IA' : 'RETORNAR PARA IA');
+    ? (isTightPanel ? 'Assumir' : 'Assumir Atendimento')
+    : (isTightPanel ? 'Voltar IA' : 'Devolver para IA');
 
   return (
     <motion.div 
       ref={panelRef}
-      initial={{ opacity: 0, scale: 0.98 }}
-      animate={{ opacity: 1, scale: 1 }}
-      className="flex min-h-[70vh] overflow-hidden rounded-[2rem] border border-gray-200 dark:border-white/5 bg-[#fffaf9] dark:bg-[#17151b] shadow-[0_18px_48px_-30px_rgba(0,0,0,0.3)] lg:h-[calc(100dvh-9rem)] lg:max-h-[calc(100dvh-7rem)] lg:rounded-[2.5rem]"
+      initial={{ opacity: 0, y: 15 }}
+      animate={{ opacity: 1, y: 0 }}
+      className="flex min-h-[70dvh] overflow-hidden rounded-2xl border border-black/[0.04] dark:border-white/[0.04] bg-white/60 dark:bg-white/[0.01] backdrop-blur-md shadow-sm lg:h-[calc(100dvh-12rem)] lg:max-h-[calc(100dvh-10rem)]"
     >
       
-      {/* ── Sidebar: Lista de Conversas ── */}
+      {/* ── Sidebar: Conversas List ── */}
       <aside className={cn(
-        "w-full min-h-0 flex flex-col border-r border-gray-200 dark:border-white/5 bg-white/80 dark:bg-[#1d1a22]",
+        "w-full min-h-0 flex flex-col border-r border-black/[0.04] dark:border-white/[0.04] bg-white/40 dark:bg-white/[0.01] backdrop-blur-sm",
         isCompactPanel ? "lg:w-[19rem] xl:w-[20rem]" : "lg:w-80 xl:w-96",
         mobileChat ? "hidden lg:flex" : "flex"
       )}>
-        <div className="flex-shrink-0 space-y-5 p-4 md:p-5">
+        <div className="flex-shrink-0 space-y-4 p-4 border-b border-black/[0.03] dark:border-white/[0.03]">
           <div className="flex items-center justify-between gap-4">
-            <h1 className="text-2xl font-black tracking-tight text-[#2f2430] dark:text-white">Inbox</h1>
-            <div className="flex h-9 w-9 items-center justify-center rounded-2xl bg-[#d48997]/10 text-[#d48997] shadow-inner">
-              <span className="text-xs font-black">{conversas.length}</span>
+            <h1 className="text-xl font-serif font-normal text-gray-900 dark:text-white leading-tight">
+              Central de <span className="text-[#d48997]">Atendimento</span>
+            </h1>
+            <div className="flex h-6 px-2.5 items-center justify-center rounded-lg bg-[#d48997]/10 text-[#d48997] font-semibold text-[10px]">
+              {conversas.length}
             </div>
           </div>
-          <div className="flex items-center gap-2 overflow-x-auto hide-scrollbar">
-            <div className="flex items-center gap-1.5 rounded-full border border-gray-100 bg-white px-3 py-1.5 dark:border-white/10 dark:bg-white/5">
-               <span className="text-[10px] font-black uppercase text-gray-400 tracking-wider">Abertas</span>
-               <span className="text-[11px] font-black text-gray-900 dark:text-white">{totalAbertas}</span>
-            </div>
-            <div className="flex items-center gap-1.5 rounded-full border border-[#d48997]/20 bg-[#d48997]/5 px-3 py-1.5 dark:bg-[#d48997]/10">
-               <span className="text-[10px] font-black uppercase text-[#d48997] tracking-wider">IA</span>
-               <span className="text-[11px] font-black text-[#d48997]">{totalIa}</span>
-            </div>
-            <div className="flex items-center gap-1.5 rounded-full border border-emerald-500/20 bg-emerald-500/5 px-3 py-1.5 dark:bg-emerald-500/10">
-               <span className="text-[10px] font-black uppercase text-emerald-600 dark:text-emerald-400 tracking-wider">Humano</span>
-               <span className="text-[11px] font-black text-emerald-600 dark:text-emerald-400">{totalHumano}</span>
-            </div>
+
+          <div className="flex items-center gap-1.5 overflow-x-auto hide-scrollbar pb-1 text-[10px] font-medium text-gray-500">
+            <span className="inline-flex items-center gap-1 rounded-lg bg-gray-50 dark:bg-white/[0.02] border border-black/[0.03] dark:border-white/5 px-2.5 py-1">
+              Abertas: <strong className="text-gray-900 dark:text-white">{totalAbertas}</strong>
+            </span>
+            <span className="inline-flex items-center gap-1 rounded-lg bg-[#d48997]/5 border border-[#d48997]/10 px-2.5 py-1 text-[#d48997]">
+              IA: <strong>{totalIa}</strong>
+            </span>
+            <span className="inline-flex items-center gap-1 rounded-lg bg-emerald-50 dark:bg-emerald-950/20 border border-emerald-500/10 px-2.5 py-1 text-emerald-600 dark:text-emerald-400">
+              Humano: <strong>{totalHumano}</strong>
+            </span>
           </div>
           
-          <div className="relative group">
-            <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 group-focus-within:text-[#d48997] transition-colors" />
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
             <input 
               type="text" 
-              placeholder="Escreva para buscar..."
+              placeholder="Buscar cliente..."
               value={search}
               onChange={e => setSearch(e.target.value)}
-              className="w-full rounded-[1.25rem] border border-gray-200 bg-white px-4 py-3.5 pl-11 text-sm font-bold text-[#3b2a35] outline-none transition-all shadow-sm placeholder:text-gray-400 focus:ring-4 focus:ring-[#E29BA8]/5 dark:border-white/10 dark:bg-gray-950/50 dark:text-white dark:placeholder:text-gray-500"
+              className="w-full h-10 rounded-xl border border-black/[0.08] dark:border-white/10 bg-white dark:bg-[#111113] pl-9 pr-4 text-xs text-gray-900 dark:text-white outline-none focus:border-[#d48997] focus:ring-2 focus:ring-[#d48997]/10 transition-all placeholder:text-gray-400"
             />
           </div>
 
-          <div className="flex items-center gap-2 overflow-x-auto hide-scrollbar -mx-4 px-4 pb-1">
+          {/* Filters tabs */}
+          <div className="flex items-center gap-1 overflow-x-auto hide-scrollbar">
             {FILTROS.map((f, i) => (
               <button
                 key={i}
                 onClick={() => { setFiltro(i); setSelecionada(null); setErro(''); }}
                 className={cn(
-                  "flex items-center gap-2 px-4 py-2.5 rounded-full text-[9px] font-black uppercase tracking-widest transition-all whitespace-nowrap border border-transparent",
+                  "flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[10px] font-semibold transition-all whitespace-nowrap border",
                   filtro === i 
-                  ? "bg-[#d48997] text-white shadow-md shadow-[#E29BA8]/20" 
-                  : "bg-gray-50 dark:bg-gray-950/50 text-gray-500 hover:text-gray-900 border-gray-100 hover:border-gray-200 dark:text-gray-400 dark:hover:text-white dark:border-white/5 dark:hover:border-white/10"
+                  ? "bg-[#d48997] border-[#d48997] text-white shadow-sm" 
+                  : "bg-white dark:bg-[#111113] border-black/[0.04] dark:border-white/5 text-gray-500 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white"
                 )}
               >
                 {f.icon}
@@ -493,46 +495,48 @@ export default function Inbox() {
           </div>
         </div>
 
-        <div className="flex-1 space-y-2 overflow-y-auto px-4 pb-8 custom-scrollbar">
+        <div className="flex-1 overflow-y-auto p-2 space-y-1 custom-scrollbar">
           <AnimatePresence mode="popLayout">
             {filteredConversas.length === 0 ? (
               <motion.div 
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
-                className="py-20 text-center space-y-4 opacity-40"
+                className="py-12 text-center space-y-3"
               >
-                <Archive size={48} className="mx-auto text-gray-400" />
-                <p className="text-[10px] font-black uppercase tracking-widest text-gray-400">Nenhuma conversa por aqui</p>
+                <Archive size={32} className="mx-auto text-gray-300 dark:text-gray-700" />
+                <p className="text-xs text-gray-400 dark:text-gray-500">Nenhuma conversa encontrada</p>
               </motion.div>
             ) : (
               filteredConversas.map(c => (
                 <motion.button
                   layout
-                  initial={{ opacity: 0, x: -20 }}
-                  animate={{ opacity: 1, x: 0 }}
+                  initial={{ opacity: 0, y: 5 }}
+                  animate={{ opacity: 1, y: 0 }}
                   key={c.id}
                   onClick={() => { setSelecionada(c); setMobileChat(true); setMensagens([]); setErro(''); }}
                   className={cn(
-                    "group flex w-full gap-3 rounded-[1.5rem] border p-3.5 text-left transition-all",
+                    "flex w-full gap-3 rounded-xl border p-3 text-left transition-all",
                     selecionada?.id === c.id 
-                    ? "bg-white dark:bg-[#25212b] shadow-lg border-[#E29BA8]/30" 
-                    : "bg-transparent border-transparent hover:bg-white/70 dark:hover:bg-white/5"
+                    ? "bg-[#d48997]/5 border-[#d48997]/20 shadow-sm" 
+                    : "bg-transparent border-transparent hover:bg-black/[0.02] dark:hover:bg-white/[0.01]"
                   )}
                 >
-                  <ContatoAvatar conversa={c} className="h-14 w-14" fallbackClassName="text-xl transition-transform group-hover:scale-105" showBadge />
-                  <div className="flex-1 min-w-0 py-1">
-                    <div className="flex justify-between items-start mb-1">
-                      <h4 className="font-black text-gray-900 dark:text-white truncate tracking-tight text-sm">
+                  <ContatoAvatar conversa={c} className="h-10 w-10" showBadge />
+                  <div className="flex-1 min-w-0 py-0.5">
+                    <div className="flex justify-between items-start mb-0.5">
+                      <h4 className="font-medium text-gray-900 dark:text-white truncate text-xs">
                         {getConversaTitulo(c)}
                       </h4>
-                      <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest">{formatarHora(c.updatedAt)}</span>
+                      <span className="text-[9px] text-gray-400 font-medium">{formatarHora(c.updatedAt)}</span>
                     </div>
-                    <p className="text-xs text-gray-500 dark:text-gray-400 truncate leading-relaxed font-bold">
+                    <p className="text-[11px] text-gray-400 dark:text-gray-500 truncate leading-relaxed">
                       {getMensagemResumo(c.ultimaMensagem)}
                     </p>
-                    <div className="flex items-center gap-2 mt-2">
-                       <div className="w-1 h-1 rounded-full bg-emerald-500" />
-                       <span className="text-[9px] font-black text-gray-400 uppercase tracking-[0.2em]">{c.atendimento === 'humano' ? 'Em atendimento' : 'IA ativa'}</span>
+                    <div className="flex items-center gap-1.5 mt-1.5">
+                       <div className={cn("w-1.5 h-1.5 rounded-full", c.atendimento === 'humano' ? "bg-emerald-500" : "bg-[#d48997]")} />
+                       <span className="text-[8px] font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wider">
+                         {c.atendimento === 'humano' ? 'Suporte Humano' : 'Respostas IA'}
+                       </span>
                     </div>
                   </div>
                 </motion.button>
@@ -544,44 +548,41 @@ export default function Inbox() {
 
       {/* ── Main: Chat Hub ── */}
       <main className={cn(
-        "relative flex min-h-0 min-w-0 flex-1 flex-col bg-[#fcf7f5] dark:bg-[#151319]",
-        !mobileChat && !selecionada ? "hidden md:flex" : "flex"
+        "relative flex min-h-0 min-w-0 flex-1 flex-col bg-white dark:bg-[#121214]",
+        !mobileChat && !selecionada ? "hidden lg:flex" : "flex"
       )}>
         {!selecionada ? (
-          <div className="flex-1 flex flex-col items-center justify-center text-center p-4 md:p-8 space-y-6">
-            <div className="flex h-24 w-24 items-center justify-center rounded-[2rem] border border-gray-200 dark:border-white/5 bg-white dark:bg-[#211d24] text-[#d48997] shadow-sm">
-              <MessageSquare size={40} />
+          <div className="flex-1 flex flex-col items-center justify-center text-center p-8 space-y-4">
+            <div className="flex h-16 w-16 items-center justify-center rounded-2xl border border-black/[0.04] dark:border-white/5 bg-gray-50 dark:bg-white/[0.01] text-[#d48997] shadow-sm">
+              <MessageSquare size={28} />
             </div>
             <div>
-              <h3 className="text-3xl font-black tracking-tight text-gray-900 dark:text-white">Selecione uma conversa</h3>
-              <p className="mx-auto mt-3 max-w-sm leading-relaxed text-gray-500 dark:text-gray-400">As mensagens novas aparecem aqui assim que entrarem no inbox.</p>
+              <h3 className="text-xl font-serif font-normal text-gray-900 dark:text-white">Selecione um Cliente</h3>
+              <p className="mx-auto mt-1 max-w-xs text-xs text-gray-400 dark:text-gray-500 leading-relaxed">
+                Escolha uma conversa na barra lateral para ler o histórico e responder às mensagens.
+              </p>
             </div>
           </div>
         ) : (
           <>
             {/* Chat Header */}
-            <header className="z-10 flex min-h-16 flex-shrink-0 flex-col gap-3 border-b border-gray-100 dark:border-white/5 bg-white/95 px-4 py-3 shadow-sm backdrop-blur-2xl dark:bg-[#1a1720] md:flex-row md:items-center md:justify-between md:px-6">
-              <div className="flex items-center gap-3 md:gap-4 min-w-0">
-                <button onClick={() => setMobileChat(false)} className="md:hidden p-2.5 bg-gray-50 dark:bg-white/5 text-gray-600 dark:text-gray-300 rounded-full">
-                  <ChevronLeft size={18} />
+            <header className="z-10 flex min-h-16 flex-shrink-0 flex-col gap-3 border-b border-black/[0.04] dark:border-white/5 bg-white/95 dark:bg-[#18181b]/95 px-4 py-3 shadow-sm backdrop-blur-md md:flex-row md:items-center md:justify-between md:px-6">
+              <div className="flex items-center gap-3 min-w-0">
+                <button onClick={() => setMobileChat(false)} className="lg:hidden p-2 text-gray-400 hover:text-gray-600 rounded-lg border border-black/[0.04] dark:border-white/10 bg-white/50 dark:bg-zinc-800">
+                  <ChevronLeft size={16} />
                 </button>
-                <ContatoAvatar conversa={selecionada} className="h-11 w-11" fallbackClassName="text-lg" />
+                <ContatoAvatar conversa={selecionada} className="h-10 w-10" />
                 <div className="min-w-0">
-                  <h3 className="truncate text-base font-black tracking-tight text-gray-900 dark:text-white leading-tight">{getConversaTitulo(selecionada)}</h3>
-                  <div className="mt-1 flex items-center gap-2 overflow-x-auto hide-scrollbar">
-                     <p className="truncate text-[11px] font-semibold text-gray-500 dark:text-gray-400">{getConversaSubtitulo(selecionada)}</p>
-                     <div className="w-1 h-1 shrink-0 rounded-full bg-gray-300 dark:bg-gray-600" />
-                     <span className="flex items-center gap-1.5 text-[9px] font-black uppercase tracking-widest text-emerald-500 shrink-0">
-                       <div className="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse"></div> Ativo
+                  <h3 className="truncate text-sm font-semibold text-gray-900 dark:text-white leading-tight">{getConversaTitulo(selecionada)}</h3>
+                  <div className="mt-1 flex items-center gap-1.5 text-[10px] text-gray-400 dark:text-gray-500">
+                     <p className="truncate">{getConversaSubtitulo(selecionada)}</p>
+                     <div className="w-1 h-1 shrink-0 rounded-full bg-gray-300 dark:bg-gray-700" />
+                     <span className="flex items-center gap-1 text-emerald-500 shrink-0 font-medium">
+                       <div className="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse"></div> Online
                      </span>
-                     <div className="w-1 h-1 shrink-0 rounded-full bg-gray-300 dark:bg-gray-600" />
-                     <span className="text-[9px] font-black uppercase tracking-widest text-gray-400 flex items-center gap-1 shrink-0">
-                       {selecionada.atendimento === 'humano' ? <User size={10} /> : <Bot size={10} />}
-                       {selecionada.atendimento === 'humano' ? 'Humano' : 'IA'}
-                     </span>
-                     <div className="w-1 h-1 shrink-0 rounded-full bg-gray-300 dark:bg-gray-600" />
-                     <span className="text-[9px] font-black uppercase tracking-widest text-gray-400 flex items-center gap-1 shrink-0">
-                       <Clock size={10} /> {formatarHora(selecionada.updatedAt) || '--:--'}
+                     <div className="w-1 h-1 shrink-0 rounded-full bg-gray-300 dark:bg-gray-700" />
+                     <span className="flex items-center gap-1 shrink-0 font-medium">
+                       {selecionada.atendimento === 'humano' ? 'Humano' : 'IA Ativa'}
                      </span>
                   </div>
                 </div>
@@ -591,30 +592,31 @@ export default function Inbox() {
                 <button
                   type="button"
                   onClick={() => navigate(`/admin/agenda?novoAgendamento=1&telefone=${selecionada.telefone}&nome=${encodeURIComponent(selecionada.nomeCliente || '')}`)}
-                  className="flex h-9 items-center justify-center rounded-full border border-gray-200 bg-white px-4 text-[9px] font-black uppercase tracking-widest text-gray-600 transition-all hover:border-[#d48997]/30 hover:bg-[#d48997]/5 hover:text-[#d48997] dark:border-white/10 dark:bg-white/5 dark:text-gray-300 dark:hover:border-[#d48997]/30 whitespace-nowrap shrink-0"
+                  className="inline-flex h-9 items-center justify-center gap-2 rounded-xl border border-black/[0.08] dark:border-white/10 bg-white dark:bg-[#18181b] px-4 text-xs font-semibold text-gray-600 dark:text-gray-300 transition hover:border-[#d48997] hover:text-[#d48997]"
                 >
-                  <Calendar size={12} className="mr-2" /> Agendar
+                  <Calendar size={13} /> Agendar
                 </button>
                 <motion.button 
-                  whileHover={{ scale: 1.02 }}
+                  whileHover={{ scale: 1.02, y: -1 }}
                   whileTap={{ scale: 0.98 }}
                   onClick={selecionada.atendimento === 'ia' ? assumir : soltarIA}
                   className={cn(
-                    "h-9 px-4 rounded-full text-[9px] font-black uppercase tracking-widest transition-all shadow-sm flex items-center justify-center gap-2 whitespace-nowrap shrink-0",
+                    "h-9 px-4 rounded-xl text-xs font-semibold text-white transition shadow-sm flex items-center justify-center gap-1.5 whitespace-nowrap shrink-0",
                     selecionada.atendimento === 'ia' 
-                    ? "bg-[#d48997] text-white hover:bg-[#b96a79]" 
-                    : "bg-emerald-600 text-white hover:bg-emerald-700"
+                    ? "bg-[#d48997] hover:bg-[#c97b8a]" 
+                    : "bg-emerald-600 hover:bg-emerald-700"
                   )}
                 >
-                  {selecionada.atendimento === 'ia' ? <Zap size={12} /> : <Bot size={12} />}
-                  <span className="hidden sm:inline">{actionLabel}</span>
-                  <span className="sm:hidden">{selecionada.atendimento === 'ia' ? 'Assumir' : 'Devolver IA'}</span>
+                  {selecionada.atendimento === 'ia' ? <Zap size={13} /> : <Bot size={13} />}
+                  <span>{actionLabel}</span>
                 </motion.button>
-                <div className="hidden md:block w-px h-5 bg-gray-200 dark:bg-white/10 mx-1 shrink-0" />
+                
+                <div className="w-px h-5 bg-black/[0.06] dark:bg-white/10 mx-1 shrink-0" />
+                
                 <button 
                   onClick={fechar}
                   title="Arquivar conversa"
-                  className="w-9 h-9 shrink-0 flex items-center justify-center bg-gray-50 dark:bg-white/5 rounded-full hover:bg-gray-200 dark:hover:bg-white/10 transition-all text-gray-400 dark:text-gray-400 hover:text-gray-700 dark:hover:text-white shadow-sm"
+                  className="w-9 h-9 shrink-0 flex items-center justify-center bg-white dark:bg-[#18181b] border border-black/[0.08] dark:border-white/10 rounded-xl hover:text-red-500 transition-colors text-gray-400"
                 >
                   <Archive size={14} />
                 </button>
@@ -624,31 +626,33 @@ export default function Inbox() {
             {/* Messages Canvas */}
             <div 
               ref={chatRef}
-              className="relative flex-1 min-h-0 overflow-y-auto bg-[linear-gradient(180deg,_rgba(255,255,255,0.86),_rgba(249,243,240,0.96))] px-4 py-6 space-y-8 custom-scrollbar dark:bg-[linear-gradient(180deg,_rgba(25,23,30,0.96),_rgba(20,18,24,0.98))] md:px-10 md:py-10"
+              className="relative flex-1 min-h-0 overflow-y-auto bg-gray-50/50 dark:bg-white/[0.01] px-4 py-6 space-y-6 custom-scrollbar md:px-6"
             >
-              <div className="flex justify-center mb-12">
-                <div className="bg-white/60 dark:bg-gray-900/60 backdrop-blur-md px-6 py-2 rounded-full text-[10px] font-black text-gray-400 dark:text-gray-500 uppercase tracking-[0.3em] border border-gray-100 dark:border-white/5 shadow-sm">
-                  Conversa iniciada em {inicioConversa ? new Date(inicioConversa).toLocaleDateString('pt-BR') : 'agora'}
+              <div className="flex justify-center mb-6">
+                <div className="bg-white dark:bg-zinc-800 px-4 py-1.5 rounded-full text-[9px] font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wider border border-black/[0.03] dark:border-white/5 shadow-sm">
+                  Início em {inicioConversa ? new Date(inicioConversa).toLocaleDateString('pt-BR') : 'hoje'}
                 </div>
               </div>
               {erro ? (
-                <div className="mx-auto max-w-2xl rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm font-semibold text-amber-700 shadow-sm dark:border-amber-500/20 dark:bg-amber-500/10 dark:text-amber-200">
+                <div className="mx-auto max-w-xl rounded-xl border border-amber-200 dark:border-amber-500/20 bg-amber-50 dark:bg-amber-950/20 px-4 py-2.5 text-xs text-amber-700 dark:text-amber-200 font-medium">
                   {erro}
                 </div>
               ) : null}
 
-              <AnimatePresence mode="popLayout">
-                {mensagens.map((m) => (
-                  <MensagemBolha key={m.id} m={m} />
-                ))}
-              </AnimatePresence>
+              <div className="space-y-4 max-w-3xl mx-auto">
+                <AnimatePresence mode="popLayout">
+                  {mensagens.map((m) => (
+                    <MensagemBolha key={m.id} m={m} />
+                  ))}
+                </AnimatePresence>
+              </div>
             </div>
 
             {/* Smart Input Bar */}
-            <footer className="border-t border-gray-100 bg-white/95 p-3 backdrop-blur-2xl dark:border-white/5 dark:bg-[#1a1720] md:p-4 shrink-0">
+            <footer className="border-t border-black/[0.04] dark:border-white/5 bg-white dark:bg-[#18181b] p-3 md:p-4 shrink-0">
               <form 
                 onSubmit={enviar}
-                className="group relative flex items-end gap-1.5 rounded-[1.5rem] border border-gray-200 bg-white p-1.5 shadow-sm transition-all focus-within:border-[#d48997]/40 focus-within:ring-4 focus-within:ring-[#d48997]/5 dark:border-white/10 dark:bg-[#100e13]"
+                className="group relative flex items-end gap-2 rounded-2xl border border-black/[0.08] dark:border-white/10 bg-white dark:bg-[#111113] p-2 focus-within:border-[#d48997] focus-within:ring-2 focus-within:ring-[#d48997]/10 transition-all max-w-3xl mx-auto"
               >
                 <input
                   ref={fileInputRef}
@@ -657,35 +661,37 @@ export default function Inbox() {
                   className="hidden"
                   onChange={selecionarArquivo}
                 />
-                <div className="flex shrink-0 items-center gap-0.5 pb-1 pl-1">
+                <div className="flex shrink-0 items-center gap-1">
                   <button
                     type="button"
                     onClick={() => fileInputRef.current?.click()}
                     disabled={enviandoAlgo}
-                    className="flex h-9 w-9 items-center justify-center rounded-full text-gray-400 transition-all hover:bg-gray-100 hover:text-gray-700 disabled:opacity-50 dark:hover:bg-white/5 dark:hover:text-white"
+                    className="flex h-9 w-9 items-center justify-center rounded-xl text-gray-400 hover:text-[#d48997] hover:bg-[#d48997]/5 transition-all disabled:opacity-50 dark:hover:bg-zinc-800"
+                    title="Anexar arquivo"
                   >
-                    <Paperclip size={18} />
+                    <Paperclip size={16} />
                   </button>
                   <button
                     type="button"
                     onClick={alternarGravacaoAudio}
                     disabled={enviandoMidia}
                     className={cn(
-                      'flex h-9 w-9 items-center justify-center rounded-full transition-all disabled:opacity-50',
+                      'flex h-9 w-9 items-center justify-center rounded-xl transition-all disabled:opacity-50',
                       gravandoAudio
-                        ? 'bg-red-500 text-white shadow-md shadow-red-500/20'
-                        : 'text-gray-400 hover:bg-gray-100 hover:text-gray-700 dark:hover:bg-white/5 dark:hover:text-white'
+                        ? 'bg-red-500 text-white shadow-sm'
+                        : 'text-gray-400 hover:text-[#d48997] hover:bg-[#d48997]/5 dark:hover:bg-zinc-800'
                     )}
+                    title="Gravar áudio"
                   >
-                    <Mic size={18} />
+                    <Mic size={16} />
                   </button>
                 </div>
                 
                 <div className="relative flex-1 flex flex-col justify-center min-w-0">
                   {showSnippets && snippets.length > 0 && (
-                    <div className="absolute bottom-full mb-3 left-0 w-full max-w-sm bg-white dark:bg-gray-900 border border-gray-200 dark:border-white/10 rounded-2xl shadow-2xl overflow-hidden z-[100]">
-                      <div className="bg-gray-50 dark:bg-white/5 px-4 py-2 text-[10px] font-black uppercase tracking-widest text-gray-500 border-b border-gray-100 dark:border-white/5">
-                        Respostas rapidas
+                    <div className="absolute bottom-full mb-3 left-0 w-full max-w-xs bg-white dark:bg-[#18181b] border border-black/[0.08] dark:border-white/10 rounded-2xl shadow-xl overflow-hidden z-[100]">
+                      <div className="bg-gray-50 dark:bg-white/[0.01] px-4 py-2.5 text-[9px] font-semibold uppercase tracking-wider text-gray-400 border-b border-black/[0.04] dark:border-white/5">
+                        Respostas Rápidas
                       </div>
                       <div className="max-h-48 overflow-y-auto">
                         {snippets.filter(s => s.atalho.toLowerCase().includes(texto.substring(1).toLowerCase())).map(snippet => (
@@ -697,10 +703,10 @@ export default function Inbox() {
                               setShowSnippets(false);
                               if (inputRef.current) inputRef.current.focus();
                             }}
-                            className="w-full text-left px-4 py-3 hover:bg-gray-50 dark:hover:bg-white/5 border-b border-gray-100 dark:border-white/5 last:border-0 transition-colors"
+                            className="w-full text-left px-4 py-2.5 hover:bg-[#d48997]/5 border-b border-black/[0.03] dark:border-white/5 last:border-0 transition-colors"
                           >
-                            <div className="text-xs font-black text-[#d48997]">/{snippet.atalho}</div>
-                            <div className="text-sm text-gray-600 dark:text-gray-300 truncate mt-0.5">{snippet.texto}</div>
+                            <div className="text-[10px] font-semibold text-[#d48997]">/{snippet.atalho}</div>
+                            <div className="text-xs text-gray-600 dark:text-gray-300 truncate mt-0.5">{snippet.texto}</div>
                           </button>
                         ))}
                       </div>
@@ -720,7 +726,7 @@ export default function Inbox() {
                         setShowSnippets(false);
                       }
                       e.target.style.height = 'auto';
-                      e.target.style.height = Math.min(e.target.scrollHeight, 140) + 'px';
+                      e.target.style.height = Math.min(e.target.scrollHeight, 120) + 'px';
                     }}
                     onKeyDown={e => {
                       if (e.key === 'Enter' && !e.shiftKey) {
@@ -736,12 +742,12 @@ export default function Inbox() {
                         enviar();
                       }
                     }}
-                    placeholder={gravandoAudio ? `Gravando áudio ${formatarDuracaoCurta(duracaoGravacao)}...` : "Mensagem... (Use / para respostas rápidas)"}
-                    className="w-full bg-transparent border-none outline-none py-2.5 px-2 text-sm text-gray-800 dark:text-gray-200 resize-none max-h-36 placeholder:text-gray-400 dark:placeholder:text-gray-600"
+                    placeholder={gravandoAudio ? `Gravando áudio ${formatarDuracaoCurta(duracaoGravacao)}...` : "Escreva uma mensagem... (Use / para respostas rápidas)"}
+                    className="w-full bg-transparent border-none outline-none py-2 px-1 text-xs text-gray-800 dark:text-gray-200 resize-none max-h-32 placeholder:text-gray-400 dark:placeholder:text-gray-600"
                   />
                   {enviandoMidia && (
                     <div className="absolute top-0 right-0 h-full flex items-center pr-2">
-                       <span className="text-[10px] font-black uppercase text-[#d48997] animate-pulse">Enviando arquivo...</span>
+                       <span className="text-[9px] font-semibold uppercase text-[#d48997] animate-pulse">Enviando arquivo...</span>
                     </div>
                   )}
                 </div>
@@ -751,9 +757,9 @@ export default function Inbox() {
                   whileTap={{ scale: 0.95 }}
                   type="submit"
                   disabled={!texto.trim() || enviandoAlgo || gravandoAudio}
-                  className="mb-1 mr-1 flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[#d48997] text-white transition-all hover:bg-[#b96a79] disabled:bg-gray-200 dark:disabled:bg-white/10"
+                  className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-[#d48997] text-white transition-all hover:bg-[#c97b8a] disabled:bg-gray-100 dark:disabled:bg-zinc-800 disabled:text-gray-400 dark:disabled:text-gray-600 shadow-sm"
                 >
-                  {enviandoAlgo ? <div className="h-4 w-4 animate-spin rounded-full border-2 border-white/30 border-t-white" /> : <Send size={16} className="-ml-0.5" />}
+                  {enviandoAlgo ? <div className="h-3 w-3 animate-spin rounded-full border border-white/30 border-t-white" /> : <Send size={13} />}
                 </motion.button>
               </form>
             </footer>
@@ -766,34 +772,60 @@ export default function Inbox() {
         {showContextSidebar && (
           <motion.aside 
             initial={{ width: 0, opacity: 0 }}
-            animate={{ width: isCompactPanel ? 208 : 220, opacity: 1 }}
+            animate={{ width: isCompactPanel ? 210 : 230, opacity: 1 }}
             exit={{ width: 0, opacity: 0 }}
-            className="hidden xl:flex flex-col gap-4 overflow-hidden border-l border-gray-100 bg-gray-50/40 p-4 backdrop-blur-xl dark:border-white/5 dark:bg-white/5"
+            className="hidden xl:flex flex-col gap-4 overflow-hidden border-l border-black/[0.04] dark:border-white/5 bg-gray-50/50 dark:bg-[#18181b]/50 p-4"
           >
-             <div className="flex items-center gap-3">
-               <ContatoAvatar conversa={selecionada} className="h-14 w-14" fallbackClassName="text-xl" />
-               <div className="min-w-0">
-               <p className="text-[10px] font-black text-gray-400 uppercase tracking-[0.3em]">Contexto</p>
-               <h4 className="mt-1 truncate text-base font-black tracking-tight text-gray-900 dark:text-white">{getConversaTitulo(selecionada)}</h4>
-               <p className="mt-1 break-all text-sm text-gray-500">{selecionada.telefone || 'Telefone nao informado'}</p>
+             <div className="flex flex-col items-center text-center pb-4 border-b border-black/[0.04] dark:border-white/5">
+               <ContatoAvatar conversa={selecionada} className="h-16 w-16 mb-3" fallbackClassName="text-2xl" />
+               <h4 className="font-serif text-base font-normal text-gray-900 dark:text-white truncate w-full">{getConversaTitulo(selecionada)}</h4>
+               <p className="text-xs text-gray-400 mt-0.5">{selecionada.telefone || 'Sem telefone'}</p>
+             </div>
+             
+             <div className="space-y-4">
+               <div>
+                 <span className="text-[9px] font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wider block mb-1">Status da Fila</span>
+                 <Badge active={selecionada.atendimento !== 'humano'}>
+                   {selecionada.atendimento === 'humano' ? 'Suporte Humano' : 'Respostas por IA'}
+                 </Badge>
+               </div>
+
+               <div className="grid grid-cols-2 gap-3 pt-2">
+                 <div className="rounded-xl border border-black/[0.04] dark:border-white/5 bg-white dark:bg-[#18181b] p-3">
+                   <span className="text-[8px] text-gray-400 dark:text-gray-500 uppercase tracking-wider block">Registrado</span>
+                   <span className="text-[11px] font-semibold text-gray-700 dark:text-gray-300 block mt-1">
+                     {inicioConversa ? new Date(inicioConversa).toLocaleDateString('pt-BR') : '--/--'}
+                   </span>
+                 </div>
+                 <div className="rounded-xl border border-black/[0.04] dark:border-white/5 bg-white dark:bg-[#18181b] p-3">
+                   <span className="text-[8px] text-gray-400 dark:text-gray-500 uppercase tracking-wider block">Última Ação</span>
+                   <span className="text-[11px] font-semibold text-gray-700 dark:text-gray-300 block mt-1">
+                     {formatarHora(selecionada.updatedAt) || '--:--'}
+                   </span>
+                 </div>
                </div>
              </div>
-             <div className="grid grid-cols-2 gap-2">
-               <SideInfo icon={<Calendar />} label="Criada em" value={inicioConversa ? new Date(inicioConversa).toLocaleDateString('pt-BR') : '--/--/----'} />
-               <SideInfo icon={<Clock />} label="Ultima acao" value={formatarHora(selecionada.updatedAt) || '--:--'} />
-               <SideInfo icon={<Bot />} label="Modo" value={selecionada.atendimento === 'humano' ? 'Humano' : 'IA'} />
-               <SideInfo icon={<Archive />} label="Status" value={selecionada.status === 'fechada' ? 'Arquivada' : 'Aberta'} />
-             </div>
-             <div className="space-y-2">
-               <ActionButton onClick={() => navigate(`/admin/agenda?novoAgendamento=1&telefone=${selecionada.telefone}&nome=${encodeURIComponent(selecionada.nomeCliente || '')}`)} icon={<Plus size={16} />} tone="soft">
-                 Agendar Agora
-               </ActionButton>
-               <ActionButton onClick={selecionada.atendimento === 'ia' ? assumir : soltarIA} icon={selecionada.atendimento === 'ia' ? <Zap size={16} /> : <Bot size={16} />} tone="primary">
-                 {selecionada.atendimento === 'ia' ? 'Assumir atendimento' : 'Devolver para IA'}
-               </ActionButton>
-               <ActionButton onClick={fechar} icon={<Archive size={16} />} tone="danger">
-                 Arquivar conversa
-               </ActionButton>
+
+             <div className="flex-1 flex flex-col justify-end gap-2.5">
+               <button
+                 onClick={() => navigate(`/admin/agenda?novoAgendamento=1&telefone=${selecionada.telefone}&nome=${encodeURIComponent(selecionada.nomeCliente || '')}`)}
+                 className="w-full flex items-center justify-center gap-2 h-10 rounded-xl border border-black/[0.08] dark:border-white/10 bg-white dark:bg-[#18181b] text-xs font-semibold text-gray-600 dark:text-gray-300 hover:text-[#d48997] hover:border-[#d48997] transition"
+               >
+                 <Plus size={14} /> Novo Agendamento
+               </button>
+               <button
+                 onClick={selecionada.atendimento === 'ia' ? assumir : soltarIA}
+                 className="w-full flex items-center justify-center gap-2 h-10 rounded-xl bg-[#d48997] hover:bg-[#c97b8a] text-xs font-semibold text-white transition shadow-sm"
+               >
+                 {selecionada.atendimento === 'ia' ? <Zap size={14} /> : <Bot size={14} />}
+                 {selecionada.atendimento === 'ia' ? 'Assumir Chat' : 'Devolver para IA'}
+               </button>
+               <button
+                 onClick={fechar}
+                 className="w-full flex items-center justify-center gap-2 h-10 rounded-xl border border-transparent bg-red-500/10 text-red-500 hover:bg-red-500 hover:text-white transition text-xs font-semibold"
+               >
+                 <Archive size={14} /> Arquivar Conversa
+               </button>
              </div>
           </motion.aside>
         )}
@@ -802,68 +834,28 @@ export default function Inbox() {
   );
 }
 
-function QuickMetric({ label, value }) {
-  return (
-    <div className="rounded-[1.35rem] border border-gray-100 bg-white/70 p-3 text-center dark:border-white/10 dark:bg-white/5">
-      <p className="text-lg font-black text-gray-900 dark:text-white">{value}</p>
-      <p className="text-[9px] font-black text-gray-400 uppercase tracking-[0.2em] mt-1">{label}</p>
-    </div>
-  );
-}
-
-function SideInfo({ icon, label, value }) {
-  return (
-    <div className="rounded-[1.5rem] border border-gray-100 dark:border-white/10 bg-white/80 dark:bg-white/5 p-4">
-      <div className="flex items-center gap-2 text-gray-400">
-        {React.cloneElement(icon, { size: 14 })}
-        <span className="text-[9px] font-black uppercase tracking-[0.2em]">{label}</span>
-      </div>
-      <p className="mt-2 text-sm font-black text-gray-900 dark:text-white break-words">{value}</p>
-    </div>
-  );
-}
-
-function ActionButton({ children, icon, onClick, tone }) {
-  return (
-    <button
-      onClick={onClick}
-      className={cn(
-        "w-full flex items-center justify-center gap-2 rounded-[1.5rem] px-4 py-4 text-[10px] font-black uppercase tracking-[0.2em] transition-all",
-        tone === 'danger'
-          ? "bg-red-500/10 text-red-500 hover:bg-red-500 hover:text-gray-900 dark:text-white"
-          : tone === 'soft'
-            ? "border border-gray-200 bg-white text-[#6f5561] hover:border-[#d48997]/30 hover:text-[#d48997] dark:border-white/10 dark:bg-white/5 dark:text-gray-200"
-            : "bg-[#d48997] text-white hover:bg-[#b96a79]"
-      )}
-    >
-      {icon}
-      {children}
-    </button>
-  );
-}
-
 function MensagemMidia({ m, isClient }) {
   const mediaSrc = getMensagemMediaSrc(m);
   if (!mediaSrc && !m?.nomeArquivo) return null;
 
   const mediaCardClass = cn(
-    "rounded-[1.25rem] border p-3 mb-3",
+    "rounded-xl border p-2.5 mb-2.5",
     isClient
-      ? "bg-gray-50 border-gray-100 text-gray-700"
+      ? "bg-gray-50 dark:bg-zinc-800 border-black/[0.04] dark:border-white/5 text-gray-700 dark:text-gray-300"
       : "bg-white/10 border-white/20 text-white"
   );
 
   if (m.tipo === 'imagem') {
     return (
       <div className={mediaCardClass}>
-        <div className="flex items-center gap-2 mb-3 text-xs font-black uppercase tracking-[0.2em] opacity-80">
-          <ImageIcon size={14} />
+        <div className="flex items-center gap-1.5 mb-2 text-[10px] font-semibold uppercase tracking-wider opacity-80">
+          <ImageIcon size={12} />
           Imagem
         </div>
         <img
           src={mediaSrc}
           alt={m.nomeArquivo || 'Imagem recebida'}
-          className="w-full max-h-80 object-cover rounded-[1rem]"
+          className="w-full max-h-72 object-cover rounded-lg"
         />
       </div>
     );
@@ -872,15 +864,15 @@ function MensagemMidia({ m, isClient }) {
   if (m.tipo === 'audio') {
     return (
       <div className={mediaCardClass}>
-        <div className="flex items-center gap-2 mb-3 text-xs font-black uppercase tracking-[0.2em] opacity-80">
-          <Mic size={14} />
-          Audio
-          {m.duracaoSeg ? <span>{Math.round(m.duracaoSeg)}s</span> : null}
+        <div className="flex items-center gap-1.5 mb-2 text-[10px] font-semibold uppercase tracking-wider opacity-80">
+          <Mic size={12} />
+          Áudio
+          {m.duracaoSeg ? <span>({Math.round(m.duracaoSeg)}s)</span> : null}
         </div>
         {mediaSrc ? (
-          <audio controls src={mediaSrc} className="w-full" preload="metadata" />
+          <audio controls src={mediaSrc} className="w-full h-8" preload="metadata" />
         ) : (
-          <p className="text-sm font-bold">Audio recebido sem preview disponivel.</p>
+          <p className="text-xs italic">Áudio recebido sem pré-visualização.</p>
         )}
       </div>
     );
@@ -889,14 +881,14 @@ function MensagemMidia({ m, isClient }) {
   if (m.tipo === 'video') {
     return (
       <div className={mediaCardClass}>
-        <div className="flex items-center gap-2 mb-3 text-xs font-black uppercase tracking-[0.2em] opacity-80">
-          <Film size={14} />
-          Video
+        <div className="flex items-center gap-1.5 mb-2 text-[10px] font-semibold uppercase tracking-wider opacity-80">
+          <Film size={12} />
+          Vídeo
         </div>
         {mediaSrc ? (
-          <video controls src={mediaSrc} className="w-full max-h-80 rounded-[1rem]" preload="metadata" />
+          <video controls src={mediaSrc} className="w-full max-h-72 rounded-lg" preload="metadata" />
         ) : (
-          <p className="text-sm font-bold">Video recebido sem preview disponivel.</p>
+          <p className="text-xs italic">Vídeo recebido sem pré-visualização.</p>
         )}
       </div>
     );
@@ -905,18 +897,18 @@ function MensagemMidia({ m, isClient }) {
   return (
     <div className={mediaCardClass}>
       <div className="flex items-center justify-between gap-3">
-        <div className="flex items-center gap-3 min-w-0">
+        <div className="flex items-center gap-2 min-w-0">
           <div
             className={cn(
-              "w-10 h-10 rounded-2xl flex items-center justify-center shrink-0",
-              isClient ? "bg-white text-[#d48997]" : "bg-white/15 text-white"
+              "w-8 h-8 rounded-lg flex items-center justify-center shrink-0",
+              isClient ? "bg-white dark:bg-zinc-700 text-[#d48997]" : "bg-white/15 text-white"
             )}
           >
-            <Paperclip size={16} />
+            <Paperclip size={14} />
           </div>
           <div className="min-w-0">
-            <p className="text-xs font-black uppercase tracking-[0.2em] opacity-80">Anexo</p>
-            <p className="text-sm font-bold truncate">{m.nomeArquivo || 'Arquivo recebido'}</p>
+            <p className="text-[10px] font-semibold uppercase tracking-wider opacity-70">Anexo</p>
+            <p className="text-xs font-medium truncate">{m.nomeArquivo || 'Arquivo recebido'}</p>
           </div>
         </div>
         {mediaSrc ? (
@@ -925,12 +917,12 @@ function MensagemMidia({ m, isClient }) {
             target="_blank"
             rel="noreferrer"
             className={cn(
-              "inline-flex items-center gap-2 rounded-2xl px-3 py-2 text-[10px] font-black uppercase tracking-[0.2em] transition-colors",
-              isClient ? "bg-white text-[#d48997]" : "bg-white text-[#b96a79]"
+              "inline-flex items-center gap-1 rounded-lg px-2.5 py-1.5 text-[9px] font-semibold uppercase tracking-wider transition-colors",
+              isClient ? "bg-[#d48997] text-white" : "bg-white text-[#d48997]"
             )}
           >
-            <Download size={14} />
-            Abrir
+            <Download size={11} />
+            Baixar
           </a>
         ) : null}
       </div>
@@ -950,15 +942,14 @@ function MensagemBolha({ m }) {
         animate={{ opacity: 1, y: 0 }}
         className="flex justify-center"
       >
-        <div className="max-w-[80%] bg-[#d48997]/5 dark:bg-[#8c4a57]/10 border border-[#E29BA8]/10 dark:border-purple-800/30 rounded-[2rem] p-4 md:p-8 space-y-4 relative overflow-hidden group hover:border-[#E29BA8] transition-all">
-          <div className="flex items-center gap-3 text-[#d48997]">
-            <Sparkles className="animate-pulse" size={20} />
-            <span className="text-[10px] font-black uppercase tracking-[0.3em]">Resumo da IA</span>
+        <div className="max-w-[85%] bg-[#d48997]/5 dark:bg-[#d48997]/5 border border-[#d48997]/15 rounded-2xl p-5 relative overflow-hidden group hover:border-[#d48997]/30 transition-all">
+          <div className="flex items-center gap-2 text-[#d48997] mb-2">
+            <Sparkles className="animate-pulse" size={15} />
+            <span className="text-[9px] font-semibold uppercase tracking-wider">Resumo de Atendimento por IA</span>
           </div>
-          <p className="text-sm text-gray-600 dark:text-gray-300 leading-relaxed font-bold italic">
+          <p className="text-xs text-gray-500 dark:text-gray-400 leading-relaxed italic">
             "{m.conteudo.replace('[RESUMO]', '').trim()}"
           </p>
-          <div className="absolute -right-4 -bottom-4 w-24 h-24 bg-[#d48997]/5 rounded-full blur-2xl group-hover:bg-[#d48997]/10 transition-colors" />
         </div>
       </motion.div>
     );
@@ -966,7 +957,7 @@ function MensagemBolha({ m }) {
 
   return (
     <motion.div 
-      initial={{ opacity: 0, y: 10, scale: 0.95 }}
+      initial={{ opacity: 0, y: 10, scale: 0.98 }}
       animate={{ opacity: 1, y: 0, scale: 1 }}
       className={cn(
         "flex flex-col group",
@@ -974,42 +965,31 @@ function MensagemBolha({ m }) {
       )}
     >
       <div className={cn(
-        "flex items-center gap-3 mb-2 px-2",
+        "flex items-center gap-2 mb-1 px-1.5 text-[9px] text-gray-400 dark:text-gray-500",
         isClient ? "flex-row" : "flex-row-reverse"
       )}>
-        <span className="text-[9px] font-black text-gray-400 uppercase tracking-widest opacity-0 group-hover:opacity-100 transition-opacity">
-          {isClient ? 'Cliente' : isIA ? 'IA' : 'Atendente'}
+        <span className="font-semibold uppercase tracking-wider">
+          {isClient ? 'Cliente' : isIA ? 'Assistente IA' : 'Atendente'}
         </span>
-        <div className="w-1 h-1 rounded-full bg-gray-200 dark:bg-white/10" />
-        <span className="text-[9px] text-gray-400 font-black tracking-tighter">{formatarHora(m.createdAt)}</span>
+        <div className="w-1 h-1 rounded-full bg-gray-200 dark:bg-zinc-800" />
+        <span>{formatarHora(m.createdAt)}</span>
       </div>
       
       <div className={cn(
-        "px-6 py-4 rounded-[1.8rem] shadow-sm border relative max-w-[80%] transition-all hover:scale-[1.01]",
+        "px-4 py-3 rounded-2xl shadow-sm border max-w-[85%] relative",
         isClient 
-        ? "bg-white dark:bg-gray-900 border-gray-100 dark:border-white/5 rounded-tl-sm text-gray-800 dark:text-gray-100" 
-        : "bg-[#dcf8e8] dark:bg-[#2c5a44] border-[#c7e9d6] dark:border-[#376a51] rounded-tr-sm text-[#123524] dark:text-white"
+        ? "bg-white dark:bg-[#18181b] border-black/[0.04] dark:border-white/5 rounded-tl-none text-gray-800 dark:text-gray-200" 
+        : "bg-[#d48997]/10 dark:bg-[#d48997]/15 border-[#d48997]/20 dark:border-[#d48997]/20 rounded-tr-none text-gray-950 dark:text-white"
       )}>
         {m.tipo && m.tipo !== 'texto' ? <MensagemMidia m={m} isClient={isClient} /> : null}
         {exibirTexto ? (
-          <p className="text-sm font-bold whitespace-pre-wrap leading-relaxed break-words">{m.conteudo}</p>
+          <p className="text-xs whitespace-pre-wrap leading-relaxed break-words font-normal">{m.conteudo}</p>
         ) : null}
         <div className={cn(
-          "flex items-center gap-1 mt-2 opacity-40",
-          isClient ? "justify-start" : "justify-end"
+          "flex items-center gap-1 mt-1.5 opacity-60",
+          isClient ? "justify-start text-gray-400" : "justify-end text-[#d48997]"
         )}>
-          {!isClient && <CheckCheck size={12} className="text-[#0f5132] dark:text-white" />}
-        </div>
-        
-        {/* Tail decoration */}
-        <div className={cn(
-          "absolute top-0 w-4 h-4 overflow-hidden",
-          isClient ? "-left-4" : "-right-4"
-        )}>
-           <div className={cn(
-             "w-4 h-4 rotate-45 transform origin-top shadow-sm",
-             isClient ? "bg-white dark:bg-gray-900 -translate-x-2" : "bg-[#dcf8e8] dark:bg-[#2c5a44] translate-x-2"
-           )} />
+          {!isClient && <CheckCheck size={11} />}
         </div>
       </div>
     </motion.div>

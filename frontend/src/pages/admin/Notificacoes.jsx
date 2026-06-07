@@ -11,24 +11,25 @@ import {
   Zap,
 } from 'lucide-react';
 import { getAdminSalao, updateAdminSalao } from '../../services/api';
+import { cn } from '../../lib/utils';
 
 const TEMPLATE_SECTIONS = [
   {
     key: 'templateConfirmacao',
-    titulo: 'Confirmacao',
-    descricao: 'Enviado logo apos a reserva ser registrada.',
+    titulo: 'Confirmação',
+    descricao: 'Disparado automaticamente logo após o agendamento ser reservado.',
     icon: CheckCircle2,
   },
   {
     key: 'templateLembrete',
-    titulo: 'Lembrete 24h',
-    descricao: 'Reforca a presenca da cliente no dia anterior.',
+    titulo: 'Lembrete (24h antes)',
+    descricao: 'Enviado para reconfirmar a presença da cliente no dia anterior.',
     icon: Bell,
   },
   {
     key: 'templateCancelamento',
     titulo: 'Cancelamento',
-    descricao: 'Padroniza a comunicacao quando houver desistencias.',
+    descricao: 'Notificação automática caso o horário seja desmarcado.',
     icon: Zap,
   },
 ];
@@ -42,7 +43,7 @@ function renderPreview(template, salaoNome) {
     .replace(/{{cliente}}/g, 'Camila')
     .replace(/{{servico}}/g, 'Escova modelada')
     .replace(/{{profissional}}/g, 'Ana Silva')
-    .replace(/{{data}}/g, '16/05/2026')
+    .replace(/{{data}}/g, '16/06/2026')
     .replace(/{{hora}}/g, '14:30')
     .replace(/{{salao}}/g, salaoNome || 'BellaPro Agenda');
 }
@@ -50,21 +51,22 @@ function renderPreview(template, salaoNome) {
 function Bubble({ text, tone = 'left' }) {
   return (
     <motion.div
-      initial={{ opacity: 0, y: 12, scale: 0.98 }}
+      initial={{ opacity: 0, y: 10, scale: 0.98 }}
       animate={{ opacity: 1, y: 0, scale: 1 }}
-      className={`flex max-w-[85%] flex-col ${tone === 'left' ? 'self-start' : 'self-end'}`}
+      className={cn('flex max-w-[85%] flex-col', tone === 'left' ? 'self-start' : 'self-end')}
     >
       <div
-        className={`rounded-[22px] px-4 py-3 text-sm leading-6 shadow-lg ${
+        className={cn(
+          'rounded-2xl px-4 py-2.5 text-xs leading-relaxed shadow-sm border',
           tone === 'left'
-            ? 'rounded-tl-md bg-[#202c33] text-white'
-            : 'rounded-tr-md bg-[#005c4b] text-white'
-        }`}
+            ? 'rounded-tl-none bg-white dark:bg-zinc-800 border-black/[0.04] dark:border-white/5 text-gray-800 dark:text-gray-200'
+            : 'rounded-tr-none bg-[#e1f3e8] dark:bg-[#183925] border-[#c2e4cf] dark:border-[#204a32] text-gray-900 dark:text-white'
+        )}
       >
         <p className="whitespace-pre-wrap">{text}</p>
-        <div className="mt-2 flex items-center justify-end gap-2 text-[10px] text-gray-200 dark:text-white/55">
+        <div className="mt-1.5 flex items-center justify-end gap-1 text-[8px] text-gray-400 dark:text-gray-500 font-medium">
           <span>14:31</span>
-          <span>OK</span>
+          {tone === 'right' && <span>• Enviado</span>}
         </div>
       </div>
     </motion.div>
@@ -120,9 +122,9 @@ export default function Notificacoes() {
     setSalvando(true);
     try {
       await updateAdminSalao(form);
-      window.alert('Templates salvos com sucesso.');
+      window.alert('Modelos de mensagens salvos com sucesso.');
     } catch {
-      window.alert('Nao foi possivel salvar os templates agora.');
+      window.alert('Não foi possível salvar os modelos agora.');
     } finally {
       setSalvando(false);
     }
@@ -131,58 +133,67 @@ export default function Notificacoes() {
   if (loading) {
     return (
       <div className="flex min-h-[60vh] items-center justify-center">
-        <div className="h-12 w-12 animate-spin rounded-full border-4 border-[rgba(233,155,168,0.22)] border-t-[#e99ba8]" />
+        <div className="h-8 w-8 animate-spin rounded-full border-2 border-[#d48997]/20 border-t-[#d48997]" />
       </div>
     );
   }
 
   return (
-    <div className="mx-auto flex max-w-7xl flex-col gap-4 md:p-8 pb-16">
-      <section className="flex flex-col gap-4 sm:p-6 rounded-[2rem] border border-gray-200 dark:border-white/5 bg-gray-50 dark:bg-[#16141a]/95 p-4 sm:p-6 shadow-[0_30px_80px_rgba(0,0,0,0.32)] lg:flex-row lg:items-start lg:justify-between lg:p-8">
-        <div className="max-w-3xl space-y-5">
-          <div className="flex items-center gap-3 text-[11px] font-semibold uppercase tracking-[0.42em] text-[#E29BA8]">
-            <MessageSquare className="h-4 w-4" />
-            Voz da marca
+    <motion.div
+      initial={{ opacity: 0, y: 15 }}
+      animate={{ opacity: 1, y: 0 }}
+      className="mx-auto max-w-6xl space-y-8 pb-20 px-4"
+    >
+      {/* Header */}
+      <header className="flex flex-col gap-4 border-b border-black/[0.03] dark:border-white/[0.03] pb-6 lg:flex-row lg:items-end lg:justify-between">
+        <div>
+          <div className="flex items-center gap-2.5 mb-2.5">
+            <MessageSquare className="h-4 w-4 text-[#d48997]" />
+            <span className="text-[10px] font-semibold text-[#d48997] tracking-wide">Mensagens Automáticas</span>
           </div>
-          <div className="space-y-4">
-            <h1 className="font-['Playfair_Display'] text-2xl sm:text-4xl leading-none text-[#faf7f6] sm:text-5xl">
-              Templates de <span className="text-[#E29BA8]">WhatsApp</span>
-            </h1>
-            <p className="max-w-2xl text-lg leading-8 text-[#c7adb4]">
-              Personalize confirmacoes, lembretes e cancelamentos com a linguagem elegante da BellaPro e um preview fiel da mensagem final.
-            </p>
-          </div>
+          <h1 className="text-2xl sm:text-3xl font-serif font-normal text-gray-900 dark:text-white tracking-wide leading-tight mb-2">
+            Modelos de <span className="text-[#d48997]">WhatsApp</span>
+          </h1>
+          <p className="text-sm text-gray-400 dark:text-gray-500 leading-relaxed max-w-xl">
+            Personalize os avisos e lembretes enviados para as clientes e veja a simulação do envio em tempo real.
+          </p>
         </div>
 
-        <button
+        <motion.button
+          whileHover={{ scale: 1.02, y: -1 }}
+          whileTap={{ scale: 0.98 }}
           type="button"
           onClick={salvar}
           disabled={salvando}
-          className="inline-flex min-h-[56px] items-center justify-center gap-3 rounded-full bg-gradient-to-r from-[#E29BA8] to-[#d48997] text-[#111116] px-8 text-sm font-semibold uppercase tracking-[0.22em] text-[#20191f] transition hover:brightness-105 disabled:cursor-not-allowed disabled:opacity-70"
+          className="inline-flex items-center justify-center gap-2 rounded-xl bg-[#d48997] hover:bg-[#c97b8a] text-white px-5 py-2.5 text-xs font-semibold shadow-sm transition-all shrink-0 disabled:opacity-50 disabled:cursor-not-allowed"
         >
           <Save className="h-4 w-4" />
-          {salvando ? 'Salvando...' : 'Salvar templates'}
-        </button>
-      </section>
+          {salvando ? 'Salvando...' : 'Salvar Modelos'}
+        </motion.button>
+      </header>
 
-      <section className="grid gap-4 sm:p-6 xl:grid-cols-[minmax(0,1fr),390px]">
-        <div className="space-y-5">
+      {/* Main Grid */}
+      <div className="grid gap-8 lg:grid-cols-[1fr,340px]">
+        {/* Left column - Editors */}
+        <div className="space-y-6">
           {TEMPLATE_SECTIONS.map((section) => {
             const Icon = section.icon;
             return (
               <div
                 key={section.key}
-                className="rounded-[2rem] border border-gray-200 dark:border-white/5 bg-white dark:bg-[#1a171f]/95 p-4 sm:p-6 shadow-[0_24px_60px_rgba(0,0,0,0.24)]"
+                className="rounded-2xl border border-black/[0.04] dark:border-white/[0.04] bg-white/60 dark:bg-white/[0.02] backdrop-blur-md p-6 shadow-sm space-y-4"
               >
-                <div className="mb-5 flex items-center gap-4">
-                  <div className="flex h-14 w-14 items-center justify-center rounded-[20px] bg-[rgba(233,155,168,0.12)] text-[#f7c1b6]">
-                    <Icon className="h-6 w-6" />
+                <div className="flex items-center gap-3 border-b border-black/[0.03] dark:border-white/5 pb-3.5">
+                  <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-[#d48997]/10 text-[#d48997]">
+                    <Icon className="h-5 w-5" />
                   </div>
                   <div>
-                    <h2 className="font-['Playfair_Display'] text-2xl text-[#faf7f6]">
+                    <h3 className="font-serif text-base font-normal text-gray-900 dark:text-white">
                       {section.titulo}
-                    </h2>
-                    <p className="mt-1 text-sm text-[#c7adb4]">{section.descricao}</p>
+                    </h3>
+                    <p className="text-[11px] text-gray-400 dark:text-gray-500 leading-relaxed">
+                      {section.descricao}
+                    </p>
                   </div>
                 </div>
 
@@ -194,70 +205,73 @@ export default function Notificacoes() {
                       [section.key]: e.target.value,
                     }))
                   }
-                  rows={5}
-                  placeholder="Escreva a mensagem principal e use as variaveis dinamicas abaixo."
-                  className="w-full resize-none rounded-[24px] border border-gray-200 dark:border-white/5 bg-[rgba(20,16,22,0.66)] px-5 py-4 text-base leading-7 text-[#faf7f6] outline-none placeholder:text-[#806871] focus:border-[rgba(233,155,168,0.28)]"
+                  rows={4}
+                  placeholder="Escreva a mensagem e use as variáveis abaixo..."
+                  className="w-full resize-none rounded-xl border border-black/[0.08] dark:border-white/10 bg-white dark:bg-[#111113] p-4 text-xs leading-relaxed text-gray-800 dark:text-gray-200 outline-none focus:border-[#d48997] focus:ring-2 focus:ring-[#d48997]/10 transition-all placeholder:text-gray-400/70"
                 />
               </div>
             );
           })}
         </div>
 
-        <aside className="space-y-5 xl:sticky xl:top-4 sm:p-6 xl:self-start">
-          <div className="inline-flex items-center gap-3 rounded-full border border-gray-200 dark:border-white/5 bg-white dark:bg-[#1a171f]/95 px-5 py-3 text-[11px] font-semibold uppercase tracking-[0.28em] text-[#c7adb4]">
-            <Eye className="h-4 w-4 text-[#f7c1b6]" />
-            Preview em tempo real
+        {/* Right column - Simulator & Tags */}
+        <aside className="space-y-6 lg:self-start lg:sticky lg:top-4">
+          <div className="flex items-center gap-2 border-b border-black/[0.03] dark:border-white/5 pb-2">
+            <Eye className="h-4 w-4 text-[#d48997]" />
+            <span className="text-xs font-semibold text-gray-800 dark:text-gray-200">
+              Simulação de Tela
+            </span>
           </div>
 
-          <div className="overflow-hidden rounded-[36px] border border-gray-200 dark:border-white/5 bg-[#0f191f] shadow-[0_32px_90px_rgba(0,0,0,0.35)]">
-            <div className="border-b border-gray-200 dark:border-white/5 bg-[#111b21] px-6 py-5">
-              <p className="text-sm font-semibold text-gray-900 dark:text-white">BellaPro Agenda</p>
-              <p className="mt-1 text-xs uppercase tracking-[0.22em] text-white/45">
-                Simulacao do WhatsApp
+          {/* WhatsApp Simulator */}
+          <div className="overflow-hidden rounded-2xl border border-black/[0.06] dark:border-white/10 bg-gray-50 dark:bg-zinc-900 shadow-md">
+            <div className="border-b border-black/[0.04] dark:border-white/5 bg-gray-100 dark:bg-zinc-800 px-4 py-3.5">
+              <h4 className="text-xs font-semibold text-gray-900 dark:text-white">{salaoNome || 'BellaPro Agenda'}</h4>
+              <p className="text-[9px] uppercase tracking-wider text-gray-400 dark:text-gray-500 mt-0.5">
+                Notificação WhatsApp
               </p>
             </div>
 
-            <div className="flex min-h-[520px] flex-col gap-4 bg-[linear-gradient(180deg,#0b141a_0%,#111b21_100%)] p-5">
-              {previews.length ? (
+            <div className="flex min-h-[360px] max-h-[460px] overflow-y-auto flex-col gap-3.5 p-4 bg-gray-100/50 dark:bg-zinc-950/20 custom-scrollbar">
+              {previews.length > 0 ? (
                 previews.map((section, index) => (
                   <Bubble key={section.key} text={section.text} tone={index % 2 === 0 ? 'left' : 'right'} />
                 ))
               ) : (
-                <div className="flex h-full min-h-[420px] items-center justify-center rounded-[28px] border border-dashed border-gray-200 dark:border-white/10 bg-white/5 px-8 text-center text-sm leading-7 text-white/45">
-                  Digite os templates para visualizar aqui como a mensagem sera entregue para a cliente.
+                <div className="flex h-full min-h-[320px] items-center justify-center rounded-xl border border-dashed border-black/[0.08] dark:border-white/10 bg-white/40 dark:bg-white/[0.01] px-6 py-8 text-center text-xs text-gray-400 dark:text-gray-500 leading-relaxed">
+                  Digite os modelos de mensagens na esquerda para visualizar como elas aparecerão no celular da cliente.
                 </div>
               )}
             </div>
           </div>
 
-          <div className="rounded-[28px] border border-gray-200 dark:border-white/5 bg-[rgba(28,23,31,0.88)] p-4 sm:p-6">
-            <div className="mb-4 flex items-center gap-3 text-[#f7c1b6]">
-              <Type className="h-5 w-5" />
-              <span className="text-sm font-semibold uppercase tracking-[0.22em]">
-                Variaveis disponiveis
+          {/* Available variables */}
+          <div className="rounded-2xl border border-black/[0.04] dark:border-white/[0.04] bg-white/60 dark:bg-white/[0.02] backdrop-blur-md p-6 shadow-sm space-y-4">
+            <div className="flex items-center gap-2 text-[#d48997]">
+              <Type className="h-4.5 w-4.5" />
+              <span className="text-[10px] font-semibold uppercase tracking-wider text-gray-800 dark:text-gray-200">
+                Variáveis Dinâmicas
               </span>
             </div>
-            <div className="flex flex-wrap gap-2">
+            <div className="flex flex-wrap gap-1.5">
               {TAGS.map((tag) => (
                 <span
                   key={tag}
-                  className="rounded-full border border-gray-200 dark:border-white/5 bg-[rgba(255,255,255,0.04)] px-3 py-2 text-[11px] font-semibold uppercase tracking-[0.16em] text-[#c7adb4]"
+                  className="inline-flex items-center rounded-lg bg-gray-50 dark:bg-white/[0.02] border border-black/[0.03] dark:border-white/5 px-2.5 py-1 text-[10px] font-medium text-gray-600 dark:text-gray-300"
                 >
-                  {'{{'}
-                  {tag}
-                  {'}}'}
+                  {`{{${tag}}}`}
                 </span>
               ))}
             </div>
-            <div className="mt-5 flex items-start gap-3 rounded-[22px] border border-[rgba(233,155,168,0.14)] bg-[rgba(233,155,168,0.08)] p-4 text-sm leading-6 text-[#d6bbc2]">
-              <Info className="mt-0.5 h-4 w-4 shrink-0 text-[#f7c1b6]" />
+            <div className="flex items-start gap-2.5 rounded-xl bg-[#d48997]/5 border border-[#d48997]/10 p-3.5 text-[11px] leading-relaxed text-gray-500 dark:text-gray-400">
+              <Info className="h-4 w-4 shrink-0 text-[#d48997] mt-0.5" />
               <p>
-                O sistema substitui automaticamente as chaves pelos dados reais do agendamento no momento do envio.
+                As variáveis dinâmicas serão substituídas automaticamente pelos dados reais da cliente e do agendamento no momento do envio.
               </p>
             </div>
           </div>
         </aside>
-      </section>
-    </div>
+      </div>
+    </motion.div>
   );
 }

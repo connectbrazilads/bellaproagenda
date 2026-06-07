@@ -1,7 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Lock, Trash2, Clock, Plus, ShieldAlert, CalendarDays } from 'lucide-react';
+import { Lock, Trash2, Clock, Plus, ShieldAlert, CalendarDays, X } from 'lucide-react';
 import { getBloqueios, createBloqueio, deleteBloqueio, getProfissionais } from '../../services/api';
+import { cn } from '../../lib/utils';
 
 const DIAS = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sab'];
 const FORM_INICIAL = {
@@ -45,11 +46,11 @@ export default function Bloqueios() {
 
     if (form.tipo === 'periodo') {
       if (!form.inicioHora || !form.fimHora) {
-        alert('Informe inicio e fim para bloquear um periodo.');
+        alert('Informe início e fim para bloquear um período.');
         return;
       }
       if (form.fimHora <= form.inicioHora) {
-        alert('O horario final precisa ser maior que o horario inicial.');
+        alert('O horário final precisa ser maior que o horário inicial.');
         return;
       }
     }
@@ -67,7 +68,7 @@ export default function Bloqueios() {
       setShowForm(false);
       carregar();
     } catch (err) {
-      alert(err.response?.data?.error || 'Nao foi possivel salvar o bloqueio.');
+      alert(err.response?.data?.error || 'Não foi possível salvar o bloqueio.');
     } finally {
       setSaving(false);
     }
@@ -90,33 +91,35 @@ export default function Bloqueios() {
 
   return (
     <motion.div
-      initial={{ opacity: 0, y: 20 }}
+      initial={{ opacity: 0, y: 15 }}
       animate={{ opacity: 1, y: 0 }}
-      className="mx-auto max-w-4xl space-y-12 pb-20"
+      className="mx-auto max-w-5xl space-y-8 pb-20 px-4"
     >
-      <header className="flex flex-col items-start justify-between gap-4 border-b border-gray-100 pb-10 md:flex-row md:items-center md:p-8 dark:border-white/5">
+      {/* Header */}
+      <header className="flex flex-col items-start justify-between gap-4 border-b border-black/[0.03] dark:border-white/[0.03] pb-6 md:flex-row md:items-center">
         <div>
-          <div className="mb-4 flex items-center gap-3">
-            <Lock className="h-4 w-4 animate-pulse text-orange-500" />
-            <h2 className="text-[10px] font-black uppercase tracking-[0.4em] text-orange-500">Restricoes de Agenda</h2>
+          <div className="flex items-center gap-2.5 mb-2.5">
+            <Lock className="h-4 w-4 text-[#d48997]" />
+            <span className="text-[10px] font-semibold text-[#d48997] tracking-wide">Restrições de Agenda</span>
           </div>
-          <h1 className="mb-4 text-2xl font-black leading-none tracking-tighter text-gray-900 sm:text-4xl sm:text-6xl dark:text-white">
-            Seus <span className="text-orange-500">Bloqueios</span>
+          <h1 className="text-2xl sm:text-3xl font-serif font-normal text-gray-900 dark:text-white tracking-wide leading-tight mb-2">
+            Gestão de <span className="text-[#d48997]">Bloqueios</span>
           </h1>
-          <p className="max-w-xl text-xl font-medium leading-relaxed text-gray-400">
-            Gerencie horarios indisponiveis e folgas da sua equipe com mais clareza.
+          <p className="text-sm text-gray-400 dark:text-gray-500 leading-relaxed max-w-xl">
+            Gerencie horários indisponíveis e folgas da sua equipe com mais clareza.
           </p>
         </div>
         <motion.button
-          whileHover={{ scale: 1.05, y: -2 }}
-          whileTap={{ scale: 0.95 }}
-          onClick={() => setShowForm((valorAtual) => !valorAtual)}
-          className="flex items-center gap-3 rounded-[2rem] bg-orange-500 px-10 py-5 text-xs font-black uppercase tracking-widest text-gray-900 shadow-2xl shadow-orange-500/20 dark:text-white"
+          whileHover={{ scale: 1.02, y: -1 }}
+          whileTap={{ scale: 0.98 }}
+          onClick={() => setShowForm((v) => !v)}
+          className="inline-flex items-center justify-center gap-2 rounded-xl bg-[#d48997] hover:bg-[#c97b8a] text-white px-5 py-2.5 text-xs font-semibold shadow-sm transition-all"
         >
-          <Plus className="h-4 w-4" /> NOVO BLOQUEIO
+          <Plus className="h-4 w-4" /> Novo Bloqueio
         </motion.button>
       </header>
 
+      {/* Form */}
       <AnimatePresence>
         {showForm && (
           <motion.form
@@ -124,23 +127,32 @@ export default function Bloqueios() {
             animate={{ opacity: 1, height: 'auto' }}
             exit={{ opacity: 0, height: 0 }}
             onSubmit={salvar}
-            className="overflow-hidden rounded-[2rem] border-2 border-orange-100 bg-white p-5 shadow-2xl shadow-orange-500/5 backdrop-blur-3xl md:p-10 dark:border-orange-900/20 dark:bg-gray-900/40"
+            className="overflow-hidden rounded-2xl border border-black/[0.04] dark:border-white/[0.04] bg-white/60 dark:bg-white/[0.02] backdrop-blur-md p-5 md:p-8 shadow-sm"
           >
-            <h2 className="mb-8 text-2xl font-black tracking-tighter text-gray-900 dark:text-white">Bloquear Agenda</h2>
-            <div className="mb-8 grid grid-cols-1 gap-4 sm:p-6 md:grid-cols-2">
-              <div className="space-y-1">
-                <label className="ml-4 text-[10px] font-black uppercase tracking-widest text-gray-400">Profissional</label>
+            <div className="flex items-center justify-between mb-6 border-b border-black/[0.03] dark:border-white/5 pb-4">
+              <div>
+                <p className="text-[10px] font-semibold text-[#d48997]">Nova restrição</p>
+                <h2 className="mt-1 font-serif font-normal text-xl text-gray-905 dark:text-white">Bloquear Agenda</h2>
+              </div>
+              <button type="button" onClick={() => setShowForm(false)} className="rounded-full border border-black/[0.04] dark:border-white/10 p-2 text-gray-400 hover:text-red-500 transition shadow-sm">
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+
+            <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+              <div>
+                <span className="mb-2 block text-[10px] font-medium text-gray-400 dark:text-gray-500">Profissional</span>
                 {isScopedProfessional ? (
                   <input
                     value={profissionais.find((p) => p.id === myProfissionalId)?.nome || 'Seu perfil'}
                     readOnly
-                    className="w-full rounded-2xl border-2 border-transparent bg-gray-100 px-6 py-4 font-black text-gray-900 outline-none dark:bg-white/10 dark:text-white"
+                    className="h-11 w-full rounded-xl border border-black/[0.08] dark:border-white/10 bg-white px-4 text-sm text-gray-900 outline-none dark:bg-[#111113] dark:text-white"
                   />
                 ) : (
                   <select
                     value={form.profissionalId}
                     onChange={(e) => setForm({ ...form, profissionalId: e.target.value })}
-                    className="w-full appearance-none rounded-2xl border-2 border-transparent bg-gray-50 px-6 py-4 font-black text-gray-900 outline-none focus:border-orange-500 dark:bg-white/5 dark:text-white"
+                    className="h-11 w-full appearance-none rounded-xl border border-black/[0.08] dark:border-white/10 bg-white px-4 text-sm text-gray-900 outline-none focus:border-[#d48997] focus:ring-2 focus:ring-[#d48997]/10 dark:bg-[#111113] dark:text-white transition-all"
                     required
                   >
                     <option value="">Selecionar profissional...</option>
@@ -151,31 +163,32 @@ export default function Bloqueios() {
                 )}
               </div>
 
-              <div className="space-y-1">
-                <label className="ml-4 text-[10px] font-black uppercase tracking-widest text-gray-400">Data</label>
+              <div>
+                <span className="mb-2 block text-[10px] font-medium text-gray-400 dark:text-gray-500">Data</span>
                 <input
                   type="date"
                   value={form.data}
                   onChange={(e) => setForm({ ...form, data: e.target.value })}
-                  className="w-full rounded-2xl border-2 border-transparent bg-gray-50 px-6 py-4 font-black text-gray-900 outline-none focus:border-orange-500 dark:bg-white/5 dark:text-white"
+                  className="h-11 w-full rounded-xl border border-black/[0.08] dark:border-white/10 bg-white px-4 text-sm text-gray-900 outline-none focus:border-[#d48997] focus:ring-2 focus:ring-[#d48997]/10 dark:bg-[#111113] dark:text-white transition-all"
                   required
                 />
               </div>
 
-              <div className="space-y-3 md:col-span-2">
-                <label className="ml-4 text-[10px] font-black uppercase tracking-widest text-gray-400">Tipo de bloqueio</label>
+              <div className="md:col-span-2 space-y-2.5">
+                <span className="block text-[10px] font-medium text-gray-400 dark:text-gray-500">Tipo de bloqueio</span>
                 <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                   <button
                     type="button"
                     onClick={() => setForm({ ...form, tipo: 'dia_todo', inicioHora: '', fimHora: '' })}
-                    className={`rounded-2xl border-2 px-5 py-4 text-left transition-all ${
+                    className={cn(
+                      'rounded-xl border p-4 text-left transition-all',
                       form.tipo === 'dia_todo'
-                        ? 'border-orange-500 bg-orange-50 text-gray-900 dark:bg-orange-500/10 dark:text-white'
-                        : 'border-gray-100 bg-gray-50 text-gray-500 dark:border-white/5 dark:bg-white/5 dark:text-white/66'
-                    }`}
+                        ? 'border-[#d48997] bg-[#d48997]/10 text-gray-900 dark:text-white'
+                        : 'border-black/[0.04] bg-gray-50/50 text-gray-500 dark:border-white/5 dark:bg-white/5 dark:text-white/70'
+                    )}
                   >
-                    <span className="block text-[11px] font-black uppercase tracking-widest">Dia inteiro</span>
-                    <span className="mt-1 block text-xs font-semibold opacity-70">
+                    <span className="block text-xs font-semibold">Dia inteiro</span>
+                    <span className="mt-1 block text-[10px] font-medium opacity-70">
                       Bloqueia toda a agenda do profissional nessa data.
                     </span>
                   </button>
@@ -183,15 +196,16 @@ export default function Bloqueios() {
                   <button
                     type="button"
                     onClick={() => setForm({ ...form, tipo: 'periodo' })}
-                    className={`rounded-2xl border-2 px-5 py-4 text-left transition-all ${
+                    className={cn(
+                      'rounded-xl border p-4 text-left transition-all',
                       form.tipo === 'periodo'
-                        ? 'border-orange-500 bg-orange-50 text-gray-900 dark:bg-orange-500/10 dark:text-white'
-                        : 'border-gray-100 bg-gray-50 text-gray-500 dark:border-white/5 dark:bg-white/5 dark:text-white/66'
-                    }`}
+                        ? 'border-[#d48997] bg-[#d48997]/10 text-gray-900 dark:text-white'
+                        : 'border-black/[0.04] bg-gray-50/50 text-gray-500 dark:border-white/5 dark:bg-white/5 dark:text-white/70'
+                    )}
                   >
-                    <span className="block text-[11px] font-black uppercase tracking-widest">Periodo</span>
-                    <span className="mt-1 block text-xs font-semibold opacity-70">
-                      Bloqueia apenas um intervalo especifico de horario.
+                    <span className="block text-xs font-semibold">Período</span>
+                    <span className="mt-1 block text-[10px] font-medium opacity-70">
+                      Bloqueia apenas um intervalo específico de horário.
                     </span>
                   </button>
                 </div>
@@ -199,119 +213,125 @@ export default function Bloqueios() {
 
               {form.tipo === 'periodo' && (
                 <>
-                  <div className="space-y-1">
-                    <label className="ml-4 text-[10px] font-black uppercase tracking-widest text-gray-400">Inicio</label>
+                  <div>
+                    <span className="mb-2 block text-[10px] font-medium text-gray-400 dark:text-gray-500">Início</span>
                     <input
                       type="time"
                       value={form.inicioHora}
                       onChange={(e) => setForm({ ...form, inicioHora: e.target.value })}
-                      className="w-full rounded-2xl border-2 border-transparent bg-gray-50 px-6 py-4 font-black text-gray-900 outline-none focus:border-orange-500 dark:bg-white/5 dark:text-white"
+                      className="h-11 w-full rounded-xl border border-black/[0.08] dark:border-white/10 bg-white px-4 text-sm text-gray-900 outline-none focus:border-[#d48997] focus:ring-2 focus:ring-[#d48997]/10 dark:bg-[#111113] dark:text-white transition-all"
                       required
                     />
                   </div>
-
-                  <div className="space-y-1">
-                    <label className="ml-4 text-[10px] font-black uppercase tracking-widest text-gray-400">Fim</label>
+                  <div>
+                    <span className="mb-2 block text-[10px] font-medium text-gray-400 dark:text-gray-500">Fim</span>
                     <input
                       type="time"
                       value={form.fimHora}
                       onChange={(e) => setForm({ ...form, fimHora: e.target.value })}
-                      className="w-full rounded-2xl border-2 border-transparent bg-gray-50 px-6 py-4 font-black text-gray-900 outline-none focus:border-orange-500 dark:bg-white/5 dark:text-white"
+                      className="h-11 w-full rounded-xl border border-black/[0.08] dark:border-white/10 bg-white px-4 text-sm text-gray-900 outline-none focus:border-[#d48997] focus:ring-2 focus:ring-[#d48997]/10 dark:bg-[#111113] dark:text-white transition-all"
                       required
                     />
                   </div>
                 </>
               )}
 
-              <div className="space-y-1 md:col-span-2">
-                <label className="ml-4 text-[10px] font-black uppercase tracking-widest text-gray-400">Motivo / Observacao</label>
+              <div className="md:col-span-2">
+                <span className="mb-2 block text-[10px] font-medium text-gray-400 dark:text-gray-500">Motivo / Observação</span>
                 <input
                   value={form.motivo}
                   onChange={(e) => setForm({ ...form, motivo: e.target.value })}
-                  placeholder="Ex: Folga, feriado, consulta medica..."
-                  className="w-full rounded-2xl border-2 border-transparent bg-gray-50 px-6 py-4 font-black text-gray-900 outline-none focus:border-orange-500 dark:bg-white/5 dark:text-white"
+                  placeholder="Ex: Folga, feriado, consulta médica..."
+                  className="h-11 w-full rounded-xl border border-black/[0.08] dark:border-white/10 bg-white px-4 text-sm text-gray-900 outline-none focus:border-[#d48997] focus:ring-2 focus:ring-[#d48997]/10 dark:bg-[#111113] dark:text-white transition-all placeholder:text-gray-400"
                 />
               </div>
             </div>
 
-            <div className="flex gap-4">
+            <div className="mt-8 flex flex-col gap-3.5 sm:flex-row sm:justify-end">
               <button
                 type="button"
                 onClick={() => setShowForm(false)}
-                className="flex-1 rounded-2xl border-2 border-gray-100 py-5 text-[10px] font-black uppercase tracking-widest text-gray-400 transition-all hover:bg-gray-50 dark:border-white/5"
+                className="inline-flex items-center justify-center rounded-xl border border-black/[0.04] dark:border-white/10 bg-gray-50 hover:bg-gray-100 dark:bg-white/5 dark:text-white px-5 py-2.5 text-xs font-semibold text-gray-500 transition"
               >
                 Cancelar
               </button>
               <button
                 type="submit"
                 disabled={saving}
-                className="flex-1 rounded-2xl bg-orange-500 py-5 text-[10px] font-black uppercase tracking-widest text-gray-900 shadow-xl shadow-orange-500/20 transition-all hover:bg-orange-600 disabled:opacity-50 dark:text-white"
+                className="inline-flex items-center justify-center rounded-xl bg-[#d48997] hover:bg-[#c97b8a] text-white px-5 py-2.5 text-xs font-semibold shadow-sm transition disabled:opacity-70"
               >
-                {saving ? 'PROCESSANDO...' : 'CONFIRMAR BLOQUEIO'}
+                {saving ? 'Processando...' : 'Confirmar Bloqueio'}
               </button>
             </div>
           </motion.form>
         )}
       </AnimatePresence>
 
-      <div className="space-y-4">
+      {/* List */}
+      <div className="space-y-3">
         {loading ? (
-          <div className="py-40 text-center">
-            <div className="inline-block h-12 w-12 animate-spin rounded-full border-4 border-orange-500 border-t-transparent" />
+          <div className="flex min-h-[35vh] items-center justify-center">
+            <div className="h-10 w-10 animate-spin rounded-full border-4 border-gray-100 border-t-[#d48997]" />
           </div>
         ) : bloqueios.length === 0 ? (
-          <div className="rounded-[3rem] border-2 border-dashed border-gray-100 bg-gray-50 p-32 text-center dark:border-white/5 dark:bg-white/5">
-            <ShieldAlert className="mx-auto mb-8 h-16 w-16 text-gray-200 dark:text-gray-800" />
-            <p className="text-[10px] font-black uppercase tracking-[0.3em] text-gray-300 dark:text-gray-700">
-              Agenda 100% livre de bloqueios
+          <div className="rounded-2xl border border-dashed border-black/[0.06] dark:border-white/10 bg-white/40 dark:bg-white/[0.01] px-8 py-16 text-center shadow-sm">
+            <ShieldAlert className="mx-auto h-12 w-12 text-gray-300 dark:text-gray-600" />
+            <h2 className="mt-4 font-serif font-normal text-xl text-gray-905 dark:text-white">Agenda livre de bloqueios</h2>
+            <p className="mx-auto mt-2 max-w-sm text-xs leading-relaxed text-gray-400 dark:text-gray-500">
+              Nenhum bloqueio registrado. Crie restrições de horário para organizar folgas e indisponibilidades.
             </p>
           </div>
         ) : (
-          <div className="grid grid-cols-1 gap-4">
+          <div className="grid grid-cols-1 gap-3">
             <AnimatePresence>
               {bloqueios.map((b, idx) => (
                 <motion.div
                   layout
-                  initial={{ opacity: 0, x: -20 }}
+                  initial={{ opacity: 0, x: -10 }}
                   animate={{ opacity: 1, x: 0 }}
-                  transition={{ delay: idx * 0.05 }}
+                  transition={{ delay: idx * 0.03 }}
                   key={b.id}
-                  className="group flex flex-col items-center justify-between gap-4 rounded-[2rem] border border-gray-100 bg-white p-4 shadow-xl shadow-gray-100/30 backdrop-blur-3xl transition-all hover:border-orange-200 md:flex-row md:p-8 dark:border-white/5 dark:bg-gray-900/40 dark:shadow-none dark:hover:border-orange-900/30"
+                  className="group flex flex-col items-start justify-between gap-4 rounded-2xl border border-black/[0.04] dark:border-white/[0.04] bg-white/60 dark:bg-white/[0.02] backdrop-blur-md p-5 shadow-sm transition-all hover:border-[#e29ba8]/30 dark:hover:border-[#e29ba8]/20 md:flex-row md:items-center"
                 >
-                  <div className="flex w-full items-center gap-4 md:w-auto md:p-8">
-                    <div className="flex h-20 w-20 items-center justify-center rounded-[1.5rem] border border-orange-100 bg-orange-50 dark:border-orange-800/30 dark:bg-orange-900/20">
-                      <Clock className="h-10 w-10 text-orange-500" />
+                  <div className="flex items-center gap-4 w-full md:w-auto">
+                    <div className="flex h-14 w-14 items-center justify-center rounded-xl bg-[#d48997]/10 text-[#d48997] border border-[#d48997]/20 shrink-0">
+                      <Clock className="h-6 w-6" />
                     </div>
-                    <div>
-                      <h4 className="mb-2 text-2xl font-black uppercase leading-none tracking-tighter text-gray-900 dark:text-white">
+                    <div className="min-w-0">
+                      <h4 className="font-semibold text-base text-gray-900 dark:text-white leading-tight truncate normal-case">
                         {b.profissional?.nome}
                       </h4>
-                      <div className="flex items-center gap-4">
-                        <p className="flex items-center gap-2 text-xs font-bold uppercase tracking-tight text-gray-500">
-                          <CalendarDays size={14} className="text-orange-500" />
+                      <div className="flex flex-wrap items-center gap-3 mt-1.5">
+                        <span className="flex items-center gap-1.5 text-xs text-gray-500 dark:text-gray-400 font-medium">
+                          <CalendarDays size={14} className="text-[#d48997]" />
                           {formatarData(b.data)}
-                        </p>
-                        <p className="text-xs font-black uppercase tracking-widest text-gray-400">
-                          {b.inicioHora && b.fimHora ? `${b.inicioHora} - ${b.fimHora}` : 'Dia inteiro'}
-                        </p>
+                        </span>
+                        <span className={cn(
+                          "rounded-full border px-2.5 py-0.5 text-[9px] font-semibold tracking-wide",
+                          b.inicioHora && b.fimHora
+                            ? "border-amber-500/25 bg-amber-500/10 text-amber-600 dark:text-amber-400"
+                            : "border-rose-500/25 bg-rose-500/10 text-rose-600 dark:text-rose-400"
+                        )}>
+                          {b.inicioHora && b.fimHora ? `${b.inicioHora} – ${b.fimHora}` : 'Dia inteiro'}
+                        </span>
                       </div>
                     </div>
                   </div>
 
-                  <div className="flex w-full items-center justify-between gap-5 border-t border-gray-50 pt-6 md:w-auto md:justify-end md:border-t-0 md:pt-0 md:p-10 dark:border-white/5">
-                    <div className="text-right">
-                      <p className="mb-1 text-[9px] font-black uppercase tracking-widest text-gray-400">Motivo</p>
-                      <p className="text-sm font-black uppercase tracking-tight text-gray-900 dark:text-white">
-                        {b.motivo || 'Nao especificado'}
+                  <div className="flex w-full items-center justify-between gap-4 border-t border-black/[0.03] pt-4 md:w-auto md:justify-end md:border-t-0 md:pt-0 dark:border-white/5">
+                    <div className="text-right min-w-0">
+                      <p className="text-[10px] font-medium text-gray-400 dark:text-gray-500">Motivo</p>
+                      <p className="mt-0.5 text-sm font-semibold text-gray-900 dark:text-white truncate max-w-[200px]">
+                        {b.motivo || 'Não especificado'}
                       </p>
                     </div>
                     <motion.button
-                      whileHover={{ scale: 1.1, rotate: 5 }}
-                      whileTap={{ scale: 0.9 }}
+                      whileHover={{ scale: 1.05 }}
+                      whileTap={{ scale: 0.95 }}
                       onClick={() => excluir(b.id)}
-                      className="rounded-2xl bg-orange-50 p-4 text-orange-400 transition-all hover:text-red-500 dark:bg-orange-500/10"
+                      className="rounded-xl border border-black/[0.04] dark:border-white/10 bg-gray-50 dark:bg-white/5 p-2.5 text-gray-400 transition-all hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10 shrink-0"
                     >
-                      <Trash2 size={20} />
+                      <Trash2 size={16} />
                     </motion.button>
                   </div>
                 </motion.div>

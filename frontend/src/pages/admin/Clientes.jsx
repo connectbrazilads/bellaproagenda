@@ -26,24 +26,24 @@ import useElementWidth from '../../hooks/useElementWidth';
 
 const STATUS_MAP = {
   ativo: {
-    label: 'Fiel',
-    chip: 'border-[rgba(45,111,86,0.28)] bg-[rgba(45,111,86,0.14)] text-[#9be0bb]',
-    dot: 'bg-[#52c18c]',
+    label: 'Fidelizado',
+    chip: 'border-emerald-500/25 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400',
+    dot: 'bg-emerald-500',
   },
   inativo: {
     label: 'Ausente',
-    chip: 'border-[rgba(214,160,84,0.28)] bg-[rgba(214,160,84,0.14)] text-[#efcb8e]',
-    dot: 'bg-[#d6a054]',
+    chip: 'border-amber-500/25 bg-amber-500/10 text-amber-600 dark:text-amber-400',
+    dot: 'bg-amber-500',
   },
   perdido: {
     label: 'Perdido',
-    chip: 'border-[rgba(195,98,98,0.28)] bg-[rgba(195,98,98,0.14)] text-[#f2a3a3]',
-    dot: 'bg-[#d06f6f]',
+    chip: 'border-rose-500/25 bg-rose-500/10 text-rose-600 dark:text-rose-455',
+    dot: 'bg-rose-500',
   },
   sem_visita: {
-    label: 'Novo',
-    chip: 'border-[rgba(120,160,214,0.28)] bg-[rgba(120,160,214,0.14)] text-[#b7d0f4]',
-    dot: 'bg-[#7aa5de]',
+    label: 'Novo Cliente',
+    chip: 'border-blue-500/25 bg-blue-500/10 text-blue-600 dark:text-blue-400',
+    dot: 'bg-blue-500',
   },
 };
 
@@ -84,7 +84,7 @@ export default function Clientes() {
   const [criando, setCriando] = useState(false);
   const [segmento, setSegmento] = useState('inativo');
   const [msgCampanha, setMsgCampanha] = useState(
-    'Ola! Sentimos sua falta aqui na BellaPro. Que tal agendar um horario para esta semana? Use o cupom VOLTA10 para 10% de desconto.'
+    'Olá! Sentimos sua falta aqui na BellaPro. Que tal agendar um horário para esta semana? Use o cupom VOLTA10 para 10% de desconto.'
   );
   const [novoCliente, setNovoCliente] = useState(EMPTY_CLIENTE);
   const [clienteEdicao, setClienteEdicao] = useState(null);
@@ -138,7 +138,7 @@ export default function Clientes() {
       setNovoCliente(EMPTY_CLIENTE);
       await carregarClientes();
     } catch (error) {
-      window.alert(error?.response?.data?.error || 'Nao foi possivel cadastrar o cliente.');
+      window.alert(error?.response?.data?.error || 'Não foi possível cadastrar o cliente.');
     } finally {
       setCriando(false);
     }
@@ -155,7 +155,7 @@ export default function Clientes() {
       setExpandido(clienteEdicao.id);
       setClienteEdicao(null);
     } catch (error) {
-      window.alert(error?.response?.data?.error || 'Nao foi possivel atualizar o cadastro do cliente.');
+      window.alert(error?.response?.data?.error || 'Não foi possível atualizar o cadastro do cliente.');
     } finally {
       setSalvandoEdicao(false);
     }
@@ -179,7 +179,7 @@ export default function Clientes() {
       window.alert('Campanha disparada com sucesso.');
       setModalCampanha(false);
     } catch {
-      window.alert('Nao foi possivel disparar a campanha agora.');
+      window.alert('Não foi possível disparar a campanha agora.');
     } finally {
       setEnviando(false);
     }
@@ -191,91 +191,92 @@ export default function Clientes() {
   );
 
   return (
-    <div ref={pageRef} className="mx-auto flex max-w-7xl flex-col gap-4 pb-16 md:gap-5">
+    <div ref={pageRef} className="mx-auto flex max-w-7xl flex-col gap-5 pb-16 px-4">
       <section className={cn(
-        'flex flex-col gap-4 rounded-[2rem] border border-gray-200 bg-white/90 p-4 shadow-[0_24px_60px_rgba(0,0,0,0.12)] dark:border-white/5 dark:bg-[#16141a]/95 dark:shadow-[0_30px_80px_rgba(0,0,0,0.32)] sm:p-6 lg:p-8',
-        !isCompactPage && 'lg:flex-row lg:items-start lg:justify-between'
+        'flex flex-col gap-4 rounded-2xl border border-black/[0.04] bg-white/60 dark:border-white/5 dark:bg-[#0c0c0e]/95 p-5 md:p-8 backdrop-blur-md shadow-sm',
+        !isCompactPage && 'lg:flex-row lg:items-center lg:justify-between'
       )}>
-        <div className="max-w-3xl space-y-5">
-          <div className="flex items-center gap-3 text-[11px] font-semibold uppercase tracking-[0.42em] text-[#E29BA8]">
+        <div className="max-w-2xl space-y-2">
+          <div className="flex items-center gap-2 text-xs font-semibold text-[#d48997]">
             <Users className="h-4 w-4" />
-            CRM BellaPro
+            <span>Gestão de Relacionamento (CRM)</span>
           </div>
-          <div className="space-y-4">
-            <h1 className="font-['Playfair_Display'] text-2xl leading-none text-[#2f2430] dark:text-[#faf7f6] sm:text-4xl sm:text-5xl">
-              Base de <span className="text-[#E29BA8]">Clientes</span>
+          <div className="space-y-1.5">
+            <h1 className="font-serif font-normal text-2xl md:text-3xl text-gray-905 dark:text-white leading-tight">
+              Base de <span className="text-[#d48997]">Clientes</span>
             </h1>
-            <p className="max-w-2xl text-lg leading-8 text-[#7f6570] dark:text-[#c7adb4]">
-              Organize relacionamento, historico e oportunidades com uma leitura mais elegante da sua carteira.
+            <p className="text-sm text-gray-400 dark:text-gray-500 leading-relaxed font-normal">
+              Acompanhe o engajamento, histórico de consumo e envie campanhas personalizadas para a sua base.
             </p>
           </div>
         </div>
 
-        <div className="flex flex-wrap gap-3">
+        <div className="flex flex-wrap gap-2.5">
           <button
             type="button"
             onClick={() => setModalNovo(true)}
-            className="inline-flex min-h-[52px] items-center justify-center gap-3 rounded-full border border-gray-200 bg-white px-7 text-sm font-semibold uppercase tracking-[0.22em] text-[#3b2a35] shadow-sm transition hover:border-[rgba(233,155,168,0.18)] dark:border-white/5 dark:bg-[rgba(255,255,255,0.04)] dark:text-[#faf7f6]"
+            className="inline-flex items-center justify-center gap-1.5 rounded-xl border border-black/[0.06] bg-white px-5 py-2.5 text-xs font-semibold text-gray-750 dark:border-white/10 dark:bg-white/5 dark:text-white shadow-sm hover:bg-gray-50 dark:hover:bg-white/10 transition-all"
           >
-            <Plus className="h-4 w-4 text-[#f7c1b6]" />
-            Novo registro
+            <Plus className="h-4 w-4 text-[#d48997]" />
+            <span>Novo Registro</span>
           </button>
           <button
             type="button"
             onClick={() => setModalCampanha(true)}
-            className="inline-flex min-h-[52px] items-center justify-center gap-3 rounded-full bg-gradient-to-r from-[#E29BA8] to-[#d48997] text-[#111116] px-7 text-sm font-semibold uppercase tracking-[0.22em] text-[#20191f] transition hover:brightness-105"
+            className="inline-flex items-center justify-center gap-1.5 rounded-xl bg-[#d48997] hover:bg-[#c97b8a] text-white px-5 py-2.5 text-xs font-semibold shadow-sm transition-all"
           >
             <MessageSquare className="h-4 w-4" />
-            Campanha MKT
+            <span>Campanha MKT</span>
           </button>
         </div>
       </section>
 
+      {/* Search form */}
       <form
         onSubmit={pesquisar}
         className={cn(
-          'flex flex-col gap-3 rounded-[2rem] border border-gray-200 dark:border-white/5 bg-white dark:bg-[#1a171f]/95 p-3 shadow-[0_24px_60px_rgba(0,0,0,0.24)]',
+          'flex flex-col gap-3 rounded-2xl border border-black/[0.04] dark:border-white/5 bg-white/40 dark:bg-[#0c0c0e]/30 backdrop-blur-md p-3.5 shadow-sm',
           !isTightPage && 'sm:flex-row'
         )}
       >
         <div className="relative flex-1">
-          <Search className="absolute left-5 top-1/2 h-5 w-5 -translate-y-1/2 text-[#806871]" />
+          <Search className="absolute left-4 top-1/2 h-4.5 w-4.5 -translate-y-1/2 text-gray-400" />
           <input
             value={busca}
             onChange={(event) => setBusca(event.target.value)}
-            placeholder="Busque por nome ou telefone..."
-            className="h-14 w-full rounded-[22px] bg-transparent pl-14 pr-4 text-base text-[#3b2a35] outline-none placeholder:text-[#9a7f88] dark:text-[#faf7f6] dark:placeholder:text-[#806871]"
+            placeholder="Buscar por nome, apelido ou telefone..."
+            className="h-11 w-full rounded-xl bg-transparent pl-11 pr-4 text-sm text-gray-900 outline-none placeholder:text-gray-400 dark:text-white focus:ring-0"
           />
         </div>
         <button
           type="submit"
           disabled={loading}
-          className="inline-flex min-h-[52px] items-center justify-center rounded-full bg-[rgba(233,155,168,0.14)] px-7 text-sm font-semibold uppercase tracking-[0.22em] text-[#b96a79] transition hover:bg-[rgba(233,155,168,0.2)] disabled:opacity-60 dark:text-[#f7c1b6]"
+          className="inline-flex items-center justify-center rounded-xl bg-[#d48997]/10 hover:bg-[#d48997]/15 px-5 py-2.5 text-xs font-semibold text-[#d48997] transition disabled:opacity-60 shrink-0"
         >
           {loading ? 'Sincronizando...' : 'Localizar'}
         </button>
       </form>
 
-      {erro ? (
-        <div className="rounded-[24px] border border-[rgba(214,120,120,0.22)] bg-[rgba(214,120,120,0.1)] px-5 py-4 text-sm text-[#f0b7b7]">
+      {erro && (
+        <div className="rounded-xl border border-rose-500/20 bg-rose-500/5 px-4 py-3 text-xs text-rose-500">
           {erro}
         </div>
-      ) : null}
+      )}
 
       {loading ? (
-        <div className="flex min-h-[40vh] items-center justify-center">
-          <div className="h-12 w-12 animate-spin rounded-full border-4 border-[rgba(233,155,168,0.22)] border-t-[#e99ba8]" />
+        <div className="flex min-h-[35vh] items-center justify-center">
+          <div className="h-10 w-10 animate-spin rounded-full border-4 border-gray-100 border-t-[#d48997]" />
         </div>
       ) : clientes.length === 0 ? (
-        <div className="rounded-[2rem] border border-dashed border-[rgba(233,155,168,0.16)] bg-white/90 px-8 py-16 text-center dark:bg-[rgba(41,31,37,0.82)]">
-          <Users className="mx-auto h-14 w-14 text-[#806871]" />
-          <h2 className="mt-6 font-['Playfair_Display'] text-3xl text-[#2f2430] dark:text-[#faf7f6]">Base vazia</h2>
-          <p className="mx-auto mt-3 max-w-xl text-sm leading-7 text-[#7f6570] dark:text-[#c7adb4]">
-            Cadastre o primeiro cliente ou importe sua base para iniciar o relacionamento no sistema.
+        <div className="rounded-2xl border border-dashed border-black/[0.06] dark:border-white/10 bg-white/40 dark:bg-white/[0.01] px-8 py-16 text-center shadow-sm">
+          <Users className="mx-auto h-12 w-12 text-gray-300" />
+          <h2 className="mt-4 font-serif font-normal text-xl text-gray-905 dark:text-white">Nenhum cliente registrado</h2>
+          <p className="mx-auto mt-2 max-w-sm text-xs leading-relaxed text-gray-400 dark:text-gray-500">
+            Cadastre seu primeiro cliente ou refine sua busca atual para iniciar a gestão do ecossistema.
           </p>
         </div>
       ) : (
-        <div className="grid gap-4 sm:p-4 lg:gap-5">
+        <div className="grid gap-4">
           {clientes.map((cliente) => {
             const status = STATUS_MAP[cliente.status] || STATUS_MAP.sem_visita;
             const isExpanded = expandido === cliente.id || expandido === cliente.telefone;
@@ -283,10 +284,10 @@ export default function Clientes() {
               <article
                 key={cliente.id || cliente.telefone}
                 className={cn(
-                  'rounded-[2rem] border bg-white dark:bg-[#1a171f]/95 p-4 sm:p-6 shadow-[0_24px_60px_rgba(0,0,0,0.24)] transition',
+                  'rounded-2xl border bg-white/60 dark:bg-white/[0.02] backdrop-blur-md p-5 hover:shadow-md transition-all duration-300',
                   isExpanded
-                    ? 'border-[rgba(233,155,168,0.24)]'
-                    : 'border-gray-200 dark:border-white/5 hover:border-[rgba(233,155,168,0.18)]'
+                    ? 'border-[#d48997]/30 shadow-sm'
+                    : 'border-black/[0.04] dark:border-white/[0.04]'
                 )}
               >
                 <button
@@ -297,55 +298,50 @@ export default function Clientes() {
                     !isCompactPage && 'lg:flex-row lg:items-center lg:justify-between'
                   )}
                 >
-                  <div className="flex items-center gap-5">
-                    <div className="relative">
-                      <div className="flex h-20 w-20 items-center justify-center rounded-[26px] bg-[#3b2a35]/14 text-3xl font-semibold text-[#3b2a35] dark:bg-[rgba(20,16,22,0.55)] dark:text-[#faf7f6]">
+                  <div className="flex items-center gap-4 min-w-0">
+                    <div className="relative shrink-0">
+                      <div className="flex h-16 w-16 items-center justify-center rounded-xl bg-gray-50 dark:bg-white/5 text-2xl font-semibold text-gray-750 dark:text-[#faf7f6] border border-black/[0.04]">
                         {initials(cliente.apelido || cliente.nome)}
                       </div>
-                      <span className={cn('absolute -right-1 -top-1 h-5 w-5 rounded-full border-2 border-[#2b2228]', status.dot)} />
+                      <span className={cn('absolute -right-0.5 -top-0.5 h-3.5 w-3.5 rounded-full border-2 border-white dark:border-[#131118]', status.dot)} />
                     </div>
-                    <div>
-                      <div className="flex flex-wrap items-center gap-3">
-                        <div>
-                          <h3 className="font-['Playfair_Display'] text-3xl text-[#2f2430] dark:text-[#faf7f6]">{cliente.apelido || cliente.nome}</h3>
-                          {cliente.apelido ? (
-                            <p className="mt-1 text-xs uppercase tracking-[0.18em] text-[#9f848d]">Cadastro: {cliente.nome}</p>
-                          ) : null}
-                        </div>
-                        <span className={cn('rounded-full border px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.16em]', status.chip)}>
+                    <div className="min-w-0">
+                      <div className="flex flex-wrap items-center gap-2">
+                        <h3 className="font-serif font-normal text-lg sm:text-xl text-gray-900 dark:text-white leading-tight truncate">{cliente.apelido || cliente.nome}</h3>
+                        <span className={cn('rounded-full border px-2.5 py-0.5 text-[9px] font-semibold tracking-wide normal-case shrink-0', status.chip)}>
                           {status.label}
                         </span>
                       </div>
-                      <div className="mt-3 flex flex-wrap gap-4 text-sm text-[#7f6570] dark:text-[#c7adb4]">
-                        <span className="inline-flex items-center gap-2">
-                          <Phone className="h-4 w-4 text-[#f7c1b6]" />
+                      <div className="mt-1.5 flex flex-wrap gap-x-4 gap-y-1 text-xs text-gray-400 dark:text-gray-500">
+                        <span className="inline-flex items-center gap-1.5">
+                          <Phone className="h-3.5 w-3.5 text-[#d48997]" />
                           {cliente.telefone || 'Sem telefone'}
                         </span>
-                        {cliente.instagram ? (
-                          <span className="inline-flex items-center gap-2">
-                            <Smartphone className="h-4 w-4 text-[#f7c1b6]" />
+                        {cliente.instagram && (
+                          <span className="inline-flex items-center gap-1.5">
+                            <Smartphone className="h-3.5 w-3.5 text-[#d48997]" />
                             {cliente.instagram}
                           </span>
-                        ) : null}
+                        )}
                       </div>
                     </div>
                   </div>
 
                   <div className={cn(
-                    'grid gap-4 border-t border-gray-200 pt-5 dark:border-white/5',
+                    'grid gap-4 border-t border-black/[0.03] pt-4 dark:border-white/5 w-full lg:w-auto shrink-0',
                     isTightPage ? 'grid-cols-2' : 'grid-cols-3',
-                    !isCompactPage && 'lg:border-l lg:border-t-0 lg:pl-6 lg:pt-0'
+                    !isCompactPage && 'lg:border-l lg:border-t-0 lg:pl-6 lg:pt-0 lg:grid-cols-[80px_120px_100px]'
                   )}>
-                    <div className={cn(isTightPage ? 'text-left' : 'text-center')}>
-                      <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-[#9f848d]">Visitas</p>
-                      <p className="mt-2 text-2xl font-semibold text-[#2f2430] dark:text-[#faf7f6]">{cliente.totalVisitas || 0}</p>
+                    <div className={cn(isTightPage ? 'text-left' : 'text-center sm:text-left lg:text-center')}>
+                      <p className="text-[10px] font-medium normal-case text-gray-400 dark:text-gray-500">Visitas</p>
+                      <p className="mt-0.5 text-base font-semibold text-gray-900 dark:text-white">{cliente.totalVisitas || 0}</p>
                     </div>
-                    <div className={cn(isTightPage ? 'text-left' : 'text-center')}>
-                      <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-[#9f848d]">LTV</p>
-                      <p className="mt-2 text-2xl font-semibold text-[#f7c1b6]">{moeda(cliente.totalGasto)}</p>
+                    <div className={cn(isTightPage ? 'text-left' : 'text-center sm:text-left lg:text-center')}>
+                      <p className="text-[10px] font-medium normal-case text-gray-400 dark:text-gray-500">Faturamento LTV</p>
+                      <p className="mt-0.5 text-base font-semibold text-[#d48997]">{moeda(cliente.totalGasto)}</p>
                     </div>
-                    <div className={cn(isTightPage ? 'col-span-2 text-left' : 'text-right')}>
-                      <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-[#E29BA8]">Ver perfil</p>
+                    <div className={cn(isTightPage ? 'col-span-2 text-left' : 'text-right sm:text-left lg:text-right flex items-center justify-end')}>
+                      <p className="text-xs font-semibold text-[#d48997] hover:underline normal-case">Ver perfil →</p>
                     </div>
                   </div>
                 </button>
@@ -355,8 +351,9 @@ export default function Clientes() {
         </div>
       )}
 
+      {/* Modal Novo Cliente */}
       <AnimatePresence>
-        {modalNovo ? (
+        {modalNovo && (
           <div className="fixed inset-0 z-[210] flex items-center justify-center overflow-y-auto overscroll-contain p-3 sm:p-6">
             <motion.button
               type="button"
@@ -364,43 +361,43 @@ export default function Clientes() {
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               onClick={() => setModalNovo(false)}
-              className="absolute inset-0 bg-black/70 backdrop-blur-sm"
+              className="absolute inset-0 bg-black/60 backdrop-blur-sm"
             />
 
             <motion.form
-              initial={{ opacity: 0, y: 18, scale: 0.98 }}
+              initial={{ opacity: 0, y: 15, scale: 0.98 }}
               animate={{ opacity: 1, y: 0, scale: 1 }}
-              exit={{ opacity: 0, y: 18, scale: 0.98 }}
+              exit={{ opacity: 0, y: 15, scale: 0.98 }}
               onSubmit={criarNovoCliente}
-              className="relative z-10 max-h-[calc(100dvh-1.5rem)] w-full max-w-2xl overflow-y-auto rounded-[2rem] border border-gray-200 bg-white/95 p-4 shadow-[0_40px_120px_rgba(0,0,0,0.18)] custom-scrollbar dark:border-white/5 dark:bg-[rgba(28,23,31,0.98)] dark:shadow-[0_40px_120px_rgba(0,0,0,0.45)] sm:p-6 lg:p-8"
+              className="relative z-10 max-h-[calc(100dvh-1.5rem)] w-full max-w-xl overflow-y-auto rounded-3xl border border-black/[0.04] bg-white p-5 shadow-xl dark:border-white/10 dark:bg-[#0c0c0e]/95 custom-scrollbar sm:p-6 md:p-8"
             >
               <button
                 type="button"
                 onClick={() => setModalNovo(false)}
-                className="absolute right-5 top-5 rounded-full border border-gray-200 p-2 text-[#8a7079] transition hover:text-[#3b2a35] dark:border-white/5 dark:text-[#c7adb4] dark:hover:text-[#faf7f6]"
+                className="absolute right-4 top-4 rounded-full border border-black/[0.04] dark:border-white/10 p-2 text-gray-400 hover:text-red-500 transition shadow-sm"
               >
                 <X className="h-4 w-4" />
               </button>
 
-              <div className="mb-8 border-b border-gray-200 dark:border-white/5 pb-6">
-                <p className="text-[11px] font-semibold uppercase tracking-[0.3em] text-[#E29BA8]">Cadastro rapido</p>
-                <h2 className="mt-3 font-['Playfair_Display'] text-2xl text-[#2f2430] dark:text-[#faf7f6] sm:text-4xl">Novo cliente</h2>
+              <div className="mb-6 border-b border-black/[0.03] dark:border-white/5 pb-4">
+                <p className="text-[10px] font-semibold text-[#d48997]">Ficha do Cliente</p>
+                <h2 className="mt-1 font-serif font-normal text-xl sm:text-2xl text-gray-905 dark:text-white">Novo registro</h2>
               </div>
 
-              <div className="grid gap-5 sm:grid-cols-2">
+              <div className="grid gap-4 sm:grid-cols-2">
                 {[
-                  ['nome', 'Nome', 'text', true],
-                  ['apelido', 'Como chamar', 'text', false],
-                  ['telefone', 'Telefone', 'text', true],
-                  ['email', 'Email', 'email', false],
-                  ['instagram', 'Instagram', 'text', false],
-                  ['cpf', 'CPF', 'text', false],
+                  ['nome', 'Nome completo', 'text', true],
+                  ['apelido', 'Como chamar (apelido)', 'text', false],
+                  ['telefone', 'Telefone principal', 'text', true],
+                  ['email', 'Endereço de e-mail', 'email', false],
+                  ['instagram', 'Usuário Instagram', 'text', false],
+                  ['cpf', 'Documento CPF', 'text', false],
                   ['dataNascimento', 'Data de nascimento', 'date', false],
-                  ['endereco', 'Endereco', 'text', false],
+                  ['endereco', 'Endereço residencial', 'text', false],
                 ].map(([field, label, type, required]) => (
                   <label key={field} className={field === 'endereco' ? 'sm:col-span-2' : ''}>
-                    <span className="mb-3 block text-[11px] font-semibold uppercase tracking-[0.26em] text-[#8a7079] dark:text-[#c7adb4]">
-                      {label}
+                    <span className="mb-2 block text-[10px] font-medium text-gray-400 dark:text-gray-500">
+                      {label} {required && <span className="text-rose-500">*</span>}
                     </span>
                     <input
                       type={type}
@@ -412,35 +409,36 @@ export default function Clientes() {
                           [field]: event.target.value,
                         }))
                       }
-                      className="h-14 w-full rounded-[20px] border border-gray-200 bg-white px-5 text-base text-[#2f2430] outline-none placeholder:text-[#9a7f88] focus:border-[rgba(233,155,168,0.28)] dark:border-white/5 dark:bg-[rgba(20,16,22,0.66)] dark:text-[#faf7f6] dark:placeholder:text-[#806871]"
+                      className="h-11 w-full rounded-xl border border-black/[0.08] dark:border-white/10 bg-white px-4 text-sm text-gray-900 outline-none focus:border-[#d48997] focus:ring-2 focus:ring-[#d48997]/10 dark:bg-[#111113] dark:text-white transition-all placeholder:text-gray-400"
                     />
                   </label>
                 ))}
               </div>
 
-              <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:justify-end">
+              <div className="mt-8 flex flex-col gap-3.5 sm:flex-row sm:justify-end">
                 <button
                   type="button"
                   onClick={() => setModalNovo(false)}
-                  className="inline-flex min-h-[52px] items-center justify-center rounded-full border border-gray-200 px-7 text-sm font-semibold uppercase tracking-[0.22em] text-[#8a7079] transition hover:border-[rgba(233,155,168,0.18)] hover:text-[#3b2a35] dark:border-white/5 dark:text-[#c7adb4] dark:hover:text-[#faf7f6]"
+                  className="inline-flex items-center justify-center rounded-xl border border-black/[0.04] dark:border-white/10 bg-gray-50 hover:bg-gray-100 dark:bg-white/5 dark:text-white px-5 py-2.5 text-xs font-semibold text-gray-500 transition"
                 >
                   Cancelar
                 </button>
                 <button
                   type="submit"
                   disabled={criando}
-                  className="inline-flex min-h-[52px] items-center justify-center rounded-full bg-gradient-to-r from-[#E29BA8] to-[#d48997] text-[#111116] px-7 text-sm font-semibold uppercase tracking-[0.22em] text-[#20191f] transition hover:brightness-105 disabled:cursor-not-allowed disabled:opacity-70"
+                  className="inline-flex items-center justify-center rounded-xl bg-[#d48997] hover:bg-[#c97b8a] text-white px-5 py-2.5 text-xs font-semibold shadow-sm transition disabled:opacity-70"
                 >
-                  {criando ? 'Salvando...' : 'Salvar cliente'}
+                  {criando ? 'Criando...' : 'Criar Registro'}
                 </button>
               </div>
             </motion.form>
           </div>
-        ) : null}
+        )}
       </AnimatePresence>
 
+      {/* Modal Campanha MKT */}
       <AnimatePresence>
-        {modalCampanha ? (
+        {modalCampanha && (
           <div className="fixed inset-0 z-[210] flex items-center justify-center overflow-y-auto overscroll-contain p-3 sm:p-6">
             <motion.button
               type="button"
@@ -448,69 +446,69 @@ export default function Clientes() {
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               onClick={() => setModalCampanha(false)}
-              className="absolute inset-0 bg-black/70 backdrop-blur-sm"
+              className="absolute inset-0 bg-black/60 backdrop-blur-sm"
             />
 
             <motion.div
-              initial={{ opacity: 0, y: 18, scale: 0.98 }}
+              initial={{ opacity: 0, y: 15, scale: 0.98 }}
               animate={{ opacity: 1, y: 0, scale: 1 }}
-              exit={{ opacity: 0, y: 18, scale: 0.98 }}
-              className="relative z-10 max-h-[calc(100dvh-1.5rem)] w-full max-w-2xl overflow-y-auto rounded-[2rem] border border-gray-200 bg-white/95 p-4 shadow-[0_40px_120px_rgba(0,0,0,0.18)] custom-scrollbar dark:border-white/5 dark:bg-[rgba(28,23,31,0.98)] dark:shadow-[0_40px_120px_rgba(0,0,0,0.45)] sm:p-6 lg:p-8"
+              exit={{ opacity: 0, y: 15, scale: 0.98 }}
+              className="relative z-10 max-h-[calc(100dvh-1.5rem)] w-full max-w-lg overflow-y-auto rounded-3xl border border-black/[0.04] bg-white p-5 shadow-xl dark:border-white/10 dark:bg-[#0c0c0e]/95 custom-scrollbar sm:p-6 md:p-8"
             >
               <button
                 type="button"
                 onClick={() => setModalCampanha(false)}
-                className="absolute right-5 top-5 rounded-full border border-gray-200 p-2 text-[#8a7079] transition hover:text-[#3b2a35] dark:border-white/5 dark:text-[#c7adb4] dark:hover:text-[#faf7f6]"
+                className="absolute right-4 top-4 rounded-full border border-black/[0.04] dark:border-white/10 p-2 text-gray-400 hover:text-red-500 transition shadow-sm"
               >
                 <X className="h-4 w-4" />
               </button>
 
-              <div className="mb-8 border-b border-gray-200 dark:border-white/5 pb-6">
-                <p className="text-[11px] font-semibold uppercase tracking-[0.3em] text-[#E29BA8]">Campanha ativa</p>
-                <h2 className="mt-3 font-['Playfair_Display'] text-2xl text-[#2f2430] dark:text-[#faf7f6] sm:text-4xl">Nova campanha</h2>
+              <div className="mb-6 border-b border-black/[0.03] dark:border-white/5 pb-4">
+                <p className="text-[10px] font-semibold text-[#d48997]">Campanhas e Promoções</p>
+                <h2 className="mt-1 font-serif font-normal text-xl sm:text-2xl text-gray-905 dark:text-white">Campanha de marketing</h2>
               </div>
 
-              <div className="space-y-6">
+              <div className="space-y-5">
                 <div>
-                  <span className="mb-3 block text-[11px] font-semibold uppercase tracking-[0.26em] text-[#8a7079] dark:text-[#c7adb4]">
-                    Publico alvo
+                  <span className="mb-2.5 block text-[10px] font-medium text-gray-400 dark:text-gray-500">
+                    Selecione o segmento do público-alvo
                   </span>
-                  <div className={cn('grid gap-3', !isTightPage && 'sm:grid-cols-3')}>
+                  <div className={cn('grid gap-3.5', !isTightPage && 'sm:grid-cols-3')}>
                     {['inativo', 'perdido', 'todos'].map((item) => (
                       <button
                         key={item}
                         type="button"
                         onClick={() => setSegmento(item)}
                         className={cn(
-                          'rounded-[18px] border px-4 py-3 text-[11px] font-semibold uppercase tracking-[0.18em] transition',
+                          'rounded-xl border px-4 py-2.5 text-xs font-semibold transition',
                           segmento === item
-                            ? 'border-[rgba(233,155,168,0.28)] bg-[rgba(233,155,168,0.14)] text-[#f7c1b6]'
-                            : 'border-gray-200 bg-[#f8efef] text-[#7f6570] dark:border-white/5 dark:bg-[rgba(255,255,255,0.03)] dark:text-[#c7adb4]'
+                            ? 'border-[#d48997] bg-[#d48997]/10 text-[#d48997]'
+                            : 'border-black/[0.04] bg-gray-50/50 text-gray-500 dark:border-white/10 dark:bg-white/5 dark:text-white/70'
                         )}
                       >
-                        {item === 'inativo' ? 'Inativos' : item === 'perdido' ? 'Perdidos' : 'Todos'}
+                        {item === 'inativo' ? 'Inativos' : item === 'perdido' ? 'Perdidos' : 'Todos os Clientes'}
                       </button>
                     ))}
                   </div>
                 </div>
 
                 <label className="block">
-                  <span className="mb-3 block text-[11px] font-semibold uppercase tracking-[0.26em] text-[#8a7079] dark:text-[#c7adb4]">
-                    Mensagem
+                  <span className="mb-2 block text-[10px] font-medium text-gray-400 dark:text-gray-500">
+                    Texto da mensagem (WhatsApp/E-mail)
                   </span>
                   <textarea
                     value={msgCampanha}
                     onChange={(event) => setMsgCampanha(event.target.value)}
-                    rows={6}
-                    className="w-full rounded-[24px] border border-gray-200 bg-white px-5 py-4 text-base leading-7 text-[#2f2430] outline-none placeholder:text-[#9a7f88] focus:border-[rgba(233,155,168,0.28)] dark:border-white/5 dark:bg-[rgba(20,16,22,0.66)] dark:text-[#faf7f6] dark:placeholder:text-[#806871]"
+                    rows={4}
+                    className="w-full rounded-xl border border-black/[0.08] bg-white px-4 py-3 text-sm text-gray-900 outline-none placeholder:text-gray-400 dark:text-white dark:bg-[#111113] dark:border-white/10 focus:border-[#d48997] focus:ring-2 focus:ring-[#d48997]/10 transition-all resize-none"
                   />
                 </label>
 
-                <div className="flex flex-col gap-3 sm:flex-row sm:justify-end">
+                <div className="flex flex-col gap-3.5 sm:flex-row sm:justify-end">
                   <button
                     type="button"
                     onClick={() => setModalCampanha(false)}
-                    className="inline-flex min-h-[52px] items-center justify-center rounded-full border border-gray-200 px-7 text-sm font-semibold uppercase tracking-[0.22em] text-[#8a7079] transition hover:border-[rgba(233,155,168,0.18)] hover:text-[#3b2a35] dark:border-white/5 dark:text-[#c7adb4] dark:hover:text-[#faf7f6]"
+                    className="inline-flex items-center justify-center rounded-xl border border-black/[0.04] dark:border-white/10 bg-gray-50 hover:bg-gray-100 dark:bg-white/5 dark:text-white px-5 py-2.5 text-xs font-semibold text-gray-500 transition"
                   >
                     Cancelar
                   </button>
@@ -518,19 +516,20 @@ export default function Clientes() {
                     type="button"
                     disabled={enviando}
                     onClick={disparar}
-                    className="inline-flex min-h-[52px] items-center justify-center rounded-full bg-gradient-to-r from-[#E29BA8] to-[#d48997] text-[#111116] px-7 text-sm font-semibold uppercase tracking-[0.22em] text-[#20191f] transition hover:brightness-105 disabled:cursor-not-allowed disabled:opacity-70"
+                    className="inline-flex items-center justify-center rounded-xl bg-[#d48997] hover:bg-[#c97b8a] text-white px-5 py-2.5 text-xs font-semibold shadow-sm transition disabled:opacity-70"
                   >
-                    {enviando ? 'Enviando...' : 'Disparar agora'}
+                    {enviando ? 'Processando...' : 'Disparar Campanha'}
                   </button>
                 </div>
               </div>
             </motion.div>
           </div>
-        ) : null}
+        )}
       </AnimatePresence>
 
+      {/* Modal Edição Cliente */}
       <AnimatePresence>
-        {clienteEdicao ? (
+        {clienteEdicao && (
           <div className="fixed inset-0 z-[215] flex items-center justify-center overflow-y-auto overscroll-contain p-3 sm:p-6">
             <motion.button
               type="button"
@@ -538,43 +537,43 @@ export default function Clientes() {
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               onClick={() => setClienteEdicao(null)}
-              className="absolute inset-0 bg-black/70 backdrop-blur-sm"
+              className="absolute inset-0 bg-black/60 backdrop-blur-sm"
             />
 
             <motion.form
-              initial={{ opacity: 0, y: 18, scale: 0.98 }}
+              initial={{ opacity: 0, y: 15, scale: 0.98 }}
               animate={{ opacity: 1, y: 0, scale: 1 }}
-              exit={{ opacity: 0, y: 18, scale: 0.98 }}
+              exit={{ opacity: 0, y: 15, scale: 0.98 }}
               onSubmit={salvarEdicaoCliente}
-              className="relative z-10 max-h-[calc(100dvh-1.5rem)] w-full max-w-2xl overflow-y-auto rounded-[2rem] border border-gray-200 bg-white/95 p-4 shadow-[0_40px_120px_rgba(0,0,0,0.18)] custom-scrollbar dark:border-white/5 dark:bg-[rgba(28,23,31,0.98)] dark:shadow-[0_40px_120px_rgba(0,0,0,0.45)] sm:p-6 lg:p-8"
+              className="relative z-10 max-h-[calc(100dvh-1.5rem)] w-full max-w-xl overflow-y-auto rounded-3xl border border-black/[0.04] bg-white p-5 shadow-xl dark:border-white/10 dark:bg-[#0c0c0e]/95 custom-scrollbar sm:p-6 md:p-8"
             >
               <button
                 type="button"
                 onClick={() => setClienteEdicao(null)}
-                className="absolute right-5 top-5 rounded-full border border-gray-200 p-2 text-[#8a7079] transition hover:text-[#3b2a35] dark:border-white/5 dark:text-[#c7adb4] dark:hover:text-[#faf7f6]"
+                className="absolute right-4 top-4 rounded-full border border-black/[0.04] dark:border-white/10 p-2 text-gray-400 hover:text-red-500 transition shadow-sm"
               >
                 <X className="h-4 w-4" />
               </button>
 
-              <div className="mb-8 border-b border-gray-200 dark:border-white/5 pb-6">
-                <p className="text-[11px] font-semibold uppercase tracking-[0.3em] text-[#E29BA8]">Atualizacao de cadastro</p>
-                <h2 className="mt-3 font-['Playfair_Display'] text-2xl text-[#2f2430] dark:text-[#faf7f6] sm:text-4xl">Editar cliente</h2>
+              <div className="mb-6 border-b border-black/[0.03] dark:border-white/5 pb-4">
+                <p className="text-[10px] font-semibold text-[#d48997]">Atualização cadastral</p>
+                <h2 className="mt-1 font-serif font-normal text-xl sm:text-2xl text-gray-905 dark:text-white">Editar cadastro</h2>
               </div>
 
-              <div className="grid gap-5 sm:grid-cols-2">
+              <div className="grid gap-4 sm:grid-cols-2">
                 {[
                   ['nome', 'Nome do cadastro', 'text', true],
                   ['apelido', 'Como chamar', 'text', false],
-                  ['telefone', 'Telefone', 'text', true],
-                  ['email', 'Email', 'email', false],
+                  ['telefone', 'Telefone principal', 'text', true],
+                  ['email', 'Endereço de e-mail', 'email', false],
                   ['instagram', 'Instagram', 'text', false],
                   ['cpf', 'CPF', 'text', false],
                   ['dataNascimento', 'Data de nascimento', 'date', false],
-                  ['endereco', 'Endereco', 'text', false],
+                  ['endereco', 'Endereço residencial', 'text', false],
                 ].map(([field, label, type, required]) => (
                   <label key={field} className={field === 'endereco' ? 'sm:col-span-2' : ''}>
-                    <span className="mb-3 block text-[11px] font-semibold uppercase tracking-[0.26em] text-[#8a7079] dark:text-[#c7adb4]">
-                      {label}
+                    <span className="mb-2 block text-[10px] font-medium text-gray-400 dark:text-gray-500">
+                      {label} {required && <span className="text-rose-500">*</span>}
                     </span>
                     <input
                       type={type}
@@ -586,42 +585,43 @@ export default function Clientes() {
                           [field]: event.target.value,
                         }))
                       }
-                      className="h-14 w-full rounded-[20px] border border-gray-200 bg-white px-5 text-base text-[#2f2430] outline-none placeholder:text-[#9a7f88] focus:border-[rgba(233,155,168,0.28)] dark:border-white/5 dark:bg-[rgba(20,16,22,0.66)] dark:text-[#faf7f6] dark:placeholder:text-[#806871]"
+                      className="h-11 w-full rounded-xl border border-black/[0.08] dark:border-white/10 bg-white px-4 text-sm text-gray-900 outline-none focus:border-[#d48997] focus:ring-2 focus:ring-[#d48997]/10 dark:bg-[#111113] dark:text-white transition-all placeholder:text-gray-400"
                     />
                   </label>
                 ))}
               </div>
 
-              <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:justify-end">
+              <div className="mt-8 flex flex-col gap-3.5 sm:flex-row sm:justify-end">
                 <button
                   type="button"
                   onClick={() => setClienteEdicao(null)}
-                  className="inline-flex min-h-[52px] items-center justify-center rounded-full border border-gray-200 px-7 text-sm font-semibold uppercase tracking-[0.22em] text-[#8a7079] transition hover:border-[rgba(233,155,168,0.18)] hover:text-[#3b2a35] dark:border-white/5 dark:text-[#c7adb4] dark:hover:text-[#faf7f6]"
+                  className="inline-flex items-center justify-center rounded-xl border border-black/[0.04] dark:border-white/10 bg-gray-50 hover:bg-gray-100 dark:bg-white/5 dark:text-white px-5 py-2.5 text-xs font-semibold text-gray-500 transition"
                 >
                   Cancelar
                 </button>
                 <button
                   type="submit"
                   disabled={salvandoEdicao}
-                  className="inline-flex min-h-[52px] items-center justify-center rounded-full bg-gradient-to-r from-[#E29BA8] to-[#d48997] text-[#111116] px-7 text-sm font-semibold uppercase tracking-[0.22em] text-[#20191f] transition hover:brightness-105 disabled:cursor-not-allowed disabled:opacity-70"
+                  className="inline-flex items-center justify-center rounded-xl bg-[#d48997] hover:bg-[#c97b8a] text-white px-5 py-2.5 text-xs font-semibold shadow-sm transition disabled:opacity-70"
                 >
-                  {salvandoEdicao ? 'Salvando...' : 'Salvar alteracoes'}
+                  {salvandoEdicao ? 'Salvando...' : 'Salvar Alterações'}
                 </button>
               </div>
             </motion.form>
           </div>
-        ) : null}
+        )}
       </AnimatePresence>
 
+      {/* Drawer Perfil Detalhado */}
       <AnimatePresence>
-        {clienteExpandido ? (
+        {clienteExpandido && (
           <div className="fixed inset-0 z-[220] flex justify-end">
             <motion.button
               type="button"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              className="absolute inset-0 bg-black/70 backdrop-blur-sm"
+              className="absolute inset-0 bg-black/60 backdrop-blur-sm"
               onClick={() => setExpandido(null)}
             />
 
@@ -629,43 +629,43 @@ export default function Clientes() {
               initial={{ x: '100%' }}
               animate={{ x: 0 }}
               exit={{ x: '100%' }}
-              transition={{ type: 'spring', stiffness: 220, damping: 28 }}
-              className="relative z-10 h-full w-full max-w-2xl overflow-y-auto border-l border-gray-200 bg-white/95 shadow-[0_40px_120px_rgba(0,0,0,0.18)] dark:border-white/5 dark:bg-[rgba(28,23,31,0.98)] dark:shadow-[0_40px_120px_rgba(0,0,0,0.45)]"
+              transition={{ type: 'spring', stiffness: 240, damping: 30 }}
+              className="relative z-10 h-full w-full max-w-xl overflow-y-auto border-l border-black/[0.04] bg-white shadow-xl dark:border-white/10 dark:bg-[#0c0c0e]/98 modal-scrollbar"
             >
               <button
                 type="button"
                 onClick={() => setExpandido(null)}
-                className="absolute right-5 top-5 rounded-full border border-gray-200 p-2 text-[#8a7079] transition hover:text-[#3b2a35] dark:border-white/5 dark:text-[#c7adb4] dark:hover:text-[#faf7f6]"
+                className="absolute right-4 top-4 rounded-full border border-black/[0.04] dark:border-white/10 p-2 text-gray-400 hover:text-red-500 transition shadow-sm z-10 bg-white dark:bg-[#0c0c0e]"
               >
                 <X className="h-4 w-4" />
               </button>
 
-              <div className="border-b border-gray-200 dark:border-white/5 p-4 md:p-8">
-                <div className="mx-auto flex h-28 w-28 items-center justify-center rounded-full bg-[#3b2a35]/14 text-3xl sm:text-5xl font-semibold text-[#3b2a35] dark:bg-[rgba(20,16,22,0.55)] dark:text-[#faf7f6]">
+              <div className="border-b border-black/[0.03] dark:border-white/5 p-6 md:p-8">
+                <div className="mx-auto flex h-24 w-24 items-center justify-center rounded-2xl bg-gray-50 dark:bg-white/5 text-4xl font-semibold text-gray-750 dark:text-[#faf7f6] border border-black/[0.04]">
                   {initials(clienteExpandido.apelido || clienteExpandido.nome)}
                 </div>
-                <div className="mt-6 text-center">
-                  <h2 className="font-['Playfair_Display'] text-2xl text-[#2f2430] dark:text-[#faf7f6] sm:text-4xl">{clienteExpandido.apelido || clienteExpandido.nome}</h2>
-                  {clienteExpandido.apelido ? (
-                    <p className="mt-2 text-[11px] uppercase tracking-[0.22em] text-[#9f848d]">Nome do cadastro: {clienteExpandido.nome}</p>
-                  ) : null}
-                  <div className="mt-4 flex flex-wrap items-center justify-center gap-4 text-sm text-[#7f6570] dark:text-[#c7adb4]">
-                    <span className="inline-flex items-center gap-2">
-                      <Phone className="h-4 w-4 text-[#f7c1b6]" />
+                <div className="mt-5 text-center">
+                  <h2 className="font-serif font-normal text-2xl sm:text-3xl text-gray-905 dark:text-white leading-tight">{clienteExpandido.apelido || clienteExpandido.nome}</h2>
+                  {clienteExpandido.apelido && (
+                    <p className="mt-1 text-[10px] font-medium text-gray-400 dark:text-gray-500 uppercase tracking-wider">Nome de registro: {clienteExpandido.nome}</p>
+                  )}
+                  <div className="mt-3.5 flex flex-wrap items-center justify-center gap-x-4 gap-y-1 text-xs text-gray-400 dark:text-gray-500">
+                    <span className="inline-flex items-center gap-1.5">
+                      <Phone className="h-4 w-4 text-[#d48997]" />
                       {clienteExpandido.telefone || 'Sem telefone'}
                     </span>
-                    {clienteExpandido.cpf ? (
-                      <span className="inline-flex items-center gap-2">
-                        <span className="text-[#f7c1b6]">CPF</span>
+                    {clienteExpandido.cpf && (
+                      <span className="inline-flex items-center gap-1">
+                        <span className="text-[#d48997] font-semibold">CPF:</span>
                         {clienteExpandido.cpf}
                       </span>
-                    ) : null}
-                    {clienteExpandido.instagram ? (
-                      <span className="inline-flex items-center gap-2">
-                        <Smartphone className="h-4 w-4 text-[#f7c1b6]" />
+                    )}
+                    {clienteExpandido.instagram && (
+                      <span className="inline-flex items-center gap-1.5">
+                        <Smartphone className="h-4 w-4 text-[#d48997]" />
                         {clienteExpandido.instagram}
                       </span>
-                    ) : null}
+                    )}
                   </div>
                   <button
                     type="button"
@@ -680,78 +680,75 @@ export default function Clientes() {
                       dataNascimento: clienteExpandido.dataNascimento ? String(clienteExpandido.dataNascimento).slice(0, 10) : '',
                       endereco: clienteExpandido.endereco || '',
                     })}
-                    className="mt-5 inline-flex min-h-[46px] items-center justify-center gap-2 rounded-full border border-gray-200 px-5 text-[11px] font-semibold uppercase tracking-[0.18em] text-[#8a7079] transition hover:border-[rgba(233,155,168,0.18)] hover:text-[#3b2a35] dark:border-white/5 dark:text-[#c7adb4] dark:hover:text-[#faf7f6]"
+                    className="mt-5 inline-flex items-center justify-center gap-1.5 rounded-xl border border-black/[0.04] px-4.5 py-2 text-xs font-semibold text-gray-650 dark:border-white/10 dark:text-white shadow-sm hover:bg-gray-50 transition-all"
                   >
-                    <Edit3 className="h-4 w-4 text-[#f7c1b6]" />
-                    Editar cadastro
+                    <Edit3 className="h-3.5 w-3.5 text-[#d48997]" />
+                    <span>Editar cadastro</span>
                   </button>
                 </div>
               </div>
 
-              <div className={cn(
-                'grid border-b border-gray-200 bg-[rgba(255,255,255,0.02)] dark:border-white/5',
-                isTightPage ? 'grid-cols-1 sm:grid-cols-3' : 'grid-cols-3'
-              )}>
-                <div className="p-5 text-center">
-                  <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-[#9f848d]">LTV</p>
-                  <p className="mt-2 text-2xl font-semibold text-[#f7c1b6]">{moeda(clienteExpandido.totalGasto)}</p>
+              <div className="grid border-b border-black/[0.03] bg-black/[0.01] dark:bg-white/[0.01] dark:border-white/5 grid-cols-3">
+                <div className="p-4.5 text-center">
+                  <p className="text-[10px] font-medium text-gray-400 dark:text-gray-550">Faturamento LTV</p>
+                  <p className="mt-1 text-lg font-semibold text-[#d48997]">{moeda(clienteExpandido.totalGasto)}</p>
                 </div>
-                <div className="p-5 text-center">
-                  <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-[#9f848d]">Visitas</p>
-                  <p className="mt-2 text-2xl font-semibold text-[#2f2430] dark:text-[#faf7f6]">{clienteExpandido.totalVisitas || 0}</p>
+                <div className="p-4.5 text-center border-l border-r border-black/[0.03] dark:border-white/5">
+                  <p className="text-[10px] font-medium text-gray-400 dark:text-gray-555">Total Visitas</p>
+                  <p className="mt-1 text-lg font-semibold text-gray-905 dark:text-white">{clienteExpandido.totalVisitas || 0}</p>
                 </div>
-                <div className="p-5 text-center">
-                  <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-[#9f848d]">Fidelidade</p>
-                  <div className="mt-3 flex items-center justify-center gap-1 text-[#9be0bb]">
-                    <Star className="h-4 w-4 fill-current" />
+                <div className="p-4.5 text-center">
+                  <p className="text-[10px] font-medium text-gray-400 dark:text-gray-550">Fidelidade</p>
+                  <div className="mt-2.5 flex items-center justify-center gap-1 text-emerald-500">
+                    <Star className="h-4 w-4 fill-emerald-500" />
                   </div>
                 </div>
               </div>
 
-              <div className="space-y-8 p-4 md:p-8">
-                <section className="space-y-4">
-                  <h3 className="flex items-center gap-3 text-[11px] font-semibold uppercase tracking-[0.3em] text-[#E29BA8]">
-                    <MapPin className="h-4 w-4" />
-                    Informacoes
+              <div className="space-y-6 p-6 md:p-8">
+                <section className="space-y-3.5">
+                  <h3 className="flex items-center gap-2 text-xs font-semibold text-gray-905 dark:text-white normal-case">
+                    <MapPin className="h-4 w-4 text-[#d48997]" />
+                    <span>Dados de Cadastro</span>
                   </h3>
-                  <div className="grid gap-4 sm:grid-cols-2">
-                    <div className="rounded-[24px] border border-gray-200 dark:border-white/5 bg-[rgba(255,255,255,0.03)] p-5">
-                      <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-[#9f848d]">Ultima visita</p>
-                      <p className="mt-2 text-sm text-[#2f2430] dark:text-[#faf7f6]">
+                  <div className="grid gap-3 sm:grid-cols-2">
+                    <div className="rounded-xl border border-black/[0.04] bg-black/[0.01] dark:bg-white/[0.01] dark:border-white/5 p-4">
+                      <p className="text-[10px] font-medium text-gray-405">Última Visita</p>
+                      <p className="mt-1 text-sm font-semibold text-gray-900 dark:text-white">
                         {clienteExpandido.lastVisit
                           ? new Date(clienteExpandido.lastVisit).toLocaleDateString()
-                          : 'Nunca'}
+                          : 'Nenhuma visita registrada'}
                       </p>
                     </div>
-                    <div className="rounded-[24px] border border-gray-200 dark:border-white/5 bg-[rgba(255,255,255,0.03)] p-5">
-                      <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-[#9f848d]">Aniversario</p>
-                      <p className="mt-2 text-sm text-[#2f2430] dark:text-[#faf7f6]">
+                    <div className="rounded-xl border border-black/[0.04] bg-black/[0.01] dark:bg-white/[0.01] dark:border-white/5 p-4">
+                      <p className="text-[10px] font-medium text-gray-405">Aniversário</p>
+                      <p className="mt-1 text-sm font-semibold text-gray-900 dark:text-white">
                         {clienteExpandido.dataNascimento
                           ? new Date(clienteExpandido.dataNascimento).toLocaleDateString()
-                          : 'Nao informado'}
+                          : 'Não informado'}
                       </p>
                     </div>
-                    <div className="rounded-[24px] border border-gray-200 dark:border-white/5 bg-[rgba(255,255,255,0.03)] p-5">
-                      <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-[#9f848d]">CPF</p>
-                      <p className="mt-2 text-sm text-[#2f2430] dark:text-[#faf7f6]">
-                        {clienteExpandido.cpf || 'Nao informado'}
+                    <div className="rounded-xl border border-black/[0.04] bg-black/[0.01] dark:bg-white/[0.01] dark:border-white/5 p-4">
+                      <p className="text-[10px] font-medium text-gray-455">Documento CPF</p>
+                      <p className="mt-1 text-sm font-semibold text-gray-900 dark:text-white">
+                        {clienteExpandido.cpf || 'Não informado'}
                       </p>
                     </div>
-                    <div className="rounded-[24px] border border-gray-200 dark:border-white/5 bg-[rgba(255,255,255,0.03)] p-5 sm:col-span-2">
-                      <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-[#9f848d]">Endereco</p>
-                      <p className="mt-2 text-sm text-[#2f2430] dark:text-[#faf7f6]">
-                        {clienteExpandido.endereco || 'Sem endereco cadastrado'}
+                    <div className="rounded-xl border border-black/[0.04] bg-black/[0.01] dark:bg-white/[0.01] dark:border-white/5 p-4 sm:col-span-2">
+                      <p className="text-[10px] font-medium text-gray-455">Endereço Residencial</p>
+                      <p className="mt-1 text-sm font-semibold text-gray-900 dark:text-white leading-relaxed">
+                        {clienteExpandido.endereco || 'Nenhum endereço cadastrado'}
                       </p>
                     </div>
                   </div>
                 </section>
 
-                <section className="space-y-4">
-                  <h3 className="flex items-center gap-3 text-[11px] font-semibold uppercase tracking-[0.3em] text-[#E29BA8]">
-                    <History className="h-4 w-4" />
-                    Historico de agendamentos
+                <section className="space-y-3.5">
+                  <h3 className="flex items-center gap-2 text-xs font-semibold text-gray-905 dark:text-white normal-case">
+                    <History className="h-4 w-4 text-[#d48997]" />
+                    <span>Histórico de Agendamentos</span>
                   </h3>
-                  <div className="space-y-3">
+                  <div className="space-y-2.5">
                     {(clienteExpandido.agendamentos || []).length ? (
                       clienteExpandido.agendamentos
                         .slice()
@@ -760,33 +757,35 @@ export default function Clientes() {
                         .map((agendamento) => (
                           <div
                             key={agendamento.id}
-                            className="flex gap-4 rounded-[24px] border border-gray-200 dark:border-white/5 bg-[rgba(255,255,255,0.03)] p-4"
+                            className="flex gap-4 rounded-2xl border border-black/[0.04] bg-white dark:bg-white/[0.01] dark:border-white/5 p-4 items-center justify-between"
                           >
-                            <div className="flex h-14 w-14 shrink-0 flex-col items-center justify-center rounded-[18px] bg-[rgba(233,155,168,0.12)] text-[#f7c1b6]">
-                              <span className="text-lg font-semibold">
-                                {new Date(agendamento.data).getDate()}
-                              </span>
-                              <span className="text-[10px] uppercase tracking-[0.12em]">
-                                {new Date(agendamento.data).toLocaleString('pt-BR', { month: 'short' })}
-                              </span>
-                            </div>
-                            <div className="min-w-0 flex-1">
-                              <p className="truncate text-sm font-semibold text-[#2f2430] dark:text-[#faf7f6]">
-                                {agendamento.servico?.nome || agendamento.pacote?.nome || 'Servico'}
-                              </p>
-                              <p className="mt-1 text-[11px] uppercase tracking-[0.18em] text-[#9f848d]">
-                                Com {agendamento.profissional?.nome || 'Equipe'}
-                              </p>
+                            <div className="flex gap-3 items-center min-w-0">
+                              <div className="flex h-11 w-11 shrink-0 flex-col items-center justify-center rounded-xl bg-[#d48997]/10 text-[#d48997] border border-[#d48997]/20">
+                                <span className="text-sm font-bold">
+                                  {new Date(agendamento.data).getDate()}
+                                </span>
+                                <span className="text-[8px] font-medium uppercase tracking-wider -mt-0.5">
+                                  {new Date(agendamento.data).toLocaleString('pt-BR', { month: 'short' })}
+                                </span>
+                              </div>
+                              <div className="min-w-0">
+                                <p className="truncate text-sm font-semibold text-gray-905 dark:text-white">
+                                  {agendamento.servico?.nome || agendamento.pacote?.nome || 'Serviço'}
+                                </p>
+                                <p className="text-[10px] font-medium text-gray-400 dark:text-gray-500 mt-0.5">
+                                  com {agendamento.profissional?.nome || 'Equipe'}
+                                </p>
+                              </div>
                             </div>
                             <div className="shrink-0 text-right">
-                              <p className="text-sm font-semibold text-[#2f2430] dark:text-[#faf7f6]">
+                              <p className="text-sm font-bold text-gray-900 dark:text-white">
                                 {moeda(calculateAgendamentoTotal(agendamento))}
                               </p>
                             </div>
                           </div>
                         ))
                     ) : (
-                      <div className="rounded-[24px] border border-dashed border-gray-200 dark:border-white/5 bg-[rgba(255,255,255,0.03)] p-4 sm:p-6 text-sm text-[#8f7880]">
+                      <div className="rounded-xl border border-dashed border-black/[0.06] dark:border-white/10 px-4 py-8 text-center text-xs text-gray-400">
                         Nenhum agendamento registrado.
                       </div>
                     )}
@@ -795,7 +794,7 @@ export default function Clientes() {
               </div>
             </motion.aside>
           </div>
-        ) : null}
+        )}
       </AnimatePresence>
     </div>
   );

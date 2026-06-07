@@ -16,6 +16,7 @@ import {
   User,
   Users,
   Wallet,
+  X,
 } from 'lucide-react';
 import { format, parseISO } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
@@ -82,169 +83,168 @@ function LancamentoModal({
 
   return (
     <AnimatePresence>
-      <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        exit={{ opacity: 0 }}
-        className="fixed inset-0 z-[160] flex items-start justify-center overflow-y-auto bg-black/80 p-4 py-6 backdrop-blur-md md:items-center"
-        onClick={onClose}
-      >
+      <div className="fixed inset-0 z-[210] flex items-center justify-center p-4">
         <motion.div
-          initial={{ opacity: 0, y: 24, scale: 0.96 }}
-          animate={{ opacity: 1, y: 0, scale: 1 }}
-          exit={{ opacity: 0, y: 24, scale: 0.96 }}
-          onClick={(event) => event.stopPropagation()}
-          className="my-auto max-h-[calc(100vh-2rem)] w-full max-w-2xl overflow-y-auto rounded-[2.5rem] border border-gray-100 bg-white p-6 shadow-[0_40px_120px_-32px_rgba(0,0,0,0.6)] dark:border-white/5 dark:bg-[#161219] md:max-h-[calc(100vh-3rem)] md:p-8"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          onClick={onClose}
+          className="absolute inset-0 bg-black/40 backdrop-blur-sm dark:bg-black/60"
+        />
+
+        <motion.div
+          initial={{ opacity: 0, scale: 0.95, y: 10 }}
+          animate={{ opacity: 1, scale: 1, y: 0 }}
+          exit={{ opacity: 0, scale: 0.95, y: 10 }}
+          className="relative z-10 w-full max-w-2xl overflow-hidden rounded-2xl border border-black/[0.04] dark:border-white/[0.04] bg-white dark:bg-[#18181b] shadow-xl"
         >
-          <div className="mb-8 flex items-start justify-between gap-4">
+          <div className="flex items-center justify-between border-b border-black/[0.04] dark:border-white/5 px-6 py-4">
             <div>
-              <p className="text-[10px] font-black uppercase tracking-[0.28em] text-[#d48997]">Remuneracao</p>
-              <h2 className="mt-2 text-3xl font-black tracking-tighter text-gray-900 dark:text-white">
-                {form.tipo === 'bonificacao' ? 'Nova bonificação' : 'Novo vale ou desconto'}
+              <span className="text-[9px] font-semibold uppercase tracking-wider text-[#d48997]">Lançamentos de Repasse</span>
+              <h2 className="mt-0.5 font-serif text-lg font-normal text-gray-900 dark:text-white">
+                {form.tipo === 'bonificacao' ? 'Nova Bonificação' : 'Novo Vale ou Desconto'}
               </h2>
-              <p className="mt-3 text-sm text-gray-500 dark:text-white/58">
-                {form.tipo === 'bonificacao'
-                  ? 'Registre uma bonificação extra para o profissional que será somada ao próximo repasse.'
-                  : 'Registre um adiantamento para o profissional ou um desconto que será abatido nas próximas comissões.'}
-              </p>
             </div>
             <button
               type="button"
               onClick={onClose}
-              className="rounded-full border border-gray-200 p-3 text-gray-400 transition hover:text-red-500 dark:border-white/10 dark:text-white/60"
+              className="rounded-full border border-black/[0.04] dark:border-white/10 p-2 text-gray-400 hover:text-red-500 transition shadow-sm"
             >
-              <AlertCircle size={16} />
+              <X className="h-4 w-4" />
             </button>
           </div>
 
-          <div className="grid gap-4 md:grid-cols-2">
-            <Field label="Profissional" icon={<User size={14} />}>
-              <select
-                value={form.profissionalId}
-                disabled={isScopedProfessional}
-                onChange={(event) => setForm((prev) => ({ ...prev, profissionalId: event.target.value }))}
-                className="h-14 w-full rounded-[1.25rem] border border-gray-200 bg-gray-50 px-4 text-sm font-bold text-gray-900 outline-none focus:border-[#d48997] dark:border-white/10 dark:bg-white/5 dark:text-white"
-              >
-                <option value="">Selecione...</option>
-                {profissionais.map((profissional) => (
-                  <option key={profissional.id} value={profissional.id}>
-                    {profissional.nome}
-                  </option>
-                ))}
-              </select>
-            </Field>
-
-            <Field label="Data" icon={<CalendarIcon size={14} />}>
-              <input
-                type="date"
-                value={form.data}
-                onChange={(event) => setForm((prev) => ({ ...prev, data: event.target.value }))}
-                className="h-14 w-full rounded-[1.25rem] border border-gray-200 bg-gray-50 px-4 text-sm font-bold text-gray-900 outline-none focus:border-[#d48997] dark:border-white/10 dark:bg-white/5 dark:text-white"
-              />
-            </Field>
-
-            <Field label="Tipo" icon={<Wallet size={14} />}>
-              <select
-                value={form.tipo}
-                onChange={(event) => {
-                  const nextTipo = event.target.value;
-                  setForm((prev) => ({
-                    ...prev,
-                    tipo: nextTipo,
-                    origem: nextTipo === 'adiantamento'
-                      ? (caixaDisponivelParaLancamento ? (prev.origem || 'caixa') : 'conta')
-                      : '',
-                  }));
-                }}
-                className="h-14 w-full rounded-[1.25rem] border border-gray-200 bg-gray-50 px-4 text-sm font-bold text-gray-900 outline-none focus:border-[#d48997] dark:border-white/10 dark:bg-white/5 dark:text-white"
-              >
-                <option value="adiantamento">Adiantamento / Vale</option>
-                <option value="desconto">Desconto</option>
-                {localStorage.getItem('salao_user_role')?.toLowerCase() === 'admin' && (
-                  <option value="bonificacao">Bonificação</option>
-                )}
-              </select>
-            </Field>
-
-            <Field label="Valor" icon={<DollarSign size={14} />}>
-              <input
-                type="number"
-                min="0"
-                step="0.01"
-                value={form.valor}
-                onChange={(event) => setForm((prev) => ({ ...prev, valor: event.target.value }))}
-                className="h-14 w-full rounded-[1.25rem] border border-gray-200 bg-gray-50 px-4 text-sm font-bold text-gray-900 outline-none focus:border-[#d48997] dark:border-white/10 dark:bg-white/5 dark:text-white"
-                placeholder="0,00"
-              />
-            </Field>
-
-            {form.tipo === 'adiantamento' && (
-              <Field label="Saiu de onde?" icon={<Landmark size={14} />}>
-                <div className="grid grid-cols-2 gap-3">
-                  <button
-                    type="button"
-                    onClick={() => setForm((prev) => ({ ...prev, origem: 'caixa' }))}
-                    disabled={loadingCaixaStatus || !caixaDisponivelParaLancamento}
-                    className={cn(
-                      'h-14 rounded-[1.25rem] border text-sm font-black uppercase tracking-[0.16em] transition-all disabled:cursor-not-allowed disabled:opacity-45',
-                      form.origem === 'caixa'
-                        ? 'border-[#d48997] bg-[#d48997] text-white'
-                        : 'border-gray-200 bg-gray-50 text-gray-500 dark:border-white/10 dark:bg-white/5 dark:text-white/60'
-                    )}
-                  >
-                    Caixa
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setForm((prev) => ({ ...prev, origem: 'conta' }))}
-                    className={cn(
-                      'h-14 rounded-[1.25rem] border text-sm font-black uppercase tracking-[0.16em] transition-all',
-                      form.origem === 'conta'
-                        ? 'border-[#d48997] bg-[#d48997] text-white'
-                        : 'border-gray-200 bg-gray-50 text-gray-500 dark:border-white/10 dark:bg-white/5 dark:text-white/60'
-                    )}
-                  >
-                    Conta
-                  </button>
-                </div>
-
-                <div
-                  className={cn(
-                    'mt-3 rounded-[1.25rem] border px-4 py-3 text-sm',
-                    valorExcedeCaixa || (!loadingCaixaStatus && !caixaDisponivelParaLancamento)
-                      ? 'border-amber-300/25 bg-amber-400/10 text-amber-200'
-                      : 'border-[#d48997]/18 bg-[#d48997]/8 text-[#d48997]'
-                  )}
+          <div className="overflow-y-auto px-6 py-6 space-y-5">
+            <div className="grid gap-5 md:grid-cols-2">
+              <Field label="Profissional">
+                <select
+                  value={form.profissionalId}
+                  disabled={isScopedProfessional}
+                  onChange={(event) => setForm((prev) => ({ ...prev, profesionalId: event.target.value }))}
+                  className="h-11 w-full rounded-xl border border-black/[0.08] dark:border-white/10 bg-white dark:bg-[#111113] px-3.5 text-xs text-gray-900 dark:text-white outline-none focus:border-[#d48997] focus:ring-2 focus:ring-[#d48997]/10"
                 >
-                  {loadingCaixaStatus
-                    ? 'Consultando saldo do caixa...'
-                    : valorExcedeCaixa
-                      ? `Saldo insuficiente no caixa. Disponivel agora: ${formatMoney(dinheiroDisponivelCaixa)}.`
-                      : !caixaDisponivelParaLancamento
-                        ? (caixaStatus?.mensagemSaida || 'Caixa indisponivel para este lancamento. Use a opcao Conta.')
-                        : `Disponivel no caixa agora: ${formatMoney(dinheiroDisponivelCaixa)}.`}
-                </div>
+                  <option value="">Selecione o profissional...</option>
+                  {profissionais.map((p) => (
+                    <option key={p.id} value={p.id}>
+                      {p.nome}
+                    </option>
+                  ))}
+                </select>
               </Field>
-            )}
 
-            <div className="md:col-span-2">
-              <Field label="Observacao" icon={<CreditCard size={14} />}>
-                <textarea
-                  value={form.descricao}
-                  onChange={(event) => setForm((prev) => ({ ...prev, descricao: event.target.value }))}
-                  rows={4}
-                  className="w-full rounded-[1.25rem] border border-gray-200 bg-gray-50 px-4 py-4 text-sm font-medium text-gray-900 outline-none focus:border-[#d48997] dark:border-white/10 dark:bg-white/5 dark:text-white"
-                  placeholder={form.tipo === 'bonificacao' ? 'Ex.: bonus por meta batida, bonificacao de feriado, etc.' : 'Ex.: vale para urgencia, desconto por quebra de material, etc.'}
+              <Field label="Data do Lançamento">
+                <input
+                  type="date"
+                  value={form.data}
+                  onChange={(event) => setForm((prev) => ({ ...prev, data: event.target.value }))}
+                  className="h-11 w-full rounded-xl border border-black/[0.08] dark:border-white/10 bg-white dark:bg-[#111113] px-4 text-xs text-gray-900 dark:text-white outline-none focus:border-[#d48997] focus:ring-2"
                 />
               </Field>
+
+              <Field label="Tipo do Lançamento">
+                <select
+                  value={form.tipo}
+                  onChange={(event) => {
+                    const nextTipo = event.target.value;
+                    setForm((prev) => ({
+                      ...prev,
+                      tipo: nextTipo,
+                      origem: nextTipo === 'adiantamento'
+                        ? (caixaDisponivelParaLancamento ? (prev.origem || 'caixa') : 'conta')
+                        : '',
+                    }));
+                  }}
+                  className="h-11 w-full rounded-xl border border-black/[0.08] dark:border-white/10 bg-white dark:bg-[#111113] px-3.5 text-xs text-gray-900 dark:text-white outline-none focus:border-[#d48997] focus:ring-2"
+                >
+                  <option value="adiantamento">Vale / Adiantamento</option>
+                  <option value="desconto">Desconto Administrativo</option>
+                  {localStorage.getItem('salao_user_role')?.toLowerCase() === 'admin' && (
+                    <option value="bonificacao">Bonificação Extra</option>
+                  )}
+                </select>
+              </Field>
+
+              <Field label="Valor (R$)">
+                <input
+                  type="number"
+                  min="0"
+                  step="0.01"
+                  value={form.valor}
+                  onChange={(event) => setForm((prev) => ({ ...prev, valor: event.target.value }))}
+                  className="h-11 w-full rounded-xl border border-black/[0.08] dark:border-white/10 bg-white dark:bg-[#111113] px-4 text-xs text-gray-900 dark:text-white outline-none focus:border-[#d48997] focus:ring-2"
+                  placeholder="0,00"
+                />
+              </Field>
+
+              {form.tipo === 'adiantamento' && (
+                <div className="md:col-span-2 space-y-1.5">
+                  <span className="block text-[10px] font-medium text-gray-400 dark:text-gray-500">Fonte de Saída</span>
+                  <div className="grid grid-cols-2 gap-3">
+                    <button
+                      type="button"
+                      onClick={() => setForm((prev) => ({ ...prev, origem: 'caixa' }))}
+                      disabled={loadingCaixaStatus || !caixaDisponivelParaLancamento}
+                      className={cn(
+                        'h-11 rounded-xl border text-xs font-semibold transition disabled:opacity-40',
+                        form.origem === 'caixa'
+                          ? 'border-[#d48997] bg-[#d48997]/10 text-[#d48997]'
+                          : 'border-black/[0.08] dark:border-white/10 bg-white dark:bg-[#111113] text-gray-500'
+                      )}
+                    >
+                      Caixa Físico
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setForm((prev) => ({ ...prev, origem: 'conta' }))}
+                      className={cn(
+                        'h-11 rounded-xl border text-xs font-semibold transition',
+                        form.origem === 'conta'
+                          ? 'border-[#d48997] bg-[#d48997]/10 text-[#d48997]'
+                          : 'border-black/[0.08] dark:border-white/10 bg-white dark:bg-[#111113] text-gray-500'
+                      )}
+                    >
+                      Conta Bancária
+                    </button>
+                  </div>
+
+                  <div
+                    className={cn(
+                      'mt-2 rounded-xl border px-3 py-2 text-xs font-medium',
+                      valorExcedeCaixa || (!loadingCaixaStatus && !caixaDisponivelParaLancamento)
+                        ? 'border-amber-300/20 bg-amber-400/5 text-amber-600 dark:text-amber-400'
+                        : 'border-[#d48997]/20 bg-[#d48997]/5 text-[#d48997]'
+                    )}
+                  >
+                    {loadingCaixaStatus
+                      ? 'Consultando saldo operacional...'
+                      : valorExcedeCaixa
+                        ? `Saldo insuficiente no caixa. Disponível agora: ${formatMoney(dinheiroDisponivelCaixa)}.`
+                        : !caixaDisponivelParaLancamento
+                          ? (caixaStatus?.mensagemSaida || 'Caixa fechado ou indisponível. Utilize a opção Conta Bancária.')
+                          : `Saldo disponível no caixa físico: ${formatMoney(dinheiroDisponivelCaixa)}.`}
+                  </div>
+                </div>
+              )}
+
+              <div className="md:col-span-2">
+                <Field label="Descrição / Observação">
+                  <textarea
+                    value={form.descricao}
+                    onChange={(event) => setForm((prev) => ({ ...prev, descricao: event.target.value }))}
+                    rows={3}
+                    className="w-full rounded-xl border border-black/[0.08] dark:border-white/10 bg-white dark:bg-[#111113] p-4 text-xs text-gray-900 dark:text-white outline-none focus:border-[#d48997] focus:ring-2 resize-none"
+                    placeholder={form.tipo === 'bonificacao' ? 'Ex: Bônus por meta batida, bonificação especial...' : 'Ex: Vale adiantado, desconto por quebra de material...'}
+                  />
+                </Field>
+              </div>
             </div>
           </div>
 
-          <div className="sticky bottom-0 mt-8 flex flex-col-reverse gap-3 border-t border-gray-100 bg-white/95 pt-5 backdrop-blur dark:border-white/5 dark:bg-[#161219]/95 md:flex-row">
+          <div className="flex items-center justify-end gap-3 border-t border-black/[0.04] dark:border-white/5 bg-gray-50/50 dark:bg-white/[0.01] px-6 py-4">
             <button
               type="button"
               onClick={onClose}
-              className="flex-1 rounded-[1.4rem] border border-gray-200 px-6 py-4 text-[11px] font-black uppercase tracking-[0.22em] text-gray-500 transition hover:bg-gray-50 dark:border-white/10 dark:text-white/60 dark:hover:bg-white/5"
+              className="h-10 rounded-xl border border-black/[0.08] dark:border-white/10 px-4 text-xs font-semibold text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 transition"
             >
               Cancelar
             </button>
@@ -252,22 +252,21 @@ function LancamentoModal({
               type="button"
               disabled={bloquearSalvar}
               onClick={() => onSave(isScopedProfessional ? { ...form, profissionalId: myPid } : form)}
-              className="flex-1 rounded-[1.4rem] bg-[#d48997] px-6 py-4 text-[11px] font-black uppercase tracking-[0.22em] text-white shadow-xl shadow-[#d48997]/25 transition hover:bg-[#c77888] disabled:cursor-not-allowed disabled:opacity-60"
+              className="h-10 rounded-xl bg-[#d48997] hover:bg-[#c97b8a] px-5 text-xs font-semibold text-white transition disabled:opacity-50"
             >
-              {saving ? 'Salvando...' : form.tipo === 'bonificacao' ? 'Registrar bonificacao' : 'Registrar lancamento'}
+              {saving ? 'Registrando...' : form.tipo === 'bonificacao' ? 'Confirmar Bônus' : 'Registrar Lançamento'}
             </button>
           </div>
         </motion.div>
-      </motion.div>
+      </div>
     </AnimatePresence>
   );
 }
 
-function Field({ label, icon, children }) {
+function Field({ label, children }) {
   return (
-    <label className="block space-y-3">
-      <span className="flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.22em] text-gray-400">
-        {icon}
+    <label className="block space-y-1.5">
+      <span className="block text-[10px] font-medium text-gray-400 dark:text-gray-500">
         {label}
       </span>
       {children}
@@ -277,19 +276,19 @@ function Field({ label, icon, children }) {
 
 function SummaryCard({ label, value, tone = 'default', icon }) {
   const toneClasses = {
-    default: 'border-gray-100 bg-white dark:border-white/5 dark:bg-white/[0.03] text-gray-900 dark:text-white',
-    rose: 'border-[#d48997]/20 bg-[#d48997]/10 text-[#d48997]',
-    amber: 'border-amber-300/20 bg-amber-400/10 text-amber-200',
-    ink: 'border-transparent bg-bellapro-ink text-white',
+    default: 'border-black/[0.04] dark:border-white/[0.04] bg-white/60 dark:bg-white/[0.02] text-gray-900 dark:text-white',
+    rose: 'border-[#d48997]/25 bg-[#d48997]/5 text-[#d48997]',
+    amber: 'border-amber-500/20 bg-amber-500/5 text-amber-600 dark:text-amber-400',
+    ink: 'border-transparent bg-zinc-900 dark:bg-zinc-800 text-white',
   };
 
   return (
-    <div className={cn('rounded-[1.8rem] border p-5 shadow-lg', toneClasses[tone])}>
+    <div className={cn('rounded-2xl border p-5 shadow-sm backdrop-blur-md', toneClasses[tone])}>
       <div className="flex items-center justify-between gap-3">
-        <p className="text-[10px] font-black uppercase tracking-[0.2em] opacity-70">{label}</p>
-        {icon}
+        <p className="text-[10px] font-semibold uppercase tracking-wider opacity-70">{label}</p>
+        {icon && React.cloneElement(icon, { size: 16, className: 'opacity-70' })}
       </div>
-      <p className="mt-3 text-2xl font-black tracking-tighter">{formatMoney(value)}</p>
+      <p className="mt-2.5 text-xl font-semibold">{formatMoney(value)}</p>
     </div>
   );
 }
@@ -342,7 +341,7 @@ export default function Remuneracao() {
       }
     } catch (err) {
       console.error(err);
-      toast.error('Nao foi possivel carregar os profissionais.');
+      toast.error('Não foi possível carregar os profissionais.');
     }
   }
 
@@ -358,7 +357,7 @@ export default function Remuneracao() {
       setLancamentos(res.data?.lancamentos || []);
     } catch (err) {
       console.error(err);
-      toast.error('Nao foi possivel carregar a remuneracao.');
+      toast.error('Não foi possível carregar a remuneração.');
     } finally {
       setLoading(false);
     }
@@ -405,13 +404,13 @@ export default function Remuneracao() {
       const dinheiroDisponivel = getDinheiroDisponivelCaixa(statusAtual);
 
       if (!statusAtual?.permiteSaida) {
-        toast.error(statusAtual?.mensagemSaida || 'Caixa indisponivel para este lancamento. Use a opcao Conta.');
+        toast.error(statusAtual?.mensagemSaida || 'Caixa indisponível para este lançamento. Use a opção Conta.');
         setFormLancamento((prev) => ({ ...prev, origem: 'conta' }));
         return;
       }
 
       if (Number(payload.valor || 0) > dinheiroDisponivel) {
-        toast.error(`Saldo insuficiente no caixa. Disponivel agora: ${formatMoney(dinheiroDisponivel)}.`);
+        toast.error(`Saldo insuficiente no caixa. Disponível agora: ${formatMoney(dinheiroDisponivel)}.`);
         return;
       }
     }
@@ -419,7 +418,7 @@ export default function Remuneracao() {
     setSavingLancamento(true);
     try {
       await createLancamentoRemuneracao(payload);
-      toast.success('Lancamento registrado com sucesso.');
+      toast.success('Lançamento registrado com sucesso.');
       setShowModal(false);
       setFormLancamento({
         ...FORM_INICIAL,
@@ -427,7 +426,7 @@ export default function Remuneracao() {
       });
       fetchDados();
     } catch (err) {
-      toast.error(err.response?.data?.error || 'Nao foi possivel registrar o lancamento.');
+      toast.error(err.response?.data?.error || 'Não foi possível registrar o lançamento.');
     } finally {
       setSavingLancamento(false);
     }
@@ -442,7 +441,7 @@ export default function Remuneracao() {
       const valorLiquido = Number(res.data?.valorLiquidoRepasse || 0);
       const valorCompensado = Number(res.data?.totalCompensado || 0);
       toast.success(
-        `Fechamento concluido. Liquido ${formatMoney(valorLiquido)}${valorCompensado > 0 ? ` e compensado ${formatMoney(valorCompensado)}` : ''}.`
+        `Fechamento concluído. Líquido ${formatMoney(valorLiquido)}${valorCompensado > 0 ? ` e compensado ${formatMoney(valorCompensado)}` : ''}.`
       );
       fetchDados();
     } catch (err) {
@@ -568,134 +567,137 @@ export default function Remuneracao() {
   }, [profissionaisAgrupados]);
 
   return (
-    <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="mx-auto max-w-7xl space-y-12 pb-20">
-      <header className="relative overflow-hidden rounded-[3rem] border border-gray-100 bg-white p-6 shadow-2xl dark:border-white/5 dark:bg-gray-900/40 md:p-8">
-        <div className="absolute -right-16 -top-20 h-64 w-64 rounded-full bg-[#d48997]/12 blur-[100px]" />
-        <div className="relative z-10 flex flex-col gap-8 xl:flex-row xl:items-end xl:justify-between">
-          <div>
-            <p className="text-[10px] font-black uppercase tracking-[0.36em] text-[#d48997]">Consolidado financeiro</p>
-            <h1 className="mt-4 text-3xl font-black tracking-tighter text-gray-900 dark:text-white sm:text-5xl">
-              Remuneracao, vales e saldo por profissional
-            </h1>
-            <p className="mt-4 max-w-3xl text-sm leading-7 text-gray-500 dark:text-white/58">
-              Controle comissao a receber, adiantamentos, descontos e o saldo real de repasse. Quando o vale sair do caixa, o sistema tambem abate no caixa operacional.
-            </p>
+    <motion.div
+      initial={{ opacity: 0, y: 15 }}
+      animate={{ opacity: 1, y: 0 }}
+      className="mx-auto max-w-6xl space-y-8 pb-20 px-4"
+    >
+      {/* Header */}
+      <header className="flex flex-col gap-4 border-b border-black/[0.03] dark:border-white/[0.03] pb-6 lg:flex-row lg:items-end lg:justify-between">
+        <div>
+          <div className="flex items-center gap-2.5 mb-2.5">
+            <Users className="h-4 w-4 text-[#d48997]" />
+            <span className="text-[10px] font-semibold text-[#d48997] tracking-wide">Repasses & Comissões</span>
           </div>
+          <h1 className="text-2xl sm:text-3xl font-serif font-normal text-gray-900 dark:text-white tracking-wide leading-tight mb-2">
+            Gestão de <span className="text-[#d48997]">Remuneração</span>
+          </h1>
+          <p className="text-sm text-gray-400 dark:text-gray-500 leading-relaxed max-w-xl">
+            Acompanhe o faturamento, vales, comissões pendentes e realize o fechamento do repasse financeiro de sua equipe.
+          </p>
+        </div>
 
-          {!isScopedProfessional && (
-            <div className="flex flex-wrap gap-3">
-              {role?.toLowerCase() === 'admin' && (
-                <button
-                  type="button"
-                  onClick={() => {
-                    setFormLancamento((prev) => ({
-                      ...prev,
-                      tipo: 'bonificacao',
-                      profissionalId: profissionalId || prev.profissionalId,
-                      data: format(new Date(), 'yyyy-MM-dd'),
-                    }));
-                    setShowModal(true);
-                  }}
-                  className="inline-flex min-h-[56px] items-center justify-center gap-3 rounded-full bg-emerald-600 px-7 text-sm font-black uppercase tracking-[0.24em] text-white shadow-xl shadow-emerald-600/25 transition hover:bg-emerald-700"
-                >
-                  <PlusCircle size={18} />
-                  Bonificar
-                </button>
-              )}
-
+        {!isScopedProfessional && (
+          <div className="flex flex-wrap gap-2.5">
+            {role?.toLowerCase() === 'admin' && (
               <button
                 type="button"
                 onClick={() => {
                   setFormLancamento((prev) => ({
                     ...prev,
-                    tipo: 'adiantamento',
+                    tipo: 'bonificacao',
                     profissionalId: profissionalId || prev.profissionalId,
                     data: format(new Date(), 'yyyy-MM-dd'),
                   }));
                   setShowModal(true);
                 }}
-                className="inline-flex min-h-[56px] items-center justify-center gap-3 rounded-full bg-[#d48997] px-7 text-sm font-black uppercase tracking-[0.24em] text-white shadow-xl shadow-[#d48997]/25 transition hover:bg-[#c77888]"
+                className="inline-flex h-10 items-center justify-center gap-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white px-4 text-xs font-semibold shadow-sm transition"
               >
-                <PlusCircle size={18} />
-                Novo vale / desconto
+                <PlusCircle size={15} />
+                Bonificar
               </button>
-            </div>
-          )}
-        </div>
+            )}
+
+            <button
+              type="button"
+              onClick={() => {
+                setFormLancamento((prev) => ({
+                  ...prev,
+                  tipo: 'adiantamento',
+                  profissionalId: profissionalId || prev.profissionalId,
+                  data: format(new Date(), 'yyyy-MM-dd'),
+                }));
+                setShowModal(true);
+              }}
+              className="inline-flex h-10 items-center justify-center gap-1.5 rounded-xl bg-[#d48997] hover:bg-[#c97b8a] text-white px-4 text-xs font-semibold shadow-sm transition"
+            >
+              <PlusCircle size={15} />
+              Novo Vale / Desconto
+            </button>
+          </div>
+        )}
       </header>
 
-      <section className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
-        <SummaryCard label="Comissao a receber" value={resumoGeral.totalPendente} tone="rose" icon={<DollarSign size={18} />} />
-        <SummaryCard label="Vales em aberto" value={resumoGeral.totalVales} tone="amber" icon={<Wallet size={18} />} />
-        <SummaryCard label="Descontos em aberto" value={resumoGeral.totalDescontos} tone="amber" icon={<MinusCircle size={18} />} />
-        <SummaryCard label="Bonificacoes" value={resumoGeral.totalBonificacoes} tone="default" icon={<PlusCircle size={18} className="text-emerald-500" />} />
-        <SummaryCard label="Saldo liquido" value={resumoGeral.totalSaldo} tone={resumoGeral.totalSaldo >= 0 ? 'default' : 'rose'} icon={<CreditCard size={18} />} />
-        <SummaryCard label="Volume bruto" value={resumoGeral.totalBruto} tone="ink" icon={<Users size={18} />} />
-      </section>
+      {/* Summary Row */}
+      <div className="grid gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-6">
+        <SummaryCard label="Comissão Pendente" value={resumoGeral.totalPendente} tone="rose" icon={<DollarSign />} />
+        <SummaryCard label="Vales em Aberto" value={resumoGeral.totalVales} tone="amber" icon={<Wallet />} />
+        <SummaryCard label="Descontos Acumulados" value={resumoGeral.totalDescontos} tone="amber" icon={<MinusCircle />} />
+        <SummaryCard label="Bonificações Extras" value={resumoGeral.totalBonificacoes} tone="default" icon={<PlusCircle className="text-emerald-500" />} />
+        <SummaryCard label="Saldo Líquido" value={resumoGeral.totalSaldo} tone={resumoGeral.totalSaldo >= 0 ? 'default' : 'rose'} icon={<CreditCard />} />
+        <SummaryCard label="Faturamento Total" value={resumoGeral.totalBruto} tone="ink" icon={<Users />} />
+      </div>
 
-      <section className="grid gap-4 lg:grid-cols-[1.2fr,1fr,1fr]">
-        <div className="rounded-[2rem] border border-gray-100 bg-white p-5 shadow-lg dark:border-white/5 dark:bg-gray-900/40">
-          <label className="mb-3 block text-[10px] font-black uppercase tracking-[0.22em] text-gray-400">Inicio</label>
+      {/* Filter Row */}
+      <div className="grid gap-4 md:grid-cols-3">
+        <div className="rounded-xl border border-black/[0.04] dark:border-white/[0.04] bg-white/60 dark:bg-white/[0.02] p-4 shadow-sm space-y-1.5">
+          <label className="block text-[9px] font-semibold uppercase tracking-wider text-gray-400 dark:text-gray-500">Período Inicial</label>
           <div className="relative">
-            <CalendarIcon className="absolute left-4 top-1/2 -translate-y-1/2 text-[#d48997]" size={16} />
+            <CalendarIcon className="absolute left-3 top-1/2 -translate-y-1/2 text-[#d48997] h-4 w-4" />
             <input
               type="date"
               value={dataInicio}
               onChange={(event) => setDataInicio(event.target.value)}
-              className="h-14 w-full rounded-[1.25rem] border border-gray-200 bg-gray-50 pl-12 pr-4 text-sm font-bold text-gray-900 outline-none focus:border-[#d48997] dark:border-white/10 dark:bg-white/5 dark:text-white"
+              className="h-10 w-full rounded-xl border border-black/[0.08] dark:border-white/10 bg-white dark:bg-[#111113] pl-9 pr-4 text-xs text-gray-900 dark:text-white outline-none focus:border-[#d48997] transition-all"
             />
           </div>
         </div>
 
-        <div className="rounded-[2rem] border border-gray-100 bg-white p-5 shadow-lg dark:border-white/5 dark:bg-gray-900/40">
-          <label className="mb-3 block text-[10px] font-black uppercase tracking-[0.22em] text-gray-400">Fim</label>
+        <div className="rounded-xl border border-black/[0.04] dark:border-white/[0.04] bg-white/60 dark:bg-white/[0.02] p-4 shadow-sm space-y-1.5">
+          <label className="block text-[9px] font-semibold uppercase tracking-wider text-gray-400 dark:text-gray-500">Período Final</label>
           <div className="relative">
-            <CalendarIcon className="absolute left-4 top-1/2 -translate-y-1/2 text-[#d48997]" size={16} />
+            <CalendarIcon className="absolute left-3 top-1/2 -translate-y-1/2 text-[#d48997] h-4 w-4" />
             <input
               type="date"
               value={dataFim}
               onChange={(event) => setDataFim(event.target.value)}
-              className="h-14 w-full rounded-[1.25rem] border border-gray-200 bg-gray-50 pl-12 pr-4 text-sm font-bold text-gray-900 outline-none focus:border-[#d48997] dark:border-white/10 dark:bg-white/5 dark:text-white"
+              className="h-10 w-full rounded-xl border border-black/[0.08] dark:border-white/10 bg-white dark:bg-[#111113] pl-9 pr-4 text-xs text-gray-900 dark:text-white outline-none focus:border-[#d48997] transition-all"
             />
           </div>
         </div>
 
-        <div className="rounded-[2rem] border border-gray-100 bg-white p-5 shadow-lg dark:border-white/5 dark:bg-gray-900/40">
-          <label className="mb-3 block text-[10px] font-black uppercase tracking-[0.22em] text-gray-400">Profissional</label>
+        <div className="rounded-xl border border-black/[0.04] dark:border-white/[0.04] bg-white/60 dark:bg-white/[0.02] p-4 shadow-sm space-y-1.5">
+          <label className="block text-[9px] font-semibold uppercase tracking-wider text-gray-400 dark:text-gray-500">Filtrar Profissional</label>
           <div className="relative">
-            <User className="absolute left-4 top-1/2 -translate-y-1/2 text-[#d48997]" size={16} />
+            <User className="absolute left-3 top-1/2 -translate-y-1/2 text-[#d48997] h-4 w-4" />
             <select
               disabled={isScopedProfessional}
               value={profissionalId}
               onChange={(event) => setProfissionalId(event.target.value)}
-              className="h-14 w-full appearance-none rounded-[1.25rem] border border-gray-200 bg-gray-50 pl-12 pr-4 text-sm font-bold text-gray-900 outline-none focus:border-[#d48997] dark:border-white/10 dark:bg-white/5 dark:text-white"
+              className="h-10 w-full rounded-xl border border-black/[0.08] dark:border-white/10 bg-white dark:bg-[#111113] pl-9 pr-4 text-xs text-gray-900 dark:text-white outline-none focus:border-[#d48997] transition-all"
             >
               <option value="">Todos os profissionais</option>
-              {profissionais.map((profissional) => (
-                <option key={profissional.id} value={profissional.id}>
-                  {profissional.nome}
+              {profissionais.map((p) => (
+                <option key={p.id} value={p.id}>
+                  {p.nome}
                 </option>
               ))}
             </select>
           </div>
         </div>
-      </section>
+      </div>
 
-      <div className="space-y-8">
+      {/* Main List */}
+      <div className="space-y-4">
         {loading ? (
-          <div className="flex flex-col items-center justify-center gap-4 rounded-[3rem] border border-gray-100 bg-white px-6 py-24 shadow-xl dark:border-white/5 dark:bg-white/[0.03]">
-            <div className="relative">
-              <div className="h-20 w-20 animate-spin rounded-full border-4 border-[#d48997]/15 border-t-[#d48997]" />
-              <DollarSign className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 text-[#d48997]" size={26} />
-            </div>
-            <p className="text-sm font-black uppercase tracking-[0.3em] text-gray-400">Sincronizando remuneracao...</p>
+          <div className="flex flex-col items-center justify-center gap-3 py-16">
+            <div className="h-8 w-8 animate-spin rounded-full border-2 border-[#d48997]/20 border-t-[#d48997]" />
+            <p className="text-xs text-gray-400">Carregando dados de remuneração...</p>
           </div>
         ) : profissionaisAgrupados.length === 0 ? (
-          <div className="rounded-[3rem] border-2 border-dashed border-gray-100 bg-white px-6 py-24 text-center shadow-xl dark:border-white/5 dark:bg-white/[0.03]">
-            <p className="text-2xl font-black tracking-tighter text-gray-900 dark:text-white">Sem dados no periodo</p>
-            <p className="mt-3 text-sm text-gray-500 dark:text-white/58">
-              Nenhum atendimento concluido nem lancamento financeiro encontrado para os filtros atuais.
-            </p>
+          <div className="rounded-2xl border border-dashed border-black/[0.08] dark:border-white/[0.08] bg-white/40 dark:bg-white/[0.01] px-6 py-12 text-center text-xs">
+            <p className="font-semibold text-gray-800 dark:text-gray-200">Nenhum Registro Encontrado</p>
+            <p className="mt-1 text-gray-400 dark:text-gray-500">Não há comissões ou vales lançados no período selecionado.</p>
           </div>
         ) : (
           profissionaisAgrupados.map((prof) => {
@@ -707,153 +709,150 @@ export default function Remuneracao() {
               <motion.div
                 key={prof.id}
                 layout
-                className="overflow-hidden rounded-[3rem] border border-gray-100 bg-white shadow-2xl dark:border-white/5 dark:bg-gray-900/40"
+                className="overflow-hidden rounded-2xl border border-black/[0.04] dark:border-white/[0.04] bg-white/60 dark:bg-white/[0.02] backdrop-blur-md shadow-sm"
               >
+                {/* Accordion Trigger */}
                 <div
                   onClick={() => setExpandedProfs((prev) => ({ ...prev, [prof.id]: !prev[prof.id] }))}
-                  className="flex cursor-pointer flex-col gap-6 p-6 transition hover:bg-gray-50/70 dark:hover:bg-white/[0.02] lg:flex-row lg:items-center lg:justify-between"
+                  className="flex cursor-pointer flex-col gap-4 p-5 transition hover:bg-black/[0.01] dark:hover:bg-white/[0.01] sm:flex-row sm:items-center sm:justify-between"
                 >
                   <div className="flex items-center gap-4">
                     <div className="relative">
-                      <div className="flex h-16 w-16 items-center justify-center overflow-hidden rounded-[1.4rem] border-2 border-[#d48997]/20 bg-gray-100 text-xl font-black uppercase text-gray-400 dark:bg-white/5">
+                      <div className="flex h-12 w-12 items-center justify-center overflow-hidden rounded-xl border border-black/[0.06] bg-gray-50 dark:bg-zinc-800 dark:border-white/5 text-sm font-semibold uppercase text-gray-400">
                         {prof.fotoUrl ? <img src={prof.fotoUrl} alt={prof.nome} className="h-full w-full object-cover" /> : prof.nome.slice(0, 2)}
                       </div>
                       <div
                         className={cn(
-                          'absolute -bottom-1 -right-1 flex h-6 w-6 items-center justify-center rounded-full border-2 border-white text-white dark:border-gray-900',
+                          'absolute -bottom-1 -right-1 flex h-5 w-5 items-center justify-center rounded-full border border-white text-white dark:border-zinc-900',
                           prof.totalSaldo < 0 ? 'bg-amber-500' : 'bg-[#d48997]'
                         )}
                       >
-                        {prof.totalSaldo < 0 ? <AlertCircle size={12} /> : <CheckCircle2 size={12} />}
+                        {prof.totalSaldo < 0 ? <AlertCircle size={10} /> : <CheckCircle2 size={10} />}
                       </div>
                     </div>
 
                     <div>
-                      <h3 className="text-2xl font-black tracking-tighter text-gray-900 dark:text-white">{prof.nome}</h3>
-                      <div className="mt-2 flex flex-wrap items-center gap-2">
-                        <span className="rounded-full border border-[#d48997]/20 bg-[#d48997]/10 px-3 py-1 text-[10px] font-black uppercase tracking-[0.18em] text-[#d48997]">
+                      <h3 className="text-sm font-semibold text-gray-900 dark:text-white leading-snug">{prof.nome}</h3>
+                      <div className="mt-1.5 flex flex-wrap items-center gap-2">
+                        <span className="inline-flex items-center rounded-lg bg-[#d48997]/10 px-2 py-0.5 text-[9px] font-semibold text-[#d48997]">
                           {prof.atendimentos} atendimentos
                         </span>
-                        <span className="rounded-full border border-white/10 bg-white/5 px-3 py-1 text-[10px] font-black uppercase tracking-[0.18em] text-gray-400 dark:text-white/58">
-                          {Object.keys(prof.dias).length} dias
+                        <span className="inline-flex items-center rounded-lg bg-black/[0.04] dark:bg-white/[0.04] px-2 py-0.5 text-[9px] font-medium text-gray-500 dark:text-gray-400">
+                          {Object.keys(prof.dias).length} dias ativos
                         </span>
                         {prof.totalVales > 0 && (
-                          <span className="rounded-full border border-amber-300/20 bg-amber-400/10 px-3 py-1 text-[10px] font-black uppercase tracking-[0.18em] text-amber-200">
-                            vale em aberto
+                          <span className="inline-flex items-center rounded-lg bg-amber-500/10 px-2 py-0.5 text-[9px] font-semibold text-amber-600 dark:text-amber-400">
+                            Vale em aberto
                           </span>
                         )}
                       </div>
                     </div>
                   </div>
 
-                  <div className="flex items-center gap-6">
-                    <div className="text-right">
-                      <p className="text-[10px] font-black uppercase tracking-[0.22em] text-gray-400">Saldo</p>
-                      <p className={cn('mt-2 text-3xl font-black tracking-tighter', prof.totalSaldo >= 0 ? 'text-[#d48997]' : 'text-amber-300')}>
+                  <div className="flex items-center justify-between gap-6 sm:justify-end">
+                    <div className="text-left sm:text-right">
+                      <span className="text-[9px] font-semibold uppercase tracking-wider text-gray-400 dark:text-gray-500 block">Saldo Líquido</span>
+                      <span className={cn('text-lg font-bold tracking-tight block mt-0.5', prof.totalSaldo >= 0 ? 'text-[#d48997]' : 'text-amber-500')}>
                         {formatMoney(prof.totalSaldo)}
-                      </p>
+                      </span>
                     </div>
                     <ChevronDown
-                      size={24}
-                      className={cn('text-gray-300 transition-transform duration-300', expandedProfs[prof.id] && 'rotate-180')}
+                      size={18}
+                      className={cn('text-gray-400 transition-transform duration-200 shrink-0', expandedProfs[prof.id] && 'rotate-180')}
                     />
                   </div>
                 </div>
 
+                {/* Accordion Content */}
                 <AnimatePresence>
                   {expandedProfs[prof.id] && (
                     <motion.div
                       initial={{ opacity: 0, height: 0 }}
                       animate={{ opacity: 1, height: 'auto' }}
                       exit={{ opacity: 0, height: 0 }}
-                      className="border-t border-gray-100 dark:border-white/5"
+                      className="border-t border-black/[0.03] dark:border-white/5"
                     >
-                      <div className="space-y-8 p-6 md:p-8">
-                        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
-                          <SummaryCard label="Comissao a receber" value={prof.totalPendente} tone="rose" icon={<DollarSign size={16} />} />
-                          <SummaryCard label="Vales" value={prof.totalVales} tone="amber" icon={<Wallet size={16} />} />
-                          <SummaryCard label="Descontos" value={prof.totalDescontos} tone="amber" icon={<MinusCircle size={16} />} />
-                          <SummaryCard label="Bonificacoes" value={prof.totalBonificacoes} tone="default" icon={<PlusCircle size={16} className="text-emerald-500" />} />
-                          <SummaryCard label="Saldo liquido" value={prof.totalSaldo} tone={prof.totalSaldo >= 0 ? 'default' : 'rose'} icon={<CreditCard size={16} />} />
+                      <div className="p-5 space-y-6">
+                        {/* Summary Cards */}
+                        <div className="grid gap-4 grid-cols-2 md:grid-cols-3 lg:grid-cols-5 text-xs">
+                          <SummaryCard label="Comissão" value={prof.totalPendente} tone="rose" icon={<DollarSign />} />
+                          <SummaryCard label="Vales" value={prof.totalVales} tone="amber" icon={<Wallet />} />
+                          <SummaryCard label="Descontos" value={prof.totalDescontos} tone="amber" icon={<MinusCircle />} />
+                          <SummaryCard label="Bônus Extra" value={prof.totalBonificacoes} tone="default" icon={<PlusCircle className="text-emerald-500" />} />
+                          <SummaryCard label="Líquido Real" value={prof.totalSaldo} tone={prof.totalSaldo >= 0 ? 'default' : 'rose'} icon={<CreditCard />} />
                         </div>
 
-                        <div className="rounded-[2rem] border border-gray-100 bg-gray-50/80 p-5 dark:border-white/5 dark:bg-white/[0.03]">
-                          <div className="grid gap-4 md:grid-cols-3">
-                            <InfoLine label="Pix do profissional" value={prof.pix || 'Nao configurado'} />
-                            <InfoLine label="Meta do periodo" value={prof.metaMensal > 0 ? formatMoney(prof.metaMensal) : 'Nao configurada'} />
-                            <InfoLine label="Bonus estimado" value={formatMoney(prof.bonusEstimado)} />
+                        {/* Meta & Pix info */}
+                        <div className="rounded-xl border border-black/[0.04] dark:border-white/5 bg-gray-50/50 dark:bg-white/[0.01] p-4 text-xs">
+                          <div className="grid gap-4 sm:grid-cols-3">
+                            <InfoLine label="PIX do Colaborador" value={prof.pix || 'Não cadastrado'} />
+                            <InfoLine label="Meta de Faturamento" value={prof.metaMensal > 0 ? formatMoney(prof.metaMensal) : 'Sem meta configurada'} />
+                            <InfoLine label="Bônus Estimado" value={formatMoney(prof.bonusEstimado)} />
                           </div>
                         </div>
 
-                        <section className="space-y-4">
-                          <div className="flex items-center justify-between">
-                            <h4 className="text-sm font-black uppercase tracking-[0.24em] text-gray-500 dark:text-white/58">Historico de faturamento</h4>
-                            <span className="text-[10px] font-black uppercase tracking-[0.18em] text-[#d48997]">
-                              {prof.atendimentos} itens
-                            </span>
+                        {/* Commissions List */}
+                        <div className="space-y-3">
+                          <div className="flex items-center justify-between border-b border-black/[0.03] dark:border-white/5 pb-2">
+                            <h4 className="text-[10px] font-semibold uppercase tracking-wider text-gray-400 dark:text-gray-500">Histórico de Atendimentos</h4>
+                            <span className="text-[10px] font-medium text-gray-400">{prof.atendimentos} registros</span>
                           </div>
 
                           {Object.keys(prof.dias).length === 0 ? (
-                            <div className="rounded-[2rem] border border-dashed border-gray-100 bg-white px-5 py-10 text-center text-sm text-gray-400 dark:border-white/5 dark:bg-white/[0.03] dark:text-white/50">
-                              Nenhum atendimento concluido neste periodo.
+                            <div className="rounded-xl border border-dashed border-black/[0.08] dark:border-white/10 bg-white/40 dark:bg-white/[0.01] py-8 text-center text-xs text-gray-400">
+                              Sem atendimentos no período.
                             </div>
                           ) : (
                             Object.values(prof.dias)
                               .sort((a, b) => b.data.localeCompare(a.data))
                               .map((dia) => (
-                                <div key={dia.data} className="space-y-4 rounded-[2rem] border border-gray-100 bg-white p-5 shadow-lg dark:border-white/5 dark:bg-white/[0.03]">
-                                  <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
-                                    <div className="flex items-center gap-3">
-                                      <CalendarDays className="text-[#d48997]" size={16} />
-                                      <span className="text-sm font-black uppercase tracking-[0.18em] text-gray-900 dark:text-white">
+                                <div key={dia.data} className="rounded-xl border border-black/[0.04] dark:border-white/5 bg-white dark:bg-[#18181b]/50 p-4 space-y-3">
+                                  <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between border-b border-black/[0.03] dark:border-white/5 pb-2">
+                                    <div className="flex items-center gap-2">
+                                      <CalendarDays className="text-[#d48997] h-4 w-4" />
+                                      <span className="text-xs font-semibold text-gray-800 dark:text-gray-250">
                                         {format(parseISO(dia.data), "EEEE, dd 'de' MMMM", { locale: ptBR })}
                                       </span>
                                     </div>
-                                    <div className="flex items-center gap-4">
-                                      <span className="text-[11px] font-black uppercase tracking-[0.16em] text-gray-400">
-                                        Producao {formatMoney(dia.bruto)}
-                                      </span>
-                                      <span className="text-[11px] font-black uppercase tracking-[0.16em] text-[#d48997]">
-                                        Comissao {formatMoney(dia.comissao)}
-                                      </span>
+                                    <div className="flex items-center gap-3.5 text-[10px] text-gray-400">
+                                      <span>Produção: <strong>{formatMoney(dia.bruto)}</strong></span>
+                                      <span className="text-[#d48997]">Comissão: <strong>{formatMoney(dia.comissao)}</strong></span>
                                     </div>
                                   </div>
 
-                                  <div className="overflow-x-auto">
-                                    <table className="w-full min-w-[760px] text-left">
+                                  <div className="overflow-x-auto text-[11px]">
+                                    <table className="w-full min-w-[700px] text-left">
                                       <thead>
-                                        <tr className="border-b border-gray-100 dark:border-white/5">
-                                          <th className="px-4 py-3 text-[10px] font-black uppercase tracking-[0.18em] text-gray-400">Horario</th>
-                                          <th className="px-4 py-3 text-[10px] font-black uppercase tracking-[0.18em] text-gray-400">Cliente</th>
-                                          <th className="px-4 py-3 text-[10px] font-black uppercase tracking-[0.18em] text-gray-400">Servico</th>
-                                          <th className="px-4 py-3 text-[10px] font-black uppercase tracking-[0.18em] text-gray-400 text-right">Valor</th>
-                                          <th className="px-4 py-3 text-[10px] font-black uppercase tracking-[0.18em] text-gray-400 text-right">Comissao</th>
+                                        <tr className="text-gray-400 dark:text-gray-500">
+                                          <th className="py-2 font-medium">Horário</th>
+                                          <th className="py-2 font-medium">Cliente</th>
+                                          <th className="py-2 font-medium">Serviço / Pacote</th>
+                                          <th className="py-2 font-medium text-right">Valor Total</th>
+                                          <th className="py-2 font-medium text-right">Comissão Devida</th>
                                         </tr>
                                       </thead>
-                                      <tbody>
+                                      <tbody className="divide-y divide-black/[0.02] dark:divide-white/[0.02]">
                                         {dia.agendamentos.map((agendamento) => (
-                                          <tr key={agendamento.id} className="border-b border-gray-50 dark:border-white/[0.04]">
-                                            <td className="px-4 py-4 text-[11px] font-black uppercase tracking-[0.16em] text-gray-500 dark:text-white/60">
-                                              {agendamento.inicioHora}
+                                          <tr key={agendamento.id} className="text-gray-700 dark:text-gray-300">
+                                            <td className="py-2.5 text-gray-400 font-medium">{agendamento.inicioHora}</td>
+                                            <td className="py-2.5">
+                                              <p className="font-semibold text-gray-800 dark:text-gray-200">{agendamento.clienteNome}</p>
+                                              <p className="text-[10px] text-gray-400 mt-0.5">{agendamento.clienteTelefone}</p>
                                             </td>
-                                            <td className="px-4 py-4">
-                                              <p className="text-sm font-black text-gray-900 dark:text-white">{agendamento.clienteNome}</p>
-                                              <p className="mt-1 text-[11px] text-gray-400">{agendamento.clienteTelefone}</p>
+                                            <td className="py-2.5 text-gray-600 dark:text-zinc-400">
+                                              {agendamento.servico?.nome || agendamento.pacote?.nome || 'Serviço'}
                                             </td>
-                                            <td className="px-4 py-4 text-sm text-gray-600 dark:text-white/68">
-                                              {agendamento.servico?.nome || agendamento.pacote?.nome || 'Sem servico principal'}
-                                            </td>
-                                            <td className="px-4 py-4 text-right text-sm font-black text-gray-900 dark:text-white">
+                                            <td className="py-2.5 text-right font-semibold text-gray-800 dark:text-gray-250">
                                               {formatMoney(buildAgendamentoTotal(agendamento))}
                                             </td>
-                                            <td className="px-4 py-4 text-right">
-                                              <div className="inline-flex items-center gap-2">
-                                                <span className="text-sm font-black text-[#d48997]">
+                                            <td className="py-2.5 text-right">
+                                              <div className="inline-flex items-center gap-1.5">
+                                                <span className="font-semibold text-[#d48997]">
                                                   {formatMoney(agendamento.comissaoValor)}
                                                 </span>
                                                 <CheckCircle2
-                                                  size={14}
-                                                  className={cn(agendamento.comissaoPaga ? 'text-[#d48997]' : 'text-gray-200 dark:text-white/12')}
+                                                  size={13}
+                                                  className={cn(agendamento.comissaoPaga ? 'text-[#d48997]' : 'text-gray-200 dark:text-zinc-700')}
                                                 />
                                               </div>
                                             </td>
@@ -865,84 +864,76 @@ export default function Remuneracao() {
                                 </div>
                               ))
                           )}
-                        </section>
+                        </div>
 
-                        <section className="space-y-4">
-                          <div className="flex items-center justify-between">
-                            <h4 className="text-sm font-black uppercase tracking-[0.24em] text-gray-500 dark:text-white/58">Historico financeiro</h4>
-                            <span className="text-[10px] font-black uppercase tracking-[0.18em] text-[#d48997]">
-                              {prof.lancamentos.length} lancamentos
-                            </span>
+                        {/* Adjustments / Vales list */}
+                        <div className="space-y-3">
+                          <div className="flex items-center justify-between border-b border-black/[0.03] dark:border-white/5 pb-2">
+                            <h4 className="text-[10px] font-semibold uppercase tracking-wider text-gray-400 dark:text-gray-500">Vales, Descontos & Bonificações</h4>
+                            <span className="text-[10px] font-medium text-gray-400">{prof.lancamentos.length} lançamentos</span>
                           </div>
 
                           {prof.lancamentos.length === 0 ? (
-                            <div className="rounded-[2rem] border border-dashed border-gray-100 bg-white px-5 py-10 text-center text-sm text-gray-400 dark:border-white/5 dark:bg-white/[0.03] dark:text-white/50">
-                              Nenhum vale ou desconto registrado para este profissional.
+                            <div className="rounded-xl border border-dashed border-black/[0.08] dark:border-white/10 bg-white/40 dark:bg-white/[0.01] py-8 text-center text-xs text-gray-400">
+                              Nenhum adiantamento ou desconto ativo.
                             </div>
                           ) : (
-                            <div className="overflow-x-auto rounded-[2rem] border border-gray-100 bg-white shadow-lg dark:border-white/5 dark:bg-white/[0.03]">
-                              <table className="w-full min-w-[820px] text-left">
+                            <div className="overflow-x-auto text-[11px] rounded-xl border border-black/[0.04] dark:border-white/5 bg-white dark:bg-[#18181b]/50">
+                              <table className="w-full min-w-[760px] text-left">
                                 <thead>
-                                  <tr className="border-b border-gray-100 dark:border-white/5">
-                                    <th className="px-4 py-3 text-[10px] font-black uppercase tracking-[0.18em] text-gray-400">Data</th>
-                                    <th className="px-4 py-3 text-[10px] font-black uppercase tracking-[0.18em] text-gray-400">Tipo</th>
-                                    <th className="px-4 py-3 text-[10px] font-black uppercase tracking-[0.18em] text-gray-400">Origem</th>
-                                    <th className="px-4 py-3 text-[10px] font-black uppercase tracking-[0.18em] text-gray-400 text-right">Valor</th>
-                                    <th className="px-4 py-3 text-[10px] font-black uppercase tracking-[0.18em] text-gray-400 text-right">Compensado</th>
-                                    <th className="px-4 py-3 text-[10px] font-black uppercase tracking-[0.18em] text-gray-400 text-right">Saldo</th>
-                                    <th className="px-4 py-3 text-[10px] font-black uppercase tracking-[0.18em] text-gray-400">Observacao</th>
+                                  <tr className="border-b border-black/[0.03] dark:border-white/5 text-gray-400 dark:text-gray-500">
+                                    <th className="px-4 py-3 font-medium">Data</th>
+                                    <th className="px-4 py-3 font-medium">Tipo</th>
+                                    <th className="px-4 py-3 font-medium">Origem</th>
+                                    <th className="px-4 py-3 font-medium text-right">Valor Original</th>
+                                    <th className="px-4 py-3 font-medium text-right">Compensado</th>
+                                    <th className="px-4 py-3 font-medium text-right">Saldo Aberto</th>
+                                    <th className="px-4 py-3 font-medium">Observação</th>
                                   </tr>
                                 </thead>
                                 <tbody>
                                   {prof.lancamentos.map((lancamento) => (
-                                    <tr key={lancamento.id} className="border-b border-gray-50 dark:border-white/[0.04]">
-                                      <td className="px-4 py-4 text-[11px] font-black uppercase tracking-[0.16em] text-gray-500 dark:text-white/60">
+                                    <tr key={lancamento.id} className="text-gray-700 dark:text-gray-300 border-b border-black/[0.02] dark:border-white/[0.02] hover:bg-black/[0.005]">
+                                      <td className="px-4 py-3 font-medium text-gray-400">
                                         {format(new Date(lancamento.data), 'dd/MM/yyyy')}
                                       </td>
-                                      <td className="px-4 py-4">
+                                      <td className="px-4 py-3">
                                         <span
                                           className={cn(
-                                            'rounded-full px-3 py-1 text-[10px] font-black uppercase tracking-[0.18em]',
+                                            'inline-flex items-center rounded px-2 py-0.5 text-[9px] font-semibold uppercase tracking-wider',
                                             lancamento.tipo === 'adiantamento'
-                                              ? 'bg-amber-400/12 text-amber-200'
+                                              ? 'bg-amber-500/10 text-amber-600 dark:text-amber-400'
                                               : lancamento.tipo === 'desconto'
-                                                ? 'bg-rose-400/12 text-rose-300'
-                                                : 'bg-emerald-400/12 text-emerald-300'
+                                                ? 'bg-rose-500/10 text-rose-600 dark:text-rose-400'
+                                                : 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400'
                                           )}
                                         >
-                                          {lancamento.tipo === 'adiantamento' ? 'Vale' : lancamento.tipo === 'desconto' ? 'Desconto' : 'Bonificação'}
+                                          {lancamento.tipo === 'adiantamento' ? 'Vale' : lancamento.tipo === 'desconto' ? 'Desconto' : 'Bônus'}
                                         </span>
                                       </td>
-                                      <td className="px-4 py-4 text-sm text-gray-600 dark:text-white/68">
-                                        {lancamento.origem === 'caixa' ? 'Caixa' : lancamento.origem === 'conta' ? 'Conta' : '-'}
-                                      </td>
-                                      <td className="px-4 py-4 text-right text-sm font-black text-gray-900 dark:text-white">
-                                        {formatMoney(lancamento.valor)}
-                                      </td>
-                                      <td className="px-4 py-4 text-right text-sm font-black text-gray-500 dark:text-white/60">
-                                        {formatMoney(lancamento.valorCompensado)}
-                                      </td>
-                                      <td className="px-4 py-4 text-right">
-                                        <span className={cn('text-sm font-black', lancamento.tipo === 'bonificacao' ? 'text-emerald-300' : lancamento.saldoAberto > 0 ? 'text-amber-200' : 'text-[#d48997]')}>
+                                      <td className="px-4 py-3 text-gray-500">{lancamento.origem === 'caixa' ? 'Caixa Físico' : lancamento.origem === 'conta' ? 'Conta Bancária' : '-'}</td>
+                                      <td className="px-4 py-3 text-right font-semibold text-gray-800 dark:text-gray-200">{formatMoney(lancamento.valor)}</td>
+                                      <td className="px-4 py-3 text-right text-gray-400">{formatMoney(lancamento.valorCompensado)}</td>
+                                      <td className="px-4 py-3 text-right font-semibold text-gray-900 dark:text-white">
+                                        <span className={cn(lancamento.tipo === 'bonificacao' ? 'text-emerald-500' : 'text-gray-900 dark:text-white')}>
                                           {formatMoney(lancamento.saldoAberto)}
                                         </span>
                                       </td>
-                                      <td className="px-4 py-4 text-sm text-gray-500 dark:text-white/58">
-                                        {lancamento.descricao || '-'}
-                                      </td>
+                                      <td className="px-4 py-3 text-gray-400 truncate max-w-[180px]">{lancamento.descricao || '-'}</td>
                                     </tr>
                                   ))}
                                 </tbody>
                               </table>
                             </div>
                           )}
-                        </section>
+                        </div>
 
-                        <div className="flex flex-col gap-4 rounded-[2rem] border border-gray-100 bg-gray-50/80 p-5 dark:border-white/5 dark:bg-white/[0.03] lg:flex-row lg:items-center lg:justify-between">
+                        {/* Actions line */}
+                        <div className="flex flex-col gap-4 rounded-xl border border-black/[0.04] dark:border-white/5 bg-gray-50/50 dark:bg-white/[0.01] p-4 lg:flex-row lg:items-center lg:justify-between">
                           <div>
-                            <p className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-400">Fechamento do repasse</p>
-                            <p className="mt-2 text-sm text-gray-600 dark:text-white/60">
-                              Ao confirmar, o sistema marca as comissoes selecionadas como pagas e abate automaticamente vales e descontos em aberto.
+                            <h5 className="text-xs font-semibold text-gray-800 dark:text-gray-200">Quitar / Fechar Repasse</h5>
+                            <p className="mt-1 text-xs text-gray-400 dark:text-gray-500">
+                              Ao confirmar, as comissões pendentes serão quitadas e o sistema liquidará automaticamente os vales e descontos em aberto.
                             </p>
                           </div>
                           <button
@@ -953,14 +944,14 @@ export default function Remuneracao() {
                               handleMarcarPago(idsPendentes, prof.id);
                             }}
                             className={cn(
-                              'inline-flex min-h-[52px] items-center justify-center gap-2 rounded-full px-7 text-sm font-black uppercase tracking-[0.2em] transition',
+                              'inline-flex h-10 items-center justify-center gap-1.5 rounded-xl px-5 text-xs font-semibold transition',
                               prof.totalPendente === 0
-                                ? 'cursor-not-allowed bg-gray-100 text-gray-400 dark:bg-white/5 dark:text-white/25'
-                                : 'bg-bellapro-ink text-white hover:bg-[#d48997]'
+                                ? 'bg-gray-100 text-gray-400 dark:bg-zinc-800 dark:text-zinc-600 cursor-not-allowed'
+                                : 'bg-[#d48997] hover:bg-[#c97b8a] text-white shadow-sm'
                             )}
                           >
-                            {processingId === prof.id ? <RefreshCw className="animate-spin" size={16} /> : <CheckCircle2 size={16} />}
-                            {prof.totalPendente === 0 ? 'Sem comissao pendente' : 'Confirmar fechamento'}
+                            {processingId === prof.id ? <RefreshCw className="animate-spin h-3.5 w-3.5" /> : <CheckCircle2 size={14} />}
+                            {prof.totalPendente === 0 ? 'Sem repasses pendentes' : 'Confirmar Fechamento'}
                           </button>
                         </div>
                       </div>
@@ -992,9 +983,9 @@ export default function Remuneracao() {
 
 function InfoLine({ label, value }) {
   return (
-    <div className="rounded-[1.4rem] border border-gray-100 bg-white px-4 py-4 dark:border-white/5 dark:bg-white/[0.03]">
-      <p className="text-[10px] font-black uppercase tracking-[0.18em] text-gray-400">{label}</p>
-      <p className="mt-2 text-sm font-black text-gray-900 dark:text-white">{value}</p>
+    <div className="rounded-xl border border-black/[0.04] dark:border-white/5 bg-white dark:bg-[#18181b] p-4 shadow-sm text-xs">
+      <span className="text-[9px] font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wider block">{label}</span>
+      <span className="mt-1 font-semibold text-gray-800 dark:text-gray-250 block">{value}</span>
     </div>
   );
 }

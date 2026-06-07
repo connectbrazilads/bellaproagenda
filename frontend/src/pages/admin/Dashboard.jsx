@@ -6,7 +6,6 @@ import {
   Calendar, 
   ChevronRight, 
   Clock, 
-  MoreHorizontal, 
   ArrowUpRight, 
   DollarSign,
   Users,
@@ -63,7 +62,7 @@ export default function Dashboard() {
       const profissionais = (rp.data || []).filter((prof) => prof.ativo);
       const concluidos = ags.filter(a => a.status === 'concluido');
       const emAtendimento = ags.filter(a => a.status === 'em_atendimento');
-      const aguardando = ags.filter(a => a.status === 'confirmado'); // Se??o visual BellaPro
+      const aguardando = ags.filter(a => a.status === 'confirmado'); 
 
       const profissionaisComAgenda = new Set(ags.map((a) => a.profissionalId).filter(Boolean)).size;
       const minutosReservados = ags.reduce((acc, a) => {
@@ -102,7 +101,7 @@ export default function Dashboard() {
   }, [hojeStr]);
 
   async function dispararIA() {
-    if (!confirm('Deseja que a IA analise os clientes ausentes e envie convites automaticos?')) return;
+    if (!confirm('Deseja que a IA analise os clientes ausentes e envie convites automáticos?')) return;
     try {
       const res = await dispararIAProativa();
       alert(`${res.data.convitesEnviados} convites enviados com sucesso!`);
@@ -133,239 +132,232 @@ export default function Dashboard() {
 
   if (loading) return (
     <div className="p-20 flex flex-col items-center justify-center space-y-4">
-      <div className="w-12 h-12 border-4 border-gray-100 border-t-[#d48997] rounded-full animate-spin" />
-      <p className="text-xs font-black text-gray-400 uppercase tracking-widest">Sincronizando BellaPro...</p>
+      <div className="w-10 h-10 border-4 border-gray-100 border-t-[#d48997] rounded-full animate-spin" />
+      <p className="text-[10px] font-semibold text-gray-400 uppercase tracking-widest">Sincronizando BellaPro...</p>
     </div>
   );
 
   return (
     <motion.div 
       ref={pageRef}
-      initial={{ opacity: 0, y: 20 }}
+      initial={{ opacity: 0, y: 15 }}
       animate={{ opacity: 1, y: 0 }}
-      className="max-w-7xl mx-auto space-y-8 lg:space-y-10 xl:space-y-12 pb-20"
+      className="max-w-7xl mx-auto space-y-8 pb-20 px-4"
     >
       <header className={cn(
-        'flex flex-col justify-between items-start gap-4 sm:p-6 border-b border-gray-100 dark:border-white/5 pb-8',
+        'flex flex-col justify-between items-start gap-4 border-b border-black/[0.03] dark:border-white/[0.03] pb-6',
         !isCompactPage && 'lg:flex-row lg:items-center'
       )}>
         <div>
-          <div className="flex items-center gap-3 mb-4">
-            <div className="flex -space-x-2">
-              {Array.from({ length: Math.min(stats.profissionaisAtivos || 1, 3) }).map((_, i) => (
-                <div key={i} className="w-6 h-6 rounded-full border-2 border-white dark:border-gray-950 bg-gray-200 overflow-hidden shadow-sm" />
-              ))}
-            </div>
-            <span className="text-[10px] font-black text-emerald-500 bg-emerald-500/10 px-3 py-1 rounded-full uppercase tracking-widest">{stats.profissionaisAtivos} profissionais com agenda hoje</span>
+          <div className="flex items-center gap-2.5 mb-2.5">
+            <span className="text-[10px] font-semibold text-emerald-500 bg-emerald-500/10 px-3 py-1 rounded-full tracking-wide">{stats.profissionaisAtivos} profissionais ativos hoje</span>
           </div>
-          <h1 className="text-2xl sm:text-4xl md:text-5xl xl:text-6xl font-black text-gray-900 dark:text-white tracking-tighter leading-none mb-3">
+          <h1 className="text-2xl sm:text-3xl font-serif font-normal text-gray-900 dark:text-white tracking-wide leading-tight mb-2">
             Performance <span className="text-[#d48997]">Geral</span>
           </h1>
-          <p className="text-gray-400 font-medium text-xl max-w-xl leading-relaxed">Analítica estratégica em tempo real para o seu ecossistema de beleza.</p>
+          <p className="text-gray-455 dark:text-gray-400 text-sm max-w-xl leading-relaxed">Analítica estratégica em tempo real para o seu ecossistema de beleza.</p>
         </div>
-        <div className="flex w-full lg:w-auto flex-col sm:flex-row sm:flex-wrap items-stretch sm:items-center gap-3">
+        <div className="flex w-full lg:w-auto flex-wrap items-center gap-3">
            <motion.button 
-             whileHover={{ scale: 1.05, y: -2 }}
-             whileTap={{ scale: 0.95 }}
+             whileHover={{ scale: 1.02, y: -1 }}
+             whileTap={{ scale: 0.98 }}
              onClick={dispararIA} 
-             className="group relative bg-[#050505] text-white px-6 md:px-8 py-4 rounded-[1.75rem] font-black text-[10px] md:text-xs shadow-2xl overflow-hidden transition-all"
+             className="group relative bg-gray-950 dark:bg-white text-white dark:text-gray-950 px-5 py-2.5 rounded-xl font-semibold text-xs shadow-sm overflow-hidden transition-all flex items-center justify-center gap-2"
            >
-             <div className="absolute inset-0 bg-gradient-to-r from-emerald-500/0 via-emerald-500/20 to-emerald-500/0 -translate-x-full group-hover:translate-x-full transition-transform duration-1000" />
-             <span className="relative z-10 flex items-center gap-3">
-               <Zap className="w-4 h-4 text-emerald-400" /> IA PROATIVA
-             </span>
+             <Zap className="w-4 h-4 text-emerald-400 fill-emerald-400" />
+             <span>IA Proativa</span>
            </motion.button>
            <motion.button 
-             whileHover={{ scale: 1.05, y: -2 }}
-             whileTap={{ scale: 0.95 }}
+             whileHover={{ scale: 1.02, y: -1 }}
+             whileTap={{ scale: 0.98 }}
              onClick={handleLembretes} 
-             className="bg-white dark:bg-white/5 text-gray-900 dark:text-white border border-gray-100 dark:border-white/10 px-6 md:px-8 py-4 rounded-[1.75rem] font-black text-[10px] md:text-xs shadow-xl transition-all flex items-center justify-center gap-3"
+             className="bg-white dark:bg-white/5 text-gray-905 dark:text-white border border-black/[0.06] dark:border-white/10 px-5 py-2.5 rounded-xl font-semibold text-xs shadow-sm transition-all flex items-center justify-center gap-2"
            >
-             <Calendar className="w-4 h-4 text-[#d48997]" /> LEMBRETES
+             <Calendar className="w-4 h-4 text-[#d48997]" />
+             <span>Enviar Lembretes</span>
            </motion.button>
         </div>
       </header>
 
       {billingResumo.temPendencia ? (
-        <div className="rounded-[2rem] border border-amber-500/20 bg-amber-500/10 px-5 py-5 sm:p-6">
+        <div className="rounded-2xl border border-amber-500/20 bg-amber-500/10 p-5 sm:p-6">
           <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
             <div className="flex items-start gap-4">
-              <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-amber-500 text-white shadow-lg shadow-amber-500/20">
+              <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-amber-500 text-white shadow-sm shrink-0">
                 {billingResumo.vencidas > 0 ? <AlertTriangle size={20} /> : <CreditCard size={20} />}
               </div>
               <div>
-                <p className="text-[10px] font-black uppercase tracking-[0.24em] text-amber-200">Financeiro SaaS</p>
-                <h3 className="mt-2 text-xl font-black text-white">
-                  {billingResumo.vencidas > 0 ? 'Existe fatura vencida aguardando pagamento.' : 'Existe fatura em aberto aguardando pagamento.'}
+                <p className="text-[10px] font-semibold uppercase tracking-wider text-amber-200">Financeiro SaaS</p>
+                <h3 className="mt-1.5 text-lg font-semibold text-white">
+                  {billingResumo.vencidas > 0 ? 'Fatura vencida aguardando pagamento.' : 'Fatura em aberto aguardando pagamento.'}
                 </h3>
-                <p className="mt-2 text-sm text-white/72">
-                  {billingResumo.totalPendencias} pendência(s) financeira(s).
-                  {billingResumo.proxima ? ` Competência ${billingResumo.proxima.competencia} · vence em ${new Date(billingResumo.proxima.vencimento).toLocaleDateString('pt-BR')}.` : ''}
+                <p className="mt-1.5 text-sm text-white/80">
+                  Você possui {billingResumo.totalPendencias} pendência(s) financeira(s).
+                  {billingResumo.proxima ? ` Próximo vencimento em ${new Date(billingResumo.proxima.vencimento).toLocaleDateString('pt-BR')}.` : ''}
                 </p>
               </div>
             </div>
             <button
               onClick={() => navigate('/admin/faturas')}
-              className="inline-flex items-center justify-center gap-2 rounded-[1.25rem] bg-white text-[#8b4f5c] px-5 py-3 text-[10px] font-black uppercase tracking-[0.2em] shadow-lg"
+              className="inline-flex items-center justify-center gap-1.5 rounded-xl bg-white text-[#d48997] px-5 py-2.5 text-xs font-semibold shadow-sm hover:bg-gray-50 transition-all"
             >
-              Ver faturas
+              <span>Ver faturas</span>
               <ChevronRight size={14} />
             </button>
           </div>
         </div>
       ) : null}
 
-      {/* Se??o BellaPro */}
+      {/* Monitor de Piso */}
       <div className={cn('grid gap-4', showWideStatusGrid ? 'lg:grid-cols-4' : 'md:grid-cols-2')}>
-        <div className={cn('bg-white dark:bg-gray-900/40 backdrop-blur-3xl p-4 sm:p-6 rounded-[2rem] border border-gray-100 dark:border-white/5 flex flex-col justify-center gap-1', showWideStatusGrid && 'lg:col-span-1')}>
-          <p className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em]">Monitor de Piso</p>
-          <h3 className="text-2xl font-black text-gray-900 dark:text-white tracking-tighter">Status em Tempo Real</h3>
+        <div className={cn('bg-white/60 dark:bg-white/[0.02] backdrop-blur-md p-5 rounded-2xl border border-black/[0.04] dark:border-white/[0.04] flex flex-col justify-center gap-1', showWideStatusGrid && 'lg:col-span-1')}>
+          <p className="text-[10px] font-semibold text-[#d48997] uppercase tracking-wide">Monitor de Piso</p>
+          <h3 className="text-lg font-serif font-normal text-gray-905 dark:text-white">Status em Tempo Real</h3>
         </div>
-        <div className="flex items-center gap-4 p-4 sm:p-6 bg-amber-50 dark:bg-amber-500/10 rounded-[2rem] border border-amber-100 dark:border-amber-500/20">
-           <div className="w-12 h-12 bg-amber-500 rounded-2xl flex items-center justify-center text-white shadow-lg shadow-amber-500/20">
-              <Clock size={20} />
+        <div className="flex items-center gap-4 p-4.5 bg-amber-500/[0.04] dark:bg-amber-500/[0.02] rounded-2xl border border-amber-500/10">
+           <div className="w-10 h-10 bg-amber-500/10 text-amber-600 rounded-xl flex items-center justify-center shrink-0">
+              <Clock size={18} />
            </div>
            <div>
-              <p className="text-[20px] font-black text-amber-600 leading-none">{stats.aguardando}</p>
-              <p className="text-[9px] font-black text-amber-700/60 uppercase tracking-widest mt-1">Aguardando Início</p>
+              <p className="text-xl font-bold text-amber-600 leading-none">{stats.aguardando}</p>
+              <p className="text-[10px] font-medium text-amber-700/60 dark:text-amber-400/60 tracking-wide mt-1">Aguardando Início</p>
            </div>
         </div>
-        <div className="flex items-center gap-4 p-4 sm:p-6 bg-[#E29BA8]/5 dark:bg-[#E29BA8]/10 rounded-[2rem] border border-[#E29BA8]/10 dark:border-[#E29BA8]/20">
-           <div className="w-12 h-12 bg-[#E29BA8] rounded-2xl flex items-center justify-center text-white shadow-lg shadow-[#E29BA8]/20">
-              <TrendingUp size={20} />
+        <div className="flex items-center gap-4 p-4.5 bg-[#E29BA8]/5 dark:bg-[#E29BA8]/10 rounded-2xl border border-[#E29BA8]/10">
+           <div className="w-10 h-10 bg-[#E29BA8]/10 text-[#d48997] rounded-xl flex items-center justify-center shrink-0">
+              <TrendingUp size={18} />
            </div>
            <div>
-              <p className="text-[20px] font-black text-[#d48997] leading-none">{stats.emAtendimento}</p>
-              <p className="text-[9px] font-black text-[#b96a79]/60 uppercase tracking-widest mt-1">Em Atenção</p>
+              <p className="text-xl font-bold text-[#d48997] leading-none">{stats.emAtendimento}</p>
+              <p className="text-[10px] font-medium text-[#b96a79]/60 dark:text-[#efbac2]/60 tracking-wide mt-1">Em Atendimento</p>
            </div>
         </div>
-        <div className="flex items-center gap-4 p-4 sm:p-6 bg-emerald-50 dark:bg-emerald-500/10 rounded-[2rem] border border-emerald-100 dark:border-emerald-500/20">
-           <div className="w-12 h-12 bg-emerald-500 rounded-2xl flex items-center justify-center text-white shadow-lg shadow-emerald-500/20">
-              <CheckCircle size={20} />
+        <div className="flex items-center gap-4 p-4.5 bg-emerald-500/[0.04] dark:bg-emerald-500/[0.02] rounded-2xl border border-emerald-500/10">
+           <div className="w-10 h-10 bg-emerald-500/10 text-emerald-600 rounded-xl flex items-center justify-center shrink-0">
+              <CheckCircle size={18} />
            </div>
            <div>
-              <p className="text-[20px] font-black text-emerald-600 leading-none">{stats.concluidos}</p>
-              <p className="text-[9px] font-black text-emerald-700/60 uppercase tracking-widest mt-1">Concluídos Hoje</p>
+              <p className="text-xl font-bold text-emerald-600 leading-none">{stats.concluidos}</p>
+              <p className="text-[10px] font-medium text-emerald-700/60 dark:text-emerald-400/60 tracking-wide mt-1">Concluídos Hoje</p>
            </div>
         </div>
       </div>
 
-      <div className={cn('grid gap-4 sm:p-6', showWideStatusGrid ? 'grid-cols-1 md:grid-cols-2 lg:grid-cols-4' : 'grid-cols-1 md:grid-cols-2')}>
+      {/* Stats Cards */}
+      <div className={cn('grid gap-4', showWideStatusGrid ? 'grid-cols-1 md:grid-cols-2 lg:grid-cols-4' : 'grid-cols-1 md:grid-cols-2')}>
         <StatCard label="Agendamentos Hoje" value={stats.hoje.length} icon={<Calendar />} color="purple" sparkline={stats.sparkline} />
         <StatCard label="Concluídos" value={stats.concluidos} icon={<CheckCircle />} color="emerald" />
         <StatCard label="Faturamento Hoje" value={`R$ ${Number(stats.faturamentoHoje || 0).toFixed(0)}`} icon={<DollarSign />} color="blue" sparkline={stats.sparkline} />
         <StatCard label="Clientes na Base" value={stats.totalClientes} icon={<Users />} color="orange" sparkline={stats.sparkline} />
       </div>
 
+      {/* Mini Exec Cards */}
       <div className={cn('grid gap-4', showWideStatusGrid ? 'grid-cols-2 xl:grid-cols-5' : 'grid-cols-2 lg:grid-cols-3')}>
-        <MiniExecCard label="Ticket médio" value={`R$ ${Number(executivo.cards?.ticketMedio || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`} />
+        <MiniExecCard label="Ticket Médio" value={`R$ ${Number(executivo.cards?.ticketMedio || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`} />
         <MiniExecCard label="Cancelados" value={executivo.cards?.cancelados || 0} tone="rose" />
-        <MiniExecCard label="No-show" value={executivo.cards?.noShows || 0} tone="amber" />
-        <MiniExecCard label="Retorno" value={`${executivo.cards?.retornoTaxa || 0}%`} tone="emerald" />
-        <MiniExecCard label="Baixo estoque" value={executivo.cards?.baixoEstoque || 0} tone="blue" />
+        <MiniExecCard label="No-Show" value={executivo.cards?.noShows || 0} tone="amber" />
+        <MiniExecCard label="Taxa de Retorno" value={`${executivo.cards?.retornoTaxa || 0}%`} tone="emerald" />
+        <MiniExecCard label="Baixo Estoque" value={executivo.cards?.baixoEstoque || 0} tone="blue" />
       </div>
 
-      <div className={cn('grid grid-cols-1 gap-5 md:p-10', showThreePanelLayout ? 'lg:grid-cols-3' : 'xl:grid-cols-[minmax(0,1fr)_360px]')}>
-        <div className={cn('space-y-6', showThreePanelLayout && 'lg:col-span-2')}>
+      <div className={cn('grid grid-cols-1 gap-6', showThreePanelLayout ? 'lg:grid-cols-3' : 'xl:grid-cols-[minmax(0,1fr)_360px]')}>
+        {/* Next Bookings */}
+        <div className={cn('space-y-4', showThreePanelLayout && 'lg:col-span-2')}>
           <div className="flex items-center justify-between">
-            <h2 className="text-sm font-black text-gray-400 uppercase tracking-[0.3em]">Próximos do Dia</h2>
-            <button onClick={() => navigate('/admin/agenda')} className="text-[10px] font-black text-[#d48997] uppercase tracking-widest flex items-center gap-1 hover:gap-2 transition-all">
-              Ver Agenda <ChevronRight className="w-3 h-3" />
+            <h2 className="text-xs font-semibold text-gray-400 dark:text-gray-505 uppercase tracking-wider">Próximos do Dia</h2>
+            <button onClick={() => navigate('/admin/agenda')} className="text-xs font-semibold text-[#d48997] flex items-center gap-1 hover:gap-1.5 transition-all">
+              <span>Ver Agenda</span> 
+              <ChevronRight className="w-3.5 h-3.5" />
             </button>
           </div>
           
-          <div className="bg-white dark:bg-gray-900/40 backdrop-blur-3xl rounded-[3rem] border border-gray-100 dark:border-white/5 overflow-hidden divide-y divide-gray-50 dark:divide-white/5 shadow-2xl shadow-gray-200/20 dark:shadow-none">
+          <div className="bg-white/60 dark:bg-white/[0.02] backdrop-blur-md rounded-2xl border border-black/[0.04] dark:border-white/[0.04] overflow-hidden divide-y divide-black/[0.03] dark:divide-white/5 shadow-sm">
             {stats.hoje.length === 0 ? (
-              <div className="p-32 text-center">
-                <div className="w-24 h-24 bg-gray-50 dark:bg-white/5 rounded-full flex items-center justify-center mx-auto mb-8">
-                  <Calendar className="w-10 h-10 text-gray-200 dark:text-gray-700" />
+              <div className="p-20 text-center">
+                <div className="w-16 h-16 bg-gray-50 dark:bg-white/5 rounded-2xl flex items-center justify-center mx-auto mb-4 border border-black/[0.04] dark:border-white/5">
+                  <Calendar className="w-6 h-6 text-gray-300 dark:text-gray-600" />
                 </div>
-                <p className="text-gray-300 dark:text-gray-700 font-black uppercase tracking-[0.3em] text-[10px]">Silênao na Agenda</p>
+                <p className="text-gray-400 dark:text-gray-500 font-medium text-xs">Silêncio na agenda por hoje.</p>
               </div>
             ) : (
               (stats.hoje || []).sort((a,b) => (a.inicioHora || '').localeCompare(b.inicioHora || '')).map((a, idx) => (
                 <motion.div 
-                  initial={{ opacity: 0, x: -20 }}
+                  initial={{ opacity: 0, x: -10 }}
                   animate={{ opacity: 1, x: 0 }}
-                  transition={{ delay: idx * 0.05 }}
+                  transition={{ delay: idx * 0.03 }}
                   key={a.id}
                   onClick={() => navigate('/admin/agenda')}
-                  className="p-4 sm:p-6 md:p-8 xl:p-10 flex flex-col xl:flex-row items-start xl:items-center justify-between hover:bg-gray-50/50 dark:hover:bg-white/5 transition-all group cursor-pointer gap-4 sm:p-6"
+                  className="p-5 flex flex-col sm:flex-row items-start sm:items-center justify-between hover:bg-black/[0.01] dark:hover:bg-white/[0.01] transition-all group cursor-pointer gap-4"
                 >
-                  <div className="flex items-center gap-4 md:gap-4 sm:p-6 xl:gap-5 md:p-10 w-full min-w-0">
-                    <div className="w-20 h-20 md:w-24 md:h-24 bg-gray-100 dark:bg-gray-800 rounded-[2rem] md:rounded-[2rem] flex flex-col items-center justify-center border border-gray-100 dark:border-white/5 group-hover:bg-white dark:group-hover:bg-gray-700 group-hover:scale-105 transition-all shadow-sm shrink-0">
-                      <span className="text-xl md:text-2xl font-black text-gray-900 dark:text-white tracking-tighter leading-none">{a.inicioHora}</span>
-                      <span className="text-[8px] font-black text-gray-400 uppercase tracking-widest mt-1">Hórario</span>
+                  <div className="flex items-center gap-4 w-full min-w-0">
+                    <div className="w-16 h-16 bg-gradient-to-tr from-gray-50 to-gray-100 dark:from-white/5 dark:to-white/10 rounded-xl flex flex-col items-center justify-center border border-black/[0.04] dark:border-white/5 group-hover:bg-white dark:group-hover:bg-white/5 transition-all shadow-sm shrink-0">
+                      <span className="text-lg font-bold text-gray-900 dark:text-white tracking-tight">{a.inicioHora}</span>
+                      <span className="text-[8px] font-semibold text-gray-405 dark:text-gray-550 uppercase tracking-widest mt-0.5">Horário</span>
                     </div>
-                    <div className="space-y-2 min-w-0">
-                      <div className="flex items-center gap-3">
-                        <h4 className="font-black text-gray-900 dark:text-white uppercase tracking-tighter text-lg md:text-xl xl:text-2xl leading-none truncate">{a.clienteNome}</h4>
-                        <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]" />
+                    <div className="space-y-1.5 min-w-0">
+                      <div className="flex items-center gap-2">
+                        <h4 className="font-semibold text-gray-900 dark:text-white text-base leading-tight truncate normal-case">{a.clienteNome}</h4>
+                        <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 shadow-sm shrink-0" />
                       </div>
-                      <p className="text-xs text-gray-500 font-bold flex flex-wrap items-center gap-2">
-                        <span className="text-[#d48997] bg-[#d48997]/10 px-3 py-1 rounded-lg uppercase tracking-widest text-[10px]">{a.servico?.nome || a.pacote?.nome}</span>
-                        <span className="opacity-40">com</span> 
-                        <span className="text-gray-900 dark:text-gray-200">{a.profissional?.nome}</span>
+                      <p className="text-xs text-gray-500 dark:text-gray-400 font-medium flex flex-wrap items-center gap-1.5">
+                        <span className="text-[#d48997] bg-[#d48997]/10 px-2.5 py-0.5 rounded-lg text-[10px] tracking-wide">{a.servico?.nome || a.pacote?.nome}</span>
+                        <span className="opacity-50 font-normal">com</span> 
+                        <span className="text-gray-805 dark:text-gray-200">{a.profissional?.nome}</span>
                       </p>
                     </div>
                   </div>
-                                <div className="flex flex-col items-end gap-3 w-full xl:w-auto mt-4 xl:mt-0">
-                    <div className="text-right w-full xl:w-auto">
-                       <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1.5 hidden xl:block">Status & Fluxo</p>
-                       <div className="flex items-center justify-end gap-2 w-full">
-                         {a.status === 'confirmado' && (
-                            <button 
-                              onClick={(e) => { e.stopPropagation(); updateAgendamentoStatus(a, 'em_atendimento'); }} 
-                              className="flex-1 xl:flex-none px-5 py-2.5 rounded-2xl text-[10px] font-black uppercase tracking-widest bg-[#d48997] text-white hover:bg-[#b96a79] transition-all shadow-lg shadow-[#E29BA8]/20 flex items-center justify-center gap-2"
-                            >
-                              <TrendingUp size={14} /> Iniciar
-                            </button>
-                         )}
-                         {a.status === 'em_atendimento' && (
-                           <button 
-                             onClick={(e) => { e.stopPropagation(); updateAgendamentoStatus(a, 'concluido'); }} 
-                             className="flex-1 xl:flex-none px-5 py-2.5 rounded-2xl text-[10px] font-black uppercase tracking-widest bg-emerald-500 text-white hover:bg-emerald-600 transition-all shadow-lg shadow-emerald-500/20 flex items-center justify-center gap-2"
-                           >
-                             <CheckCircle size={14} /> Finalizar
-                           </button>
-                         )}
-                         {a.status === 'concluido' && (
-                            <button 
-                              onClick={(e) => { 
-                                e.stopPropagation(); 
-                                const total = calculateAgendamentoTotal(a);
-                                const itensArr = [
-                                  a.servico?.nome || a.pacote?.nome,
-                                  ...getAgendamentoItensExtras(a).map((i) => i.servico?.nome || i.nome),
-                                  ...(a.produtos?.map(p => `${p.quantidade}x ${p.produto?.nome}`) || [])
-                                ].filter(Boolean);
-                                const itensStr = itensArr.join(', ');
-                                
-                                const msg = encodeURIComponent(
-                                  `*REENVIO DE COMPROVANTE*\n\n` +
-                                  `Ol?, *${a.clienteNome}*!\n` +
-                                  `Segue o seu comprovante de atendimento.\n\n` +
-                                  `*Detalhes:*\n${itensStr}\n` +
-                                  `*Valor Total:* R$ ${total.toFixed(2)}\n\n` +
-                                  `Agradecemos a prefer?ncia! �S�`
-                                );
-                                window.open(`https://wa.me/55${a.clienteTelefone.replace(/\D/g,'')}?text=${msg}`, '_blank');
-                              }} 
-                              className="flex-1 xl:flex-none px-5 py-2.5 rounded-2xl text-[10px] font-black uppercase tracking-widest bg-emerald-50 text-emerald-600 border border-emerald-100 hover:bg-[#25D366] hover:text-white transition-all shadow-sm flex items-center justify-center gap-2"
-                            >
-                              <MessageSquare size={14} /> Reenviar Recibo
-                            </button>
-                         )}
-                         <span className={cn(
-                           "flex-1 xl:flex-none px-5 py-2.5 rounded-2xl text-[10px] font-black uppercase tracking-widest border transition-all flex items-center justify-center text-center font-black",
-                           a.status === 'concluido' && 'bg-emerald-50 dark:bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-100 dark:border-emerald-500/20 shadow-lg shadow-emerald-500/10',
-                           a.status === 'em_atendimento' && 'bg-[#E29BA8]/5 dark:bg-[#E29BA8]/10 text-[#d48997] dark:text-[#efbac2] border-[#E29BA8]/10 dark:border-[#E29BA8]/20',
-                           a.status === 'confirmado' && 'bg-gray-50 dark:bg-white/5 text-gray-400 border-gray-100 dark:border-white/5'
-                         )}>
-                           {a.status === 'concluido' ? 'FINALIZADO' : a.status === 'em_atendimento' ? 'EM ATENDIMENTO' : 'AGUARDANDO'}
-                         </span>
-                       </div>
-                    </div>
+                  <div className="flex items-center gap-2.5 w-full sm:w-auto shrink-0 justify-end">
+                     {a.status === 'confirmado' && (
+                        <button 
+                          onClick={(e) => { e.stopPropagation(); updateAgendamentoStatus(a, 'em_atendimento'); }} 
+                          className="flex-1 sm:flex-none px-4 py-2 rounded-xl text-xs font-semibold bg-[#d48997] hover:bg-[#c97b8a] text-white shadow-sm transition-all flex items-center justify-center gap-1.5"
+                        >
+                          <TrendingUp size={14} /> <span>Iniciar</span>
+                        </button>
+                     )}
+                     {a.status === 'em_atendimento' && (
+                       <button 
+                         onClick={(e) => { e.stopPropagation(); updateAgendamentoStatus(a, 'concluido'); }} 
+                         className="flex-1 sm:flex-none px-4 py-2 rounded-xl text-xs font-semibold bg-emerald-500 hover:bg-emerald-600 text-white shadow-sm transition-all flex items-center justify-center gap-1.5"
+                       >
+                         <CheckCircle size={14} /> <span>Finalizar</span>
+                       </button>
+                     )}
+                     {a.status === 'concluido' && (
+                        <button 
+                          onClick={(e) => { 
+                            e.stopPropagation(); 
+                            const total = calculateAgendamentoTotal(a);
+                            const itensArr = [
+                              a.servico?.nome || a.pacote?.nome,
+                              ...getAgendamentoItensExtras(a).map((i) => i.servico?.nome || i.nome),
+                              ...(a.produtos?.map(p => `${p.quantidade}x ${p.produto?.nome}`) || [])
+                            ].filter(Boolean);
+                            const itensStr = itensArr.join(', ');
+                            
+                            const msg = encodeURIComponent(
+                              `*REENVIO DE COMPROVANTE*\n\n` +
+                              `Olá, *${a.clienteNome}*!\n` +
+                              `Segue o seu comprovante de atendimento.\n\n` +
+                              `*Detalhes:*\n${itensStr}\n` +
+                              `*Valor Total:* R$ ${total.toFixed(2)}\n\n` +
+                              `Agradecemos a preferência!`
+                            );
+                            window.open(`https://wa.me/55${a.clienteTelefone.replace(/\D/g,'')}?text=${msg}`, '_blank');
+                          }} 
+                          className="flex-1 sm:flex-none px-4 py-2 rounded-xl text-xs font-semibold bg-emerald-50 dark:bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/15 hover:bg-[#25D366] hover:text-white transition-all flex items-center justify-center gap-1.5"
+                        >
+                          <MessageSquare size={14} /> <span>Recibo</span>
+                        </button>
+                     )}
+                     <span className={cn(
+                       "flex-1 sm:flex-none px-4 py-2 rounded-xl text-xs font-semibold border transition-all text-center",
+                       a.status === 'concluido' && 'bg-emerald-500/5 text-emerald-600 border-emerald-500/10',
+                       a.status === 'em_atendimento' && 'bg-[#E29BA8]/5 text-[#d48997] border-[#E29BA8]/15',
+                       a.status === 'confirmado' && 'bg-gray-50/50 dark:bg-white/[0.02] text-gray-400 border-black/[0.04] dark:border-white/5'
+                     )}>
+                       {a.status === 'concluido' ? 'Finalizado' : a.status === 'em_atendimento' ? 'Em Agenda' : 'Aguardando'}
+                     </span>
                   </div>
                 </motion.div>
               ))
@@ -373,96 +365,100 @@ export default function Dashboard() {
           </div>
         </div>
 
-        <div className="space-y-6">
-          <h2 className="text-sm font-black text-gray-400 uppercase tracking-[0.3em]">Insights de IA</h2>
+        {/* AI Insight Sidecard */}
+        <div className="space-y-4">
+          <h2 className="text-xs font-semibold text-gray-400 dark:text-gray-505 uppercase tracking-wider">Insights de IA</h2>
           <motion.div 
-            whileHover={{ y: -5 }}
-            className="relative bg-[#0a0a0a] rounded-[2rem] p-5 md:p-10 text-white shadow-2xl overflow-hidden group"
+            whileHover={{ y: -2 }}
+            className="relative bg-gray-950 dark:bg-[#0c0c0e] rounded-2xl p-6 md:p-8 text-white border border-black/[0.04] dark:border-white/10 shadow-sm overflow-hidden group"
           >
-             <div className="absolute top-[-20%] right-[-10%] w-[60%] h-[60%] bg-[#d48997]/20 blur-[80px] rounded-full group-hover:bg-[#d48997]/30 transition-colors" />
+             <div className="absolute top-[-20%] right-[-10%] w-[60%] h-[60%] bg-[#d48997]/15 blur-[60px] rounded-full group-hover:bg-[#d48997]/25 transition-colors duration-500" />
              
              <div className="relative z-10">
-               <div className="w-14 h-14 bg-white/10 backdrop-blur-xl rounded-2xl flex items-center justify-center mb-8 border border-gray-200 dark:border-white/10">
-                  <Zap className="w-7 h-7 text-amber-400 animate-pulse" />
+               <div className="w-11 h-11 bg-white/10 backdrop-blur-xl rounded-xl flex items-center justify-center mb-6 border border-white/10">
+                  <Zap className="w-5 h-5 text-amber-400 fill-amber-400 animate-pulse" />
                </div>
-               <h3 className="text-2xl font-black mb-3 tracking-tight">Análise Preditiva</h3>
-               <p className="text-gray-400 text-sm leading-relaxed mb-8 font-medium">
-                 A IA pode analisar sua base atual e disparar convites para clientes sem retorno recente, com foco em preencher os horários mes vazios.
+               <h3 className="text-lg font-serif font-normal mb-2 tracking-wide text-white">Análise Preditiva</h3>
+               <p className="text-gray-400 text-xs leading-relaxed mb-6 font-medium">
+                 A IA pode analisar sua base atual e disparar convites para clientes ausentes, com foco em preencher os horários mais vazios da semana.
                </p>
                <button 
                  onClick={dispararIA} 
-                 className="w-full py-5 bg-gradient-to-r from-[#d48997] to-indigo-600 text-white rounded-2xl font-black text-xs hover:scale-[1.02] active:scale-[0.98] transition-all uppercase tracking-widest shadow-xl shadow-[#E29BA8]/20"
+                 className="w-full py-3 bg-[#d48997] hover:bg-[#c97b8a] text-white rounded-xl font-semibold text-xs transition-all uppercase tracking-wider shadow-sm hover:shadow"
                >
                  Otimizar Retenção
                </button>
              </div>
           </motion.div>
 
-          <div className="bg-white rounded-[2rem] p-4 md:p-8 border border-gray-100 shadow-xl shadow-gray-200/20">
-             <div className="flex items-center justify-between mb-6">
-                <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Taxa de Ocupação</p>
-                <span className="text-emerald-500 font-black text-xs">{stats.ocupacao}%</span>
+          <div className="bg-white/60 dark:bg-white/[0.02] backdrop-blur-md rounded-2xl p-5 border border-black/[0.04] dark:border-white/[0.04] shadow-sm">
+             <div className="flex items-center justify-between mb-4">
+                <p className="text-[10px] font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wide">Taxa de Ocupação</p>
+                <span className="text-emerald-500 font-semibold text-xs">{stats.ocupacao}%</span>
              </div>
-             <div className="w-full h-3 bg-gray-50 rounded-full overflow-hidden">
+             <div className="w-full h-2 bg-gray-100 dark:bg-white/10 rounded-full overflow-hidden">
                 <motion.div 
-                  initial={{ width: 0 }}
-                  animate={{ width: `${stats.ocupacao}%` }}
-                  className="h-full bg-emerald-500" 
+                   initial={{ width: 0 }}
+                   animate={{ width: `${stats.ocupacao}%` }}
+                   className="h-full bg-emerald-500" 
                 />
              </div>
           </div>
         </div>
       </div>
 
-      <div className={cn('grid grid-cols-1 gap-4 sm:p-6', showDualInsights && 'xl:grid-cols-2')}>
-        <div className="bg-white dark:bg-gray-900/40 backdrop-blur-3xl rounded-[2rem] p-4 md:p-8 border border-gray-100 dark:border-white/5 shadow-xl">
-          <div className="flex items-center justify-between mb-6">
-            <h3 className="text-lg font-black text-gray-900 dark:text-white tracking-tight">Produtividade por profissional</h3>
-            <span className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-400">Período executivo</span>
+      {/* Productive list */}
+      <div className={cn('grid gap-6', showDualInsights && 'xl:grid-cols-2')}>
+        <div className="bg-white/60 dark:bg-white/[0.02] backdrop-blur-md rounded-2xl p-5 md:p-6 border border-black/[0.04] dark:border-white/[0.04] shadow-sm">
+          <div className="flex items-center justify-between mb-5">
+            <h3 className="text-base font-semibold text-gray-905 dark:text-white">Produtividade por Profissional</h3>
+            <span className="text-[10px] font-medium uppercase tracking-wider text-gray-400">Mensal</span>
           </div>
-          <div className="space-y-3">
+          <div className="space-y-2.5">
             {(executivo.produtividade || []).slice(0, 6).map((item) => (
-              <div key={item.id} className="grid grid-cols-[1fr_auto] gap-4 rounded-2xl border border-gray-100 dark:border-white/5 px-4 py-4">
+              <div key={item.id} className="grid grid-cols-[1fr_auto] gap-4 rounded-xl border border-black/[0.03] dark:border-white/[0.03] bg-white dark:bg-white/[0.01] px-4 py-3">
                 <div>
-                  <p className="text-sm font-black text-gray-900 dark:text-white">{item.nome}</p>
-                  <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-gray-400">{item.atendimentos} atendimentos</p>
+                  <p className="text-sm font-semibold text-gray-900 dark:text-white normal-case">{item.nome}</p>
+                  <p className="text-[10px] font-medium text-gray-405 dark:text-gray-500 mt-0.5">{item.atendimentos} atendimentos</p>
                 </div>
                 <div className="text-right">
-                  <p className="text-sm font-black text-[#d48997]">R$ {Number(item.faturamento || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</p>
-                  <p className="text-[10px] font-black text-emerald-500">Com. R$ {Number(item.comissao || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</p>
+                  <p className="text-sm font-semibold text-[#d48997]">R$ {Number(item.faturamento || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</p>
+                  <p className="text-[10px] font-medium text-emerald-500">Comissão R$ {Number(item.comissao || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</p>
                 </div>
               </div>
             ))}
           </div>
         </div>
 
-        <div className="bg-white dark:bg-gray-900/40 backdrop-blur-3xl rounded-[2rem] p-4 md:p-8 border border-gray-100 dark:border-white/5 shadow-xl">
-          <div className="flex items-center justify-between mb-6">
-            <h3 className="text-lg font-black text-gray-900 dark:text-white tracking-tight">Faturamento por categoria</h3>
-            <span className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-400">Equipe</span>
-          </div>
-          <div className="space-y-3">
-            {(executivo.faturamentoPorCategoria || []).slice(0, 6).map((item) => (
-              <div key={item.nome} className="rounded-2xl border border-gray-100 dark:border-white/5 px-4 py-4">
-                <div className="flex items-center justify-between gap-4">
-                  <p className="text-sm font-black text-gray-900 dark:text-white">{item.nome}</p>
-                  <p className="text-sm font-black text-blue-600">R$ {Number(item.valor || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</p>
+        <div className="bg-white/60 dark:bg-white/[0.02] backdrop-blur-md rounded-2xl p-5 md:p-6 border border-black/[0.04] dark:border-white/[0.04] shadow-sm flex flex-col justify-between">
+          <div>
+            <div className="flex items-center justify-between mb-5">
+              <h3 className="text-base font-semibold text-gray-905 dark:text-white">Faturamento por Categoria</h3>
+              <span className="text-[10px] font-medium uppercase tracking-wider text-gray-400">Geral</span>
+            </div>
+            <div className="space-y-2.5">
+              {(executivo.faturamentoPorCategoria || []).slice(0, 4).map((item) => (
+                <div key={item.nome} className="rounded-xl border border-black/[0.03] dark:border-white/[0.03] bg-white dark:bg-white/[0.01] px-4 py-3">
+                  <div className="flex items-center justify-between gap-4">
+                    <p className="text-sm font-semibold text-gray-900 dark:text-white normal-case">{item.nome}</p>
+                    <p className="text-sm font-semibold text-[#d48997]">R$ {Number(item.valor || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</p>
+                  </div>
                 </div>
-              </div>
-            ))}
+              ))}
+            </div>
           </div>
 
-          <div className="mt-6 rounded-[2rem] border border-gray-100 dark:border-white/5 px-5 py-5">
-            <div className="flex items-center justify-between mb-4">
-              <p className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-400">Alertas executivos</p>
-              <span className="text-xs font-black text-[#d48997]">{executivo.alertas?.length || 0}</span>
+          <div className="mt-5 rounded-2xl border border-black/[0.04] dark:border-white/[0.04] bg-white/40 dark:bg-white/[0.01] px-5 py-4">
+            <div className="flex items-center justify-between mb-3">
+              <p className="text-[10px] font-semibold uppercase tracking-wider text-gray-405 dark:text-gray-500">Alertas Operacionais</p>
+              <span className="text-xs font-semibold text-[#d48997]">{executivo.alertas?.length || 0}</span>
             </div>
             <div className="space-y-2">
-              {(executivo.alertas?.length ? executivo.alertas : [{ nome: 'Sem alertas críticos', estoque: '-' }]).map((alerta, index) => (
-                <div key={`${alerta.nome}-${index}`} className="rounded-2xl bg-gray-50 dark:bg-white/5 px-4 py-3">
-                  <p className="text-sm font-black text-gray-900 dark:text-white">{alerta.nome}</p>
-                  <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-gray-400">
-                    {alerta.estoque === '-' ? 'Opera??o estável' : `Estoque em ${alerta.estoque} unidade(s)`}
+              {(executivo.alertas?.length ? executivo.alertas : [{ nome: 'Nenhum alerta crítico', estoque: '-' }]).map((alerta, index) => (
+                <div key={`${alerta.nome}-${index}`} className="rounded-xl bg-white dark:bg-white/[0.02] border border-black/[0.03] dark:border-white/[0.03] px-4 py-2.5">
+                  <p className="text-xs font-semibold text-gray-900 dark:text-white normal-case">{alerta.nome}</p>
+                  <p className="text-[10px] font-medium text-gray-405 dark:text-gray-500 mt-0.5">
+                    {alerta.estoque === '-' ? 'Estabilidade operacional' : `Estoque mínimo: ${alerta.estoque} unidades`}
                   </p>
                 </div>
               ))}
@@ -474,17 +470,17 @@ export default function Dashboard() {
       {checkoutSuccess && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center overflow-y-auto overscroll-contain p-3 bg-black/60 backdrop-blur-sm sm:p-4">
           <motion.div 
-            initial={{ scale: 0.9, opacity: 0 }}
+            initial={{ scale: 0.95, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
-            className="max-h-[calc(100dvh-1.5rem)] w-full max-w-sm overflow-y-auto rounded-[3rem] bg-white p-5 text-center shadow-2xl custom-scrollbar dark:bg-gray-900 md:p-10"
+            className="max-h-[calc(100dvh-1.5rem)] w-full max-w-sm overflow-y-auto rounded-3xl bg-white p-6 text-center shadow-xl border border-black/[0.04] dark:bg-gray-900 dark:border-white/10 md:p-8"
           >
-            <div className="w-20 h-20 bg-emerald-500 rounded-[2rem] flex items-center justify-center text-white mx-auto mb-6 shadow-lg shadow-emerald-500/20">
-              <CheckCircle size={40} />
+            <div className="w-16 h-16 bg-emerald-500/10 text-emerald-600 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-inner">
+              <CheckCircle size={32} />
             </div>
-            <h3 className="text-2xl font-black text-gray-900 dark:text-white uppercase tracking-tighter mb-2">Atenção Finalizado!</h3>
-            <p className="text-gray-500 text-sm mb-10 font-medium">O status foi atualizado e as comissões foram geradas com sucesso.</p>
+            <h3 className="text-lg font-serif font-normal text-gray-900 dark:text-white mb-2">Atendimento Concluído</h3>
+            <p className="text-gray-405 dark:text-gray-400 text-xs mb-8">As atualizações foram consolidadas e as comissões devidamente registradas.</p>
             
-            <div className="space-y-3">
+            <div className="space-y-2">
               <button 
                 onClick={() => {
                   const total = calculateAgendamentoTotal(checkoutSuccess);
@@ -497,22 +493,22 @@ export default function Dashboard() {
                   
                   const msg = encodeURIComponent(
                     `*COMPROVANTE DE ATENDIMENTO*\n\n` +
-                    `Ol?, *${checkoutSuccess.clienteNome}*!\n` +
+                    `Olá, *${checkoutSuccess.clienteNome}*!\n` +
                     `Seu atendimento foi finalizado com sucesso.\n\n` +
                     `*Detalhes:*\n${itensStr}\n` +
                     `*Valor Total:* R$ ${total.toFixed(2)}\n\n` +
-                    `Agradecemos a prefer?ncia! �S�`
+                    `Agradecemos a preferência!`
                   );
                   window.open(`https://wa.me/55${checkoutSuccess.clienteTelefone.replace(/\D/g,'')}?text=${msg}`, '_blank');
                   setCheckoutSuccess(null);
                 }}
-                className="w-full py-5 rounded-[2rem] bg-[#25D366] text-white font-black uppercase tracking-widest text-[10px] flex items-center justify-center gap-3 shadow-xl shadow-emerald-500/10 hover:scale-[1.02] transition-all"
+                className="w-full py-3.5 rounded-xl bg-[#25D366] text-white font-semibold text-xs flex items-center justify-center gap-2 shadow-sm shadow-emerald-500/10 hover:scale-[1.01] transition-all"
               >
-                <TrendingUp size={16} className="rotate-90" /> Enviar Comprovante WhatsApp
+                <TrendingUp size={14} className="rotate-90" /> Enviar Comprovante WhatsApp
               </button>
               <button 
                 onClick={() => setCheckoutSuccess(null)}
-                className="w-full py-5 rounded-[2rem] bg-gray-100 dark:bg-white/5 text-gray-400 font-black uppercase tracking-widest text-[10px] hover:bg-gray-200 dark:hover:bg-white/10 transition-all"
+                className="w-full py-3.5 rounded-xl bg-gray-50 border border-black/[0.04] text-gray-500 hover:bg-gray-100 dark:bg-white/5 dark:border-white/5 dark:text-white/70 dark:hover:bg-white/10 transition-all font-semibold text-xs"
               >
                 Fechar
               </button>
@@ -534,33 +530,33 @@ function StatCard({ label, value, icon, color, trend, sparkline }) {
 
   return (
     <motion.div 
-      whileHover={{ y: -6, scale: 1.02 }}
-      className="bg-white/80 dark:bg-[#1a1820]/30 backdrop-blur-2xl p-6 md:p-8 xl:p-10 rounded-[2.2rem] shadow-[0_20px_48px_-24px_rgba(140,107,117,0.12)] dark:shadow-none border border-slate-200/60 dark:border-white/5 relative overflow-hidden group transition-all duration-300 hover:border-[#e29ba8]/30 dark:hover:border-[#e29ba8]/20"
+      whileHover={{ y: -3, scale: 1.01 }}
+      className="bg-white/60 dark:bg-white/[0.02] backdrop-blur-md p-6 rounded-2xl shadow-sm border border-black/[0.04] dark:border-white/[0.04] relative overflow-hidden group transition-all duration-300 hover:border-[#e29ba8]/30 dark:hover:border-[#e29ba8]/20"
     >
-       <div className="flex justify-between items-start mb-8">
-          <div className={cn("w-14 h-14 md:w-16 md:h-16 rounded-2xl flex items-center justify-center text-3xl border shadow-inner transition-all group-hover:rotate-6", colors[color])}>
-            {React.cloneElement(icon, { size: 24, strokeWidth: 2.5 })}
+       <div className="flex justify-between items-start mb-6">
+          <div className={cn("w-12 h-12 rounded-xl flex items-center justify-center border shadow-inner transition-all group-hover:rotate-6", colors[color])}>
+            {React.cloneElement(icon, { size: 20, strokeWidth: 2 })}
           </div>
           {trend && (
-            <span className="flex items-center gap-1 text-[10px] font-black text-emerald-500 bg-emerald-500/10 px-4 py-2 rounded-full border border-emerald-500/20">
+            <span className="flex items-center gap-1 text-[10px] font-semibold text-emerald-500 bg-emerald-500/10 px-3 py-1 rounded-full border border-emerald-500/20">
               <ArrowUpRight className="w-3 h-3" /> {trend}
             </span>
           )}
        </div>
 
-       <div className="space-y-1 mb-8">
-          <p className="text-3xl md:text-4xl font-black text-gray-900 dark:text-white tracking-tighter leading-none break-words">{value}</p>
-          <p className="text-[9px] font-black text-gray-400 dark:text-white/40 uppercase tracking-[0.4em] mt-3">{label}</p>
+       <div className="space-y-1 mb-6">
+          <p className="text-2xl font-semibold text-gray-905 dark:text-white tracking-tight leading-none break-words">{value}</p>
+          <p className="text-[10px] font-medium text-gray-400 dark:text-gray-500 tracking-wide mt-2 normal-case">{label}</p>
        </div>
 
-       <div className="h-16 w-full -mb-2 opacity-80 group-hover:opacity-100 transition-opacity">
+       <div className="h-10 w-full opacity-60 group-hover:opacity-100 transition-opacity">
           <ResponsiveContainer width="100%" height="100%">
              <LineChart data={sparkline?.length ? sparkline : [{ val: 0 }]}>
                 <Line 
                    type="monotone" 
                    dataKey="val" 
                    stroke={color === 'purple' ? '#d48997' : color === 'emerald' ? '#10b981' : color === 'blue' ? '#3b82f6' : '#f97316'} 
-                   strokeWidth={4} 
+                   strokeWidth={3} 
                    dot={false} 
                 />
              </LineChart>
@@ -572,17 +568,17 @@ function StatCard({ label, value, icon, color, trend, sparkline }) {
 
 function MiniExecCard({ label, value, tone = 'default' }) {
   const tones = {
-    default: 'border-slate-200/60 dark:border-white/5 text-gray-900 dark:text-white',
-    rose: 'border-rose-200/50 dark:border-rose-500/20 text-rose-600 dark:text-rose-300 bg-rose-500/[0.02]',
-    amber: 'border-amber-200/50 dark:border-amber-500/20 text-amber-600 dark:text-amber-300 bg-amber-500/[0.02]',
-    emerald: 'border-emerald-200/50 dark:border-emerald-500/20 text-emerald-600 dark:text-emerald-300 bg-emerald-500/[0.02]',
-    blue: 'border-blue-200/50 dark:border-blue-500/20 text-blue-600 dark:text-blue-300 bg-blue-500/[0.02]',
+    default: 'border-black/[0.04] dark:border-white/[0.04] text-gray-900 dark:text-white',
+    rose: 'border-rose-250/20 text-[#d48997] bg-rose-500/[0.02]',
+    amber: 'border-amber-250/20 text-amber-600 bg-amber-500/[0.02]',
+    emerald: 'border-emerald-250/20 text-emerald-600 bg-emerald-500/[0.02]',
+    blue: 'border-blue-250/20 text-blue-600 bg-blue-500/[0.02]',
   };
 
   return (
-    <div className={`rounded-[1.75rem] border bg-white/70 dark:bg-[#1a1820]/30 backdrop-blur-xl px-5 py-5 shadow-sm transition-all duration-300 hover:border-[#e29ba8]/20 ${tones[tone]}`}>
-      <p className="text-[9px] font-black uppercase tracking-[0.22em] text-gray-400 dark:text-white/40">{label}</p>
-      <p className="mt-2 text-xl font-black tracking-tighter">{value}</p>
+    <div className={`rounded-xl border bg-white/60 dark:bg-white/[0.02] backdrop-blur-md px-5 py-4 shadow-sm transition-all duration-300 hover:border-[#e29ba8]/20 ${tones[tone]}`}>
+      <p className="text-[10px] font-medium text-gray-400 dark:text-gray-505 normal-case">{label}</p>
+      <p className="mt-1 text-lg font-bold tracking-tight">{value}</p>
     </div>
   );
 }

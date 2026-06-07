@@ -1,6 +1,16 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
-import { Check, Edit3, Package, Plus, Trash2 } from 'lucide-react';
+import {
+  Check,
+  Clock,
+  DollarSign,
+  Edit3,
+  Package,
+  Plus,
+  Trash2,
+  X,
+  AlertTriangle,
+} from 'lucide-react';
 import {
   createPacote,
   deletePacote,
@@ -8,6 +18,7 @@ import {
   getServicos,
   updatePacote,
 } from '../../services/api';
+import { cn } from '../../lib/utils';
 
 const EMPTY_FORM = {
   nome: '',
@@ -32,6 +43,7 @@ export default function Pacotes() {
   const [saving, setSaving] = useState(false);
   const [editing, setEditing] = useState(null);
   const [form, setForm] = useState(EMPTY_FORM);
+  const [busca, setBusca] = useState('');
 
   async function carregar() {
     setLoading(true);
@@ -47,6 +59,14 @@ export default function Pacotes() {
   useEffect(() => {
     carregar();
   }, []);
+
+  const filtrados = useMemo(() => {
+    return pacotes.filter(
+      (p) =>
+        p.nome?.toLowerCase().includes(busca.toLowerCase()) ||
+        p.descricao?.toLowerCase().includes(busca.toLowerCase())
+    );
+  }, [pacotes, busca]);
 
   const resumoServicos = useMemo(() => {
     const mapa = new Map(servicos.map((servico) => [servico.id, servico.nome]));
@@ -72,7 +92,7 @@ export default function Pacotes() {
   }
 
   async function excluirPacote(id) {
-    if (!window.confirm('Excluir este pacote?')) return;
+    if (!window.confirm('Deseja realmente excluir este pacote?')) return;
     await deletePacote(id);
     await carregar();
   }
@@ -112,201 +132,239 @@ export default function Pacotes() {
   }
 
   return (
-    <div className="mx-auto flex max-w-7xl flex-col gap-4 md:p-8 pb-16">
-      <section className="flex flex-col gap-4 sm:p-6 rounded-[2rem] border border-gray-200 dark:border-white/5 bg-gray-50 dark:bg-[#16141a]/95 p-4 sm:p-6 shadow-[0_30px_80px_rgba(0,0,0,0.32)] lg:flex-row lg:items-start lg:justify-between lg:p-8">
-        <div className="max-w-3xl space-y-5">
-          <div className="flex items-center gap-3 text-[11px] font-semibold uppercase tracking-[0.42em] text-[#E29BA8]">
-            <Package className="h-4 w-4" />
-            Combos de valor
+    <motion.div
+      initial={{ opacity: 0, y: 15 }}
+      animate={{ opacity: 1, y: 0 }}
+      className="mx-auto max-w-6xl space-y-8 pb-20 px-4"
+    >
+      {/* Header */}
+      <header className="flex flex-col gap-4 border-b border-black/[0.03] dark:border-white/[0.03] pb-6 lg:flex-row lg:items-end lg:justify-between">
+        <div>
+          <div className="flex items-center gap-2.5 mb-2.5">
+            <Package className="h-4 w-4 text-[#d48997]" />
+            <span className="text-[10px] font-semibold text-[#d48997] tracking-wide">Combos Promocionais</span>
           </div>
-          <div className="space-y-4">
-            <h1 className="font-['Playfair_Display'] text-2xl sm:text-4xl leading-none text-[#faf7f6] sm:text-5xl">
-              Pacotes <span className="text-[#E29BA8]">BellaPro</span>
-            </h1>
-            <p className="max-w-2xl text-lg leading-8 text-[#c7adb4]">
-              Monte ofertas mais fortes combinando servicos, narrativa comercial e previsibilidade de receita.
-            </p>
-          </div>
+          <h1 className="text-2xl sm:text-3xl font-serif font-normal text-gray-900 dark:text-white tracking-wide leading-tight mb-2">
+            Gestão de <span className="text-[#d48997]">Pacotes</span>
+          </h1>
+          <p className="text-sm text-gray-400 dark:text-gray-500 leading-relaxed max-w-xl">
+            Crie ofertas exclusivas combinando múltiplos serviços com condições especiais e prazos de validade flexíveis.
+          </p>
         </div>
 
-        <button
-          type="button"
-          onClick={abrirNovo}
-          className="inline-flex min-h-[56px] items-center justify-center gap-3 rounded-full bg-gradient-to-r from-[#E29BA8] to-[#d48997] text-[#111116] px-8 text-sm font-semibold uppercase tracking-[0.22em] text-[#20191f] transition hover:brightness-105"
-        >
-          <Plus className="h-4 w-4" />
-          Novo pacote
-        </button>
-      </section>
+        <div className="flex flex-col gap-3 sm:flex-row">
+          <div className="relative">
+            <input
+              value={busca}
+              onChange={(e) => setBusca(e.target.value)}
+              placeholder="Buscar pacote..."
+              className="h-11 w-full min-w-[240px] rounded-xl border border-black/[0.08] dark:border-white/10 bg-white dark:bg-[#111113] px-4 text-sm text-gray-900 dark:text-white outline-none focus:border-[#d48997] focus:ring-2 focus:ring-[#d48997]/10 transition-all placeholder:text-gray-400"
+            />
+          </div>
+          <motion.button
+            whileHover={{ scale: 1.02, y: -1 }}
+            whileTap={{ scale: 0.98 }}
+            type="button"
+            onClick={abrirNovo}
+            className="inline-flex items-center justify-center gap-2 rounded-xl bg-[#d48997] hover:bg-[#c97b8a] text-white px-5 py-2.5 text-xs font-semibold shadow-sm transition-all shrink-0"
+          >
+            <Plus className="h-4 w-4" /> Novo pacote
+          </motion.button>
+        </div>
+      </header>
 
+      {/* Content */}
       {loading ? (
         <div className="flex min-h-[40vh] items-center justify-center">
-          <div className="h-12 w-12 animate-spin rounded-full border-4 border-[rgba(233,155,168,0.22)] border-t-[#e99ba8]" />
+          <div className="h-8 w-8 animate-spin rounded-full border-2 border-[#d48997]/20 border-t-[#d48997]" />
         </div>
-      ) : pacotes.length === 0 ? (
-        <div className="rounded-[2rem] border border-dashed border-[rgba(233,155,168,0.16)] bg-[rgba(41,31,37,0.82)] px-8 py-16 text-center">
-          <Package className="mx-auto h-14 w-14 text-[#806871]" />
-          <h2 className="mt-6 font-['Playfair_Display'] text-3xl text-[#faf7f6]">Nenhum pacote cadastrado</h2>
-          <p className="mx-auto mt-3 max-w-xl text-sm leading-7 text-[#c7adb4]">
-            Comece criando combos estrategicos para aumentar ticket medio e dar mais clareza comercial ao seu menu.
+      ) : filtrados.length === 0 ? (
+        <div className="rounded-2xl border border-dashed border-black/[0.08] dark:border-white/[0.08] bg-white/40 dark:bg-white/[0.01] px-8 py-16 text-center">
+          <Package className="mx-auto h-12 w-12 text-gray-300 dark:text-gray-700" />
+          <h2 className="mt-4 font-serif text-lg text-gray-800 dark:text-gray-200">Nenhum pacote encontrado</h2>
+          <p className="mx-auto mt-2 max-w-xs text-xs text-gray-400 dark:text-gray-500">
+            Experimente buscar por outro termo ou crie um novo pacote clicando no botão acima.
           </p>
         </div>
       ) : (
-        <div className="grid gap-4 sm:p-6 md:grid-cols-2 xl:grid-cols-3">
-          {pacotes.map((pacote) => (
-            <article
-              key={pacote.id}
-              className="flex flex-col rounded-[2rem] border border-gray-200 dark:border-white/5 bg-white dark:bg-[#1a171f]/95 p-4 sm:p-6 shadow-[0_24px_60px_rgba(0,0,0,0.24)]"
-            >
-              <div className="mb-6 flex items-start justify-between gap-4">
-                <div className="flex h-14 w-14 items-center justify-center rounded-[20px] bg-[rgba(233,155,168,0.12)] text-[#f7c1b6]">
-                  <Package className="h-6 w-6" />
-                </div>
-                <div className="flex gap-2">
-                  <button
-                    type="button"
-                    onClick={() => editarPacote(pacote)}
-                    className="rounded-2xl border border-gray-200 dark:border-white/5 bg-[rgba(255,255,255,0.03)] p-3 text-[#c7adb4] transition hover:border-[rgba(233,155,168,0.18)] hover:text-[#f7c1b6]"
-                  >
-                    <Edit3 className="h-4 w-4" />
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => excluirPacote(pacote.id)}
-                    className="rounded-2xl border border-gray-200 dark:border-white/5 bg-[rgba(255,255,255,0.03)] p-3 text-[#c7adb4] transition hover:border-[rgba(220,120,120,0.22)] hover:text-[#f4aaaa]"
-                  >
-                    <Trash2 className="h-4 w-4" />
-                  </button>
-                </div>
-              </div>
-
-              <h2 className="font-['Playfair_Display'] text-3xl text-[#faf7f6]">{pacote.nome}</h2>
-              <p className="mt-3 flex-1 text-sm leading-7 text-[#c7adb4]">
-                {pacote.descricao || 'Pacote pronto para combinar conveniencia, resultado e recorrencia.'}
-              </p>
-
-              <div className="mt-6">
-                <p className="text-[11px] font-semibold uppercase tracking-[0.28em] text-[#E29BA8]">
-                  Servicos inclusos
-                </p>
-                <div className="mt-3 flex flex-wrap gap-2">
-                  {(pacote.itens || []).length ? (
-                    pacote.itens.map((item) => (
-                      <span
-                        key={item.id}
-                        className="rounded-full border border-gray-200 dark:border-white/5 bg-[rgba(255,255,255,0.04)] px-3 py-2 text-[11px] font-semibold uppercase tracking-[0.12em] text-[#d7c0c6]"
-                      >
-                        {item.servico?.nome || 'Servico'}
-                      </span>
-                    ))
-                  ) : (
-                    <span className="text-sm text-[#8f7880]">Nenhum servico associado.</span>
-                  )}
-                </div>
-              </div>
-
-              <div className="mt-8 flex items-end justify-between border-t border-gray-200 dark:border-white/5 pt-6">
+        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+          <AnimatePresence mode="popLayout">
+            {filtrados.map((pacote) => (
+              <motion.article
+                layout
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.95 }}
+                key={pacote.id}
+                className="group relative flex flex-col justify-between rounded-2xl border border-black/[0.04] dark:border-white/[0.04] bg-white/60 dark:bg-white/[0.02] backdrop-blur-md p-6 shadow-sm transition-all hover:shadow-md hover:border-black/[0.08] dark:hover:border-white/[0.08]"
+              >
                 <div>
-                  <p className="text-[11px] font-semibold uppercase tracking-[0.26em] text-[#9f848d]">
-                    Valor
+                  <div className="mb-4 flex items-center justify-between">
+                    <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#d48997]/10 text-[#d48997]">
+                      <Package className="h-5 w-5" />
+                    </div>
+                    <div className="flex items-center gap-1.5 opacity-80 group-hover:opacity-100 transition-opacity">
+                      <button
+                        onClick={() => editarPacote(pacote)}
+                        className="rounded-lg border border-black/[0.04] dark:border-white/10 bg-white/80 dark:bg-[#18181b]/80 p-2 text-gray-400 hover:text-[#d48997] transition shadow-sm"
+                        title="Editar"
+                      >
+                        <Edit3 className="h-3.5 w-3.5" />
+                      </button>
+                      <button
+                        onClick={() => excluirPacote(pacote.id)}
+                        className="rounded-lg border border-black/[0.04] dark:border-white/10 bg-white/80 dark:bg-[#18181b]/80 p-2 text-gray-400 hover:text-red-500 transition shadow-sm"
+                        title="Excluir"
+                      >
+                        <Trash2 className="h-3.5 w-3.5" />
+                      </button>
+                    </div>
+                  </div>
+
+                  <h3 className="font-serif text-lg font-medium text-gray-900 dark:text-white group-hover:text-[#d48997] transition-colors">
+                    {pacote.nome}
+                  </h3>
+                  <p className="mt-2 text-xs text-gray-400 dark:text-gray-500 line-clamp-2 leading-relaxed">
+                    {pacote.descricao || 'Sem descrição cadastrada.'}
                   </p>
-                  <p className="mt-2 text-3xl font-semibold text-[#f7c1b6]">{moeda(pacote.preco)}</p>
+
+                  <div className="mt-4 border-t border-dashed border-black/[0.04] dark:border-white/[0.04] pt-4">
+                    <span className="text-[10px] font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wider block mb-2">
+                      Serviços inclusos
+                    </span>
+                    <div className="flex flex-wrap gap-1.5 max-h-[88px] overflow-y-auto pr-1">
+                      {(pacote.itens || []).length > 0 ? (
+                        pacote.itens.map((item) => (
+                          <span
+                            key={item.id}
+                            className="inline-flex items-center rounded-lg bg-gray-50 dark:bg-white/[0.03] border border-black/[0.03] dark:border-white/5 px-2 py-1 text-[10px] font-medium text-gray-600 dark:text-gray-300"
+                          >
+                            {item.servico?.nome || 'Serviço'}
+                          </span>
+                        ))
+                      ) : (
+                        <span className="text-[11px] text-gray-400 italic">Nenhum serviço associado.</span>
+                      )}
+                    </div>
+                  </div>
                 </div>
-                <div className="text-right">
-                  <p className="text-[11px] font-semibold uppercase tracking-[0.26em] text-[#9f848d]">
-                    Validade
-                  </p>
-                  <p className="mt-2 text-lg font-semibold text-[#faf7f6]">
-                    {pacote.validadeDias || 0} dias
-                  </p>
+
+                <div className="mt-6 border-t border-black/[0.03] dark:border-white/5 pt-4 flex items-end justify-between">
+                  <div>
+                    <span className="text-[9px] font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wider block">
+                      Preço
+                    </span>
+                    <span className="text-xl font-semibold text-gray-900 dark:text-white">
+                      {moeda(pacote.preco)}
+                    </span>
+                  </div>
+                  <div className="text-right">
+                    <span className="text-[9px] font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wider block">
+                      Validade
+                    </span>
+                    <span className="inline-flex items-center gap-1 text-xs font-medium text-gray-700 dark:text-gray-300">
+                      <Clock className="h-3.5 w-3.5 text-[#d48997]" />
+                      {pacote.validadeDias || 0} dias
+                    </span>
+                  </div>
                 </div>
-              </div>
-            </article>
-          ))}
+              </motion.article>
+            ))}
+          </AnimatePresence>
         </div>
       )}
 
+      {/* Modal */}
       <AnimatePresence>
-        {modalOpen ? (
-          <div className="fixed inset-0 z-[210] flex items-center justify-center overflow-y-auto overscroll-contain p-3 sm:p-6">
-            <motion.button
-              type="button"
+        {modalOpen && (
+          <div className="fixed inset-0 z-[210] flex items-center justify-center p-4">
+            <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              onClick={() => setModalOpen(false)}
-              className="absolute inset-0 bg-black/70 backdrop-blur-sm"
+              onClick={fecharModal}
+              className="absolute inset-0 bg-black/40 backdrop-blur-sm dark:bg-black/60"
             />
 
-            <motion.form
-              initial={{ opacity: 0, y: 18, scale: 0.98 }}
-              animate={{ opacity: 1, y: 0, scale: 1 }}
-              exit={{ opacity: 0, y: 18, scale: 0.98 }}
-              onSubmit={salvar}
-              className="relative z-10 flex max-h-[calc(100dvh-1.5rem)] w-full max-w-4xl flex-col overflow-hidden rounded-[2rem] border border-gray-200 dark:border-white/5 bg-[rgba(28,23,31,0.98)] shadow-[0_40px_120px_rgba(0,0,0,0.45)]"
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95, y: 10 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 10 }}
+              className="relative z-10 w-full max-w-3xl overflow-hidden rounded-2xl border border-black/[0.04] dark:border-white/[0.04] bg-white dark:bg-[#18181b] shadow-xl"
             >
-              <div className="mb-0 flex shrink-0 flex-col gap-4 border-b border-gray-200 px-4 py-4 dark:border-white/5 sm:flex-row sm:items-end sm:justify-between sm:px-6 sm:py-6 lg:px-8">
-                <div>
-                  <p className="text-[11px] font-semibold uppercase tracking-[0.3em] text-[#E29BA8]">
-                    Estrutura comercial
-                  </p>
-                  <h2 className="mt-3 font-['Playfair_Display'] text-2xl sm:text-4xl text-[#faf7f6]">
-                    {editing ? 'Editar pacote' : 'Novo pacote'}
-                  </h2>
-                </div>
-                <div className="text-sm leading-7 text-[#c7adb4] sm:max-w-sm">
-                  Escolha os servicos que entram no combo e defina um valor que faça sentido para a sua margem.
-                </div>
-              </div>
-
-              <div className="min-h-0 flex-1 overflow-y-auto px-4 pb-4 pt-4 custom-scrollbar sm:px-6 sm:pb-6 sm:pt-6 lg:px-8 lg:pb-8">
-                <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr),320px]">
-                <div className="space-y-5">
-                  <label className="block space-y-3">
-                    <span className="text-[11px] font-semibold uppercase tracking-[0.26em] text-[#c7adb4]">
-                      Nome do pacote
+              <form onSubmit={salvar} className="flex flex-col max-h-[85dvh]">
+                {/* Modal Header */}
+                <div className="flex items-center justify-between border-b border-black/[0.04] dark:border-white/5 px-6 py-4">
+                  <div>
+                    <span className="text-[9px] font-semibold uppercase tracking-wider text-[#d48997]">
+                      Formulário de Pacote
                     </span>
-                    <input
-                      value={form.nome}
-                      onChange={(e) => setForm((prev) => ({ ...prev, nome: e.target.value }))}
-                      required
-                      className="h-14 w-full rounded-[20px] border border-gray-200 dark:border-white/5 bg-[rgba(20,16,22,0.66)] px-5 text-base text-[#faf7f6] outline-none placeholder:text-[#806871] focus:border-[rgba(233,155,168,0.28)]"
-                      placeholder="Ex.: Ritual glow premium"
-                    />
-                  </label>
+                    <h2 className="mt-0.5 font-serif text-lg font-normal text-gray-900 dark:text-white">
+                      {editing ? 'Editar Pacote' : 'Novo Pacote'}
+                    </h2>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setModalOpen(false)}
+                    className="rounded-full border border-black/[0.04] dark:border-white/10 p-2 text-gray-400 hover:text-red-500 transition shadow-sm"
+                  >
+                    <X className="h-4 w-4" />
+                  </button>
+                </div>
 
-                  <label className="block space-y-3">
-                    <span className="text-[11px] font-semibold uppercase tracking-[0.26em] text-[#c7adb4]">
-                      Descricao
-                    </span>
-                    <textarea
-                      value={form.descricao}
-                      onChange={(e) => setForm((prev) => ({ ...prev, descricao: e.target.value }))}
-                      rows={5}
-                      className="w-full rounded-[24px] border border-gray-200 dark:border-white/5 bg-[rgba(20,16,22,0.66)] px-5 py-4 text-base leading-7 text-[#faf7f6] outline-none placeholder:text-[#806871] focus:border-[rgba(233,155,168,0.28)]"
-                      placeholder="Descreva o posicionamento e os beneficios percebidos pela cliente."
-                    />
-                  </label>
+                {/* Modal Body */}
+                <div className="overflow-y-auto px-6 py-6 space-y-5">
+                  <div className="grid gap-5 md:grid-cols-2">
+                    <div className="space-y-4 md:col-span-2">
+                      <div>
+                        <span className="mb-2 block text-[10px] font-medium text-gray-400 dark:text-gray-500">
+                          Nome do Pacote
+                        </span>
+                        <input
+                          value={form.nome}
+                          onChange={(e) => setForm((prev) => ({ ...prev, nome: e.target.value }))}
+                          required
+                          className="h-11 w-full rounded-xl border border-black/[0.08] dark:border-white/10 bg-white dark:bg-[#111113] px-4 text-sm text-gray-900 dark:text-white outline-none focus:border-[#d48997] focus:ring-2 focus:ring-[#d48997]/10 transition-all placeholder:text-gray-400"
+                          placeholder="Ex: Combo Noiva Bronze, Pacote Massoterapia..."
+                        />
+                      </div>
 
-                  <div className="grid gap-5 sm:grid-cols-2">
-                    <label className="block space-y-3">
-                      <span className="text-[11px] font-semibold uppercase tracking-[0.26em] text-[#c7adb4]">
-                        Preco
+                      <div>
+                        <span className="mb-2 block text-[10px] font-medium text-gray-400 dark:text-gray-500">
+                          Descrição
+                        </span>
+                        <textarea
+                          value={form.descricao}
+                          onChange={(e) => setForm((prev) => ({ ...prev, descricao: e.target.value }))}
+                          rows={3}
+                          className="w-full rounded-xl border border-black/[0.08] dark:border-white/10 bg-white dark:bg-[#111113] p-4 text-sm text-gray-900 dark:text-white outline-none focus:border-[#d48997] focus:ring-2 focus:ring-[#d48997]/10 transition-all placeholder:text-gray-400 resize-none"
+                          placeholder="Descreva detalhes ou termos especiais do pacote..."
+                        />
+                      </div>
+                    </div>
+
+                    <div>
+                      <span className="mb-2 block text-[10px] font-medium text-gray-400 dark:text-gray-500">
+                        Preço de Venda (R$)
                       </span>
-                      <input
-                        type="number"
-                        min="0"
-                        step="0.01"
-                        value={form.preco}
-                        onChange={(e) => setForm((prev) => ({ ...prev, preco: e.target.value }))}
-                        required
-                        className="h-14 w-full rounded-[20px] border border-gray-200 dark:border-white/5 bg-[rgba(20,16,22,0.66)] px-5 text-base text-[#faf7f6] outline-none placeholder:text-[#806871] focus:border-[rgba(233,155,168,0.28)]"
-                      />
-                    </label>
+                      <div className="relative">
+                        <DollarSign className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
+                        <input
+                          type="number"
+                          min="0"
+                          step="0.01"
+                          value={form.preco}
+                          onChange={(e) => setForm((prev) => ({ ...prev, preco: e.target.value }))}
+                          required
+                          className="h-11 w-full rounded-xl border border-black/[0.08] dark:border-white/10 bg-white dark:bg-[#111113] pl-9 pr-4 text-sm text-gray-900 dark:text-white outline-none focus:border-[#d48997] focus:ring-2 focus:ring-[#d48997]/10 transition-all"
+                          placeholder="0,00"
+                        />
+                      </div>
+                    </div>
 
-                    <label className="block space-y-3">
-                      <span className="text-[11px] font-semibold uppercase tracking-[0.26em] text-[#c7adb4]">
-                        Validade em dias
+                    <div>
+                      <span className="mb-2 block text-[10px] font-medium text-gray-400 dark:text-gray-500">
+                        Validade (dias)
                       </span>
                       <input
                         type="number"
@@ -319,85 +377,78 @@ export default function Pacotes() {
                           }))
                         }
                         required
-                        className="h-14 w-full rounded-[20px] border border-gray-200 dark:border-white/5 bg-[rgba(20,16,22,0.66)] px-5 text-base text-[#faf7f6] outline-none placeholder:text-[#806871] focus:border-[rgba(233,155,168,0.28)]"
+                        className="h-11 w-full rounded-xl border border-black/[0.08] dark:border-white/10 bg-white dark:bg-[#111113] px-4 text-sm text-gray-900 dark:text-white outline-none focus:border-[#d48997] focus:ring-2 focus:ring-[#d48997]/10 transition-all"
                       />
-                    </label>
-                  </div>
-                </div>
-
-                <div className="rounded-[28px] border border-gray-200 dark:border-white/5 bg-[rgba(41,31,37,0.76)] p-5">
-                  <p className="text-[11px] font-semibold uppercase tracking-[0.28em] text-[#E29BA8]">
-                    Servicos do pacote
-                  </p>
-                  <div className="mt-4 max-h-[320px] space-y-2 overflow-y-auto pr-1 custom-scrollbar">
-                    {servicos.map((servico) => {
-                      const active = form.servicosIds.includes(servico.id);
-                      return (
-                        <button
-                          key={servico.id}
-                          type="button"
-                          onClick={() => toggleServico(servico.id)}
-                          className={`flex w-full items-center justify-between rounded-[18px] border px-4 py-3 text-left transition ${
-                            active
-                              ? 'border-[rgba(233,155,168,0.28)] bg-[rgba(233,155,168,0.12)] text-[#faf7f6]'
-                              : 'border-gray-200 dark:border-white/5 bg-[rgba(255,255,255,0.03)] text-[#c7adb4] hover:border-[rgba(233,155,168,0.18)]'
-                          }`}
-                        >
-                          <div>
-                            <p className="text-sm font-semibold">{servico.nome}</p>
-                            <p className="mt-1 text-xs uppercase tracking-[0.16em] text-[#8f7880]">
-                              {moeda(servico.preco)}
-                            </p>
-                          </div>
-                          {active ? <Check className="h-4 w-4 text-[#f7c1b6]" /> : null}
-                        </button>
-                      );
-                    })}
+                    </div>
                   </div>
 
-                  <div className="mt-5 rounded-[22px] border border-gray-200 dark:border-white/5 bg-[rgba(20,16,22,0.54)] p-4">
-                    <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-[#9f848d]">
-                      Selecionados
-                    </p>
-                    <div className="mt-3 flex flex-wrap gap-2">
-                      {resumoServicos.length ? (
-                        resumoServicos.map((nome) => (
-                          <span
-                            key={nome}
-                            className="rounded-full border border-gray-200 dark:border-white/5 bg-[rgba(255,255,255,0.04)] px-3 py-2 text-[11px] font-semibold uppercase tracking-[0.14em] text-[#d7c0c6]"
+                  <div className="border-t border-black/[0.04] dark:border-white/5 pt-5">
+                    <span className="mb-3 block text-[10px] font-medium text-gray-400 dark:text-gray-500">
+                      Vincular Serviços ao Pacote
+                    </span>
+
+                    <div className="grid gap-2.5 sm:grid-cols-2 max-h-[180px] overflow-y-auto pr-1">
+                      {servicos.map((servico) => {
+                        const active = form.servicosIds.includes(servico.id);
+                        return (
+                          <button
+                            key={servico.id}
+                            type="button"
+                            onClick={() => toggleServico(servico.id)}
+                            className={cn(
+                              'flex w-full items-center justify-between rounded-xl border p-3 text-left transition-all',
+                              active
+                                ? 'border-[#d48997] bg-[#d48997]/5 text-gray-900 dark:text-white'
+                                : 'border-black/[0.06] dark:border-white/5 bg-gray-50/50 dark:bg-white/[0.01] hover:border-black/[0.12] dark:hover:border-white/[0.12]'
+                            )}
                           >
-                            {nome}
-                          </span>
-                        ))
-                      ) : (
-                        <span className="text-sm text-[#8f7880]">Nenhum servico selecionado.</span>
-                      )}
+                            <div className="min-w-0 pr-2">
+                              <p className="text-xs font-semibold truncate text-gray-800 dark:text-gray-200">
+                                {servico.nome}
+                              </p>
+                              <p className="mt-0.5 text-[10px] text-gray-400 dark:text-gray-500">
+                                {moeda(servico.preco)}
+                              </p>
+                            </div>
+                            <div
+                              className={cn(
+                                'flex h-5 w-5 items-center justify-center rounded-md border transition-all',
+                                active
+                                  ? 'border-[#d48997] bg-[#d48997] text-white'
+                                  : 'border-black/20 dark:border-white/20 bg-white dark:bg-transparent'
+                              )}
+                            >
+                              {active && <Check className="h-3 w-3 stroke-[3]" />}
+                            </div>
+                          </button>
+                        );
+                      })}
                     </div>
                   </div>
                 </div>
-                </div>
-              </div>
 
-              <div className="sticky bottom-0 mt-0 flex shrink-0 flex-col gap-3 border-t border-gray-200 bg-[rgba(28,23,31,0.98)] px-4 py-4 backdrop-blur dark:border-white/5 sm:px-6 sm:flex-row sm:justify-end lg:px-8">
-                <button
-                  type="button"
-                  onClick={() => setModalOpen(false)}
-                  className="inline-flex min-h-[52px] items-center justify-center rounded-full border border-gray-200 dark:border-white/5 px-7 text-sm font-semibold uppercase tracking-[0.22em] text-[#c7adb4] transition hover:border-[rgba(233,155,168,0.18)] hover:text-[#faf7f6]"
-                >
-                  Cancelar
-                </button>
-                <button
-                  type="submit"
-                  disabled={saving}
-                  className="inline-flex min-h-[52px] items-center justify-center rounded-full bg-gradient-to-r from-[#E29BA8] to-[#d48997] text-[#111116] px-7 text-sm font-semibold uppercase tracking-[0.22em] text-[#20191f] transition hover:brightness-105 disabled:cursor-not-allowed disabled:opacity-70"
-                >
-                  {saving ? 'Salvando...' : editing ? 'Atualizar pacote' : 'Criar pacote'}
-                </button>
-              </div>
-            </motion.form>
+                {/* Modal Footer */}
+                <div className="flex items-center justify-end gap-3 border-t border-black/[0.04] dark:border-white/5 bg-gray-50/50 dark:bg-white/[0.01] px-6 py-4">
+                  <button
+                    type="button"
+                    onClick={() => setModalOpen(false)}
+                    className="h-10 rounded-xl border border-black/[0.08] dark:border-white/10 px-4 text-xs font-semibold text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 transition"
+                  >
+                    Cancelar
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={saving}
+                    className="h-10 rounded-xl bg-[#d48997] hover:bg-[#c97b8a] px-5 text-xs font-semibold text-white transition disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    {saving ? 'Salvando...' : editing ? 'Salvar Alterações' : 'Criar Pacote'}
+                  </button>
+                </div>
+              </form>
+            </motion.div>
           </div>
-        ) : null}
+        )}
       </AnimatePresence>
-    </div>
+    </motion.div>
   );
 }

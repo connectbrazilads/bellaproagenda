@@ -19,6 +19,7 @@ import {
   Users,
   Zap,
   MessageSquare,
+  X,
 } from 'lucide-react';
 import {
   connectWhatsapp,
@@ -130,71 +131,75 @@ export default function Configuracoes() {
   return (
     <motion.div
       ref={pageRef}
-      initial={{ opacity: 0, y: 16 }}
+      initial={{ opacity: 0, y: 15 }}
       animate={{ opacity: 1, y: 0 }}
-      className="max-w-7xl mx-auto space-y-8 lg:space-y-10 pb-20"
+      className="mx-auto max-w-6xl space-y-8 pb-20 px-4"
     >
-      <header className="flex flex-col gap-5 border-b border-gray-200 dark:border-white/5 pb-8">
-        <div className="flex items-center gap-3">
-          <span className="h-2 w-2 rounded-full bg-[#e29ba8]" />
-          <p className="brand-kicker">Centro de comando</p>
-        </div>
-        <div className={cn('flex flex-col gap-4', showRail && 'lg:flex-row lg:items-end lg:justify-between')}>
-          <div>
-            <h1 className="text-3xl sm:text-5xl font-brand-display text-gray-900 dark:text-white leading-none">
-              Configurações <span className="brand-text-gradient">BellaPro</span>
-            </h1>
-            <p className="mt-4 max-w-2xl text-base text-white/62">
-              Ajuste a operação da unidade, os acessos da equipe e a camada de automação com uma linguagem visual mais consistente.
-            </p>
+      {/* Header */}
+      <header className="flex flex-col gap-4 border-b border-black/[0.03] dark:border-white/[0.03] pb-6 lg:flex-row lg:items-end lg:justify-between">
+        <div>
+          <div className="flex items-center gap-2.5 mb-2.5">
+            <Store className="h-4 w-4 text-[#d48997]" />
+            <span className="text-[10px] font-semibold text-[#d48997] tracking-wide">Configurações Gerais</span>
           </div>
+          <h1 className="text-2xl sm:text-3xl font-serif font-normal text-gray-900 dark:text-white tracking-wide leading-tight mb-2">
+            Painel de <span className="text-[#d48997]">Configurações</span>
+          </h1>
+          <p className="text-sm text-gray-400 dark:text-gray-500 leading-relaxed max-w-xl">
+            Ajuste a identidade visual da sua marca, as permissões da equipe de colaboradores e controle os logs do sistema.
+          </p>
         </div>
       </header>
 
-      <div className={cn('grid gap-4 md:p-8', showRail && 'lg:grid-cols-[280px_minmax(0,1fr)]')}>
-        <aside className={cn(showRail ? 'space-y-3' : 'overflow-x-auto custom-scrollbar pb-2')}>
-          <div className={cn(showRail ? 'space-y-3' : 'flex min-w-max gap-3')}>
-            {TABS.map((tab) => {
-              const Icon = tab.icon;
-              const active = activeTab === tab.id;
-              return (
-                <button
-                  key={tab.id}
-                  type="button"
-                  onClick={() => setActiveTab(tab.id)}
-                  className={cn(
-                    'flex items-center justify-between rounded-[1.8rem] border px-5 py-4 text-left transition-all',
-                    showRail ? 'w-full' : 'min-w-[220px] flex-shrink-0',
-                    active
-                      ? 'border-[#e29ba8]/40 bg-[#2f242d] text-white shadow-[0_22px_50px_-28px_rgba(226,155,168,0.55)]'
-                      : 'border-gray-200 dark:border-white/5 bg-white/[0.03] text-white/68 hover:border-[#e29ba8]/20 hover:bg-white/[0.045]'
-                  )}
-                >
-                  <div className="flex items-center gap-4">
-                    <span
-                      className={cn(
-                        'flex h-11 w-11 items-center justify-center rounded-2xl',
-                        active ? 'bg-[#e29ba8] text-[#1a1a1f]' : 'bg-white/[0.06] text-[#efbcc4]'
-                      )}
-                    >
-                      <Icon size={18} />
-                    </span>
-                    <span className="text-[11px] font-black uppercase tracking-[0.24em]">{tab.label}</span>
-                  </div>
-                  <ChevronRight size={16} className={active ? 'text-[#efb9c2]' : 'text-gray-400 dark:text-white/24'} />
-                </button>
-              );
-            })}
-          </div>
+      {/* Main Grid */}
+      <div className={cn('grid gap-8', showRail ? 'lg:grid-cols-[260px,1fr]' : 'grid-cols-1')}>
+        {/* Navigation Tabs */}
+        <aside className={cn(showRail ? 'space-y-2.5' : 'flex items-center gap-2 overflow-x-auto hide-scrollbar pb-1')}>
+          {TABS.map((tab) => {
+            const Icon = tab.icon;
+            const active = activeTab === tab.id;
+            return (
+              <button
+                key={tab.id}
+                type="button"
+                onClick={() => setActiveTab(tab.id)}
+                className={cn(
+                  'flex items-center gap-3 rounded-xl border p-3.5 text-left transition-all',
+                  showRail ? 'w-full justify-between' : 'whitespace-nowrap',
+                  active
+                    ? 'border-[#d48997] bg-[#d48997]/5 text-[#d48997] shadow-sm'
+                    : 'border-black/[0.04] dark:border-white/[0.04] bg-white/60 dark:bg-white/[0.02] backdrop-blur-md text-gray-600 dark:text-gray-400 hover:border-black/[0.08] dark:hover:border-white/[0.08]'
+                )}
+              >
+                <div className="flex items-center gap-3">
+                  <span className={cn('flex h-8 w-8 items-center justify-center rounded-lg', active ? 'bg-[#d48997]/10 text-[#d48997]' : 'bg-black/[0.04] dark:bg-white/5')}>
+                    <Icon size={16} />
+                  </span>
+                  <span className="text-xs font-semibold">{tab.label}</span>
+                </div>
+                {showRail && (
+                  <ChevronRight
+                    size={14}
+                    className={cn(
+                      'text-gray-400 dark:text-gray-600 transition-transform',
+                      active && 'text-[#d48997] translate-x-0.5'
+                    )}
+                  />
+                )}
+              </button>
+            );
+          })}
         </aside>
 
-        <main>
+        {/* Content Area */}
+        <main className="min-w-0">
           <AnimatePresence mode="wait">
             <motion.div
               key={activeTab}
-              initial={{ opacity: 0, y: 12 }}
+              initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -12 }}
+              exit={{ opacity: 0, y: -10 }}
+              transition={{ duration: 0.15 }}
             >
               {activeTab === 'salao' && <SecaoSalao />}
               {activeTab === 'branding' && <SecaoBranding />}
@@ -260,67 +265,69 @@ function SecaoSalao() {
   }
 
   return (
-    <SectionCard title="Informações da unidade" icon={<Store size={18} />}>
-      <form onSubmit={handleSubmit} className="space-y-8">
-        <div className="grid gap-4 sm:p-6 md:grid-cols-2">
+    <SectionCard title="Informações da Unidade" icon={<Store size={18} />}>
+      <form onSubmit={handleSubmit} className="space-y-6">
+        <div className="grid gap-5 md:grid-cols-2">
           <Field
-            label="Nome do salão"
+            label="Nome do Salão"
             value={salao.nome}
             onChange={(value) => setSalao((prev) => ({ ...prev, nome: value }))}
-            icon={<Store size={15} />}
+            icon={<Store size={14} />}
           />
           <Field
-            label="Telefone de contato"
+            label="Telefone de Contato"
             value={salao.telefone}
             onChange={(value) => setSalao((prev) => ({ ...prev, telefone: value }))}
-            icon={<Smartphone size={15} />}
+            icon={<Smartphone size={14} />}
           />
         </div>
 
         <Field
-          label="Endereço completo"
+          label="Endereço Completo"
           value={salao.endereco}
           onChange={(value) => setSalao((prev) => ({ ...prev, endereco: value }))}
-          icon={<Globe size={15} />}
+          icon={<Globe size={14} />}
         />
 
-        <Field
-          label="WhatsApp Business"
-          value={salao.whatsapp}
-          onChange={(value) => setSalao((prev) => ({ ...prev, whatsapp: value }))}
-          placeholder="Ex: 5511999999999"
-          icon={<Zap size={15} />}
-        />
+        <div className="grid gap-5 md:grid-cols-2">
+          <Field
+            label="WhatsApp Business"
+            value={salao.whatsapp}
+            onChange={(value) => setSalao((prev) => ({ ...prev, whatsapp: value }))}
+            placeholder="Ex: 5511999999999"
+            icon={<Zap size={14} />}
+          />
 
-        <Field
-          label="WhatsApp para alertas de agendamento"
-          value={salao.whatsappAgendamentos}
-          onChange={(value) => setSalao((prev) => ({ ...prev, whatsappAgendamentos: value }))}
-          placeholder="Ex: 5511999999999"
-          helper="Se ficar vazio, o sistema usa o WhatsApp Business principal."
-          icon={<MessageSquare size={15} />}
-        />
+          <Field
+            label="WhatsApp para Alertas de Agendamento"
+            value={salao.whatsappAgendamentos}
+            onChange={(value) => setSalao((prev) => ({ ...prev, whatsappAgendamentos: value }))}
+            placeholder="Ex: 5511999999999"
+            helper="Se mantido em branco, o sistema utilizará o número principal."
+            icon={<MessageSquare size={14} />}
+          />
+        </div>
 
-        <div className="rounded-[2rem] border border-dashed border-[#e29ba8]/16 bg-black/15 p-4 sm:p-6">
+        <div className="rounded-xl border border-dashed border-black/[0.08] dark:border-white/[0.08] p-4 bg-gray-50/50 dark:bg-white/[0.01]">
           <ImageUpload
-            label="Logotipo da unidade"
+            label="Logotipo da Unidade"
             value={salao.logoUrl}
             onChange={(value) => setSalao((prev) => ({ ...prev, logoUrl: value }))}
           />
         </div>
 
-        <div className="flex flex-col gap-4 border-t border-gray-200 dark:border-white/5 pt-6 lg:flex-row lg:items-center lg:justify-between">
+        <div className="flex flex-col gap-4 border-t border-black/[0.03] dark:border-white/5 pt-5 sm:flex-row sm:items-center sm:justify-between">
           <InlineMessage text={message} />
-          <div className="flex flex-wrap gap-3">
+          <div className="flex flex-wrap items-center gap-2.5">
             <button
               type="button"
               onClick={handleBackup}
               disabled={downloading}
-              className="rounded-[1.3rem] border border-[#e29ba8]/20 bg-white/[0.04] px-5 py-3 text-[10px] font-black uppercase tracking-[0.22em] text-white/78 transition hover:border-[#e29ba8]/32 hover:text-gray-900 dark:text-white disabled:opacity-50"
+              className="inline-flex h-10 items-center justify-center rounded-xl border border-black/[0.08] dark:border-white/10 bg-white dark:bg-[#18181b] px-4 text-xs font-semibold text-gray-600 dark:text-gray-300 hover:text-[#d48997] hover:border-[#d48997] transition disabled:opacity-55"
             >
-              {downloading ? 'Gerando backup...' : 'Exportar backup'}
+              {downloading ? 'Gerando backup...' : 'Exportar Backup'}
             </button>
-            <PrimaryButton type="submit" loading={saving} label="Salvar unidade" />
+            <PrimaryButton type="submit" loading={saving} label="Salvar Dados" />
           </div>
         </div>
       </form>
@@ -356,30 +363,30 @@ function SecaoBranding() {
   }
 
   return (
-    <SectionCard title="Branding e atmosfera" icon={<Palette size={18} />}>
-      <form onSubmit={handleSubmit} className="space-y-8">
-        <div className="grid gap-4 sm:p-6 md:grid-cols-2">
+    <SectionCard title="Branding & Atmosfera" icon={<Palette size={18} />}>
+      <form onSubmit={handleSubmit} className="space-y-6">
+        <div className="grid gap-5 md:grid-cols-2">
           <ColorField
-            label="Cor principal"
+            label="Cor Principal (Accent)"
             value={salao.corPrimaria || '#e29ba8'}
             onChange={(value) => setSalao((prev) => ({ ...prev, corPrimaria: value }))}
           />
           <ColorField
-            label="Cor de suporte"
+            label="Cor de Suporte"
             value={salao.corSecundaria || '#3b2a35'}
             onChange={(value) => setSalao((prev) => ({ ...prev, corSecundaria: value }))}
           />
         </div>
 
         <Field
-          label="Headline do banner"
+          label="Headline do Banner da Agenda"
           value={salao.bannerTexto}
           onChange={(value) => setSalao((prev) => ({ ...prev, bannerTexto: value }))}
-          icon={<ImageIcon size={15} />}
-          placeholder="Ex: Gestão premium para salões de beleza"
+          icon={<ImageIcon size={14} />}
+          placeholder="Ex: Agende seu momento de cuidado e sofisticação."
         />
 
-        <div className="grid gap-4 md:grid-cols-2">
+        <div className="grid gap-4 sm:grid-cols-2">
           {['dark', 'light'].map((theme) => {
             const active = salao.tema === theme;
             return (
@@ -388,36 +395,36 @@ function SecaoBranding() {
                 type="button"
                 onClick={() => setSalao((prev) => ({ ...prev, tema: theme }))}
                 className={cn(
-                  'rounded-[2rem] border p-4 sm:p-6 text-left transition-all',
+                  'rounded-xl border p-5 text-left transition-all',
                   active
-                    ? 'border-[#e29ba8]/36 bg-[#2f242d] shadow-[0_20px_50px_-32px_rgba(226,155,168,0.55)]'
-                    : 'border-gray-200 dark:border-white/5 bg-white/[0.03] hover:border-[#e29ba8]/20'
+                    ? 'border-[#d48997] bg-[#d48997]/5 shadow-sm'
+                    : 'border-black/[0.04] dark:border-white/[0.04] bg-white/60 dark:bg-white/[0.02] hover:border-black/[0.08] dark:hover:border-white/[0.08]'
                 )}
               >
-                <p className="text-[10px] font-black uppercase tracking-[0.26em] text-[#efbac2]">
-                  {theme === 'dark' ? 'Tema noturno' : 'Tema claro'}
-                </p>
-                <p className="mt-3 text-sm text-gray-600 dark:text-white/70">
+                <span className="text-[10px] font-semibold uppercase tracking-wider text-[#d48997]">
+                  {theme === 'dark' ? 'Tema Escuro (Premium)' : 'Tema Claro (Editorial)'}
+                </span>
+                <p className="mt-2 text-xs text-gray-400 dark:text-gray-500 leading-relaxed">
                   {theme === 'dark'
-                    ? 'Foco em contraste elegante, fundo profundo e atmosfera premium.'
-                    : 'Leitura mais leve com superfícies claras e acabamento editorial.'}
+                    ? 'Superfícies profundas e escuras com contrastes suaves de alto requinte.'
+                    : 'Superfícies limpas e brancas que evocam bem-estar e sofisticação natural.'}
                 </p>
               </button>
             );
           })}
         </div>
 
-        <div className="rounded-[2rem] border border-dashed border-[#e29ba8]/16 bg-black/15 p-4 sm:p-6">
+        <div className="rounded-xl border border-dashed border-black/[0.08] dark:border-white/[0.08] p-4 bg-gray-50/50 dark:bg-white/[0.01]">
           <ImageUpload
-            label="Imagem de hero"
+            label="Banner Hero (Imagem Principal)"
             value={salao.bannerUrl}
             onChange={(value) => setSalao((prev) => ({ ...prev, bannerUrl: value }))}
           />
         </div>
 
-        <div className="flex flex-col gap-4 border-t border-gray-200 dark:border-white/5 pt-6 lg:flex-row lg:items-center lg:justify-between">
+        <div className="flex flex-col gap-4 border-t border-black/[0.03] dark:border-white/5 pt-5 sm:flex-row sm:items-center sm:justify-between">
           <InlineMessage text={message} />
-          <PrimaryButton type="submit" loading={saving} label="Salvar branding" />
+          <PrimaryButton type="submit" loading={saving} label="Salvar Branding" />
         </div>
       </form>
     </SectionCard>
@@ -431,7 +438,6 @@ function SecaoWhatsapp() {
   const [disconnecting, setDisconnecting] = useState(false);
   const [message, setMessage] = useState('');
   const timerRef = useRef(null);
-
   const [salao, setSalao] = useState(null);
 
   useEffect(() => {
@@ -511,77 +517,75 @@ function SecaoWhatsapp() {
 
   const statusBadge = useMemo(() => {
     const map = {
-      not_configured: { label: 'Aguardando ativacao', className: 'bg-white/6 text-gray-600 dark:text-white/60' },
-      not_created: { label: 'Pronto para conectar', className: 'bg-amber-500/18 text-amber-200' },
-      open: { label: 'Conectado', className: 'bg-emerald-500/16 text-emerald-300' },
-      connecting: { label: 'Aguardando leitura', className: 'bg-amber-500/18 text-amber-200' },
-      close: { label: 'Desconectado', className: 'bg-red-500/14 text-red-200' },
-      error: { label: 'Falha de conexão', className: 'bg-red-500/14 text-red-200' },
+      not_configured: { label: 'Aguardando Ativação', className: 'bg-black/[0.04] dark:bg-white/[0.04] text-gray-500' },
+      not_created: { label: 'Pronto para Conectar', className: 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20' },
+      open: { label: 'WhatsApp Conectado', className: 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20' },
+      connecting: { label: 'Aguardando Leitura QR Code', className: 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20' },
+      close: { label: 'WhatsApp Desconectado', className: 'bg-red-500/10 text-red-600 dark:text-red-400 border border-red-500/20' },
+      error: { label: 'Falha de Conexão', className: 'bg-red-500/10 text-red-600 dark:text-red-400 border border-red-500/20' },
     };
     return map[status] || map.not_configured;
   }, [status]);
 
   return (
-    <SectionCard title="Integração WhatsApp e IA" icon={<Bot size={18} />}>
+    <SectionCard title="Integração WhatsApp & IA" icon={<Bot size={18} />}>
       {(!salao?.moduloWhatsapp || !salao?.moduloIA) && (
-        <div className="mb-8 rounded-[2rem] border border-[#e29ba8]/20 bg-[#2f242d] p-8 text-center shadow-[0_20px_50px_-32px_rgba(226,155,168,0.55)]">
-          <Bot size={40} className="mx-auto text-[#efbac2] mb-4" />
-          <h3 className="text-xl font-brand-display text-white mb-2">Módulo Inteligente Bloqueado</h3>
-          <p className="text-sm text-white/70 max-w-md mx-auto">
-            A automação de WhatsApp e a Inteligência Artificial não estão ativas no seu plano atual. 
-            Entre em contato com o nosso suporte para realizar um upgrade e liberar o assistente virtual 24/7.
+        <div className="mb-6 rounded-2xl border border-[#d48997]/25 bg-gradient-to-br from-[#d48997]/5 to-transparent p-6 text-center shadow-sm">
+          <Bot size={32} className="mx-auto text-[#d48997] mb-3" />
+          <h3 className="font-serif text-base font-semibold text-gray-900 dark:text-white mb-1">Módulo Automação Bloqueado</h3>
+          <p className="text-xs text-gray-400 dark:text-gray-500 max-w-sm mx-auto leading-relaxed">
+            As notificações por WhatsApp e respostas com Inteligência Artificial estão inativas no seu plano. Entre em contato para assinar o módulo BellaPro Automação.
           </p>
         </div>
       )}
 
       {salao?.moduloWhatsapp && (
-        <>
-          <div className="mb-8 rounded-[2rem] border border-gray-200 dark:border-white/5 bg-white/[0.03] p-4 sm:p-6">
-            <p className="text-[10px] font-black uppercase tracking-[0.24em] text-[#efbac2]">Conexao simplificada</p>
-            <h3 className="mt-3 text-xl font-brand-display text-white">Conecte seu WhatsApp em poucos segundos</h3>
-            <p className="mt-3 max-w-2xl text-sm leading-7 text-white/70">
-              Para usar o inbox e as automacoes, basta clicar em <strong className="text-white">Conectar WhatsApp</strong> e ler o QR Code com o aparelho da unidade.
-              Toda a configuracao tecnica da integracao ja fica sob nossa gestao e nao precisa ser preenchida por voce.
+        <div className="space-y-6">
+          <div className="rounded-xl border border-black/[0.04] dark:border-white/5 bg-gray-50/50 dark:bg-white/[0.01] p-5">
+            <span className="text-[9px] font-semibold uppercase tracking-wider text-[#d48997]">Ativação Simples</span>
+            <h4 className="mt-1 font-semibold text-sm text-gray-900 dark:text-white">Conexão em poucos segundos</h4>
+            <p className="mt-1.5 text-xs text-gray-400 dark:text-gray-500 leading-relaxed">
+              Clique no botão de conexão e faça a leitura do QR Code com o aplicativo WhatsApp de sua empresa (ou aparelhos adicionais). A inteligência do sistema assume o disparo de confirmações imediatamente.
             </p>
           </div>
 
-          <div className="mb-8 flex flex-col gap-4 rounded-[2rem] border border-gray-200 dark:border-white/5 bg-white/[0.03] p-4 sm:p-6 md:flex-row md:items-center md:justify-between">
+          <div className="flex flex-col gap-4 rounded-xl border border-black/[0.04] dark:border-white/5 bg-gray-50/50 dark:bg-white/[0.01] p-5 sm:flex-row sm:items-center sm:justify-between">
             <div>
-              <p className="text-[10px] font-black uppercase tracking-[0.24em] text-[#efbac2]">Estado da conexão</p>
-              <div className={cn('mt-3 inline-flex rounded-full px-4 py-2 text-[10px] font-black uppercase tracking-[0.18em]', statusBadge.className)}>
+              <span className="text-[9px] font-semibold uppercase tracking-wider text-gray-400 dark:text-gray-500">Status do Serviço</span>
+              <div className={cn('mt-1.5 inline-flex rounded-lg px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wider', statusBadge.className)}>
                 {statusBadge.label}
               </div>
             </div>
-            <div className="flex flex-wrap gap-3">
+            <div className="flex flex-wrap gap-2.5">
               {status === 'open' ? (
                 <button
                   type="button"
                   onClick={handleDisconnect}
                   disabled={disconnecting}
-                  className="rounded-[1.3rem] border border-red-300/20 bg-red-400/10 px-5 py-3 text-[10px] font-black uppercase tracking-[0.22em] text-red-200 transition hover:bg-red-400/14 disabled:opacity-50"
+                  className="inline-flex h-10 items-center justify-center rounded-xl bg-red-500/10 hover:bg-red-500 hover:text-white text-red-500 px-4 text-xs font-semibold transition disabled:opacity-50"
                 >
-                  {disconnecting ? 'Desconectando...' : 'Desconectar'}
+                  {disconnecting ? 'Desconectando...' : 'Desconectar Dispositivo'}
                 </button>
               ) : (
                 <PrimaryButton
                   type="button"
                   onClick={handleConnect}
                   loading={connecting}
-                  label="Conectar WhatsApp"
+                  label="Conectar Celular"
                 />
               )}
             </div>
           </div>
 
           {status === 'connecting' && qr && (
-            <div className="mb-8 rounded-[2rem] border border-[#e29ba8]/14 bg-black/24 p-4 md:p-8 text-center">
-              <p className="text-[10px] font-black uppercase tracking-[0.24em] text-[#efbac2]">Leia o QR Code no aparelho</p>
-              <img src={qr} alt="QR Code do WhatsApp" className="mx-auto mt-5 w-56 rounded-[1.6rem] bg-white p-4" />
+            <div className="rounded-xl border border-black/[0.04] dark:border-white/5 bg-white dark:bg-[#111113] p-6 text-center space-y-3">
+              <span className="text-[10px] font-semibold uppercase tracking-wider text-[#d48997]">Abra o WhatsApp &gt; Dispositivos Conectados</span>
+              <img src={qr} alt="QR Code WhatsApp" className="mx-auto w-48 rounded-xl bg-white p-3 border border-black/10" />
             </div>
           )}
           
           <InlineMessage text={message} />
-        </>
+        </div>
       )}
     </SectionCard>
   );
@@ -679,7 +683,7 @@ function SecaoUsuarios() {
   }
 
   async function handleDelete(id) {
-    if (!window.confirm('Deseja remover este acesso?')) return;
+    if (!window.confirm('Deseja remover este acesso de login?')) return;
     try {
       await deleteUsuario(id);
       if (editingUserId === id) {
@@ -692,137 +696,137 @@ function SecaoUsuarios() {
   }
 
   return (
-    <div className="space-y-8">
-      <SectionCard title={editingUserId ? 'Editar acesso' : 'Gestão de acessos'} icon={<Users size={18} />}>
-        <form onSubmit={handleSubmit} className="space-y-8">
-          <div className="grid gap-4 sm:p-6 md:grid-cols-2">
+    <div className="space-y-6">
+      <SectionCard title={editingUserId ? 'Editar Acesso de Login' : 'Cadastrar Novo Login'} icon={<Users size={18} />}>
+        <form onSubmit={handleSubmit} className="space-y-6">
+          <div className="grid gap-5 md:grid-cols-2">
             <Field
-              label="Nome completo"
+              label="Nome Completo"
               value={form.nome}
               onChange={(value) => setForm((prev) => ({ ...prev, nome: value }))}
-              icon={<User size={15} />}
+              icon={<User size={14} />}
             />
             <Field
-              label="E-mail de login"
+              label="E-mail de Login"
               value={form.email}
               onChange={(value) => setForm((prev) => ({ ...prev, email: value }))}
-              icon={<Globe size={15} />}
+              icon={<Globe size={14} />}
             />
           </div>
 
-          <div className="grid gap-4 sm:p-6 md:grid-cols-3">
+          <div className="grid gap-5 md:grid-cols-3">
             <Field
-              label={editingUserId ? 'Nova senha' : 'Senha inicial'}
+              label={editingUserId ? 'Nova Senha (Opcional)' : 'Senha de Login'}
               value={form.senha}
               onChange={(value) => setForm((prev) => ({ ...prev, senha: value }))}
               type="password"
-              icon={<Lock size={15} />}
-              helper={editingUserId ? 'Opcional. Deixe em branco para manter a senha atual.' : 'Senha para o novo acesso.'}
+              icon={<Lock size={14} />}
+              helper={editingUserId ? 'Deixe em branco para manter a senha atual.' : 'Mínimo de 6 caracteres.'}
             />
 
             <SelectField
-              label="Perfil"
+              label="Perfil de Usuário"
               value={form.role}
               onChange={handleRoleChange}
               options={[
-                { value: 'gestor', label: 'Gestor' },
+                { value: 'gestor', label: 'Gestor (Acesso Amplo)' },
                 { value: 'recepcao', label: 'Recepção' },
-                { value: 'profissional', label: 'Profissional' },
+                { value: 'profissional', label: 'Profissional da Equipe' },
               ]}
             />
 
             <SelectField
-              label="Profissional vinculado"
+              label="Profissional Vinculado"
               value={form.profissionalId}
               onChange={(value) => setForm((prev) => ({ ...prev, profissionalId: value }))}
               options={[
-                { value: '', label: 'Nenhum vínculo' },
-                ...profissionais.map((profissional) => ({ value: profissional.id, label: profissional.nome })),
+                { value: '', label: 'Sem vínculo (Uso geral)' },
+                ...profissionais.map((p) => ({ value: p.id, label: p.nome })),
               ]}
             />
           </div>
 
           <PermissionGrid
-            title="Abas liberadas"
+            title="Abas e Módulos do Sistema Habilitados"
             items={AVAILABLE_PERMISSIONS}
             activeItems={form.permissions}
             getLabel={(permission) => PERMISSION_LABELS[permission] || permission}
             onToggle={togglePermission}
-            activeClassName="border-[#e29ba8]/36 bg-[#e29ba8]/10 text-[#f6c6cd]"
+            activeClassName="border-[#d48997] bg-[#d48997]/5 text-[#d48997]"
           />
 
           {form.permissions.includes('agenda.ver_colegas') && (
-            <p className="rounded-[1.2rem] border border-[#e29ba8]/18 bg-[#e29ba8]/10 px-4 py-3 text-xs text-[#f3c8d1]">
-              Para marcar nos colegas, habilite também a ação <strong>Criar atendimentos</strong>.
-            </p>
+            <div className="rounded-xl border border-[#d48997]/20 bg-[#d48997]/5 p-3.5 text-xs text-[#d48997] font-medium">
+              Nota: Para que o colaborador marque na agenda de colegas, garanta que a ação <strong>Criar agendamentos</strong> também esteja habilitada abaixo.
+            </div>
           )}
 
           <PermissionGrid
-            title="Ações liberadas"
+            title="Ações e Operações Autorizadas"
             items={AVAILABLE_ACTIONS}
             activeItems={form.actionPermissions}
             getLabel={(permission) => ACTION_PERMISSION_LABELS[permission] || permission}
             onToggle={toggleAction}
-            activeClassName="border-emerald-400/30 bg-emerald-400/10 text-emerald-200"
+            activeClassName="border-emerald-500 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400"
           />
 
-          <div className="flex flex-col gap-4 border-t border-gray-200 dark:border-white/5 pt-6 lg:flex-row lg:items-center lg:justify-between">
+          <div className="flex flex-col gap-4 border-t border-black/[0.03] dark:border-white/5 pt-5 sm:flex-row sm:items-center sm:justify-between">
             <InlineMessage text={message} />
-            <div className="flex flex-wrap gap-3">
+            <div className="flex flex-wrap gap-2.5">
               {editingUserId && (
                 <button
                   type="button"
                   onClick={handleCancelEdit}
-                  className="rounded-[1.3rem] border border-[#e29ba8]/20 bg-white/[0.04] px-5 py-3 text-[10px] font-black uppercase tracking-[0.22em] text-white/78 transition hover:border-[#e29ba8]/32 hover:text-gray-900 dark:text-white"
+                  className="inline-flex h-10 items-center justify-center rounded-xl border border-black/[0.08] dark:border-white/10 px-4 text-xs font-semibold text-gray-500 dark:text-gray-400 hover:text-gray-800 transition"
                 >
-                  Cancelar edição
+                  Cancelar Edição
                 </button>
               )}
-              <PrimaryButton type="submit" loading={saving} label={editingUserId ? 'Salvar alterações' : 'Criar acesso'} />
+              <PrimaryButton type="submit" loading={saving} label={editingUserId ? 'Salvar Acesso' : 'Criar Acesso'} />
             </div>
           </div>
         </form>
       </SectionCard>
 
-      <SectionCard title="Usuários ativos" icon={<Users size={18} />}>
-        <div className="overflow-x-auto rounded-[2rem] border border-gray-200 dark:border-white/5 custom-scrollbar">
+      <SectionCard title="Usuários com Acesso à Unidade" icon={<Users size={18} />}>
+        <div className="overflow-x-auto rounded-xl border border-black/[0.04] dark:border-white/5 custom-scrollbar text-xs">
           <table className="w-full text-left">
-            <thead className="bg-white/[0.04]">
-              <tr>
-                <th className="px-5 py-4 text-[10px] font-black uppercase tracking-[0.22em] text-white/46">Usuário</th>
-                <th className="px-5 py-4 text-[10px] font-black uppercase tracking-[0.22em] text-white/46">Perfil</th>
-                <th className="px-5 py-4 text-[10px] font-black uppercase tracking-[0.22em] text-white/46">Escopo</th>
-                <th className="px-5 py-4 text-right text-[10px] font-black uppercase tracking-[0.22em] text-white/46">Ação</th>
+            <thead className="bg-gray-50 dark:bg-white/[0.02]">
+              <tr className="text-gray-400 dark:text-gray-500">
+                <th className="px-5 py-3.5 font-semibold">Nome / Login</th>
+                <th className="px-5 py-3.5 font-semibold">Perfil</th>
+                <th className="px-5 py-3.5 font-semibold">Escopo de Acesso</th>
+                <th className="px-5 py-3.5 text-right font-semibold">Operações</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-white/6 bg-black/12">
-              {usuarios.map((usuario) => (
-                <tr key={usuario.id}>
+            <tbody className="divide-y divide-black/[0.03] dark:divide-white/5">
+              {usuarios.map((u) => (
+                <tr key={u.id} className="text-gray-700 dark:text-gray-300 hover:bg-black/[0.005]">
                   <td className="px-5 py-4">
-                    <p className="text-sm font-semibold text-gray-900 dark:text-white">{usuario.nome}</p>
-                    <p className="mt-1 text-xs text-gray-200 dark:text-white/54">{usuario.email}</p>
+                    <p className="font-semibold text-gray-900 dark:text-white">{u.nome}</p>
+                    <p className="text-xs text-gray-450 dark:text-gray-500 mt-0.5">{u.email}</p>
                   </td>
                   <td className="px-5 py-4">
-                    <span className="rounded-full bg-white/6 px-3 py-2 text-[10px] font-black uppercase tracking-[0.18em] text-[#efbac2]">
-                      {usuario.role}
+                    <span className="inline-flex rounded-lg bg-black/[0.04] dark:bg-white/5 px-2.5 py-1 font-semibold text-[10px] uppercase text-[#d48997]">
+                      {u.role}
                     </span>
                   </td>
-                  <td className="px-5 py-4 text-xs text-gray-200 dark:text-white/54">
-                    {usuario.permissions?.length || 0} abas · {usuario.actionPermissions?.length || 0} ações
+                  <td className="px-5 py-4 text-gray-400">
+                    {u.permissions?.length || 0} abas · {u.actionPermissions?.length || 0} ações
                   </td>
                   <td className="px-5 py-4 text-right">
                     <div className="flex items-center justify-end gap-2">
                       <button
                         type="button"
-                        onClick={() => handleStartEdit(usuario)}
-                        className="rounded-xl border border-white/10 bg-white/[0.04] px-3 py-2 text-[10px] font-black uppercase tracking-[0.16em] text-white/80 transition hover:border-[#e29ba8]/24 hover:text-white"
+                        onClick={() => handleStartEdit(u)}
+                        className="inline-flex h-8 items-center justify-center rounded-lg border border-black/[0.08] dark:border-white/10 px-3 font-semibold hover:text-[#d48997] hover:border-[#d48997] transition"
                       >
                         Editar
                       </button>
                       <button
                         type="button"
-                        onClick={() => handleDelete(usuario.id)}
-                        className="rounded-xl border border-red-300/16 bg-red-400/10 px-3 py-2 text-[10px] font-black uppercase tracking-[0.16em] text-red-200 transition hover:bg-red-400/14"
+                        onClick={() => handleDelete(u.id)}
+                        className="inline-flex h-8 items-center justify-center rounded-lg bg-red-500/10 hover:bg-red-500 hover:text-white text-red-500 px-3 font-semibold transition"
                       >
                         Remover
                       </button>
@@ -832,8 +836,8 @@ function SecaoUsuarios() {
               ))}
               {usuarios.length === 0 && (
                 <tr>
-                  <td colSpan={4} className="px-5 py-8 text-center text-sm text-white/46">
-                    Nenhum acesso cadastrado ainda.
+                  <td colSpan={4} className="px-5 py-8 text-center text-gray-400">
+                    Nenhum acesso de login cadastrado nesta unidade.
                   </td>
                 </tr>
               )}
@@ -863,28 +867,28 @@ function SecaoAuditoria() {
   }, []);
 
   return (
-    <SectionCard title="Auditoria operacional" icon={<ShieldCheck size={18} />}>
-      <div className="space-y-4">
-        {loading && <p className="text-sm text-white/48">Carregando registros...</p>}
-        {!loading && logs.length === 0 && <p className="text-sm text-white/48">Nenhum evento auditado até aqui.</p>}
+    <SectionCard title="Auditoria de Ações" icon={<ShieldCheck size={18} />}>
+      <div className="space-y-3.5">
+        {loading && <p className="text-xs text-gray-400">Carregando logs de auditoria...</p>}
+        {!loading && logs.length === 0 && <p className="text-xs text-gray-400">Nenhum evento auditado até o momento.</p>}
         {logs.map((log) => (
-          <div key={log.id} className="rounded-[1.8rem] border border-gray-200 dark:border-white/5 bg-black/16 p-5">
-            <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
-              <div>
-                <p className="text-[10px] font-black uppercase tracking-[0.22em] text-[#efbac2]">{log.acao}</p>
-                <p className="mt-2 text-sm font-semibold text-gray-900 dark:text-white">{log.mensagem || log.entidade}</p>
-                <p className="mt-2 text-xs text-white/48">
+          <div key={log.id} className="rounded-xl border border-black/[0.04] dark:border-white/5 bg-gray-50/50 dark:bg-white/[0.01] p-4 text-xs">
+            <div className="flex flex-col gap-2.5 sm:flex-row sm:items-start sm:justify-between">
+              <div className="space-y-1">
+                <span className="text-[9px] font-semibold uppercase text-[#d48997] tracking-wide">{log.acao}</span>
+                <p className="font-semibold text-gray-800 dark:text-gray-200">{log.mensagem || log.entidade}</p>
+                <p className="text-[10px] text-gray-400 dark:text-gray-500">
                   {log.usuario?.nome || log.usuario?.email || 'Sistema'} · {new Date(log.createdAt).toLocaleString('pt-BR')}
                 </p>
               </div>
               <span
                 className={cn(
-                  'inline-flex rounded-full px-3 py-2 text-[10px] font-black uppercase tracking-[0.18em]',
+                  'inline-flex rounded-lg px-2.5 py-1 text-[9px] font-semibold uppercase tracking-wider self-start',
                   log.status === 'failed' || log.severity === 'error'
-                    ? 'bg-red-400/12 text-red-200'
+                    ? 'bg-red-500/10 text-red-500'
                     : log.severity === 'warning'
-                      ? 'bg-amber-400/12 text-amber-100'
-                      : 'bg-emerald-400/12 text-emerald-200'
+                      ? 'bg-amber-500/10 text-amber-600 dark:text-amber-400'
+                      : 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400'
                 )}
               >
                 {log.status || 'ok'}
@@ -944,45 +948,45 @@ function SecaoSeguranca() {
   }
 
   return (
-    <SectionCard title="Segurança da conta" icon={<Lock size={18} />}>
-      <form onSubmit={handleSubmit} className="space-y-8">
+    <SectionCard title="Segurança da Conta" icon={<Lock size={18} />}>
+      <form onSubmit={handleSubmit} className="space-y-6">
         <Field
-          label="Senha atual"
+          label="Senha Atual"
           value={form.senhaAtual}
           onChange={(value) => setForm((prev) => ({ ...prev, senhaAtual: value }))}
           type="password"
-          icon={<Lock size={15} />}
+          icon={<Lock size={14} />}
         />
 
-        <div className="grid gap-4 sm:p-6 md:grid-cols-2">
+        <div className="grid gap-5 md:grid-cols-2">
           <Field
-            label="Nova senha"
+            label="Nova Senha"
             value={form.novaSenha}
             onChange={(value) => setForm((prev) => ({ ...prev, novaSenha: value }))}
             type="password"
-            icon={<ShieldCheck size={15} />}
+            icon={<ShieldCheck size={14} />}
           />
           <Field
-            label="Confirmar nova senha"
+            label="Confirmar Nova Senha"
             value={form.confirmar}
             onChange={(value) => setForm((prev) => ({ ...prev, confirmar: value }))}
             type="password"
-            icon={<Check size={15} />}
+            icon={<Check size={14} />}
           />
         </div>
 
-        <div className="flex flex-col gap-4 border-t border-gray-200 dark:border-white/5 pt-6 lg:flex-row lg:items-center lg:justify-between">
+        <div className="flex flex-col gap-4 border-t border-black/[0.03] dark:border-white/5 pt-5 sm:flex-row sm:items-center sm:justify-between">
           <InlineMessage text={message} />
-          <div className="flex flex-wrap gap-3">
+          <div className="flex flex-wrap items-center gap-2.5">
             <button
               type="button"
               onClick={handleBackup}
               disabled={downloading}
-              className="rounded-[1.3rem] border border-[#e29ba8]/20 bg-white/[0.04] px-5 py-3 text-[10px] font-black uppercase tracking-[0.22em] text-white/78 transition hover:border-[#e29ba8]/32 hover:text-gray-900 dark:text-white disabled:opacity-50"
+              className="inline-flex h-10 items-center justify-center rounded-xl border border-black/[0.08] dark:border-white/10 bg-white dark:bg-[#18181b] px-4 text-xs font-semibold text-gray-600 dark:text-gray-300 hover:text-[#d48997] hover:border-[#d48997] transition disabled:opacity-55"
             >
-              {downloading ? 'Gerando backup...' : 'Exportar backup'}
+              {downloading ? 'Gerando backup...' : 'Exportar Backup'}
             </button>
-            <PrimaryButton type="submit" loading={saving} label="Atualizar senha" />
+            <PrimaryButton type="submit" loading={saving} label="Atualizar Senha" />
           </div>
         </div>
       </form>
@@ -992,12 +996,12 @@ function SecaoSeguranca() {
 
 function SectionCard({ title, icon, children }) {
   return (
-    <div className="rounded-[2.6rem] border border-slate-200/50 dark:border-white/5 bg-white/80 dark:bg-[#18161d]/30 backdrop-blur-2xl p-4 md:p-8 shadow-[0_24px_50px_-32px_rgba(140,107,117,0.15)] dark:shadow-none md:p-10">
-      <div className="mb-8 flex items-center gap-4">
-        <div className="flex h-14 w-14 items-center justify-center rounded-[1.4rem] bg-white/90 dark:bg-white/[0.04] border border-slate-200/40 dark:border-white/5 text-[#efbac2] shadow-sm">
+    <div className="rounded-2xl border border-black/[0.04] dark:border-white/[0.04] bg-white/60 dark:bg-white/[0.02] backdrop-blur-md p-6 shadow-sm">
+      <div className="mb-6 flex items-center gap-3.5 border-b border-black/[0.03] dark:border-white/5 pb-4">
+        <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#d48997]/10 text-[#d48997]">
           {icon}
         </div>
-        <h2 className="text-3xl font-brand-display text-gray-900 dark:text-white leading-none">{title}</h2>
+        <h2 className="font-serif text-lg font-normal text-gray-900 dark:text-white leading-none">{title}</h2>
       </div>
       {children}
     </div>
@@ -1006,37 +1010,37 @@ function SectionCard({ title, icon, children }) {
 
 function Field({ label, value, onChange, type = 'text', placeholder, icon, helper }) {
   return (
-    <div className="space-y-3">
-      <label className="text-[10px] font-black uppercase tracking-[0.24em] text-gray-500 dark:text-white/44">{label}</label>
+    <div className="space-y-1.5 w-full">
+      <span className="block text-[10px] font-medium text-gray-400 dark:text-gray-500">{label}</span>
       <div className="relative">
-        {icon && <span className="absolute left-5 top-1/2 -translate-y-1/2 text-gray-400 dark:text-white/30">{icon}</span>}
+        {icon && <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400">{icon}</span>}
         <input
           type={type}
           value={value || ''}
           onChange={(event) => onChange(event.target.value)}
           placeholder={placeholder}
           className={cn(
-            'w-full rounded-[1.35rem] border border-gray-200 dark:border-white/5 bg-white/40 dark:bg-white/[0.04] px-5 py-4 text-sm font-semibold text-gray-900 dark:text-white outline-none transition placeholder:text-gray-400 dark:placeholder:text-white/25 focus:border-[#e29ba8]/32 focus:bg-white/60 dark:focus:bg-white/[0.06] premium-focus-input',
-            icon && 'pl-14'
+            'w-full h-11 rounded-xl border border-black/[0.08] dark:border-white/10 bg-white dark:bg-[#111113] px-4 text-xs text-gray-900 dark:text-white outline-none focus:border-[#d48997] focus:ring-2 focus:ring-[#d48997]/10 transition-all placeholder:text-gray-450',
+            icon && 'pl-10'
           )}
         />
       </div>
-      {helper ? <p className="text-xs text-gray-400 dark:text-white/42">{helper}</p> : null}
+      {helper && <p className="text-[10px] text-gray-400">{helper}</p>}
     </div>
   );
 }
 
 function SelectField({ label, value, onChange, options }) {
   return (
-    <div className="space-y-3">
-      <label className="text-[10px] font-black uppercase tracking-[0.24em] text-gray-500 dark:text-white/44">{label}</label>
+    <div className="space-y-1.5 w-full">
+      <span className="block text-[10px] font-medium text-gray-400 dark:text-gray-500">{label}</span>
       <select
         value={value}
         onChange={(event) => onChange(event.target.value)}
-        className="w-full rounded-[1.35rem] border border-gray-200 dark:border-white/5 bg-white/40 dark:bg-white/[0.04] px-5 py-4 text-sm font-semibold text-gray-900 dark:text-white outline-none transition focus:border-[#e29ba8]/32 focus:bg-white/60 dark:focus:bg-[#1a171f] premium-focus-input"
+        className="w-full h-11 rounded-xl border border-black/[0.08] dark:border-white/10 bg-white dark:bg-[#111113] px-3.5 text-xs text-gray-900 dark:text-white outline-none focus:border-[#d48997] focus:ring-2 focus:ring-[#d48997]/10 transition-all"
       >
         {options.map((option) => (
-          <option key={option.value} value={option.value} className="bg-white dark:bg-[#18161d] text-gray-900 dark:text-white">
+          <option key={option.value} value={option.value} className="bg-white dark:bg-[#18181b]">
             {option.label}
           </option>
         ))}
@@ -1047,11 +1051,11 @@ function SelectField({ label, value, onChange, options }) {
 
 function ColorField({ label, value, onChange }) {
   return (
-    <div className="space-y-3">
-      <label className="text-[10px] font-black uppercase tracking-[0.24em] text-gray-500 dark:text-white/44">{label}</label>
-      <div className="flex items-center gap-4 rounded-[1.35rem] border border-gray-200 dark:border-white/5 bg-white/40 dark:bg-white/[0.04] px-4 py-3">
-        <input type="color" value={value} onChange={(event) => onChange(event.target.value)} className="h-12 w-14 rounded-xl bg-transparent border-0 cursor-pointer" />
-        <span className="font-mono text-sm font-semibold uppercase tracking-[0.18em] text-gray-900 dark:text-white">{value}</span>
+    <div className="space-y-1.5 w-full">
+      <span className="block text-[10px] font-medium text-gray-400 dark:text-gray-500">{label}</span>
+      <div className="flex items-center gap-3 rounded-xl border border-black/[0.08] dark:border-white/10 bg-white dark:bg-[#111113] px-3 py-1.5 h-11">
+        <input type="color" value={value} onChange={(event) => onChange(event.target.value)} className="h-7 w-12 rounded-lg bg-transparent border-0 cursor-pointer" />
+        <span className="font-mono text-xs font-semibold uppercase text-gray-800 dark:text-zinc-200">{value}</span>
       </div>
     </div>
   );
@@ -1059,9 +1063,9 @@ function ColorField({ label, value, onChange }) {
 
 function PermissionGrid({ title, items, activeItems, onToggle, getLabel, activeClassName }) {
   return (
-    <div className="space-y-4">
-      <p className="text-[10px] font-black uppercase tracking-[0.24em] text-gray-500 dark:text-white/44">{title}</p>
-      <div className="grid gap-3 sm:grid-cols-2 2xl:grid-cols-3">
+    <div className="space-y-2.5">
+      <span className="block text-[10px] font-medium text-gray-400 dark:text-gray-500">{title}</span>
+      <div className="grid gap-2.5 sm:grid-cols-2 md:grid-cols-3">
         {items.map((item) => {
           const active = activeItems.includes(item);
           return (
@@ -1070,10 +1074,10 @@ function PermissionGrid({ title, items, activeItems, onToggle, getLabel, activeC
               type="button"
               onClick={() => onToggle(item)}
               className={cn(
-                'rounded-[1.25rem] border px-4 py-4 text-left text-[10px] font-black uppercase tracking-[0.16em] transition-all duration-200',
+                'rounded-xl border p-3.5 text-left text-[10px] font-semibold transition-all',
                 active
                   ? activeClassName
-                  : 'border-slate-200/50 dark:border-white/7 bg-white/30 dark:bg-white/[0.035] text-gray-600 dark:text-white/54 hover:border-[#e29ba8]/20 hover:text-gray-900 dark:hover:text-white'
+                  : 'border-black/[0.06] dark:border-white/5 bg-gray-50/50 dark:bg-white/[0.01] text-gray-500 dark:text-gray-400 hover:border-black/[0.12] dark:hover:border-white/[0.12]'
               )}
             >
               {getLabel(item)}
@@ -1091,13 +1095,13 @@ function InlineMessage({ text }) {
   return (
     <div
       className={cn(
-        'inline-flex items-center gap-2 rounded-[1.2rem] border px-4 py-3 text-[10px] font-black uppercase tracking-[0.18em]',
+        'inline-flex items-center gap-1.5 rounded-xl border px-3 py-2 text-[10px] font-semibold',
         success
-          ? 'border-emerald-300/22 bg-emerald-400/10 text-emerald-600 dark:text-emerald-200'
-          : 'border-red-300/18 bg-red-400/10 text-red-600 dark:text-red-200'
+          ? 'border-emerald-500/20 bg-emerald-500/5 text-emerald-600 dark:text-emerald-400'
+          : 'border-red-500/20 bg-red-500/5 text-red-500'
       )}
     >
-      {success ? <Check size={14} /> : <AlertCircle size={14} />}
+      {success ? <Check size={13} /> : <AlertCircle size={13} />}
       {text}
     </div>
   );
@@ -1109,10 +1113,10 @@ function PrimaryButton({ loading, label, type = 'button', onClick }) {
       type={type}
       onClick={onClick}
       disabled={loading}
-      className="inline-flex items-center justify-center gap-3 rounded-[1.4rem] bg-gradient-to-r from-[#E29BA8] to-[#d48997] text-slate-950 px-6 py-4 text-[10px] font-black uppercase tracking-[0.24em] shadow-[0_16px_35px_-12px_rgba(222,151,165,0.65)] hover:shadow-[0_20px_45px_-12px_rgba(222,151,165,0.85)] transition-all duration-300 hover:scale-[1.02] disabled:opacity-55"
+      className="inline-flex h-10 items-center justify-center gap-1.5 rounded-xl bg-[#d48997] hover:bg-[#c97b8a] text-white px-5 text-xs font-semibold shadow-sm transition disabled:opacity-55"
     >
-      {loading ? <RefreshCw size={15} className="animate-spin" /> : <Save size={15} />}
-      {loading ? 'Processando...' : label}
+      {loading ? <RefreshCw size={13} className="animate-spin" /> : <Save size={13} />}
+      {loading ? 'Salvando...' : label}
     </button>
   );
 }

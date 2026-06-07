@@ -11,30 +11,32 @@ import {
   Zap,
 } from 'lucide-react';
 import { getAdminSalao, updateFidelidadeConfig } from '../../services/api';
+import { cn } from '../../lib/utils';
 
 const TIPO_OPCOES = [
   {
     id: 'cashback',
-    titulo: 'Cashback premium',
-    descricao: 'Devolva um percentual para a cliente usar em futuras visitas.',
-    exemplo: 'Ex.: a cada atendimento, 5% volta como credito.',
+    titulo: 'Cashback Premium',
+    descricao: 'Devolva um percentual do valor gasto para a cliente usar em futuras visitas.',
+    exemplo: 'A cada atendimento, um percentual retorna como crédito.',
   },
   {
     id: 'pontos',
-    titulo: 'Clube de pontos',
-    descricao: 'Transforme consumo recorrente em beneficios e resgates.',
-    exemplo: 'Ex.: a cada R$ 1 gasto, a cliente acumula pontos.',
+    titulo: 'Clube de Pontos',
+    descricao: 'Transforme consumo recorrente em pontos acumulativos para resgate de benefícios.',
+    exemplo: 'A cada R$ 1,00 gasto, a cliente acumula pontos definidos.',
   },
 ];
 
 function Badge({ active, children }) {
   return (
     <span
-      className={`inline-flex items-center rounded-full px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.22em] ${
+      className={cn(
+        'inline-flex items-center rounded-lg px-2.5 py-1 text-[10px] font-semibold tracking-wider transition-colors',
         active
-          ? 'bg-[rgba(233,155,168,0.16)] text-[#f7c1b6]'
-          : 'bg-[rgba(255,255,255,0.04)] text-[#9f848d]'
-      }`}
+          ? 'bg-[#d48997]/15 text-[#d48997]'
+          : 'bg-black/[0.04] dark:bg-white/[0.04] text-gray-500 dark:text-gray-400'
+      )}
     >
       {children}
     </span>
@@ -82,24 +84,24 @@ export default function Fidelidade() {
   const preview = useMemo(() => {
     if (!form.fidelidadeAtiva) {
       return {
-        titulo: 'Programa pausado',
+        titulo: 'Programa Pausado',
         descricao:
-          'Ative a fidelidade para apresentar recompensas automaticamente no relacionamento com suas clientes.',
+          'Ative o programa de fidelidade para apresentar e creditar recompensas automaticamente no relacionamento com suas clientes.',
         destaque: 'Inativo',
       };
     }
 
     if (form.fidelidadeTipo === 'cashback') {
       return {
-        titulo: 'Cashback inteligente',
-        descricao: `A cliente recebe ${form.fidelidadeRegra || '0'}% de volta em credito para usar em novos atendimentos.`,
+        titulo: 'Cashback Ativo',
+        descricao: `A cliente recebe ${form.fidelidadeRegra || '0'}% de volta em crédito para usar em novos atendimentos.`,
         destaque: `${form.fidelidadeRegra || '0'}% de retorno`,
       };
     }
 
     return {
-      titulo: 'Clube de pontos',
-      descricao: `A cada compra, a cliente acumula pontos ate atingir ${form.fidelidadeMeta || 0} e desbloquear ${form.fidelidadePremio || 'um premio especial'}.`,
+      titulo: 'Pontuação Ativa',
+      descricao: `A cada compra, a cliente acumula pontos até atingir ${form.fidelidadeMeta || 0} e desbloquear o prêmio: ${form.fidelidadePremio || 'um prêmio especial'}.`,
       destaque: `${form.fidelidadeMeta || 0} pontos`,
     };
   }, [form]);
@@ -108,9 +110,9 @@ export default function Fidelidade() {
     setSalvando(true);
     try {
       await updateFidelidadeConfig(form);
-      window.alert('Configuracoes de fidelidade salvas com sucesso.');
+      window.alert('Configurações de fidelidade salvas com sucesso.');
     } catch {
-      window.alert('Nao foi possivel salvar as configuracoes agora.');
+      window.alert('Não foi possível salvar as configurações agora.');
     } finally {
       setSalvando(false);
     }
@@ -119,61 +121,70 @@ export default function Fidelidade() {
   if (loading) {
     return (
       <div className="flex min-h-[60vh] items-center justify-center">
-        <div className="h-12 w-12 animate-spin rounded-full border-4 border-[rgba(233,155,168,0.25)] border-t-[#e99ba8]" />
+        <div className="h-8 w-8 animate-spin rounded-full border-2 border-[#d48997]/20 border-t-[#d48997]" />
       </div>
     );
   }
 
   return (
-    <div className="mx-auto flex max-w-7xl flex-col gap-4 md:p-8 pb-16">
-      <section className="flex flex-col gap-4 sm:p-6 rounded-[2rem] border border-gray-200 dark:border-white/5 bg-gray-50 dark:bg-[#16141a]/95 p-4 sm:p-6 shadow-[0_30px_80px_rgba(0,0,0,0.32)] lg:flex-row lg:items-start lg:justify-between lg:p-8">
-        <div className="max-w-3xl space-y-5">
-          <div className="flex items-center gap-3 text-[11px] font-semibold uppercase tracking-[0.42em] text-[#E29BA8]">
-            <Award className="h-4 w-4" />
-            Retencao e recorrencia
+    <motion.div
+      initial={{ opacity: 0, y: 15 }}
+      animate={{ opacity: 1, y: 0 }}
+      className="mx-auto max-w-6xl space-y-8 pb-20 px-4"
+    >
+      {/* Header */}
+      <header className="flex flex-col gap-4 border-b border-black/[0.03] dark:border-white/[0.03] pb-6 lg:flex-row lg:items-end lg:justify-between">
+        <div>
+          <div className="flex items-center gap-2.5 mb-2.5">
+            <Award className="h-4 w-4 text-[#d48997]" />
+            <span className="text-[10px] font-semibold text-[#d48997] tracking-wide">Fidelização</span>
           </div>
-          <div className="space-y-4">
-            <h1 className="font-['Playfair_Display'] text-2xl sm:text-4xl leading-none text-[#faf7f6] sm:text-5xl">
-              Programa de <span className="text-[#E29BA8]">Fidelidade</span>
-            </h1>
-            <p className="max-w-2xl text-lg leading-8 text-[#c7adb4]">
-              Estruture recompensas com a linguagem BellaPro: claras para a cliente, simples para a equipe e sustentaveis para o caixa.
-            </p>
-          </div>
+          <h1 className="text-2xl sm:text-3xl font-serif font-normal text-gray-900 dark:text-white tracking-wide leading-tight mb-2">
+            Programa de <span className="text-[#d48997]">Fidelidade</span>
+          </h1>
+          <p className="text-sm text-gray-400 dark:text-gray-500 leading-relaxed max-w-xl">
+            Aumente a retenção de clientes e a recorrência de visitas com campanhas transparentes e fáceis de gerenciar.
+          </p>
         </div>
 
-        <button
+        <motion.button
+          whileHover={{ scale: 1.02, y: -1 }}
+          whileTap={{ scale: 0.98 }}
           type="button"
           onClick={salvar}
           disabled={salvando}
-          className="inline-flex min-h-[56px] items-center justify-center gap-3 rounded-full bg-gradient-to-r from-[#E29BA8] to-[#d48997] text-[#111116] px-8 text-sm font-semibold uppercase tracking-[0.22em] text-[#20191f] transition hover:brightness-105 disabled:cursor-not-allowed disabled:opacity-70"
+          className="inline-flex items-center justify-center gap-2 rounded-xl bg-[#d48997] hover:bg-[#c97b8a] text-white px-5 py-2.5 text-xs font-semibold shadow-sm transition-all shrink-0 disabled:opacity-50 disabled:cursor-not-allowed"
         >
           <Save className="h-4 w-4" />
-          {salvando ? 'Salvando...' : 'Salvar estrategia'}
-        </button>
-      </section>
+          {salvando ? 'Salvando...' : 'Salvar Estratégia'}
+        </motion.button>
+      </header>
 
-      <section className="grid gap-4 sm:p-6 xl:grid-cols-[minmax(0,1fr),360px]">
+      {/* Content Grid */}
+      <div className="grid gap-8 lg:grid-cols-[1fr,320px]">
+        {/* Left Section - Configs */}
         <div className="space-y-6">
-          <div className="rounded-[2rem] border border-gray-200 dark:border-white/5 bg-white dark:bg-[#1a171f]/95 p-4 sm:p-6 shadow-[0_24px_60px_rgba(0,0,0,0.26)] lg:p-8">
-            <div className="flex flex-col gap-4 sm:p-6 sm:flex-row sm:items-center sm:justify-between">
+          {/* Status Card */}
+          <div className="rounded-2xl border border-black/[0.04] dark:border-white/[0.04] bg-white/60 dark:bg-white/[0.02] backdrop-blur-md p-6 shadow-sm">
+            <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
               <div className="flex items-center gap-4">
                 <div
-                  className={`flex h-16 w-16 items-center justify-center rounded-[24px] ${
+                  className={cn(
+                    'flex h-12 w-12 items-center justify-center rounded-xl transition-all',
                     form.fidelidadeAtiva
-                      ? 'bg-[rgba(233,155,168,0.16)] text-[#f7c1b6]'
-                      : 'bg-[rgba(255,255,255,0.05)] text-[#8f7880]'
-                  }`}
+                      ? 'bg-[#d48997]/10 text-[#d48997]'
+                      : 'bg-black/[0.04] dark:bg-white/[0.04] text-gray-400'
+                  )}
                 >
-                  <ShieldCheck className="h-7 w-7" />
+                  <ShieldCheck className="h-6 w-6" />
                 </div>
                 <div>
-                  <p className="text-[11px] font-semibold uppercase tracking-[0.35em] text-[#E29BA8]">
-                    Status do programa
-                  </p>
-                  <h2 className="mt-2 font-['Playfair_Display'] text-3xl text-[#faf7f6]">
-                    {form.fidelidadeAtiva ? 'Programa ativo' : 'Programa desativado'}
-                  </h2>
+                  <span className="text-[9px] font-semibold uppercase tracking-wider text-[#d48997]">
+                    Status do Programa
+                  </span>
+                  <h3 className="mt-0.5 text-lg font-serif font-normal text-gray-900 dark:text-white">
+                    {form.fidelidadeAtiva ? 'Campanha Ativa' : 'Campanha Inativa'}
+                  </h3>
                 </div>
               </div>
 
@@ -185,21 +196,23 @@ export default function Fidelidade() {
                     fidelidadeAtiva: !prev.fidelidadeAtiva,
                   }))
                 }
-                className={`relative h-11 w-24 rounded-full transition ${
-                  form.fidelidadeAtiva ? 'bg-[#e99ba8]' : 'bg-[rgba(255,255,255,0.08)]'
-                }`}
+                className={cn(
+                  'relative h-7 w-12 rounded-full transition-colors outline-none focus:ring-2 focus:ring-[#d48997]/25',
+                  form.fidelidadeAtiva ? 'bg-[#d48997]' : 'bg-gray-200 dark:bg-zinc-700'
+                )}
               >
                 <motion.span
-                  animate={{ x: form.fidelidadeAtiva ? 50 : 4 }}
-                  transition={{ type: 'spring', stiffness: 420, damping: 28 }}
-                  className="absolute top-[4px] flex h-9 w-9 items-center justify-center rounded-full bg-[#faf7f6] text-[#20191f] shadow-lg"
+                  animate={{ x: form.fidelidadeAtiva ? 22 : 2 }}
+                  transition={{ type: 'spring', stiffness: 500, damping: 30 }}
+                  className="absolute top-[2px] left-0 flex h-6 w-6 items-center justify-center rounded-full bg-white shadow-md text-gray-800"
                 >
-                  <Zap className="h-4 w-4" />
+                  <Zap className={cn("h-3.5 w-3.5", form.fidelidadeAtiva ? "text-[#d48997]" : "text-gray-400")} />
                 </motion.span>
               </button>
             </div>
           </div>
 
+          {/* Types Selection */}
           <div className="grid gap-5 md:grid-cols-2">
             {TIPO_OPCOES.map((tipo) => {
               const active = form.fidelidadeTipo === tipo.id;
@@ -213,42 +226,48 @@ export default function Fidelidade() {
                       fidelidadeTipo: tipo.id,
                     }))
                   }
-                  className={`rounded-[2rem] border p-4 sm:p-6 text-left transition ${
+                  className={cn(
+                    'group text-left rounded-2xl border p-6 transition-all',
                     active
-                      ? 'border-[rgba(233,155,168,0.28)] bg-[rgba(59,42,53,0.82)] shadow-[0_24px_60px_rgba(0,0,0,0.22)]'
-                      : 'border-gray-200 dark:border-white/5 bg-[rgba(33,26,31,0.9)] hover:border-[rgba(233,155,168,0.18)]'
-                  }`}
+                      ? 'border-[#d48997] bg-[#d48997]/5 shadow-sm'
+                      : 'border-black/[0.04] dark:border-white/[0.04] bg-white/60 dark:bg-white/[0.02] backdrop-blur-md hover:border-black/[0.08] dark:hover:border-white/[0.08]'
+                  )}
                 >
-                  <div className="mb-5 flex h-14 w-14 items-center justify-center rounded-[20px] bg-[rgba(233,155,168,0.12)] text-[#f7c1b6]">
-                    {tipo.id === 'cashback' ? <Gift className="h-6 w-6" /> : <Sparkles className="h-6 w-6" />}
+                  <div className="mb-4 flex h-10 w-10 items-center justify-center rounded-xl bg-[#d48997]/10 text-[#d48997] group-hover:scale-105 transition-transform">
+                    {tipo.id === 'cashback' ? <Gift className="h-5 w-5" /> : <Sparkles className="h-5 w-5" />}
                   </div>
-                  <div className="space-y-3">
+                  <div className="space-y-2">
                     <div className="flex items-center justify-between gap-4">
-                      <h3 className="font-['Playfair_Display'] text-2xl text-[#faf7f6]">
+                      <h4 className="font-serif text-base font-normal text-gray-900 dark:text-white">
                         {tipo.titulo}
-                      </h3>
-                      <Badge active={active}>{active ? 'Selecionado' : 'Disponivel'}</Badge>
+                      </h4>
+                      <Badge active={active}>{active ? 'Ativo' : 'Opção'}</Badge>
                     </div>
-                    <p className="text-sm leading-7 text-[#c7adb4]">{tipo.descricao}</p>
-                    <p className="text-xs uppercase tracking-[0.18em] text-[#9f848d]">{tipo.exemplo}</p>
+                    <p className="text-xs text-gray-400 dark:text-gray-500 leading-relaxed">
+                      {tipo.descricao}
+                    </p>
+                    <p className="text-[10px] font-medium text-[#d48997] opacity-80 pt-1">
+                      {tipo.exemplo}
+                    </p>
                   </div>
                 </button>
               );
             })}
           </div>
 
-          <div className="rounded-[2rem] border border-gray-200 dark:border-white/5 bg-white dark:bg-[#1a171f]/95 p-4 sm:p-6 shadow-[0_24px_60px_rgba(0,0,0,0.26)] lg:p-8">
-            <div className="mb-8 flex items-center gap-3 text-[11px] font-semibold uppercase tracking-[0.35em] text-[#E29BA8]">
-              <Info className="h-4 w-4" />
-              Parametros da regra
+          {/* Rule Configuration */}
+          <div className="rounded-2xl border border-black/[0.04] dark:border-white/[0.04] bg-white/60 dark:bg-white/[0.02] backdrop-blur-md p-6 shadow-sm space-y-5">
+            <div className="flex items-center gap-2 border-b border-black/[0.03] dark:border-white/5 pb-3">
+              <Info className="h-4 w-4 text-[#d48997]" />
+              <span className="text-xs font-semibold text-gray-800 dark:text-gray-200">
+                Parâmetros e Regras
+              </span>
             </div>
 
-            <div className="grid gap-4 sm:p-6 md:grid-cols-2">
-              <label className="space-y-3">
-                <span className="text-[11px] font-semibold uppercase tracking-[0.26em] text-[#c7adb4]">
-                  {form.fidelidadeTipo === 'cashback'
-                    ? 'Percentual de retorno'
-                    : 'Pontos por real'}
+            <div className="grid gap-5 md:grid-cols-2">
+              <div>
+                <span className="mb-2 block text-[10px] font-medium text-gray-400 dark:text-gray-500">
+                  {form.fidelidadeTipo === 'cashback' ? 'Percentual de Retorno (%)' : 'Pontos por Real Gasto'}
                 </span>
                 <input
                   type="number"
@@ -260,14 +279,14 @@ export default function Fidelidade() {
                       fidelidadeRegra: e.target.value,
                     }))
                   }
-                  placeholder={form.fidelidadeTipo === 'cashback' ? 'Ex.: 5' : 'Ex.: 1'}
-                  className="h-14 w-full rounded-[20px] border border-gray-200 dark:border-white/5 bg-[rgba(20,16,22,0.65)] px-5 text-base text-[#faf7f6] outline-none placeholder:text-[#806871] focus:border-[rgba(233,155,168,0.28)]"
+                  placeholder={form.fidelidadeTipo === 'cashback' ? 'Ex: 5' : 'Ex: 1'}
+                  className="h-11 w-full rounded-xl border border-black/[0.08] dark:border-white/10 bg-white dark:bg-[#111113] px-4 text-sm text-gray-900 dark:text-white outline-none focus:border-[#d48997] focus:ring-2 focus:ring-[#d48997]/10 transition-all placeholder:text-gray-400"
                 />
-              </label>
+              </div>
 
-              <label className="space-y-3">
-                <span className="text-[11px] font-semibold uppercase tracking-[0.26em] text-[#c7adb4]">
-                  Meta para resgate
+              <div>
+                <span className="mb-2 block text-[10px] font-medium text-gray-400 dark:text-gray-500">
+                  Meta para Resgate
                 </span>
                 <input
                   type="number"
@@ -279,76 +298,87 @@ export default function Fidelidade() {
                       fidelidadeMeta: Number(e.target.value || 0),
                     }))
                   }
-                  className="h-14 w-full rounded-[20px] border border-gray-200 dark:border-white/5 bg-[rgba(20,16,22,0.65)] px-5 text-base text-[#faf7f6] outline-none placeholder:text-[#806871] focus:border-[rgba(233,155,168,0.28)]"
+                  className="h-11 w-full rounded-xl border border-black/[0.08] dark:border-white/10 bg-white dark:bg-[#111113] px-4 text-sm text-gray-900 dark:text-white outline-none focus:border-[#d48997] focus:ring-2 focus:ring-[#d48997]/10 transition-all"
                 />
-              </label>
-            </div>
+              </div>
 
-            <label className="mt-6 block space-y-3">
-              <span className="text-[11px] font-semibold uppercase tracking-[0.26em] text-[#c7adb4]">
-                Descricao do premio
-              </span>
-              <input
-                type="text"
-                value={form.fidelidadePremio}
-                onChange={(e) =>
-                  setForm((prev) => ({
-                    ...prev,
-                    fidelidadePremio: e.target.value,
-                  }))
-                }
-                placeholder="Ex.: hidratacao premium, desconto progressivo ou servico cortesia"
-                className="h-14 w-full rounded-[20px] border border-gray-200 dark:border-white/5 bg-[rgba(20,16,22,0.65)] px-5 text-base text-[#faf7f6] outline-none placeholder:text-[#806871] focus:border-[rgba(233,155,168,0.28)]"
-              />
-            </label>
+              <div className="md:col-span-2">
+                <span className="mb-2 block text-[10px] font-medium text-gray-400 dark:text-gray-500">
+                  Prêmio / Recompensa por Atingir a Meta
+                </span>
+                <input
+                  type="text"
+                  value={form.fidelidadePremio}
+                  onChange={(e) =>
+                    setForm((prev) => ({
+                      ...prev,
+                      fidelidadePremio: e.target.value,
+                    }))
+                  }
+                  placeholder="Ex: Escova Cortesia, Desconto de R$ 50,00, Hidratação L'Oréal..."
+                  className="h-11 w-full rounded-xl border border-black/[0.08] dark:border-white/10 bg-white dark:bg-[#111113] px-4 text-sm text-gray-900 dark:text-white outline-none focus:border-[#d48997] focus:ring-2 focus:ring-[#d48997]/10 transition-all placeholder:text-gray-400"
+                />
+              </div>
+            </div>
           </div>
         </div>
 
-        <aside className="space-y-6">
-          <div className="rounded-[2rem] border border-[rgba(233,155,168,0.18)] bg-[linear-gradient(180deg,rgba(59,42,53,0.96),rgba(24,20,27,0.96))] p-4 sm:p-6 shadow-[0_30px_80px_rgba(0,0,0,0.28)]">
-            <div className="mb-6 flex items-center justify-between">
-              <div className="flex h-12 w-12 items-center justify-center rounded-[18px] bg-[rgba(233,155,168,0.14)] text-[#f7c1b6]">
+        {/* Right Section - Sidebar Preview */}
+        <div className="space-y-6">
+          {/* Card Preview */}
+          <div className="rounded-2xl border border-[#d48997]/20 bg-gradient-to-br from-[#d48997]/5 to-[#d48997]/0 p-6 shadow-sm space-y-4 relative overflow-hidden">
+            <div className="flex items-center justify-between">
+              <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-[#d48997]/10 text-[#d48997]">
                 <Award className="h-5 w-5" />
               </div>
               <Badge active>{preview.destaque}</Badge>
             </div>
 
-            <h3 className="font-['Playfair_Display'] text-3xl text-[#faf7f6]">{preview.titulo}</h3>
-            <p className="mt-4 text-sm leading-7 text-[#d4bcc2]">{preview.descricao}</p>
+            <h4 className="font-serif text-lg font-normal text-gray-900 dark:text-white">
+              {preview.titulo}
+            </h4>
+            <p className="text-xs text-gray-400 dark:text-gray-500 leading-relaxed">
+              {preview.descricao}
+            </p>
 
-            <div className="mt-8 rounded-[24px] border border-gray-200 dark:border-white/10 bg-[rgba(255,255,255,0.04)] p-5">
-              <p className="text-[11px] font-semibold uppercase tracking-[0.28em] text-[#9f848d]">
-                Exemplo de impacto
-              </p>
-              <div className="mt-4 flex items-end justify-between">
-                <div>
-                  <p className="text-3xl font-semibold text-[#faf7f6]">
-                    {form.fidelidadeTipo === 'cashback' ? 'R$ 24,90' : `${form.fidelidadeMeta || 0} pts`}
-                  </p>
-                  <p className="mt-2 text-sm text-[#c7adb4]">
-                    Percepcao de valor para reforcar retorno e recorrencia.
-                  </p>
-                </div>
-                <TrendingUp className="h-6 w-6 text-[#f7c1b6]" />
+            <div className="border-t border-black/[0.04] dark:border-white/5 pt-4 flex items-center justify-between">
+              <div>
+                <span className="text-[10px] text-gray-400 dark:text-gray-500 block">
+                  Simulação
+                </span>
+                <span className="text-lg font-semibold text-gray-950 dark:text-white">
+                  {form.fidelidadeTipo === 'cashback' ? 'Crédito Progressivo' : `${form.fidelidadeMeta || 0} Pontos`}
+                </span>
               </div>
+              <TrendingUp className="h-5 w-5 text-[#d48997]" />
             </div>
           </div>
 
-          <div className="rounded-[28px] border border-gray-200 dark:border-white/5 bg-[rgba(28,23,31,0.88)] p-4 sm:p-6">
-            <div className="mb-4 flex items-center gap-3 text-[#f7c1b6]">
-              <Sparkles className="h-5 w-5" />
-              <span className="text-sm font-semibold uppercase tracking-[0.22em]">
-                Boas praticas
+          {/* Tips Card */}
+          <div className="rounded-2xl border border-black/[0.04] dark:border-white/[0.04] bg-white/60 dark:bg-white/[0.02] backdrop-blur-md p-6 shadow-sm space-y-3">
+            <div className="flex items-center gap-2 text-[#d48997]">
+              <Sparkles className="h-4.5 w-4.5" />
+              <span className="text-[10px] font-semibold uppercase tracking-wider text-gray-800 dark:text-gray-200">
+                Boas Práticas
               </span>
             </div>
-            <div className="space-y-4 text-sm leading-7 text-[#c7adb4]">
-              <p>Prefira regras simples para que a equipe explique o beneficio sem atrito.</p>
-              <p>Evite premios muito vagos. Descreva o que a cliente ganha e quando pode usar.</p>
-              <p>Se usar cashback, defina um percentual financeiramente sustentavel para o seu ticket medio.</p>
-            </div>
+            <ul className="space-y-3.5 text-xs text-gray-400 dark:text-gray-500 leading-relaxed">
+              <li className="flex gap-2">
+                <span className="text-[#d48997] font-bold">•</span>
+                <span>Prefira regras simples para que a sua equipe consiga explicar a vantagem rapidamente.</span>
+              </li>
+              <li className="flex gap-2">
+                <span className="text-[#d48997] font-bold">•</span>
+                <span>Ofereça recompensas atrativas, como serviços de valor agregado em vez de pequenos descontos.</span>
+              </li>
+              <li className="flex gap-2">
+                <span className="text-[#d48997] font-bold">•</span>
+                <span>Se optar por cashback, defina um percentual sustentável (geralmente entre 2% e 5%).</span>
+              </li>
+            </ul>
           </div>
-        </aside>
-      </section>
-    </div>
+        </div>
+      </div>
+    </motion.div>
   );
 }

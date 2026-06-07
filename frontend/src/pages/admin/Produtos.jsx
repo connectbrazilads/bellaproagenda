@@ -8,6 +8,7 @@ import {
   Search,
   ShoppingBag,
   Trash2,
+  X,
 } from 'lucide-react';
 import {
   createProduto,
@@ -112,59 +113,59 @@ export default function Produtos() {
   }
 
   return (
-    <div className="mx-auto flex max-w-7xl flex-col gap-4 md:p-8 pb-16">
-      <section className="flex flex-col gap-4 sm:p-6 rounded-[2rem] border border-gray-200 dark:border-white/5 bg-gray-50 dark:bg-[#16141a]/95 p-4 sm:p-6 shadow-[0_30px_80px_rgba(0,0,0,0.32)] lg:flex-row lg:items-start lg:justify-between lg:p-8">
-        <div className="max-w-3xl space-y-5">
-          <div className="flex items-center gap-3 text-[11px] font-semibold uppercase tracking-[0.42em] text-[#E29BA8]">
-            <ShoppingBag className="h-4 w-4" />
-            Estoque inteligente
+    <motion.div initial={{ opacity: 0, y: 15 }} animate={{ opacity: 1, y: 0 }} className="mx-auto max-w-6xl space-y-8 pb-20 px-4">
+      {/* Header */}
+      <header className="flex flex-col gap-4 border-b border-black/[0.03] dark:border-white/[0.03] pb-6 lg:flex-row lg:items-end lg:justify-between">
+        <div>
+          <div className="flex items-center gap-2.5 mb-2.5">
+            <ShoppingBag className="h-4 w-4 text-[#d48997]" />
+            <span className="text-[10px] font-semibold text-[#d48997] tracking-wide">Estoque inteligente</span>
           </div>
-          <div className="space-y-4">
-            <h1 className="font-['Playfair_Display'] text-2xl sm:text-4xl leading-none text-[#faf7f6] sm:text-5xl">
-              Gestao de <span className="text-[#E29BA8]">Produtos</span>
-            </h1>
-            <p className="max-w-2xl text-lg leading-8 text-[#c7adb4]">
-              Controle itens de revenda e insumos profissionais com uma leitura mais refinada do seu estoque.
-            </p>
-          </div>
+          <h1 className="text-2xl sm:text-3xl font-serif font-normal text-gray-900 dark:text-white tracking-wide leading-tight mb-2">
+            Gestão de <span className="text-[#d48997]">Produtos</span>
+          </h1>
+          <p className="text-sm text-gray-400 dark:text-gray-500 leading-relaxed max-w-xl">
+            Controle itens de revenda e insumos profissionais com uma leitura mais refinada do seu estoque.
+          </p>
         </div>
 
         <div className="flex flex-col gap-3 sm:flex-row">
           <div className="relative">
-            <Search className="absolute left-5 top-1/2 h-5 w-5 -translate-y-1/2 text-[#806871]" />
+            <Search className="absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
             <input
               value={busca}
               onChange={(event) => setBusca(event.target.value)}
               placeholder="Localizar produto..."
-              className="h-14 w-full min-w-[260px] rounded-full border border-gray-200 dark:border-white/5 bg-[rgba(255,255,255,0.04)] pl-14 pr-5 text-sm text-[#faf7f6] outline-none placeholder:text-[#806871]"
+              className="h-11 w-full min-w-[240px] rounded-xl border border-black/[0.08] dark:border-white/10 bg-white dark:bg-[#111113] pl-11 pr-4 text-sm text-gray-900 dark:text-white outline-none focus:border-[#d48997] focus:ring-2 focus:ring-[#d48997]/10 transition-all placeholder:text-gray-400"
             />
           </div>
-
-          <button
+          <motion.button
+            whileHover={{ scale: 1.02, y: -1 }}
+            whileTap={{ scale: 0.98 }}
             type="button"
             onClick={abrirNovo}
-            className="inline-flex min-h-[48px] sm:min-h-[56px] items-center justify-center gap-2 sm:gap-3 rounded-full bg-gradient-to-r from-[#E29BA8] to-[#d48997] text-[#111116] px-6 sm:px-8 text-xs sm:text-sm font-semibold uppercase tracking-[0.22em] transition hover:brightness-105"
+            className="inline-flex items-center justify-center gap-2 rounded-xl bg-[#d48997] hover:bg-[#c97b8a] text-white px-5 py-2.5 text-xs font-semibold shadow-sm transition-all shrink-0"
           >
-            <Plus className="h-4 w-4" />
-            Novo produto
-          </button>
+            <Plus className="h-4 w-4" /> Novo produto
+          </motion.button>
         </div>
-      </section>
+      </header>
 
+      {/* Content */}
       {loading ? (
-        <div className="flex min-h-[40vh] items-center justify-center">
-          <div className="h-12 w-12 animate-spin rounded-full border-4 border-[rgba(233,155,168,0.22)] border-t-[#e99ba8]" />
+        <div className="flex min-h-[35vh] items-center justify-center">
+          <div className="h-10 w-10 animate-spin rounded-full border-4 border-gray-100 border-t-[#d48997]" />
         </div>
       ) : filtrados.length === 0 ? (
-        <div className="rounded-[2rem] border border-dashed border-[rgba(233,155,168,0.16)] bg-[rgba(41,31,37,0.82)] px-8 py-16 text-center">
-          <Package className="mx-auto h-14 w-14 text-[#806871]" />
-          <h2 className="mt-6 font-['Playfair_Display'] text-3xl text-[#faf7f6]">Nenhum produto encontrado</h2>
-          <p className="mx-auto mt-3 max-w-xl text-sm leading-7 text-[#c7adb4]">
-            Cadastre produtos para acompanhar revenda, uso interno e sinais de reposicao.
+        <div className="rounded-2xl border border-dashed border-black/[0.06] dark:border-white/10 bg-white/40 dark:bg-white/[0.01] px-8 py-16 text-center shadow-sm">
+          <Package className="mx-auto h-12 w-12 text-gray-300 dark:text-gray-600" />
+          <h2 className="mt-4 font-serif font-normal text-xl text-gray-905 dark:text-white">Nenhum produto encontrado</h2>
+          <p className="mx-auto mt-2 max-w-sm text-xs leading-relaxed text-gray-400 dark:text-gray-500">
+            Cadastre produtos para acompanhar revenda, uso interno e sinais de reposição.
           </p>
         </div>
       ) : (
-        <div className="grid gap-4 sm:p-6 sm:grid-cols-2 xl:grid-cols-4">
+        <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
           {filtrados.map((produto) => {
             const estoqueBaixo = Number(produto.estoque || 0) < 5;
             const consumos = (produto.consumosServico || [])
@@ -176,62 +177,47 @@ export default function Produtos() {
             return (
               <article
                 key={produto.id}
-                className="flex flex-col rounded-[2rem] border border-gray-200 dark:border-white/5 bg-white dark:bg-[#1a171f]/95 p-4 sm:p-6 shadow-[0_24px_60px_rgba(0,0,0,0.24)] transition hover:border-[rgba(233,155,168,0.18)]"
+                className="flex flex-col rounded-2xl border border-black/[0.04] dark:border-white/[0.04] bg-white/60 dark:bg-white/[0.02] backdrop-blur-md p-5 shadow-sm hover:border-[#e29ba8]/30 dark:hover:border-[#e29ba8]/20 transition-all duration-300 group"
               >
-                <div className="mb-6 flex items-start justify-between gap-4">
-                  <div className="flex h-14 w-14 items-center justify-center rounded-[20px] bg-[rgba(233,155,168,0.12)] text-[#f7c1b6]">
-                    <ShoppingBag className="h-6 w-6" />
+                <div className="mb-4 flex items-start justify-between gap-3">
+                  <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-[#d48997]/10 text-[#d48997] border border-[#d48997]/20 shrink-0 group-hover:rotate-6 transition-all">
+                    <ShoppingBag className="h-5 w-5" />
                   </div>
-                  <div className="flex gap-2">
-                    <button
-                      type="button"
-                      onClick={() => editar(produto)}
-                      className="rounded-2xl border border-gray-200 dark:border-white/5 bg-[rgba(255,255,255,0.03)] p-3 text-[#c7adb4] transition hover:border-[rgba(233,155,168,0.18)] hover:text-[#f7c1b6]"
-                    >
-                      <Edit3 className="h-4 w-4" />
+                  <div className="flex gap-1.5">
+                    <button type="button" onClick={() => editar(produto)} className="rounded-xl border border-black/[0.04] dark:border-white/10 bg-gray-50 dark:bg-white/5 p-2 text-gray-400 transition hover:text-gray-900 dark:hover:text-white">
+                      <Edit3 className="h-3.5 w-3.5" />
                     </button>
-                    <button
-                      type="button"
-                      onClick={() => excluir(produto.id)}
-                      className="rounded-2xl border border-gray-200 dark:border-white/5 bg-[rgba(255,255,255,0.03)] p-3 text-[#c7adb4] transition hover:border-[rgba(220,120,120,0.22)] hover:text-[#f4aaaa]"
-                    >
-                      <Trash2 className="h-4 w-4" />
+                    <button type="button" onClick={() => excluir(produto.id)} className="rounded-xl border border-black/[0.04] dark:border-white/10 bg-gray-50 dark:bg-white/5 p-2 text-gray-400 transition hover:text-red-500">
+                      <Trash2 className="h-3.5 w-3.5" />
                     </button>
                   </div>
                 </div>
 
-                <h2 className="font-['Playfair_Display'] text-3xl text-[#faf7f6]">{produto.nome}</h2>
-                <p className="mt-3 flex-1 text-sm leading-7 text-[#c7adb4]">
-                  {produto.descricao || 'Produto cadastrado para uso profissional ou revenda no salao.'}
+                <h2 className="text-lg font-serif font-normal text-gray-900 dark:text-white leading-tight">{produto.nome}</h2>
+                <p className="mt-2 flex-1 text-xs text-gray-400 dark:text-gray-500 leading-relaxed">
+                  {produto.descricao || 'Produto cadastrado para uso profissional ou revenda no salão.'}
                 </p>
 
-                {(produto.consumosServico || []).length ? (
-                  <div className="mt-5 rounded-[22px] border border-[rgba(122,165,222,0.22)] bg-[rgba(122,165,222,0.08)] p-4">
-                    <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-[#b7d0f4]">
-                      Uso automatico em servicos
-                    </p>
-                    <p className="mt-2 text-sm text-[#d5e4fb]">
+                {(produto.consumosServico || []).length > 0 && (
+                  <div className="mt-4 rounded-xl border border-blue-500/15 bg-blue-500/5 p-3">
+                    <p className="text-[9px] font-semibold text-blue-600 dark:text-blue-400">Uso automático em serviços</p>
+                    <p className="mt-1 text-xs text-blue-700 dark:text-blue-300 font-medium">
                       {consumos}
                       {(produto.consumosServico || []).length > 2 ? ` +${produto.consumosServico.length - 2}` : ''}
                     </p>
                   </div>
-                ) : null}
+                )}
 
-                <div className="mt-8 grid grid-cols-2 gap-4 border-t border-gray-200 dark:border-white/5 pt-6">
+                <div className="mt-5 grid grid-cols-2 gap-3 border-t border-black/[0.03] dark:border-white/5 pt-4">
                   <div>
-                    <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-[#9f848d]">Preco</p>
-                    <p className="mt-2 text-2xl font-semibold text-[#f7c1b6]">{moeda(produto.preco)}</p>
+                    <p className="text-[9px] font-medium text-gray-400 dark:text-gray-500">Preço</p>
+                    <p className="mt-1 text-base font-semibold text-[#d48997]">{moeda(produto.preco)}</p>
                   </div>
                   <div className="text-right">
-                    <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-[#9f848d]">Estoque</p>
-                    <div className="mt-2 flex items-center justify-end gap-2">
-                      {estoqueBaixo ? <AlertTriangle className="h-4 w-4 text-[#f4aaaa]" /> : null}
-                      <p
-                        className={cn(
-                          'text-2xl font-semibold',
-                          estoqueBaixo ? 'text-[#f4aaaa]' : 'text-[#faf7f6]'
-                        )}
-                      >
+                    <p className="text-[9px] font-medium text-gray-400 dark:text-gray-500">Estoque</p>
+                    <div className="mt-1 flex items-center justify-end gap-1.5">
+                      {estoqueBaixo && <AlertTriangle className="h-3.5 w-3.5 text-rose-500" />}
+                      <p className={cn('text-base font-semibold', estoqueBaixo ? 'text-rose-500' : 'text-gray-900 dark:text-white')}>
                         {produto.estoque || 0}
                       </p>
                     </div>
@@ -243,6 +229,7 @@ export default function Produtos() {
         </div>
       )}
 
+      {/* Modal */}
       <AnimatePresence>
         {modalOpen ? (
           <div className="fixed inset-0 z-[210] flex items-center justify-center overflow-y-auto overscroll-contain p-3 sm:p-6">
@@ -252,55 +239,53 @@ export default function Produtos() {
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               onClick={fecharModal}
-              className="absolute inset-0 bg-black/70 backdrop-blur-sm"
+              className="absolute inset-0 bg-black/60 backdrop-blur-sm"
             />
 
             <motion.form
-              initial={{ opacity: 0, y: 18, scale: 0.98 }}
+              initial={{ opacity: 0, y: 15, scale: 0.98 }}
               animate={{ opacity: 1, y: 0, scale: 1 }}
-              exit={{ opacity: 0, y: 18, scale: 0.98 }}
+              exit={{ opacity: 0, y: 15, scale: 0.98 }}
               onSubmit={salvar}
-              className="relative z-10 flex max-h-[calc(100dvh-1.5rem)] w-full max-w-xl flex-col overflow-hidden rounded-[2rem] border border-gray-200 dark:border-white/5 bg-[rgba(28,23,31,0.98)] shadow-[0_40px_120px_rgba(0,0,0,0.45)]"
+              className="relative z-10 max-h-[calc(100dvh-1.5rem)] w-full max-w-xl overflow-y-auto rounded-3xl border border-black/[0.04] bg-white p-5 shadow-xl dark:border-white/10 dark:bg-[#0c0c0e]/95 custom-scrollbar sm:p-6 md:p-8"
             >
-              <div className="mb-0 shrink-0 border-b border-gray-200 px-4 py-4 dark:border-white/5 sm:px-6 sm:py-6 lg:px-8">
-                <p className="text-[11px] font-semibold uppercase tracking-[0.3em] text-[#E29BA8]">Catalogo interno</p>
-                <h2 className="mt-3 font-['Playfair_Display'] text-2xl sm:text-4xl text-[#faf7f6]">
+              <button type="button" onClick={fecharModal} className="absolute right-4 top-4 rounded-full border border-black/[0.04] dark:border-white/10 p-2 text-gray-400 hover:text-red-500 transition shadow-sm">
+                <X className="h-4 w-4" />
+              </button>
+
+              <div className="mb-6 border-b border-black/[0.03] dark:border-white/5 pb-4">
+                <p className="text-[10px] font-semibold text-[#d48997]">Catálogo interno</p>
+                <h2 className="mt-1 font-serif font-normal text-xl sm:text-2xl text-gray-905 dark:text-white">
                   {editing ? 'Editar produto' : 'Novo produto'}
                 </h2>
               </div>
 
-              <div className="min-h-0 flex-1 space-y-5 overflow-y-auto px-4 pb-4 pt-4 custom-scrollbar sm:px-6 sm:pb-6 sm:pt-6 lg:px-8 lg:pb-8">
-                <label className="block">
-                  <span className="mb-3 block text-[11px] font-semibold uppercase tracking-[0.26em] text-[#c7adb4]">
-                    Nome do produto
-                  </span>
+              <div className="space-y-4">
+                <label>
+                  <span className="mb-2 block text-[10px] font-medium text-gray-400 dark:text-gray-500">Nome do produto</span>
                   <input
                     value={form.nome}
                     onChange={(event) => setForm((prev) => ({ ...prev, nome: event.target.value }))}
                     required
-                    className="h-14 w-full rounded-[20px] border border-gray-200 dark:border-white/5 bg-[rgba(20,16,22,0.66)] px-5 text-base text-[#faf7f6] outline-none placeholder:text-[#806871] focus:border-[rgba(233,155,168,0.28)]"
-                    placeholder="Ex.: mascara reconstrutora"
+                    className="h-11 w-full rounded-xl border border-black/[0.08] dark:border-white/10 bg-white px-4 text-sm text-gray-900 outline-none focus:border-[#d48997] focus:ring-2 focus:ring-[#d48997]/10 dark:bg-[#111113] dark:text-white transition-all placeholder:text-gray-400"
+                    placeholder="Ex.: máscara reconstrutora"
                   />
                 </label>
 
-                <label className="block">
-                  <span className="mb-3 block text-[11px] font-semibold uppercase tracking-[0.26em] text-[#c7adb4]">
-                    Descricao
-                  </span>
+                <label>
+                  <span className="mb-2 block text-[10px] font-medium text-gray-400 dark:text-gray-500">Descrição</span>
                   <textarea
                     value={form.descricao}
                     onChange={(event) => setForm((prev) => ({ ...prev, descricao: event.target.value }))}
-                    rows={4}
-                    className="w-full rounded-[24px] border border-gray-200 dark:border-white/5 bg-[rgba(20,16,22,0.66)] px-5 py-4 text-base leading-7 text-[#faf7f6] outline-none placeholder:text-[#806871] focus:border-[rgba(233,155,168,0.28)]"
-                    placeholder="Beneficios, uso e observacoes comerciais."
+                    rows={3}
+                    className="w-full rounded-xl border border-black/[0.08] dark:border-white/10 bg-white px-4 py-3 text-sm text-gray-900 outline-none focus:border-[#d48997] focus:ring-2 focus:ring-[#d48997]/10 dark:bg-[#111113] dark:text-white transition-all placeholder:text-gray-400 resize-none"
+                    placeholder="Benefícios, uso e observações comerciais."
                   />
                 </label>
 
-                <div className="grid gap-5 sm:grid-cols-2">
-                  <label className="block">
-                    <span className="mb-3 block text-[11px] font-semibold uppercase tracking-[0.26em] text-[#c7adb4]">
-                      Preco
-                    </span>
+                <div className="grid gap-4 sm:grid-cols-2">
+                  <label>
+                    <span className="mb-2 block text-[10px] font-medium text-gray-400 dark:text-gray-500">Preço</span>
                     <input
                       type="number"
                       min="0"
@@ -308,44 +293,28 @@ export default function Produtos() {
                       value={form.preco}
                       onChange={(event) => setForm((prev) => ({ ...prev, preco: event.target.value }))}
                       required
-                      className="h-14 w-full rounded-[20px] border border-gray-200 dark:border-white/5 bg-[rgba(20,16,22,0.66)] px-5 text-base text-[#faf7f6] outline-none placeholder:text-[#806871] focus:border-[rgba(233,155,168,0.28)]"
+                      className="h-11 w-full rounded-xl border border-black/[0.08] dark:border-white/10 bg-white px-4 text-sm text-gray-900 outline-none focus:border-[#d48997] focus:ring-2 focus:ring-[#d48997]/10 dark:bg-[#111113] dark:text-white transition-all"
                     />
                   </label>
-
-                  <label className="block">
-                    <span className="mb-3 block text-[11px] font-semibold uppercase tracking-[0.26em] text-[#c7adb4]">
-                      Estoque inicial
-                    </span>
+                  <label>
+                    <span className="mb-2 block text-[10px] font-medium text-gray-400 dark:text-gray-500">Estoque inicial</span>
                     <input
                       type="number"
                       min="0"
                       value={form.estoque}
-                      onChange={(event) =>
-                        setForm((prev) => ({
-                          ...prev,
-                          estoque: Number(event.target.value || 0),
-                        }))
-                      }
+                      onChange={(event) => setForm((prev) => ({ ...prev, estoque: Number(event.target.value || 0) }))}
                       required
-                      className="h-14 w-full rounded-[20px] border border-gray-200 dark:border-white/5 bg-[rgba(20,16,22,0.66)] px-5 text-base text-[#faf7f6] outline-none placeholder:text-[#806871] focus:border-[rgba(233,155,168,0.28)]"
+                      className="h-11 w-full rounded-xl border border-black/[0.08] dark:border-white/10 bg-white px-4 text-sm text-gray-900 outline-none focus:border-[#d48997] focus:ring-2 focus:ring-[#d48997]/10 dark:bg-[#111113] dark:text-white transition-all"
                     />
                   </label>
                 </div>
               </div>
 
-              <div className="sticky bottom-0 mt-0 flex shrink-0 flex-col gap-3 border-t border-gray-200 bg-[rgba(28,23,31,0.98)] px-4 py-4 backdrop-blur dark:border-white/5 sm:px-6 sm:flex-row sm:justify-end lg:px-8">
-                <button
-                  type="button"
-                  onClick={fecharModal}
-                  className="inline-flex min-h-[52px] items-center justify-center rounded-full border border-gray-200 dark:border-white/5 px-7 text-sm font-semibold uppercase tracking-[0.22em] text-[#c7adb4] transition hover:border-[rgba(233,155,168,0.18)] hover:text-[#faf7f6]"
-                >
+              <div className="mt-8 flex flex-col gap-3.5 sm:flex-row sm:justify-end">
+                <button type="button" onClick={fecharModal} className="inline-flex items-center justify-center rounded-xl border border-black/[0.04] dark:border-white/10 bg-gray-50 hover:bg-gray-100 dark:bg-white/5 dark:text-white px-5 py-2.5 text-xs font-semibold text-gray-500 transition">
                   Cancelar
                 </button>
-                <button
-                  type="submit"
-                  disabled={saving}
-                  className="inline-flex min-h-[48px] sm:min-h-[52px] items-center justify-center rounded-full bg-gradient-to-r from-[#E29BA8] to-[#d48997] text-[#111116] px-6 sm:px-7 text-xs sm:text-sm font-semibold uppercase tracking-[0.22em] transition hover:brightness-105 disabled:cursor-not-allowed disabled:opacity-70"
-                >
+                <button type="submit" disabled={saving} className="inline-flex items-center justify-center rounded-xl bg-[#d48997] hover:bg-[#c97b8a] text-white px-5 py-2.5 text-xs font-semibold shadow-sm transition disabled:opacity-70">
                   {saving ? 'Salvando...' : 'Salvar produto'}
                 </button>
               </div>
@@ -353,6 +322,6 @@ export default function Produtos() {
           </div>
         ) : null}
       </AnimatePresence>
-    </div>
+    </motion.div>
   );
 }

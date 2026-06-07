@@ -43,8 +43,8 @@ const DIAS = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sab'];
 const TABS = [
   { id: 'geral', label: 'Geral', icon: User },
   { id: 'contato', label: 'Contato', icon: Mail },
-  { id: 'endereco', label: 'Endereco', icon: MapPin },
-  { id: 'servicos', label: 'Servicos', icon: Scissors },
+  { id: 'endereco', label: 'Endereço', icon: MapPin },
+  { id: 'servicos', label: 'Serviços', icon: Scissors },
   { id: 'banco', label: 'Banco e Pix', icon: CreditCard },
 ];
 
@@ -281,7 +281,7 @@ export default function Profissionais() {
   }
 
   async function removeCategoria(categoriaId) {
-    if (!window.confirm('Deseja excluir esta categoria do salÃ£o inteiro?')) return;
+    if (!window.confirm('Deseja excluir esta categoria do salão inteiro?')) return;
     await deleteCategoriaProfissional(categoriaId);
     setCategoriasDisponiveis((prev) => prev.filter((categoria) => categoria.id !== categoriaId));
     setForm((prev) => ({ ...prev, categoriasIds: prev.categoriasIds.filter((id) => id !== categoriaId) }));
@@ -335,41 +335,41 @@ export default function Profissionais() {
   }, [categoriasServicosDisponiveis, form.servicoCategoriasIds, form.servicos, servicoIdsPorCategoriaSelecionada, servicosDisponiveis]);
 
   return (
-    <motion.div ref={pageRef} initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} className="max-w-7xl mx-auto space-y-8 lg:space-y-10 pb-20">
-      <header className="flex flex-col gap-5 border-b border-gray-200 dark:border-white/5 pb-8">
-        <div className="flex items-center gap-3">
-          <span className="h-px w-12 bg-[#e29ba8]" />
-          <p className="brand-kicker">Curadoria da equipe</p>
+    <motion.div ref={pageRef} initial={{ opacity: 0, y: 15 }} animate={{ opacity: 1, y: 0 }} className="max-w-7xl mx-auto space-y-8 pb-20 px-4">
+      <header className="flex flex-col gap-4 border-b border-black/[0.03] dark:border-white/5 pb-6">
+        <div className="flex items-center gap-2 text-xs font-semibold text-[#d48997]">
+          <Scissors className="h-4 w-4" />
+          <span>Equipe e Disponibilidade</span>
         </div>
-        <div className={cn('flex flex-col gap-5', !isCompactPage && 'lg:flex-row lg:items-end lg:justify-between')}>
+        <div className={cn('flex flex-col gap-4', !isCompactPage && 'lg:flex-row lg:items-center lg:justify-between')}>
           <div>
-            <h1 className="text-3xl sm:text-5xl font-brand-display text-gray-900 dark:text-white leading-none">
-              Elite <span className="brand-text-gradient">Squad</span>
+            <h1 className="font-serif font-normal text-2xl md:text-3xl text-gray-905 dark:text-white leading-tight">
+              Profissionais da <span className="text-[#d48997]">Casa</span>
             </h1>
-            <p className="mt-4 max-w-2xl text-base text-gray-600 dark:text-white/60">
-              Organize os talentos que sustentam a experiÃªncia do salÃ£o com um cadastro claro, bonito e pronto para operar.
+            <p className="mt-1.5 text-sm text-gray-400 dark:text-gray-500 font-normal">
+              Gerencie os cadastros da equipe, comissões individuais, serviços atendidos e escala de trabalho.
             </p>
           </div>
 
           <div className="flex flex-wrap items-center gap-4">
-            <div className={cn('rounded-[1.8rem] border border-gray-200 dark:border-white/5 bg-white/[0.03] px-6 py-4 items-center gap-4 sm:p-6', showSummaryCard ? 'flex' : 'hidden')}>
-              <MiniMetric label="Ativos" value={visibleProfessionals.filter((item) => item.ativo).length} />
-              <MiniMetric label="ServiÃ§os" value={servicosDisponiveis.length} highlight />
+            <div className={cn('rounded-xl border border-black/[0.04] dark:border-white/5 bg-white/40 dark:bg-white/[0.01] px-5 py-3 items-center gap-6 shadow-sm', showSummaryCard ? 'flex' : 'hidden')}>
+              <MiniMetric label="Profissionais ativos" value={visibleProfessionals.filter((item) => item.ativo).length} />
+              <MiniMetric label="Serviços cadastrados" value={servicosDisponiveis.length} highlight />
             </div>
 
             {!isScopedProfessional && (
-              <div className="flex flex-col items-end gap-2">
+              <div className="flex flex-col items-end gap-1 shrink-0">
                 <button
                   onClick={openCreate}
                   disabled={salaoInfo && profissionais.length >= salaoInfo.maxProfissionais}
-                  className="inline-flex items-center gap-3 rounded-[1.6rem] bg-gradient-to-r from-[#E29BA8] to-[#d48997] text-[#111116] px-6 py-4 text-[10px] font-black uppercase tracking-[0.24em] text-white shadow-[0_24px_60px_-30px_rgba(222,151,165,0.95)] disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-[#d48997] to-[#e29ba8] px-5 py-2.5 text-xs font-semibold text-white shadow-sm transition disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   <Plus size={16} />
-                  Novo profissional
+                  <span>Novo Profissional</span>
                 </button>
                 {salaoInfo && profissionais.length >= salaoInfo.maxProfissionais && (
-                  <p className="text-xs text-[#efbac2]">
-                    Limite de {salaoInfo.maxProfissionais} atingido. Contate o suporte para upgrade.
+                  <p className="text-[10px] text-[#efbac2] mt-1">
+                    Limite máximo de {salaoInfo.maxProfissionais} profissionais atingido.
                   </p>
                 )}
               </div>
@@ -378,81 +378,82 @@ export default function Profissionais() {
         </div>
       </header>
 
-      <div className={cn('grid gap-4 sm:p-6 md:grid-cols-2', showThreeCards && 'xl:grid-cols-3')}>
+      <div className={cn('grid gap-4 md:grid-cols-2', showThreeCards && 'xl:grid-cols-3')}>
         <AnimatePresence mode="popLayout">
           {visibleProfessionals.map((profissional) => (
             <motion.article
               key={profissional.id}
               layout
-              initial={{ opacity: 0, y: 20 }}
+              initial={{ opacity: 0, y: 15 }}
               animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.96 }}
-              className="relative overflow-hidden rounded-[2rem] border border-gray-200 dark:border-white/5 bg-white dark:bg-[#1a171f] p-4 sm:p-6 shadow-[0_34px_70px_-42px_rgba(0,0,0,0.9)]"
+              exit={{ opacity: 0, scale: 0.98 }}
+              className="relative overflow-hidden rounded-2xl border border-black/[0.04] dark:border-white/[0.04] bg-white/60 dark:bg-white/[0.02] p-5 shadow-sm hover:shadow-md transition-all duration-300 flex flex-col justify-between gap-5"
             >
-              <div className="flex items-start justify-between gap-3 sm:gap-4">
-                <div className="relative">
-                  <div className="h-16 w-16 sm:h-20 sm:w-20 overflow-hidden rounded-[1.4rem] sm:rounded-[1.7rem] border border-gray-200 dark:border-white/5 bg-white dark:bg-[#1a171f]">
-                    {profissional.fotoUrl ? (
-                      <img src={profissional.fotoUrl} alt={profissional.nome} className="h-full w-full object-cover" />
-                    ) : (
-                      <div className="flex h-full w-full items-center justify-center text-3xl font-black text-gray-400 dark:text-white/24">
-                        {profissional.nome?.[0] || 'P'}
+              <div>
+                <div className="flex items-start justify-between gap-4">
+                  <div className="relative shrink-0">
+                    <div className="h-16 w-16 overflow-hidden rounded-xl border border-black/[0.04] dark:border-white/5 bg-gray-50 dark:bg-white/5">
+                      {profissional.fotoUrl ? (
+                        <img src={profissional.fotoUrl} alt={profissional.nome} className="h-full w-full object-cover" />
+                      ) : (
+                        <div className="flex h-full w-full items-center justify-center text-2xl font-semibold text-gray-400 dark:text-white/20">
+                          {profissional.nome?.[0] || 'P'}
+                        </div>
+                      )}
+                    </div>
+                    <span className={`absolute -right-1 -top-1 flex h-5 w-5 items-center justify-center rounded-full border-2 border-white dark:border-[#0c0c0e] ${profissional.ativo ? 'bg-emerald-500' : 'bg-gray-300'}`}>
+                      <Activity size={9} className="text-white" />
+                    </span>
+                  </div>
+
+                  <div className="flex-1 min-w-0">
+                    <h2 className="font-serif font-normal text-lg sm:text-xl text-gray-905 dark:text-white truncate leading-snug">{profissional.nome}</h2>
+                    <div className="mt-1 flex items-center gap-1.5">
+                      <div className="flex">
+                        {[1, 2, 3, 4, 5].map((star) => (
+                          <Star key={star} size={9} className="fill-amber-400 text-amber-400" />
+                        ))}
                       </div>
+                      <span className="text-[10px] font-medium text-gray-400 dark:text-gray-500 normal-case">Especialista BellaPro</span>
+                    </div>
+                  </div>
+                </div>
+
+                {profissional.bio && (
+                  <p className="mt-3.5 line-clamp-2 text-xs italic text-gray-455 dark:text-gray-400 leading-relaxed">"{profissional.bio}"</p>
+                )}
+
+                <div className="mt-4 rounded-xl border border-black/[0.03] dark:border-white/5 bg-gray-50/50 dark:bg-white/[0.01] p-3.5">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2 text-gray-400 dark:text-gray-500">
+                      <Tag size={13} />
+                      <span className="text-[10px] font-medium normal-case">Categorias</span>
+                    </div>
+                    <span className="text-[10px] font-semibold text-[#d48997]">
+                      {(profissional.categorias || []).length} vinculadas
+                    </span>
+                  </div>
+                  <div className="mt-2.5 flex flex-wrap gap-1.5">
+                    {(profissional.categorias || []).slice(0, 3).map((item) => (
+                      <span key={item.categoriaId} className="rounded-full border border-black/[0.04] dark:border-white/10 bg-white/40 dark:bg-white/5 px-2.5 py-0.5 text-[10px] font-medium tracking-wide normal-case text-gray-600 dark:text-white/60">
+                        {item.categoria?.nome}
+                      </span>
+                    ))}
+                    {(!profissional.categorias || profissional.categorias.length === 0) && (
+                      <span className="text-xs text-gray-400 dark:text-gray-500 font-normal">Sem categorias definidas</span>
                     )}
                   </div>
-                  <span className={`absolute -right-1 -top-1 flex h-8 w-8 items-center justify-center rounded-full border-4 border-[#2b2129] ${profissional.ativo ? 'bg-emerald-400' : 'bg-white/18'}`}>
-                    <Activity size={12} className="text-gray-900 dark:text-white" />
-                  </span>
                 </div>
               </div>
 
-              <div className="mt-4 sm:mt-5">
-                <h2 className="text-2xl sm:text-3xl font-brand-display text-gray-900 dark:text-white">{profissional.nome}</h2>
-                <div className="mt-2 flex items-center gap-2 sm:gap-3">
-                  <div className="flex gap-1">
-                    {[1, 2, 3, 4, 5].map((star) => (
-                      <Star key={star} size={10} className="fill-[#efb45e] text-[#efb45e]" />
-                    ))}
-                  </div>
-                  <span className="text-[10px] font-black uppercase tracking-[0.22em] text-[#efbac2]">Especialista BellaPro</span>
-                </div>
-                {profissional.bio && (
-                  <p className="mt-4 line-clamp-3 text-sm italic leading-relaxed text-gray-200 dark:text-white/58">"{profissional.bio}"</p>
-                )}
-              </div>
-
-              <div className="mt-4 sm:mt-6 rounded-[1.5rem] sm:rounded-[1.7rem] border border-gray-200 dark:border-white/5 bg-black/14 p-3 sm:p-4">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2 sm:gap-3">
-                    <span className="flex h-8 w-8 sm:h-9 sm:w-9 items-center justify-center rounded-xl bg-[#e29ba8]/12 text-[#efbac2]">
-                      <Tag size={15} />
-                    </span>
-                    <span className="text-[10px] font-black uppercase tracking-[0.22em] text-gray-500 dark:text-white/44">Categorias</span>
-                  </div>
-                  <span className="text-[10px] font-black uppercase tracking-[0.18em] text-[#efbac2]">
-                    {(profissional.categorias || []).length}
-                  </span>
-                </div>
-                <div className="mt-4 flex flex-wrap gap-2">
-                  {(profissional.categorias || []).slice(0, 3).map((item) => (
-                    <span key={item.categoriaId} className="rounded-full border border-gray-200 dark:border-white/5 bg-white/[0.05] px-3 py-2 text-[10px] font-black uppercase tracking-[0.16em] text-gray-600 dark:text-white/64">
-                      {item.categoria?.nome}
-                    </span>
-                  ))}
-                  {(!profissional.categorias || profissional.categorias.length === 0) && (
-                    <span className="text-xs text-gray-500 dark:text-white/40">Sem categorias definidas</span>
-                  )}
-                </div>
-              </div>
-
-              <div className="mt-4 sm:mt-6 grid grid-cols-2 gap-2 sm:gap-3">
-                <button onClick={() => setActionMenuModal(profissional)} className="rounded-xl sm:rounded-[1.3rem] border border-gray-200 dark:border-white/5 bg-white/[0.04] px-3 py-3 sm:px-4 sm:py-4 text-[9px] sm:text-[10px] font-black uppercase tracking-[0.22em] text-gray-600 dark:text-white/74 flex items-center justify-center gap-2 transition hover:bg-white/[0.08] hover:text-gray-900 dark:hover:text-white">
-                  <Edit3 size={14} />
-                  Editar
+              <div className="grid grid-cols-2 gap-2 mt-2">
+                <button onClick={() => setActionMenuModal(profissional)} className="rounded-xl border border-black/[0.08] dark:border-white/10 bg-white dark:bg-white/5 px-3 py-2 text-xs font-semibold text-gray-600 dark:text-white/80 flex items-center justify-center gap-1.5 transition hover:bg-gray-50 dark:hover:bg-white/10">
+                  <Edit3 size={13} />
+                  <span>Editar</span>
                 </button>
-                <button onClick={() => openSchedules(profissional)} className="rounded-xl sm:rounded-[1.3rem] bg-gradient-to-r from-[#E29BA8] to-[#d48997] text-[#111116] px-3 py-3 sm:px-4 sm:py-4 text-[9px] sm:text-[10px] font-black uppercase tracking-[0.22em] flex items-center justify-center gap-2">
-                  <Calendar size={14} />
-                  Escala
+                <button onClick={() => openSchedules(profissional)} className="rounded-xl bg-[#d48997]/10 hover:bg-[#d48997]/15 text-[#d48997] px-3 py-2 text-xs font-semibold flex items-center justify-center gap-1.5 transition">
+                  <Calendar size={13} />
+                  <span>Escala</span>
                 </button>
               </div>
             </motion.article>
@@ -461,25 +462,25 @@ export default function Profissionais() {
       </div>
 
       {modalOpen && (
-        <div className="fixed inset-0 z-[120] flex items-center justify-center overflow-y-auto overscroll-contain bg-black/82 p-3 backdrop-blur-md sm:p-4">
-          <div className="flex max-h-[calc(100dvh-1.5rem)] w-full max-w-6xl flex-col overflow-hidden rounded-[2.6rem] border border-gray-200 dark:border-white/5 bg-white dark:bg-[#1a171f] lg:flex-row">
-            <aside className="w-full border-b border-gray-200 dark:border-white/5 bg-gray-50 dark:bg-[#16141a] p-4 sm:p-6 lg:w-80 lg:border-b-0 lg:border-r">
-              <div className="mb-8 flex items-start justify-between gap-4">
+        <div className="fixed inset-0 z-[120] flex items-center justify-center overflow-y-auto overscroll-contain bg-black/60 p-3 backdrop-blur-sm sm:p-4">
+          <div className="flex max-h-[calc(100dvh-1.5rem)] w-full max-w-5xl flex-col overflow-hidden rounded-3xl border border-black/[0.04] dark:border-white/5 bg-white dark:bg-[#0c0c0e] lg:flex-row">
+            <aside className="w-full border-b border-black/[0.04] dark:border-white/5 bg-gray-50/50 dark:bg-[#111113]/95 p-5 lg:w-72 lg:border-b-0 lg:border-r shrink-0">
+              <div className="mb-6 flex items-start justify-between gap-4">
                 <div>
-                  <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-[1.4rem] bg-[#e29ba8] text-[#1a1a1f]">
-                    <User size={22} />
+                  <div className="mb-3.5 flex h-11 w-11 items-center justify-center rounded-xl bg-[#d48997]/10 text-[#d48997]">
+                    <User size={18} />
                   </div>
-                  <h2 className="text-2xl sm:text-4xl font-brand-display text-gray-900 dark:text-white">{editingId ? 'Editar' : 'Novo'} perfil</h2>
-                  <p className="mt-3 text-[10px] font-black uppercase tracking-[0.22em] text-white/38">
-                    Carreira, agenda e cadastro profissional
+                  <h2 className="text-xl sm:text-2xl font-serif font-normal text-gray-905 dark:text-white">{editingId ? 'Editar' : 'Novo'} Profissional</h2>
+                  <p className="mt-1.5 text-[10px] font-medium text-gray-400 dark:text-gray-500">
+                    Carreira, escala e configurações.
                   </p>
                 </div>
-                <button onClick={() => setModalOpen(false)} className="rounded-2xl border border-gray-200 dark:border-white/5 bg-white/[0.04] p-3 text-gray-600 dark:text-white/60 transition hover:text-gray-900 dark:text-white">
-                  <X size={18} />
+                <button onClick={() => setModalOpen(false)} className="rounded-xl border border-black/[0.04] dark:border-white/10 p-2 text-gray-400 hover:text-red-500 transition shadow-sm z-10">
+                  <X size={16} />
                 </button>
               </div>
 
-              <div className="flex gap-2 overflow-x-auto pb-2 lg:block lg:space-y-2 lg:overflow-visible">
+              <div className="flex gap-1 overflow-x-auto pb-2 lg:block lg:space-y-1 lg:overflow-visible">
                 {TABS.map((tab) => {
                   const Icon = tab.icon;
                   const active = activeTab === tab.id;
@@ -489,139 +490,133 @@ export default function Profissionais() {
                       type="button"
                       onClick={() => setActiveTab(tab.id)}
                       className={cn(
-                        'flex min-w-[170px] items-center gap-3 rounded-[1.4rem] px-4 py-4 text-[10px] font-black uppercase tracking-[0.18em] transition lg:w-full',
+                        'flex items-center gap-2.5 rounded-xl px-4 py-3 text-xs font-semibold normal-case transition shrink-0 lg:w-full',
                         active
-                          ? 'bg-[#de97a5] text-white shadow-[0_20px_50px_-28px_rgba(222,151,165,0.9)]'
-                          : 'bg-transparent text-gray-200 dark:text-white/54 hover:bg-white/[0.05] hover:text-white/78'
+                          ? 'bg-[#d48997] text-white shadow-sm'
+                          : 'bg-transparent text-gray-400 dark:text-gray-500 hover:bg-black/[0.02] dark:hover:bg-white/5 hover:text-gray-700 dark:hover:text-white'
                       )}
                     >
-                      <span className={cn('flex h-9 w-9 items-center justify-center rounded-xl', active ? 'bg-white/18' : 'bg-white/[0.06]')}>
-                        <Icon size={14} />
-                      </span>
-                      {tab.label}
+                      <Icon size={14} />
+                      <span>{tab.label}</span>
                     </button>
                   );
                 })}
               </div>
             </aside>
 
-            <div className="min-h-0 min-w-0 flex-1 overflow-y-auto p-4 custom-scrollbar sm:p-6 md:p-8">
-              <form onSubmit={handleSubmit} className="space-y-8">
+            <div className="min-h-0 min-w-0 flex-1 overflow-y-auto p-5 custom-scrollbar sm:p-6 md:p-8">
+              <form onSubmit={handleSubmit} className="space-y-6">
                 {activeTab === 'geral' && (
-                  <div className="space-y-8">
-                    <div className="grid gap-4 sm:p-6 md:grid-cols-2">
-                      <Field label="Nome artÃ­stico ou completo" value={form.nome} onChange={(value) => setForm((prev) => ({ ...prev, nome: value }))} required />
+                  <div className="space-y-6">
+                    <div className="grid gap-4 md:grid-cols-2">
+                      <Field label="Nome artístico ou completo" value={form.nome} onChange={(value) => setForm((prev) => ({ ...prev, nome: value }))} required />
                       <Field label="Biografia ou especialidade" value={form.bio} onChange={(value) => setForm((prev) => ({ ...prev, bio: value }))} />
                     </div>
 
-                    <div className="grid gap-4 sm:p-6 lg:grid-cols-[minmax(0,1fr)_320px]">
-                      <div className="rounded-[2rem] border border-gray-200 dark:border-white/5 bg-white dark:bg-[#1a171f] p-4 sm:p-6">
-                        <p className="text-[10px] font-black uppercase tracking-[0.22em] text-[#efbac2]">Categorias profissionais</p>
-                        <h3 className="mt-3 text-3xl font-brand-display text-gray-900 dark:text-white">Defina como esta pessoa aparece no salÃ£o</h3>
-                        <p className="mt-3 text-sm text-gray-200 dark:text-white/56">
-                          Exemplos: cabeleireiro, manicure, barbeiro, esteticista ou designer de sobrancelhas.
-                        </p>
+                    <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_300px]">
+                      <div className="rounded-2xl border border-black/[0.04] dark:border-white/[0.04] bg-white/40 dark:bg-white/[0.01] p-5 shadow-sm space-y-4">
+                        <div>
+                          <p className="text-xs font-semibold text-[#d48997]">Categorias Profissionais</p>
+                          <p className="mt-1 text-xs text-gray-400 dark:text-gray-550 leading-relaxed font-normal">
+                            Vincule o profissional às categorias correspondentes na plataforma (ex: Barbeiro, Manicure).
+                          </p>
+                        </div>
 
-                        <div className="mt-6 flex flex-col gap-3 md:flex-row">
+                        <div className="flex flex-col gap-2 md:flex-row">
                           <input
                             value={novaCategoria}
                             onChange={(event) => setNovaCategoria(event.target.value)}
-                            placeholder="Criar nova categoria do salÃ£o"
-                            className="flex-1 rounded-[1.2rem] border border-gray-200 dark:border-white/5 bg-[#332832] px-4 py-3 text-sm text-white outline-none placeholder:text-white/28 focus:border-[#e29ba8]/28"
+                            placeholder="Criar nova categoria"
+                            className="flex-1 rounded-xl border border-black/[0.08] dark:border-white/10 bg-white px-4 py-2.5 text-sm text-gray-900 outline-none placeholder:text-gray-400 focus:border-[#d48997] focus:ring-2 focus:ring-[#d48997]/10 dark:bg-[#111113] dark:text-white transition-all"
                           />
-                          <button type="button" onClick={addCategoria} className="rounded-[1.2rem] bg-gradient-to-r from-[#E29BA8] to-[#d48997] text-[#111116] px-5 py-3 text-[10px] font-black uppercase tracking-[0.22em] text-white">
-                            Adicionar categoria
+                          <button type="button" onClick={addCategoria} className="rounded-xl bg-[#d48997] hover:bg-[#c97b8a] text-white px-4 py-2.5 text-xs font-semibold shrink-0">
+                            Adicionar
                           </button>
                         </div>
 
-                        <div className="mt-5 flex flex-wrap gap-2">
+                        <div className="flex flex-wrap gap-2 pt-2">
                           {categoriasDisponiveis.map((categoria) => {
                             const active = form.categoriasIds.includes(categoria.id);
                             return (
-                              <div key={categoria.id} className={cn('flex items-center gap-2 rounded-full border px-3 py-2', active ? 'border-[#e29ba8]/32 bg-[#e29ba8]/10' : 'border-gray-200 dark:border-white/5 bg-white/[0.04]')}>
-                                <button type="button" onClick={() => toggleCategoria(categoria.id)} className={cn('text-[10px] font-black uppercase tracking-[0.16em]', active ? 'text-[#f4c3cb]' : 'text-gray-600 dark:text-white/60')}>
+                              <div key={categoria.id} className={cn('flex items-center gap-1.5 rounded-full border px-3 py-1.5 transition-all text-xs font-medium', active ? 'border-[#d48997]/30 bg-[#d48997]/5 text-[#d48997]' : 'border-black/[0.04] dark:border-white/10 bg-white/40 dark:bg-white/5 text-gray-600 dark:text-white/60')}>
+                                <button type="button" onClick={() => toggleCategoria(categoria.id)} className="normal-case font-medium">
                                   {categoria.nome}
                                 </button>
                                 {!isScopedProfessional && (
-                                  <button type="button" onClick={() => removeCategoria(categoria.id)} className="text-white/34 transition hover:text-red-200">
+                                  <button type="button" onClick={() => removeCategoria(categoria.id)} className="text-gray-400 hover:text-red-500 transition-colors">
                                     <Trash2 size={12} />
                                   </button>
                                 )}
                               </div>
                             );
                           })}
-                          {categoriasDisponiveis.length === 0 && <span className="text-sm text-white/38">Nenhuma categoria criada ainda.</span>}
+                          {categoriasDisponiveis.length === 0 && <span className="text-xs text-gray-400">Nenhuma categoria criada ainda.</span>}
                         </div>
                       </div>
 
-                      <div className="rounded-[2rem] border border-gray-200 dark:border-white/5 bg-black/14 p-4 sm:p-6">
+                      <div className="rounded-2xl border border-black/[0.04] dark:border-white/[0.04] bg-white/40 dark:bg-white/[0.01] p-5 shadow-sm flex flex-col justify-center">
                         <ImageUpload
-                          label="Retrato profissional"
+                          label="Foto de Perfil"
                           value={form.fotoUrl}
                           onChange={(value) => setForm((prev) => ({ ...prev, fotoUrl: value }))}
                         />
                       </div>
                     </div>
 
-                    <div className="grid gap-4 sm:p-6 md:grid-cols-3 rounded-[2rem] border border-gray-200 dark:border-white/5 bg-black/14 p-4 sm:p-6">
-                      <NumberField label="Comissao padrao (%)" value={form.comissaoPercent} onChange={(value) => setForm((prev) => ({ ...prev, comissaoPercent: Number(value || 0) }))} icon={<Percent size={14} />} />
-                      <NumberField label="Meta mensal (R$)" value={form.metaMensal} onChange={(value) => setForm((prev) => ({ ...prev, metaMensal: Number(value || 0) }))} icon={<TrendingUp size={14} />} />
-                      <NumberField label="Bonus fixo (R$)" value={form.bonusMetaValor} onChange={(value) => setForm((prev) => ({ ...prev, bonusMetaValor: Number(value || 0) }))} icon={<DollarSign size={14} />} />
+                    <div className="grid gap-4 md:grid-cols-3 rounded-2xl border border-black/[0.04] dark:border-white/[0.04] bg-white/40 dark:bg-white/[0.01] p-5 shadow-sm">
+                      <NumberField label="Comissão Padrão (%)" value={form.comissaoPercent} onChange={(value) => setForm((prev) => ({ ...prev, comissaoPercent: Number(value || 0) }))} icon={<Percent size={13} />} />
+                      <NumberField label="Meta Mensal (R$)" value={form.metaMensal} onChange={(value) => setForm((prev) => ({ ...prev, metaMensal: Number(value || 0) }))} icon={<TrendingUp size={13} />} />
+                      <NumberField label="Bônus Meta Fixo (R$)" value={form.bonusMetaValor} onChange={(value) => setForm((prev) => ({ ...prev, bonusMetaValor: Number(value || 0) }))} icon={<DollarSign size={13} />} />
                     </div>
                   </div>
                 )}
 
                 {activeTab === 'contato' && (
-                  <div className="grid gap-4 sm:p-6 md:grid-cols-2">
-                    <Field label="E-mail" value={form.email} onChange={(value) => setForm((prev) => ({ ...prev, email: value }))} icon={<Mail size={14} />} />
-                    <Field label="Telefone ou WhatsApp" value={form.telefone} onChange={(value) => setForm((prev) => ({ ...prev, telefone: value }))} icon={<Phone size={14} />} />
-                    <Field label="CPF" value={form.cpf} onChange={(value) => setForm((prev) => ({ ...prev, cpf: value }))} icon={<FileText size={14} />} />
-                    <Field label="RG" value={form.rg} onChange={(value) => setForm((prev) => ({ ...prev, rg: value }))} icon={<FileText size={14} />} />
-                    <Field label="Data de nascimento" type="date" value={form.dataNascimento} onChange={(value) => setForm((prev) => ({ ...prev, dataNascimento: value }))} icon={<Calendar size={14} />} />
+                  <div className="grid gap-4 md:grid-cols-2">
+                    <Field label="E-mail principal" value={form.email} onChange={(value) => setForm((prev) => ({ ...prev, email: value }))} icon={<Mail size={13} />} />
+                    <Field label="Telefone / WhatsApp" value={form.telefone} onChange={(value) => setForm((prev) => ({ ...prev, telefone: value }))} icon={<Phone size={13} />} />
+                    <Field label="CPF" value={form.cpf} onChange={(value) => setForm((prev) => ({ ...prev, cpf: value }))} icon={<FileText size={13} />} />
+                    <Field label="RG" value={form.rg} onChange={(value) => setForm((prev) => ({ ...prev, rg: value }))} icon={<FileText size={13} />} />
+                    <Field label="Data de nascimento" type="date" value={form.dataNascimento} onChange={(value) => setForm((prev) => ({ ...prev, dataNascimento: value }))} icon={<Calendar size={13} />} />
                   </div>
                 )}
 
                 {activeTab === 'endereco' && (
-                  <div className="space-y-6">
-                    <div className="grid gap-4 sm:p-6 md:grid-cols-3">
+                  <div className="space-y-4">
+                    <div className="grid gap-4 md:grid-cols-3">
                       <div className="md:col-span-2">
-                        <Field label="Logradouro" value={form.endereco} onChange={(value) => setForm((prev) => ({ ...prev, endereco: value }))} icon={<MapPin size={14} />} />
+                        <Field label="Endereço / Logradouro" value={form.endereco} onChange={(value) => setForm((prev) => ({ ...prev, endereco: value }))} icon={<MapPin size={13} />} />
                       </div>
-                      <Field label="Numero" value={form.numero} onChange={(value) => setForm((prev) => ({ ...prev, numero: value }))} />
+                      <Field label="Número" value={form.numero} onChange={(value) => setForm((prev) => ({ ...prev, numero: value }))} />
                     </div>
-                    <div className="grid gap-4 sm:p-6 md:grid-cols-2">
+                    <div className="grid gap-4 md:grid-cols-2">
                       <Field label="Bairro" value={form.bairro} onChange={(value) => setForm((prev) => ({ ...prev, bairro: value }))} />
-                      <Field label="Complemento" value={form.complemento} onChange={(value) => setForm((prev) => ({ ...prev, complemento: value }))} />
+                      <Field label="Complemento (apto, sala)" value={form.complemento} onChange={(value) => setForm((prev) => ({ ...prev, complemento: value }))} />
                     </div>
-                    <div className="grid gap-4 sm:p-6 md:grid-cols-3">
+                    <div className="grid gap-4 md:grid-cols-3">
                       <Field label="CEP" value={form.cep} onChange={(value) => setForm((prev) => ({ ...prev, cep: value }))} />
                       <Field label="Cidade" value={form.cidade} onChange={(value) => setForm((prev) => ({ ...prev, cidade: value }))} />
-                      <Field label="Estado" value={form.estado} onChange={(value) => setForm((prev) => ({ ...prev, estado: value }))} />
+                      <Field label="Estado (UF)" value={form.estado} onChange={(value) => setForm((prev) => ({ ...prev, estado: value }))} />
                     </div>
                   </div>
                 )}
 
                 {activeTab === 'servicos' && (
                   <div className="space-y-6">
-                    <div className="flex flex-col gap-3 rounded-[2rem] border border-gray-200 dark:border-white/5 bg-black/14 p-4 sm:p-6 md:flex-row md:items-center md:justify-between">
+                    <div className="flex flex-col gap-3 rounded-2xl border border-black/[0.04] dark:border-white/[0.04] bg-white/40 dark:bg-white/[0.01] p-5 shadow-sm md:flex-row md:items-center md:justify-between">
                       <div>
-                        <p className="text-[10px] font-black uppercase tracking-[0.22em] text-[#efbac2]">Menu de especialidades</p>
-                        <h3 className="mt-2 text-3xl font-brand-display text-gray-900 dark:text-white">Servicos e comissoes</h3>
-                        <p className="mt-2 text-sm text-gray-200 dark:text-white/56">Use categorias para liberar pacotes inteiros de servicos e complemente manualmente so quando precisar.</p>
+                        <p className="text-xs font-semibold text-[#d48997]">Catálogo de Especialidades</p>
+                        <h3 className="mt-1.5 text-lg font-serif font-normal text-gray-905 dark:text-white">Serviços e Comissões</h3>
+                        <p className="mt-1 text-xs text-gray-400 dark:text-gray-500 font-normal">Libere serviços inteiros marcando as categorias de serviços correspondentes.</p>
                       </div>
-                      <div className="rounded-full bg-[#e29ba8]/10 px-4 py-3 text-[10px] font-black uppercase tracking-[0.18em] text-[#f2c1c9]">
-                        {servicosVinculadosNoFormulario.length} servicos ativos
+                      <div className="rounded-full bg-[#d48997]/10 px-4 py-1.5 text-[10px] font-semibold text-[#d48997] shrink-0 border border-[#d48997]/20">
+                        {servicosVinculadosNoFormulario.length} ativos
                       </div>
                     </div>
 
-                    <div className="rounded-[2rem] border border-gray-200 dark:border-white/5 bg-black/14 p-4 sm:p-6">
-                      <p className="text-[10px] font-black uppercase tracking-[0.22em] text-[#efbac2]">Categorias de servicos</p>
-                      <h4 className="mt-2 text-2xl font-brand-display text-gray-900 dark:text-white">Marque uma vez e herde todos os servicos</h4>
-                      <p className="mt-2 text-sm text-gray-200 dark:text-white/56">
-                        Quando uma categoria estiver marcada, os servicos dela passam a valer automaticamente para este profissional.
-                      </p>
-
-                      <div className="mt-5 flex flex-wrap gap-3">
+                    <div className="rounded-2xl border border-black/[0.04] dark:border-white/[0.04] bg-white/40 dark:bg-white/[0.01] p-5 shadow-sm">
+                      <p className="text-[10px] font-medium text-gray-400 dark:text-gray-500 uppercase tracking-wide mb-3">Categorias de Serviços Relacionados</p>
+                      <div className="flex flex-wrap gap-2.5">
                         {categoriasServicosDisponiveis.map((categoria) => {
                           const active = form.servicoCategoriasIds.includes(categoria.id);
                           return (
@@ -630,114 +625,96 @@ export default function Profissionais() {
                               type="button"
                               onClick={() => toggleCategoriaServico(categoria.id)}
                               className={cn(
-                                'rounded-[1.3rem] border px-4 py-3 text-left transition',
+                                'rounded-xl border px-4 py-2.5 text-left transition-all text-xs font-semibold',
                                 active
-                                  ? 'border-[#e29ba8]/34 bg-[#e29ba8]/10 shadow-[0_18px_40px_-30px_rgba(222,151,165,0.6)]'
-                                  : 'border-gray-200 dark:border-white/5 bg-white/[0.03]'
+                                  ? 'border-[#d48997]/30 bg-[#d48997]/5 text-[#d48997] shadow-sm'
+                                  : 'border-black/[0.04] bg-gray-50/50 text-gray-500 dark:border-white/10 dark:bg-white/5 dark:text-white/70'
                               )}
                             >
-                              <p className={cn('text-[10px] font-black uppercase tracking-[0.18em]', active ? 'text-[#f2c1c9]' : 'text-gray-500 dark:text-white/48')}>
-                                {categoria.nome}
-                              </p>
-                              <p className="mt-2 text-sm text-gray-600 dark:text-white/62">
-                                {(categoria.servicos || []).length} servicos
+                              <p className="normal-case font-medium">{categoria.nome}</p>
+                              <p className="text-[10px] text-gray-400 dark:text-gray-500 font-normal mt-0.5">
+                                {(categoria.servicos || []).length} serviços
                               </p>
                             </button>
                           );
                         })}
                         {categoriasServicosDisponiveis.length === 0 && (
-                          <span className="text-sm text-gray-500 dark:text-white/40">Nenhuma categoria de servicos criada ainda. Cadastre em Servicos.</span>
+                          <span className="text-xs text-gray-400">Nenhuma categoria de serviços encontrada.</span>
                         )}
                       </div>
                     </div>
 
-                    <div className="rounded-[2rem] border border-gray-200 dark:border-white/5 bg-black/14 p-4 sm:p-6">
-                      <p className="text-[10px] font-black uppercase tracking-[0.22em] text-[#efbac2]">Resumo efetivo</p>
-                      <div className="mt-4 flex flex-wrap gap-2">
-                        {servicosVinculadosNoFormulario.map((servico) => (
-                          <span key={servico.id} className={cn('rounded-full border px-3 py-2 text-[10px] font-black uppercase tracking-[0.16em]', servico.inherited ? 'border-[#e29ba8]/20 bg-[#e29ba8]/10 text-[#f2c1c9]' : 'border-gray-200 dark:border-white/5 bg-white/[0.03] text-gray-600 dark:text-white/64')}>
-                            {servico.nome}
-                            {servico.categoriaNome ? ` · ${servico.categoriaNome}` : ''}
-                          </span>
-                        ))}
-                        {servicosVinculadosNoFormulario.length === 0 && (
-                          <span className="text-sm text-gray-500 dark:text-white/40">Nenhum servico vinculado ainda.</span>
-                        )}
-                      </div>
-                    </div>
-
-                    <div className="space-y-4">
-                      {servicosDisponiveis.map((servico) => {
-                        const selected = form.servicos.find((item) => item.id === servico.id);
-                        const inherited = servicoIdsPorCategoriaSelecionada.has(servico.id);
-                        return (
-                          <div key={servico.id} className={cn('rounded-[2rem] border p-5 transition', selected || inherited ? 'border-[#e29ba8]/34 bg-[#e29ba8]/08' : 'border-gray-200 dark:border-white/5 bg-white/[0.03]')}>
-                            <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-                              <label className={cn('flex items-center gap-4', inherited && !selected ? 'cursor-default' : 'cursor-pointer')}>
-                                <input
-                                  type="checkbox"
-                                  checked={Boolean(selected || inherited)}
-                                  disabled={inherited && !selected}
-                                  onChange={() => toggleServico(servico.id)}
-                                  className="h-4 w-4 accent-[#de97a5] disabled:cursor-not-allowed disabled:opacity-70"
-                                />
-                                <div>
-                                  <div className="flex flex-wrap items-center gap-2">
-                                    <p className="text-sm font-semibold text-gray-900 dark:text-white">{servico.nome}</p>
-                                    {servico.categoria?.nome && (
-                                      <span className="rounded-full border border-[#e29ba8]/18 bg-[#e29ba8]/08 px-2 py-1 text-[9px] font-black uppercase tracking-[0.16em] text-[#f2c1c9]">
-                                        {servico.categoria.nome}
-                                      </span>
-                                    )}
-                                    {inherited && (
-                                      <span className="rounded-full border border-emerald-400/20 bg-emerald-400/10 px-2 py-1 text-[9px] font-black uppercase tracking-[0.16em] text-emerald-200">
-                                        Herdado por categoria
-                                      </span>
-                                    )}
+                    <div className="rounded-2xl border border-black/[0.04] dark:border-white/[0.04] bg-white/40 dark:bg-white/[0.01] p-5 shadow-sm space-y-3.5">
+                      <p className="text-[10px] font-medium text-gray-400 dark:text-gray-500 uppercase tracking-wide">Serviços Vinculados Individualmente</p>
+                      <div className="grid gap-3">
+                        {servicosDisponiveis.map((servico) => {
+                          const selected = form.servicos.find((item) => item.id === servico.id);
+                          const inherited = servicoIdsPorCategoriaSelecionada.has(servico.id);
+                          return (
+                            <div key={servico.id} className={cn('rounded-xl border p-4.5 transition-all bg-white dark:bg-white/[0.02]', selected || inherited ? 'border-[#d48997]/25 shadow-sm' : 'border-black/[0.04] dark:border-white/[0.05]')}>
+                              <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+                                <label className={cn('flex items-center gap-3', inherited && !selected ? 'cursor-default' : 'cursor-pointer')}>
+                                  <input
+                                    type="checkbox"
+                                    checked={Boolean(selected || inherited)}
+                                    disabled={inherited && !selected}
+                                    onChange={() => toggleServico(servico.id)}
+                                    className="h-4 w-4 rounded border-gray-300 text-[#d48997] focus:ring-[#d48997]/50 disabled:opacity-50"
+                                  />
+                                  <div>
+                                    <div className="flex flex-wrap items-center gap-2">
+                                      <p className="text-sm font-semibold text-gray-900 dark:text-white normal-case">{servico.nome}</p>
+                                      {inherited && (
+                                        <span className="rounded-full border border-emerald-500/20 bg-emerald-500/10 px-2 py-0.5 text-[9px] font-medium text-emerald-600 dark:text-emerald-400">
+                                          Herdado da categoria
+                                        </span>
+                                      )}
+                                    </div>
+                                    <p className="text-xs text-gray-400 dark:text-gray-500 font-medium mt-0.5">
+                                      {Number(servico.preco || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
+                                    </p>
                                   </div>
-                                  <p className="mt-1 text-xs text-gray-500 dark:text-white/44">
-                                    {Number(servico.preco || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
-                                  </p>
-                                </div>
-                              </label>
+                                </label>
 
-                              {selected && (
-                                <div className="grid gap-3 md:grid-cols-2">
-                                  <NumberField compact label="Comissao (%)" value={selected.comissaoPercent ?? ''} onChange={(value) => updateServicoComissao(servico.id, 'comissaoPercent', value)} icon={<Percent size={13} />} />
-                                  <NumberField compact label="Valor fixo (R$)" value={selected.comissaoValor ?? ''} onChange={(value) => updateServicoComissao(servico.id, 'comissaoValor', value)} icon={<DollarSign size={13} />} />
-                                </div>
-                              )}
+                                {selected && (
+                                  <div className="grid gap-3 grid-cols-2">
+                                    <NumberField compact label="Repasse (%)" value={selected.comissaoPercent ?? ''} onChange={(value) => updateServicoComissao(servico.id, 'comissaoPercent', value)} icon={<Percent size={12} />} />
+                                    <NumberField compact label="Fixo (R$)" value={selected.comissaoValor ?? ''} onChange={(value) => updateServicoComissao(servico.id, 'comissaoValor', value)} icon={<DollarSign size={12} />} />
+                                  </div>
+                                )}
+                              </div>
                             </div>
-                          </div>
-                        );
-                      })}
+                          );
+                        })}
+                      </div>
                     </div>
                   </div>
                 )}
+
                 {activeTab === 'banco' && (
-                  <div className="space-y-6">
-                    <div className="grid gap-4 sm:p-6 md:grid-cols-2">
-                      <Field label="Banco" value={form.banco} onChange={(value) => setForm((prev) => ({ ...prev, banco: value }))} icon={<CreditCard size={14} />} />
-                      <Field label="Agencia" value={form.agencia} onChange={(value) => setForm((prev) => ({ ...prev, agencia: value }))} />
-                      <Field label="Conta" value={form.conta} onChange={(value) => setForm((prev) => ({ ...prev, conta: value }))} />
-                      <Field label="Chave Pix" value={form.pix} onChange={(value) => setForm((prev) => ({ ...prev, pix: value }))} icon={<DollarSign size={14} />} />
+                  <div className="space-y-4">
+                    <div className="grid gap-4 md:grid-cols-2">
+                      <Field label="Nome da Instituição Bancária" value={form.banco} onChange={(value) => setForm((prev) => ({ ...prev, banco: value }))} icon={<CreditCard size={13} />} />
+                      <Field label="Código da Agência" value={form.agencia} onChange={(value) => setForm((prev) => ({ ...prev, agency: value }))} />
+                      <Field label="Número da Conta Bancária" value={form.conta} onChange={(value) => setForm((prev) => ({ ...prev, conta: value }))} />
+                      <Field label="Chave PIX principal" value={form.pix} onChange={(value) => setForm((prev) => ({ ...prev, pix: value }))} icon={<DollarSign size={13} />} />
                     </div>
 
-                    <div className="rounded-[2rem] border border-[#e29ba8]/12 bg-[#e29ba8]/06 p-4 sm:p-6">
-                      <p className="text-[10px] font-black uppercase tracking-[0.22em] text-[#efbac2]">Repasse organizado</p>
-                      <p className="mt-3 text-sm leading-relaxed text-white/62">
-                        Esses dados ajudam no controle de comissÃµes e deixam a rotina financeira mais segura na hora do pagamento da equipe.
+                    <div className="rounded-2xl border border-black/[0.04] dark:border-white/[0.04] bg-white/40 dark:bg-white/[0.01] p-5 shadow-sm">
+                      <p className="text-xs font-semibold text-[#d48997]">Repasse Automatizado</p>
+                      <p className="mt-1 text-xs text-gray-400 dark:text-gray-500 leading-relaxed font-normal">
+                        Estas informações são utilizadas pelo financeiro do salão para consolidar relatórios de comissionamento e repasses mensais/quinzenais.
                       </p>
                     </div>
                   </div>
                 )}
 
-                <div className="sticky bottom-0 flex flex-col gap-3 border-t border-gray-200 bg-white/95 pt-6 backdrop-blur dark:border-white/5 dark:bg-[#1a171f]/95 md:flex-row">
-                  <button type="button" onClick={() => setModalOpen(false)} className="rounded-[1.4rem] border border-gray-200 dark:border-white/5 bg-white/[0.04] px-6 py-4 text-[10px] font-black uppercase tracking-[0.22em] text-gray-500 dark:text-white/66">
-                    Descartar alteracoes
+                <div className="sticky bottom-0 flex flex-col gap-3 border-t border-black/[0.04] bg-white/95 pt-4 backdrop-blur dark:border-white/5 dark:bg-[#0c0c0e]/95 md:flex-row justify-end">
+                  <button type="button" onClick={() => setModalOpen(false)} className="rounded-xl border border-black/[0.04] bg-gray-50 hover:bg-gray-105 dark:bg-white/5 px-6 py-2.5 text-xs font-semibold text-gray-500 dark:text-white/70">
+                    Descartar alterações
                   </button>
-                  <button type="submit" disabled={saving} className="flex-1 rounded-[1.5rem] bg-gradient-to-r from-[#E29BA8] to-[#d48997] text-[#111116] px-6 py-4 text-[10px] font-black uppercase tracking-[0.24em] text-white shadow-[0_24px_60px_-30px_rgba(222,151,165,0.95)]">
-                    {saving ? 'Salvando...' : editingId ? 'Salvar perfil' : 'Criar perfil'}
+                  <button type="submit" disabled={saving} className="rounded-xl bg-[#d48997] hover:bg-[#c97b8a] text-white px-6 py-2.5 text-xs font-semibold shadow-sm transition">
+                    {saving ? 'Gravando...' : editingId ? 'Salvar Configurações' : 'Criar Profissional'}
                   </button>
                 </div>
               </form>
@@ -747,44 +724,44 @@ export default function Profissionais() {
       )}
 
       {actionMenuModal && (
-        <div className="fixed inset-0 z-[120] flex items-center justify-center bg-black/82 p-4 backdrop-blur-md">
-          <div className="w-full max-w-sm rounded-[2rem] border border-gray-200 dark:border-white/5 bg-white dark:bg-[#1a171f] p-6 shadow-2xl">
-            <div className="flex items-center justify-between mb-6">
-              <h3 className="text-2xl font-brand-display text-gray-900 dark:text-white">Opções</h3>
-              <button onClick={() => setActionMenuModal(null)} className="rounded-2xl border border-gray-200 dark:border-white/5 bg-white/[0.04] p-3 text-gray-600 dark:text-white/60 transition hover:text-gray-900 dark:text-white">
-                <X size={18} />
+        <div className="fixed inset-0 z-[120] flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm">
+          <div className="w-full max-w-sm rounded-2xl border border-black/[0.04] bg-white p-5 shadow-xl dark:border-white/10 dark:bg-[#0c0c0e]">
+            <div className="flex items-center justify-between mb-4 pb-2 border-b border-black/[0.03]">
+              <h3 className="text-lg font-serif font-normal text-gray-905 dark:text-white">Opções Gerais</h3>
+              <button onClick={() => setActionMenuModal(null)} className="rounded-xl border border-black/[0.04] dark:border-white/10 p-2 text-gray-400 hover:text-red-500 transition shadow-sm z-10 bg-white dark:bg-[#0c0c0e]">
+                <X size={16} />
               </button>
             </div>
             
-            <div className="flex flex-col gap-3">
-              <button onClick={() => { openEdit(actionMenuModal, 'geral'); setActionMenuModal(null); }} className="flex items-center gap-3 rounded-[1.2rem] border border-gray-200 dark:border-white/5 bg-white/[0.02] p-4 text-left transition hover:bg-white/[0.06]">
-                <User size={18} className="text-gray-500 dark:text-white/60" />
+            <div className="flex flex-col gap-2">
+              <button onClick={() => { openEdit(actionMenuModal, 'geral'); setActionMenuModal(null); }} className="flex items-center gap-3 rounded-xl border border-black/[0.04] bg-white dark:bg-white/[0.01] p-3 text-left transition hover:bg-gray-50 dark:hover:bg-white/5">
+                <User size={16} className="text-gray-400" />
                 <div>
-                  <p className="text-sm font-bold text-gray-900 dark:text-white">Perfil Geral</p>
-                  <p className="text-[11px] text-gray-500 dark:text-white/40">Nome, biografia, foto e comissão</p>
+                  <p className="text-sm font-semibold text-gray-905 dark:text-white">Perfil e Configurações</p>
+                  <p className="text-[10px] text-gray-405 dark:text-gray-500">Nome, biografia, foto e comissão padrão</p>
                 </div>
               </button>
               
-              <button onClick={() => { openEdit(actionMenuModal, 'servicos'); setActionMenuModal(null); }} className="flex items-center gap-3 rounded-[1.2rem] border border-gray-200 dark:border-white/5 bg-white/[0.02] p-4 text-left transition hover:bg-white/[0.06]">
-                <Scissors size={18} className="text-[#e29ba8]" />
+              <button onClick={() => { openEdit(actionMenuModal, 'servicos'); setActionMenuModal(null); }} className="flex items-center gap-3 rounded-xl border border-black/[0.04] bg-white dark:bg-white/[0.01] p-3 text-left transition hover:bg-gray-50 dark:hover:bg-white/5">
+                <Scissors size={16} className="text-[#d48997]" />
                 <div>
-                  <p className="text-sm font-bold text-gray-900 dark:text-white">Serviços e Preços</p>
-                  <p className="text-[11px] text-gray-500 dark:text-white/40">O que este profissional atende</p>
+                  <p className="text-sm font-semibold text-gray-905 dark:text-white">Serviços Habilitados</p>
+                  <p className="text-[10px] text-gray-455 dark:text-gray-500">Ajustes manuais de comissões por serviço</p>
                 </div>
               </button>
 
-              <button onClick={() => { openEdit(actionMenuModal, 'banco'); setActionMenuModal(null); }} className="flex items-center gap-3 rounded-[1.2rem] border border-gray-200 dark:border-white/5 bg-white/[0.02] p-4 text-left transition hover:bg-white/[0.06]">
-                <CreditCard size={18} className="text-blue-400" />
+              <button onClick={() => { openEdit(actionMenuModal, 'banco'); setActionMenuModal(null); }} className="flex items-center gap-3 rounded-xl border border-black/[0.04] bg-white dark:bg-white/[0.01] p-3 text-left transition hover:bg-gray-50 dark:hover:bg-white/5">
+                <CreditCard size={16} className="text-blue-500" />
                 <div>
-                  <p className="text-sm font-bold text-gray-900 dark:text-white">Dados Financeiros</p>
-                  <p className="text-[11px] text-gray-500 dark:text-white/40">Banco, PIX e repasses</p>
+                  <p className="text-sm font-semibold text-gray-905 dark:text-white">Dados Financeiros</p>
+                  <p className="text-[10px] text-gray-455 dark:text-gray-500">Banco, PIX e informações cadastrais</p>
                 </div>
               </button>
 
               {!isScopedProfessional && (
-                <button onClick={() => { handleDelete(actionMenuModal.id); setActionMenuModal(null); }} className="mt-2 flex items-center justify-center gap-2 rounded-[1.2rem] border border-red-500/20 bg-red-500/10 p-4 text-left transition hover:bg-red-500/20">
-                  <Trash2 size={16} className="text-red-400" />
-                  <span className="text-sm font-bold text-red-400">Excluir profissional</span>
+                <button onClick={() => { handleDelete(actionMenuModal.id); setActionMenuModal(null); }} className="mt-2.5 flex items-center justify-center gap-2 rounded-xl border border-red-500/20 bg-red-500/5 p-3 text-center transition hover:bg-red-500/10">
+                  <Trash2 size={15} className="text-red-500" />
+                  <span className="text-xs font-semibold text-red-500">Excluir Profissional</span>
                 </button>
               )}
             </div>
@@ -793,36 +770,36 @@ export default function Profissionais() {
       )}
 
       {scheduleModal && (
-        <div className="fixed inset-0 z-[120] flex items-center justify-center overflow-y-auto overscroll-contain bg-black/82 p-3 backdrop-blur-md sm:p-4">
-          <div className="flex max-h-[calc(100dvh-1.5rem)] w-full max-w-3xl flex-col overflow-hidden rounded-[2rem] border border-gray-200 dark:border-white/5 bg-white dark:bg-[#1a171f]">
-            <div className="mb-0 flex shrink-0 items-start justify-between gap-4 border-b border-gray-200 px-4 py-4 dark:border-white/5 sm:px-6 sm:py-6 md:px-8">
+        <div className="fixed inset-0 z-[120] flex items-center justify-center overflow-y-auto overscroll-contain bg-black/60 p-3 backdrop-blur-sm sm:p-4">
+          <div className="flex max-h-[calc(100dvh-1.5rem)] w-full max-w-2xl flex-col overflow-hidden rounded-3xl border border-black/[0.04] bg-white dark:bg-[#0c0c0e] dark:border-white/10">
+            <div className="flex shrink-0 items-start justify-between gap-4 border-b border-black/[0.03] px-5 py-4 dark:border-white/5">
               <div>
-                <p className="brand-kicker">Escala semanal</p>
-                <h3 className="mt-2 text-3xl font-brand-display text-gray-900 dark:text-white">{scheduleModal.nome}</h3>
+                <p className="text-[10px] font-semibold text-[#d48997]">Definição de Horários</p>
+                <h3 className="mt-1 font-serif font-normal text-xl sm:text-2xl text-gray-905 dark:text-white">{scheduleModal.nome}</h3>
               </div>
-              <button onClick={() => setScheduleModal(null)} className="rounded-2xl border border-gray-200 dark:border-white/5 bg-white/[0.04] p-3 text-gray-600 dark:text-white/60 transition hover:text-gray-900 dark:text-white">
-                <X size={18} />
+              <button onClick={() => setScheduleModal(null)} className="rounded-xl border border-black/[0.04] dark:border-white/10 p-2 text-gray-400 hover:text-red-500 transition shadow-sm z-10 bg-white dark:bg-[#0c0c0e]">
+                <X size={16} />
               </button>
             </div>
 
-            <div className="min-h-0 flex-1 space-y-3 overflow-y-auto px-4 pb-4 pt-4 custom-scrollbar sm:px-6 sm:pb-6 sm:pt-6 md:px-8 md:pb-8">
+            <div className="min-h-0 flex-1 space-y-3 overflow-y-auto p-5 custom-scrollbar">
               {DIAS.map((dia, index) => {
                 const horario = horarios.find((item) => item.diaSemana === index);
                 return (
-                  <div key={dia} className={cn('rounded-[1.8rem] border p-4', horario ? 'border-emerald-300/18 bg-emerald-400/08' : 'border-gray-200 dark:border-white/5 bg-white/[0.03]')}>
+                  <div key={dia} className={cn('rounded-2xl border p-4 bg-white/60 dark:bg-white/[0.02]', horario ? 'border-emerald-500/25 bg-emerald-500/[0.01]' : 'border-black/[0.04] dark:border-white/[0.04]')}>
                     <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-                      <label className="flex items-center gap-3 text-sm font-semibold text-gray-900 dark:text-white">
-                        <input type="checkbox" checked={Boolean(horario)} onChange={() => toggleDia(index)} className="h-4 w-4 accent-[#de97a5]" />
-                        {dia}
+                      <label className="flex items-center gap-2.5 text-xs font-semibold text-gray-909 dark:text-white cursor-pointer select-none">
+                        <input type="checkbox" checked={Boolean(horario)} onChange={() => toggleDia(index)} className="h-4 w-4 rounded border-gray-300 text-[#d48997] focus:ring-[#d48997]/50" />
+                        <span>{dia}</span>
                       </label>
 
                       {horario && (
-                        <div className="grid gap-3 md:grid-cols-3">
+                        <div className="grid gap-3.5 grid-cols-3">
                           <CompactInput type="time" label="Entrada" value={horario.inicioHora} onChange={(value) => updateHorario(index, 'inicioHora', value)} />
-                          <CompactInput type="time" label="Saida" value={horario.fimHora} onChange={(value) => updateHorario(index, 'fimHora', value)} />
+                          <CompactInput type="time" label="Saída" value={horario.fimHora} onChange={(value) => updateHorario(index, 'fimHora', value)} />
                           <div>
-                            <label className="mb-2 block text-[10px] font-black uppercase tracking-[0.18em] text-gray-500 dark:text-white/40">Intervalo</label>
-                            <select value={horario.intervaloMin} onChange={(event) => updateHorario(index, 'intervaloMin', Number(event.target.value))} className="w-full rounded-[1rem] border border-gray-200 dark:border-white/5 bg-[#332832] px-4 py-3 text-sm text-white outline-none focus:border-[#e29ba8]/28">
+                            <label className="mb-1.5 block text-[10px] font-medium text-gray-400 dark:text-gray-500">Intervalo</label>
+                            <select value={horario.intervaloMin} onChange={(event) => updateHorario(index, 'intervaloMin', Number(event.target.value))} className="w-full rounded-xl border border-black/[0.08] dark:border-white/10 bg-white dark:bg-[#111113] px-3.5 py-2.5 text-xs font-medium text-gray-950 dark:text-white outline-none focus:border-[#d48997]">
                               <option value={15}>15 min</option>
                               <option value={30}>30 min</option>
                               <option value={60}>60 min</option>
@@ -836,12 +813,12 @@ export default function Profissionais() {
               })}
             </div>
 
-            <div className="sticky bottom-0 mt-0 flex shrink-0 flex-col gap-3 border-t border-gray-200 bg-white/95 px-4 py-4 backdrop-blur dark:border-white/5 dark:bg-[#1a171f]/95 sm:px-6 md:flex-row md:px-8">
-              <button onClick={() => setScheduleModal(null)} className="rounded-[1.4rem] border border-gray-200 dark:border-white/5 bg-white/[0.04] px-6 py-4 text-[10px] font-black uppercase tracking-[0.22em] text-gray-500 dark:text-white/66">
+            <div className="sticky bottom-0 flex shrink-0 flex-col gap-3 border-t border-black/[0.04] bg-white/95 p-4 backdrop-blur dark:border-white/5 dark:bg-[#0c0c0e]/95 md:flex-row justify-end">
+              <button onClick={() => setScheduleModal(null)} className="rounded-xl border border-black/[0.04] bg-gray-50 hover:bg-gray-105 dark:bg-white/5 px-6 py-2.5 text-xs font-semibold text-gray-500 dark:text-white/70">
                 Cancelar
               </button>
-              <button onClick={saveSchedules} disabled={saving} className="flex-1 rounded-[1.5rem] bg-gradient-to-r from-[#E29BA8] to-[#d48997] text-[#111116] px-6 py-4 text-[10px] font-black uppercase tracking-[0.24em] text-white">
-                {saving ? 'Salvando...' : 'Salvar horarios'}
+              <button onClick={saveSchedules} disabled={saving} className="rounded-xl bg-[#d48997] hover:bg-[#c97b8a] text-white px-6 py-2.5 text-xs font-semibold shadow-sm transition">
+                {saving ? 'Gravando...' : 'Salvar Escala'}
               </button>
             </div>
           </div>
@@ -854,24 +831,24 @@ export default function Profissionais() {
 function MiniMetric({ label, value, highlight = false }) {
   return (
     <div className="text-center">
-      <p className="text-[9px] font-black uppercase tracking-[0.18em] text-gray-500 dark:text-white/40">{label}</p>
-      <p className={cn('mt-2 text-2xl font-semibold', highlight ? 'text-[#efbac2]' : 'text-gray-900 dark:text-white')}>{value}</p>
+      <p className="text-[10px] font-medium text-gray-400 dark:text-gray-500 normal-case">{label}</p>
+      <p className={cn('mt-0.5 text-lg font-semibold', highlight ? 'text-[#d48997]' : 'text-gray-909 dark:text-white')}>{value}</p>
     </div>
   );
 }
 
 function Field({ label, value, onChange, type = 'text', icon, required = false }) {
   return (
-    <div className="space-y-3">
-      <label className="text-[10px] font-black uppercase tracking-[0.22em] text-white/42">{label}</label>
+    <div className="space-y-1.5 w-full">
+      <label className="text-[10px] font-medium text-gray-400 dark:text-gray-500">{label} {required && <span className="text-rose-500">*</span>}</label>
       <div className="relative">
-        {icon && <span className="absolute left-4 top-1/2 -translate-y-1/2 text-white/28">{icon}</span>}
+        {icon && <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400">{icon}</span>}
         <input
           type={type}
           value={value}
           onChange={(event) => onChange(event.target.value)}
           required={required}
-          className={cn('w-full rounded-[1.25rem] border border-gray-200 dark:border-white/5 bg-[#332832] px-4 py-3 text-sm text-white outline-none placeholder:text-white/28 focus:border-[#e29ba8]/28', icon && 'pl-12')}
+          className={cn('w-full rounded-xl border border-black/[0.08] dark:border-white/10 bg-white px-4 py-2.5 text-sm text-gray-950 outline-none placeholder:text-gray-400 focus:border-[#d48997] focus:ring-2 focus:ring-[#d48997]/10 dark:bg-[#111113] dark:text-white transition-all', icon && 'pl-11')}
         />
       </div>
     </div>
@@ -880,15 +857,15 @@ function Field({ label, value, onChange, type = 'text', icon, required = false }
 
 function NumberField({ label, value, onChange, icon, compact = false }) {
   return (
-    <div className="space-y-3">
-      <label className="text-[10px] font-black uppercase tracking-[0.22em] text-white/42">{label}</label>
+    <div className="space-y-1.5 w-full">
+      <label className="text-[10px] font-medium text-gray-400 dark:text-gray-500">{label}</label>
       <div className="relative">
-        {icon && <span className="absolute left-4 top-1/2 -translate-y-1/2 text-white/28">{icon}</span>}
+        {icon && <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400">{icon}</span>}
         <input
           type="number"
           value={value}
           onChange={(event) => onChange(event.target.value)}
-          className={cn('w-full rounded-[1.25rem] border border-gray-200 dark:border-white/5 bg-[#332832] px-4 py-3 text-sm text-white outline-none placeholder:text-white/28 focus:border-[#e29ba8]/28', icon && 'pl-12', compact && 'py-2.5')}
+          className={cn('w-full rounded-xl border border-black/[0.08] dark:border-white/10 bg-white px-4 py-2.5 text-sm text-gray-950 outline-none placeholder:text-gray-400 focus:border-[#d48997] focus:ring-2 focus:ring-[#d48997]/10 dark:bg-[#111113] dark:text-white transition-all', icon && 'pl-11', compact && 'py-2')}
         />
       </div>
     </div>
@@ -898,14 +875,13 @@ function NumberField({ label, value, onChange, icon, compact = false }) {
 function CompactInput({ label, value, onChange, type = 'text' }) {
   return (
     <div>
-      <label className="mb-2 block text-[10px] font-black uppercase tracking-[0.18em] text-gray-500 dark:text-white/40">{label}</label>
+      <label className="mb-1.5 block text-[10px] font-medium text-gray-400 dark:text-gray-500">{label}</label>
       <input
         type={type}
         value={value}
         onChange={(event) => onChange(event.target.value)}
-        className="w-full rounded-[1rem] border border-gray-200 dark:border-white/5 bg-[#332832] px-4 py-3 text-sm text-white outline-none focus:border-[#e29ba8]/28"
+        className="w-full rounded-xl border border-black/[0.08] dark:border-white/10 bg-white px-3.5 py-2.5 text-xs font-semibold text-gray-950 dark:text-white outline-none focus:border-[#d48997] dark:bg-[#111113] transition-all"
       />
     </div>
   );
 }
-
