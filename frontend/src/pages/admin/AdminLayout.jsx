@@ -429,8 +429,8 @@ export default function AdminLayout() {
       {/* Sidebar — desktop */}
       <aside className={cn(
         "hidden lg:flex flex-col transition-all duration-500 ease-in-out relative group/sidebar",
-        effectiveCollapsed ? "w-24" : "w-72",
-        dark ? "bg-slate-950/40 backdrop-blur-2xl border-r border-white/5" : "bg-white/70 backdrop-blur-2xl border-r border-[#edd7d4] shadow-[0_24px_60px_-32px_rgba(140,107,117,0.15)]"
+        effectiveCollapsed ? "w-24" : "w-[290px]",
+        dark ? "bg-[#121116]/80 backdrop-blur-3xl border-r border-white/[0.02]" : "bg-[#fcfafa]/80 backdrop-blur-3xl border-r border-black/[0.03] shadow-[0_24px_60px_-32px_rgba(140,107,117,0.06)]"
       )}>
         {/* Toggle Button */}
         <div className={cn("absolute -right-4 top-24 z-50", !canToggleSidebar && "hidden")}>
@@ -480,7 +480,7 @@ export default function AdminLayout() {
                 >
                   <Bell className="w-4 h-4" />
                   {alertasUnread > 0 && (
-                    <span className="absolute -right-1 -top-1 min-w-[18px] rounded-full bg-[#e29ba8] px-1.5 py-0.5 text-[9px] font-black leading-none text-[#1a1a1f]">
+                    <span className="absolute -right-1 -top-1 min-w-[18px] rounded-full bg-[#e29ba8] px-1.5 py-0.5 text-[10px] font-bold leading-none text-[#1a1a1f] shadow-sm">
                       {alertasUnread > 9 ? '9+' : alertasUnread}
                     </span>
                   )}
@@ -516,22 +516,22 @@ export default function AdminLayout() {
                     title={effectiveCollapsed ? item.label : ""}
                     className={({ isActive }) =>
                       cn(
-                        "flex items-center rounded-2xl transition-all duration-300 group relative",
+                        "flex items-center rounded-[1.25rem] transition-all duration-300 group relative",
                         effectiveCollapsed ? "justify-center p-4" : "gap-4 px-5 py-3",
                         isActive
                             ? dark
-                            ? "bg-gradient-to-r from-[#d68c99] to-[#b26a78] text-white shadow-xl shadow-[#d68c9955] translate-x-1"
-                            : "bg-[#fff0f1] text-[#b56f7c] ring-1 ring-[#efcbd1] shadow-[0_18px_38px_-28px_rgba(210,133,149,0.55)] translate-x-1"
+                            ? "bg-white/10 text-white shadow-lg shadow-black/20 translate-x-1"
+                            : "bg-[#fff0f1] text-[#b56f7c] translate-x-1"
                           : cn(
                               "hover:translate-x-1",
-                              dark ? "text-[#a98690] hover:text-[#faf7f6] hover:bg-white/5" : "text-[#8c6b75] hover:text-[#1a1a1f] hover:bg-[#fff2f1]"
+                              dark ? "text-[#a98690] hover:text-[#faf7f6] hover:bg-white/[0.02]" : "text-[#8c6b75] hover:text-[#1a1a1f] hover:bg-[#fff2f1]"
                             )
                       )
                     }
                   >
                     <item.icon className={cn("w-4 h-4 flex-shrink-0", "transition-transform group-hover:scale-110")} />
                     {!effectiveCollapsed && (
-                      <span className="text-[10px] font-black uppercase tracking-widest whitespace-nowrap">
+                      <span className="text-[11px] font-black uppercase tracking-widest whitespace-nowrap">
                         {item.label}
                       </span>
                     )}
@@ -560,8 +560,8 @@ export default function AdminLayout() {
 
       {/* Topbar — mobile */}
       <div className={cn(
-        "lg:hidden fixed top-0 left-0 right-0 z-[70] flex items-center justify-between px-4 py-4 sm:px-6 border-b",
-        dark ? "bg-[#16151bdd] backdrop-blur-xl border-white/5" : "bg-[#fffaf9d9] backdrop-blur-xl border-[#f0dfdc] shadow-[0_4px_30px_rgba(226,155,168,0.03)]"
+        "lg:hidden fixed top-0 left-0 right-0 z-[70] flex items-center justify-between px-5 py-4 border-b",
+        dark ? "bg-[#121116]/90 backdrop-blur-xl border-white/[0.02]" : "bg-white/90 backdrop-blur-xl border-black/[0.02] shadow-[0_4px_30px_rgba(226,155,168,0.02)]"
       )}>
         <div className="flex items-center gap-3">
           {isSubPage && (
@@ -644,11 +644,11 @@ export default function AdminLayout() {
                           type="button"
                           onClick={() => handleMobileNavigate(item.to)}
                           className={cn(
-                            "w-full flex items-center gap-4 px-5 py-3.5 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all text-left",
+                            "w-full flex items-center gap-4 px-5 py-4 rounded-[1.25rem] text-[11px] font-black uppercase tracking-widest transition-all text-left",
                             isItemActive(item)
                               ? dark
-                                ? "bg-gradient-to-r from-[#d68c99] to-[#b26a78] text-white shadow-xl shadow-[#d68c9955]"
-                                : "bg-[#fff0f1] text-[#b56f7c] ring-1 ring-[#efcbd1] shadow-[0_18px_38px_-28px_rgba(210,133,149,0.55)]"
+                                ? "bg-white/10 text-white shadow-lg"
+                                : "bg-[#fff0f1] text-[#b56f7c]"
                               : dark ? "text-[#d6b6bc]" : "text-[#8c6b75]"
                           )}
                         >
@@ -690,7 +690,7 @@ export default function AdminLayout() {
               transition={{ type: 'spring', damping: 26, stiffness: 220 }}
               className={cn(
                 "ml-auto flex h-full w-full max-w-md flex-col border-l shadow-2xl",
-                dark ? "bg-[#17151b] border-white/5" : "bg-[#fff9f8] border-[#edd7d4]"
+                dark ? "bg-[#121116]/95 backdrop-blur-3xl border-white/[0.03]" : "bg-white/95 backdrop-blur-3xl border-black/[0.03]"
               )}
               onClick={(event) => event.stopPropagation()}
             >
@@ -773,8 +773,8 @@ export default function AdminLayout() {
                           <div className="flex items-start justify-between gap-4">
                             <div className="min-w-0">
                               <div className="flex items-center gap-2">
-                                {!lida && <span className="h-2.5 w-2.5 rounded-full bg-[#10b981]" />}
-                                <p className="truncate text-[11px] font-black uppercase tracking-[0.22em] text-[#e29ba8]">
+                                {!lida && <span className="h-2 w-2 rounded-full bg-[#10b981]" />}
+                                <p className="truncate text-[10px] font-black uppercase tracking-[0.2em] text-[#e29ba8]">
                                   {alerta.tipo === 'agendamento_online_novo' ? 'Agendamento online' : 'Alerta'}
                                 </p>
                               </div>

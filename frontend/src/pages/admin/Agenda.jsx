@@ -68,42 +68,42 @@ const END_HOUR = 22;
 const STATUS_CONFIG = {
   pendente: {
     label: 'Pendente',
-    bg: 'bg-amber-50/90 dark:bg-bellapro-blush/10 backdrop-blur-xl',
-    border: 'border-amber-200 dark:border-bellapro-blush/30',
+    bg: 'bg-amber-500/[0.08] dark:bg-amber-500/[0.08] backdrop-blur-xl',
+    border: 'border-amber-500/20 dark:border-amber-500/20',
     text: 'text-amber-700 dark:text-amber-400',
-    dot: 'bg-bellapro-blush shadow-[0_0_10px_rgba(245,158,11,0.5)]',
+    dot: 'bg-amber-500',
     icon: Clock3
   },
   confirmado: {
     label: 'Confirmado',
-    bg: 'bg-white/90 dark:bg-[#d48997]/10 backdrop-blur-xl',
-    border: 'border-[#E29BA8]/20 dark:border-[#E29BA8]/30',
+    bg: 'bg-black/[0.03] dark:bg-white/[0.05] backdrop-blur-xl',
+    border: 'border-[#E29BA8]/30 dark:border-[#d48997]/40',
     text: 'text-[#b96a79] dark:text-[#f4d1d6]',
-    dot: 'bg-[#E29BA8] shadow-[0_0_10px_rgba(168,85,247,0.5)]',
+    dot: 'bg-[#E29BA8] shadow-sm',
     icon: CalendarDays
   },
   em_atendimento: {
     label: 'Em Agenda',
-    bg: 'bg-blue-50/90 dark:bg-[#E29BA8]/10 backdrop-blur-xl',
-    border: 'border-blue-200 dark:border-[#E29BA8]/30',
+    bg: 'bg-blue-500/[0.05] dark:bg-blue-500/[0.08] backdrop-blur-xl',
+    border: 'border-blue-500/20 dark:border-blue-500/20',
     text: 'text-blue-700 dark:text-blue-400',
-    dot: 'bg-[#E29BA8] shadow-[0_0_10px_rgba(59,130,246,0.5)]',
+    dot: 'bg-blue-500',
     icon: Zap
   },
   concluido: {
     label: 'Concluido',
-    bg: 'bg-[#E29BA8]/5/90 dark:bg-[#E29BA8]/10 backdrop-blur-xl',
-    border: 'border-[#E29BA8]/20 dark:border-[#E29BA8]/30',
-    text: 'text-emerald-700 dark:text-[#efbac2]',
-    dot: 'bg-[#E29BA8] shadow-[0_0_10px_rgba(16,185,129,0.5)]',
+    bg: 'bg-emerald-500/[0.05] dark:bg-emerald-500/[0.08] backdrop-blur-xl',
+    border: 'border-emerald-500/20 dark:border-emerald-500/20',
+    text: 'text-emerald-700 dark:text-emerald-400',
+    dot: 'bg-emerald-500',
     icon: CheckCircle2
   },
   cancelado: {
     label: 'Cancelado',
-    bg: 'bg-rose-50/90 dark:bg-red-500/10 backdrop-blur-xl',
-    border: 'border-rose-200 dark:border-red-500/30',
-    text: 'text-rose-700 dark:text-red-400',
-    dot: 'bg-red-500 shadow-[0_0_10px_rgba(239,68,68,0.5)]',
+    bg: 'bg-red-500/[0.05] dark:bg-red-500/[0.08] backdrop-blur-xl',
+    border: 'border-red-500/20 dark:border-red-500/20',
+    text: 'text-red-600 dark:text-red-400',
+    dot: 'bg-red-500',
     icon: AlertCircle
   },
 };
@@ -3570,7 +3570,7 @@ export default function Agenda() {
   }, [location.search]);
   const [contextMenu, setContextMenu] = useState(null);
 
-  const [colWidth, setColWidth] = useState(180);
+  const [colWidth, setColWidth] = useState(200);
   const [hourHeight, setHourHeight] = useState(80);
   const [profVisiveis, setProfVisiveis] = useState({});
   const [draggedProfId, setDraggedProfId] = useState('');
@@ -3663,7 +3663,7 @@ export default function Agenda() {
 
   const hours = Array.from({ length: END_HOUR - START_HOUR + 1 }, (_, i) => START_HOUR + i);
   const profsDisplay = (profissionais || []).filter(p => profVisiveis[p.id]);
-  const mobileColWidth = 142;
+  const mobileColWidth = 164;
   const mobileHourHeight = 92;
 
   const handleGridClick = (e, profId, hour) => {
@@ -4144,7 +4144,7 @@ export default function Agenda() {
 
                   <div className="flex relative">
                     {profsDisplay.map((p) => (
-                      <div key={p.id} className="relative flex-shrink-0 border-r border-gray-200/70 dark:border-white/5 bg-white dark:bg-[#101113]" style={{ width: mobileColWidth, height: hours.length * mobileHourHeight + 52 }}>
+                      <div key={p.id} className="relative flex-shrink-0 border-r border-black/[0.04] dark:border-white/[0.04]" style={{ width: mobileColWidth, height: hours.length * mobileHourHeight + 52 }}>
                         <div className="sticky top-0 z-20 h-[52px] border-b border-gray-200 dark:border-white/10 bg-white dark:bg-[#111214] flex items-center justify-center px-2">
                           <p className="text-[11px] font-black text-gray-900 dark:text-white truncate">{p.nome}</p>
                         </div>
@@ -4322,7 +4322,7 @@ export default function Agenda() {
 
             <div className="flex relative">
               {profsDisplay.map(p => (
-                <div key={p.id} className="relative border-r border-gray-100 dark:border-white/5 last:border-r-0 flex-shrink-0" style={{ width: colWidth, height: hours.length * hourHeight }}>
+                <div key={p.id} className="relative border-r border-black/[0.04] dark:border-white/[0.04] last:border-r-0 flex-shrink-0" style={{ width: colWidth, height: hours.length * hourHeight }}>
                   {hours.map(h => (
                     <div 
                       key={h} 
