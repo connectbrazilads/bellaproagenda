@@ -45,7 +45,7 @@ export default function StepServico({ booking, set, next, cor }) {
     return (
       <div className="space-y-4">
         {[1, 2, 3].map((item) => (
-          <div key={item} className="h-28 w-full animate-shimmer rounded-3xl bg-gray-50" />
+          <div key={item} className="h-28 w-full rounded-3xl bg-white/5 border border-white/5 animate-pulse" />
         ))}
       </div>
     );
@@ -57,21 +57,21 @@ export default function StepServico({ booking, set, next, cor }) {
   return (
     <div className="space-y-8">
       {pacotes.length > 0 && (
-        <div className="flex rounded-[2rem] border border-gray-100 bg-gray-50 p-1.5">
+        <div className="flex rounded-[2rem] border border-[#d4af37]/20 bg-black/40 p-1.5 backdrop-blur-md">
           <button
             onClick={() => setAba('servicos')}
             className={cn(
               'flex-1 rounded-2xl py-3.5 text-[10px] font-black uppercase tracking-[0.2em] transition-all duration-300',
-              aba === 'servicos' ? 'bg-white text-gray-900 shadow-xl shadow-gray-200/50' : 'text-gray-400 hover:text-gray-600'
+              aba === 'servicos' ? 'bg-[#d4af37] text-black shadow-[0_0_15px_rgba(212,175,55,0.4)]' : 'text-[#b299a0] hover:text-[#d4af37]'
             )}
           >
-            Servicos
+            Serviços
           </button>
           <button
             onClick={() => setAba('pacotes')}
             className={cn(
               'flex-1 rounded-2xl py-3.5 text-[10px] font-black uppercase tracking-[0.2em] transition-all duration-300',
-              aba === 'pacotes' ? 'bg-white text-gray-900 shadow-xl shadow-gray-200/50' : 'text-gray-400 hover:text-gray-600'
+              aba === 'pacotes' ? 'bg-[#d4af37] text-black shadow-[0_0_15px_rgba(212,175,55,0.4)]' : 'text-[#b299a0] hover:text-[#d4af37]'
             )}
           >
             Pacotes VIP
@@ -79,7 +79,7 @@ export default function StepServico({ booking, set, next, cor }) {
         </div>
       )}
 
-      <div className="custom-scrollbar max-h-[450px] space-y-4 overflow-y-auto px-1">
+      <div className="custom-scrollbar max-h-[450px] space-y-4 overflow-y-auto px-1 pb-4">
         {listaAtual.map((item, idx) => {
           const selected = booking.servicos.some((servico) => servico.id === item.id);
           return (
@@ -92,14 +92,13 @@ export default function StepServico({ booking, set, next, cor }) {
               whileTap={{ scale: 0.98 }}
               onClick={() => toggleServico(item)}
               className={cn(
-                'group relative w-full overflow-hidden rounded-[2rem] border-2 p-6 text-left transition-all',
-                selected ? 'bg-white' : 'border-gray-50 bg-white hover:border-gray-100 hover:bg-gray-50/50'
+                'group relative w-full overflow-hidden rounded-[2rem] border p-6 text-left transition-all',
+                selected ? 'bg-[#d4af37]/10 border-[#d4af37] shadow-[0_0_20px_rgba(212,175,55,0.15)]' : 'border-white/10 bg-black/40 hover:border-[#d4af37]/40 hover:bg-black/60'
               )}
-              style={{ borderColor: selected ? cor : undefined }}
             >
               {selected && (
                 <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }} className="absolute right-0 top-0 p-3">
-                  <div className="rounded-full p-1.5 text-white shadow-lg" style={{ backgroundColor: cor }}>
+                  <div className="rounded-full bg-[#d4af37] p-1.5 text-black shadow-[0_0_10px_rgba(212,175,55,0.5)]">
                     <Check className="h-4 w-4" strokeWidth={4} />
                   </div>
                 </motion.div>
@@ -109,35 +108,34 @@ export default function StepServico({ booking, set, next, cor }) {
                 <div className="flex flex-1 items-center gap-6">
                   <div
                     className={cn(
-                      'flex h-16 w-16 items-center justify-center rounded-2xl transition-colors duration-500',
-                      selected ? 'bg-purple-50' : 'bg-gray-50 group-hover:bg-white'
+                      'flex h-16 w-16 items-center justify-center rounded-2xl border transition-colors duration-500',
+                      selected ? 'bg-[#d4af37]/20 border-[#d4af37]/30' : 'bg-white/5 border-white/10 group-hover:border-[#d4af37]/30'
                     )}
-                    style={{ backgroundColor: selected ? `${cor}15` : undefined }}
                   >
                     {item.nome.toLowerCase().includes('corte') ? (
-                      <Scissors className="h-7 w-7" style={{ color: cor }} />
+                      <Scissors className="h-7 w-7 text-[#d4af37]" />
                     ) : item.nome.toLowerCase().includes('unha') ? (
-                      <Heart className="h-7 w-7" style={{ color: cor }} />
+                      <Heart className="h-7 w-7 text-[#d4af37]" />
                     ) : item.nome.toLowerCase().includes('ia') ? (
-                      <Zap className="h-7 w-7" style={{ color: cor }} />
+                      <Zap className="h-7 w-7 text-[#d4af37]" />
                     ) : (
-                      <Star className="h-7 w-7" style={{ color: cor }} />
+                      <Star className="h-7 w-7 text-[#d4af37]" />
                     )}
                   </div>
 
                   <div className="flex-1">
-                    <h3 className="mb-0.5 text-lg font-black uppercase tracking-tight text-gray-900">{item.nome}</h3>
-                    <p className="max-w-[200px] text-xs font-medium leading-relaxed text-gray-400">
-                      {item.descricao || 'Experiencia premium de beleza personalizada.'}
+                    <h3 className="mb-0.5 text-lg font-brand-display font-black tracking-tight text-[#f4ecd8] group-hover:text-[#d4af37] transition-colors">{item.nome}</h3>
+                    <p className="max-w-[200px] text-[11px] font-light leading-relaxed text-[#b299a0]">
+                      {item.descricao || 'Experiência premium de beleza e bem-estar.'}
                     </p>
                   </div>
                 </div>
 
                 <div className="text-right">
-                  <p className="text-2xl font-black tracking-tighter" style={{ color: cor }}>
+                  <p className="text-2xl font-brand-display font-black tracking-tighter text-[#d4af37]">
                     R$ {Number(item.preco || 0).toFixed(2).replace('.', ',')}
                   </p>
-                  <div className="mt-1 flex items-center justify-end gap-1.5 text-[10px] font-black uppercase text-gray-300">
+                  <div className="mt-1 flex items-center justify-end gap-1.5 text-[10px] font-bold uppercase tracking-[0.1em] text-[#8a6c74]">
                     <Clock className="h-3 w-3" />
                     {item.duracaoMin} min
                   </div>
@@ -152,19 +150,15 @@ export default function StepServico({ booking, set, next, cor }) {
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="flex items-center justify-between border-t border-gray-100 pt-8"
+          className="flex items-center justify-between border-t border-white/10 pt-8"
         >
           <div>
-            <p className="mb-1 text-[10px] font-black uppercase tracking-[0.3em] text-gray-400">Investimento Total</p>
-            <p className="text-3xl font-black tracking-tighter text-gray-900">R$ {total.toFixed(2).replace('.', ',')}</p>
+            <p className="mb-1 text-[10px] font-black uppercase tracking-[0.3em] text-[#8a6c74]">Investimento Total</p>
+            <p className="text-3xl font-brand-display font-black tracking-tighter text-[#f4ecd8]">R$ {total.toFixed(2).replace('.', ',')}</p>
           </div>
           <button
             onClick={next}
-            style={{
-              backgroundColor: cor,
-              boxShadow: `0 20px 40px -10px ${cor}44`,
-            }}
-            className="rounded-[1.5rem] px-12 py-5 text-sm font-black uppercase tracking-[0.2em] text-white transition-all hover:scale-105 active:scale-95"
+            className="premium-btn-primary rounded-full px-12 py-5 text-sm font-black uppercase tracking-[0.2em]"
           >
             Continuar
           </button>

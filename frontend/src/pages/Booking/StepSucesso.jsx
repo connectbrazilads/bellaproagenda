@@ -11,77 +11,83 @@ export default function StepSucesso({ agendamento, salao, cor }) {
   const dataFormatada = dia && mes && ano ? `${dia}/${mes}/${ano}` : '--/--/----';
 
   const nomeServico = listaAgendamentos.length
-    ? listaAgendamentos.map((item) => item?.servico?.nome || item?.pacote?.nome || 'Servico').join(' + ')
+    ? listaAgendamentos.map((item) => item?.servico?.nome || item?.pacote?.nome || 'Serviço').join(' + ')
     : (agendamentoBase?.servico?.nome || agendamentoBase?.pacote?.nome || agendamentoBase?.itens?.map((item) => item.nome).join(' + ') || '-');
 
   const nomeProfissional = listaAgendamentos.length
-    ? 'Equipe do salao'
+    ? 'Equipe do salão'
     : (agendamentoBase?.profissional?.nome || '-');
 
   const horarioResumo = listaAgendamentos.length
-    ? listaAgendamentos.map((item) => `${item?.servico?.nome || 'Servico'} ${item?.inicioHora || '-'}`).join(' | ')
+    ? listaAgendamentos.map((item) => `${item?.servico?.nome || 'Serviço'} ${item?.inicioHora || '-'}`).join(' | ')
     : (agendamentoBase?.inicioHora || agendamentoBase?.hora || '-');
 
   const itensResumo = listaAgendamentos.length
     ? listaAgendamentos.map((item) => ({
         id: item.id,
-        titulo: item?.servico?.nome || item?.pacote?.nome || 'Servico',
+        titulo: item?.servico?.nome || item?.pacote?.nome || 'Serviço',
         profissional: item?.profissional?.nome || 'Equipe',
         hora: item?.inicioHora || '-',
       }))
     : [];
 
   return (
-    <div className="min-h-screen bg-white md:bg-gray-50 flex items-center justify-center p-0 md:p-6 overflow-x-hidden">
+    <div className="flex items-center justify-center overflow-x-hidden">
       <motion.div
         initial={{ opacity: 0, scale: 0.94 }}
         animate={{ opacity: 1, scale: 1 }}
-        className="max-w-xl w-full bg-white md:rounded-[3rem] shadow-2xl shadow-gray-200/40 p-8 md:p-12 text-center relative overflow-hidden"
+        className="max-w-xl w-full text-center relative overflow-hidden"
       >
-        <div className="relative z-10">
-          <div className="w-24 h-24 rounded-[2.5rem] flex items-center justify-center text-white mx-auto mb-8 shadow-2xl" style={{ backgroundColor: cor }}>
-            <Check size={40} strokeWidth={3} />
+        <div className="relative z-10 py-10">
+          <div className="w-24 h-24 rounded-full flex items-center justify-center bg-gradient-to-tr from-[#d4af37] to-[#e4c96b] text-black mx-auto mb-10 shadow-[0_0_40px_rgba(212,175,55,0.4)]">
+            <Check size={44} strokeWidth={3} />
           </div>
 
-          <h1 className="text-4xl md:text-5xl font-black text-gray-900 mb-4 tracking-tighter uppercase leading-none">Tudo Pronto!</h1>
-          <p className="text-gray-500 font-medium mb-10 max-w-xs mx-auto">
-            Sua reserva foi criada com sucesso. Preparamos tudo para te receber!
+          <h1 className="text-4xl md:text-5xl font-brand-display font-black text-[#f4ecd8] mb-4 tracking-tighter uppercase leading-none">Tudo Pronto!</h1>
+          <p className="text-[#b299a0] text-sm mb-12 max-w-xs mx-auto">
+            Sua reserva foi criada com sucesso. Preparamos tudo para te receber de forma exclusiva!
           </p>
 
-          <div className="bg-gray-50 rounded-[2.5rem] p-8 text-left space-y-6 mb-10 border border-gray-100">
-            <div className="flex items-start gap-4">
-              <Calendar className="w-5 h-5 text-gray-400 mt-1" />
+          <div className="glass-card-neon rounded-[2.5rem] p-8 text-left space-y-6 mb-10 border border-[#d4af37]/20">
+            <div className="flex items-start gap-5">
+              <div className="p-3 rounded-2xl bg-[#d4af37]/10 text-[#d4af37]">
+                <Calendar className="w-5 h-5" />
+              </div>
               <div>
-                <p className="text-[9px] font-black text-gray-400 uppercase tracking-widest mb-1">Data e horario</p>
-                <p className="text-lg font-black text-gray-900 tracking-tight">{dataFormatada} - {horarioResumo}</p>
+                <p className="text-[9px] font-black text-[#8a6c74] uppercase tracking-widest mb-1">Data e horário</p>
+                <p className="text-lg font-brand-display font-black text-[#f4ecd8] tracking-tight">{dataFormatada} - <span className="text-[#d4af37]">{horarioResumo}</span></p>
               </div>
             </div>
 
-            <div className="flex items-start gap-4">
-              <Heart className="w-5 h-5 text-gray-400 mt-1" />
+            <div className="flex items-start gap-5">
+              <div className="p-3 rounded-2xl bg-[#d4af37]/10 text-[#d4af37]">
+                <Heart className="w-5 h-5" />
+              </div>
               <div>
-                <p className="text-[9px] font-black text-gray-400 uppercase tracking-widest mb-1">Servicos</p>
-                <p className="text-lg font-black text-gray-900 tracking-tight uppercase">{nomeServico}</p>
+                <p className="text-[9px] font-black text-[#8a6c74] uppercase tracking-widest mb-1">Serviços</p>
+                <p className="text-lg font-brand-display font-black text-[#f4ecd8] tracking-tight uppercase">{nomeServico}</p>
               </div>
             </div>
 
-            <div className="flex items-start gap-4">
-              <User className="w-5 h-5 text-gray-400 mt-1" />
+            <div className="flex items-start gap-5">
+              <div className="p-3 rounded-2xl bg-[#d4af37]/10 text-[#d4af37]">
+                <User className="w-5 h-5" />
+              </div>
               <div>
-                <p className="text-[9px] font-black text-gray-400 uppercase tracking-widest mb-1">Especialista</p>
-                <p className="text-lg font-black text-gray-900 tracking-tight uppercase">{nomeProfissional}</p>
+                <p className="text-[9px] font-black text-[#8a6c74] uppercase tracking-widest mb-1">Especialista</p>
+                <p className="text-lg font-brand-display font-black text-[#f4ecd8] tracking-tight uppercase">{nomeProfissional}</p>
               </div>
             </div>
 
             {itensResumo.length > 1 && (
-              <div className="rounded-[1.75rem] border border-gray-200 bg-white px-4 py-4">
-                <p className="text-[9px] font-black uppercase tracking-widest text-gray-400">Itens da comanda</p>
-                <div className="mt-3 space-y-3">
+              <div className="rounded-[2rem] border border-[#d4af37]/20 bg-black/40 px-5 py-5 mt-8">
+                <p className="text-[9px] font-black uppercase tracking-widest text-[#8a6c74]">Itens da comanda</p>
+                <div className="mt-4 space-y-3">
                   {itensResumo.map((item) => (
-                    <div key={item.id} className="rounded-2xl bg-gray-50 px-4 py-3">
-                      <p className="text-sm font-black uppercase tracking-tight text-gray-900">{item.titulo}</p>
-                      <p className="mt-1 text-[10px] font-bold uppercase tracking-[0.16em] text-gray-400">
-                        {item.profissional} - {item.hora}
+                    <div key={item.id} className="rounded-2xl border border-white/5 bg-black/60 px-4 py-4 flex justify-between items-center">
+                      <p className="text-xs font-brand-display font-black uppercase tracking-tight text-[#f4ecd8]">{item.titulo}</p>
+                      <p className="text-[9px] font-bold uppercase tracking-[0.2em] text-[#b299a0]">
+                        {item.profissional} - <span className="text-[#d4af37]">{item.hora}</span>
                       </p>
                     </div>
                   ))}
@@ -93,31 +99,31 @@ export default function StepSucesso({ agendamento, salao, cor }) {
           <div className="space-y-4">
             <button
               onClick={() => {
-                const text = encodeURIComponent(`Ola! Acabei de marcar um horario em ${salao?.nome} para ${nomeServico} dia ${dataFormatada} as ${horarioResumo}.`);
+                const text = encodeURIComponent(`Olá! Acabei de marcar um horário em ${salao?.nome} para ${nomeServico} dia ${dataFormatada} às ${horarioResumo}.`);
                 window.open(`https://wa.me/?text=${text}`, '_blank');
               }}
-              className="w-full py-6 rounded-[2rem] bg-[#25D366] text-white font-black uppercase tracking-[0.2em] text-xs flex items-center justify-center gap-3 shadow-xl shadow-emerald-500/10 hover:scale-[1.02] transition-all"
+              className="w-full py-5 rounded-[2rem] bg-gradient-to-r from-[#25D366] to-[#1DA851] text-white font-black uppercase tracking-[0.2em] text-xs flex items-center justify-center gap-3 shadow-[0_10px_20px_-10px_rgba(37,211,102,0.5)] hover:scale-[1.02] transition-all border border-white/20"
             >
               <Share2 size={18} /> Compartilhar no WhatsApp
             </button>
 
             <button
               onClick={() => window.location.reload()}
-              className="w-full py-6 rounded-[2rem] bg-gray-100 text-gray-400 font-black uppercase tracking-[0.2em] text-xs hover:bg-gray-200 transition-all"
+              className="premium-btn-secondary w-full py-5 text-xs tracking-[0.2em]"
             >
               Fazer novo agendamento
             </button>
           </div>
 
-          <div className="mt-12 pt-8 border-t border-gray-100 flex flex-col items-center gap-4">
-            <p className="text-[10px] font-black text-gray-300 uppercase tracking-[0.3em]">Duvidas ou cancelamentos?</p>
+          <div className="mt-12 pt-8 border-t border-white/10 flex flex-col items-center gap-4">
+            <p className="text-[9px] font-black text-[#8a6c74] uppercase tracking-[0.3em]">Dúvidas ou cancelamentos?</p>
             {salao?.telefone && (
               <a
                 href={`tel:${salao.telefone}`}
-                className="flex items-center gap-3 px-6 py-3 rounded-2xl bg-white border border-gray-100 shadow-sm text-gray-600"
+                className="flex items-center gap-3 px-8 py-4 rounded-full bg-black/60 border border-[#d4af37]/20 shadow-[0_0_15px_rgba(212,175,55,0.05)] text-[#d4af37] hover:bg-[#d4af37]/10 transition-colors"
               >
                 <Phone size={16} />
-                <span className="text-sm font-black tracking-tight">{salao.telefone}</span>
+                <span className="text-sm font-brand-display font-black tracking-widest">{salao.telefone}</span>
               </a>
             )}
           </div>

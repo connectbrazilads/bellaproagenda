@@ -16,14 +16,14 @@ function HorarioCard({ titulo, slots, selecionado, onSelect, cor }) {
   const periods = splitPeriods(slots);
 
   return (
-    <div className="space-y-8 rounded-[2rem] border border-gray-100 bg-white p-5 shadow-lg shadow-gray-200/20">
+    <div className="glass-card-neon space-y-8 rounded-[2rem] p-6">
       <div className="flex items-center justify-between gap-3">
         <div>
-          <p className="text-[10px] font-black uppercase tracking-[0.24em] text-[#a58690]">Item da comanda</p>
-          <h3 className="mt-2 text-lg font-black uppercase tracking-tight text-gray-900">{titulo}</h3>
+          <p className="text-[9px] font-black uppercase tracking-[0.3em] text-[#8a6c74]">Item da comanda</p>
+          <h3 className="mt-2 text-lg font-brand-display font-black tracking-tight text-[#f4ecd8]">{titulo}</h3>
         </div>
         {selecionado && (
-          <div className="inline-flex items-center gap-2 rounded-full bg-emerald-50 px-3 py-2 text-[10px] font-black uppercase tracking-[0.18em] text-emerald-700">
+          <div className="inline-flex items-center gap-2 rounded-full border border-[#d4af37]/30 bg-[#d4af37]/10 px-4 py-2 text-[9px] font-black uppercase tracking-[0.2em] text-[#d4af37]">
             <CheckCircle2 size={14} />
             {selecionado}
           </div>
@@ -34,8 +34,8 @@ function HorarioCard({ titulo, slots, selecionado, onSelect, cor }) {
         {Object.entries(periods).map(([name, times]) => times.length > 0 && (
           <div key={name} className="space-y-4">
             <div className="flex items-center gap-4">
-              <h4 className="text-[10px] font-black uppercase tracking-[0.3em] text-gray-900">{name}</h4>
-              <div className="h-px flex-1 bg-gray-100" />
+              <h4 className="text-[10px] font-black uppercase tracking-[0.4em] text-[#d4af37]">{name}</h4>
+              <div className="h-px flex-1 bg-gradient-to-r from-[#d4af37]/30 to-transparent" />
             </div>
 
             <div className="grid grid-cols-3 gap-3 sm:grid-cols-4">
@@ -45,15 +45,15 @@ function HorarioCard({ titulo, slots, selecionado, onSelect, cor }) {
                   type="button"
                   onClick={() => onSelect(hora)}
                   className={cn(
-                    'flex min-h-14 items-center justify-center rounded-2xl border-2 text-sm font-black transition-all shadow-sm',
-                    selecionado === hora ? 'bg-white shadow-xl' : 'border-gray-50 bg-white text-gray-900 hover:border-purple-500/20'
+                    'flex min-h-14 items-center justify-center rounded-2xl border transition-all',
+                    selecionado === hora ? 'bg-[#d4af37]/10 border-[#d4af37] shadow-[0_0_15px_rgba(212,175,55,0.15)] text-[#d4af37]' : 'border-white/10 bg-black/40 text-[#b299a0] hover:border-[#d4af37]/40 hover:text-[#f4ecd8]'
                   )}
                   style={{
                     borderColor: selecionado === hora ? cor : undefined,
                     color: selecionado === hora ? cor : undefined,
                   }}
                 >
-                  {hora}
+                  <span className="text-sm font-black tracking-widest">{hora}</span>
                 </button>
               ))}
             </div>
@@ -148,8 +148,8 @@ export default function StepHorario({ booking, set, next, cor }) {
   if (loading) {
     return (
       <div className="flex flex-col items-center justify-center space-y-4 py-20">
-        <div className="h-12 w-12 animate-spin rounded-full border-4 border-gray-100 border-t-purple-600" />
-        <p className="text-[10px] font-black uppercase tracking-[0.3em] text-gray-400">Consultando agenda</p>
+        <div className="h-12 w-12 animate-spin rounded-full border-4 border-[#d4af37]/10 border-t-[#d4af37]" />
+        <p className="text-[10px] font-black uppercase tracking-[0.3em] text-[#d4af37]">Consultando agenda</p>
       </div>
     );
   }
@@ -157,14 +157,14 @@ export default function StepHorario({ booking, set, next, cor }) {
   if (booking.multiProfissional) {
     return (
       <div className="space-y-8">
-        <div className="flex flex-col justify-between gap-4 rounded-[2rem] border border-gray-100/50 bg-gray-50/50 p-6 md:flex-row md:items-center">
-          <div className="flex items-center gap-4">
-            <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-white text-purple-600 shadow-lg">
+        <div className="flex flex-col justify-between gap-4 rounded-[2rem] border border-[#d4af37]/20 bg-black/40 p-6 backdrop-blur-md md:flex-row md:items-center">
+          <div className="flex items-center gap-5">
+            <div className="flex h-12 w-12 items-center justify-center rounded-2xl border border-white/5 bg-black/60 shadow-lg text-[#d4af37]">
               <Clock size={24} />
             </div>
             <div>
-              <p className="mb-1 text-[10px] font-black uppercase tracking-widest text-gray-400">Data escolhida</p>
-              <p className="text-sm font-black uppercase tracking-tight text-gray-900">
+              <p className="mb-1 text-[10px] font-black uppercase tracking-[0.2em] text-[#b299a0]">Data escolhida</p>
+              <p className="text-sm font-brand-display font-black uppercase tracking-tight text-[#f4ecd8]">
                 {new Date(`${booking.data}T00:00:00`).toLocaleDateString('pt-BR', { day: '2-digit', month: 'long', weekday: 'long' })}
               </p>
             </div>
@@ -172,13 +172,13 @@ export default function StepHorario({ booking, set, next, cor }) {
         </div>
 
         {erro && (
-          <div className="flex items-start gap-4 rounded-[2rem] border border-rose-100 bg-rose-50 p-5 text-rose-700">
-            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-white shadow-sm">
+          <div className="flex items-start gap-4 rounded-[2rem] border border-rose-500/20 bg-rose-500/10 p-5 text-rose-400 backdrop-blur-md">
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl border border-white/5 bg-black/40 shadow-sm">
               <AlertCircle size={20} />
             </div>
             <div>
-              <p className="text-xs font-black uppercase tracking-[0.24em]">Nao foi possivel carregar os horarios</p>
-              <p className="mt-2 text-sm font-medium leading-relaxed">{erro}</p>
+              <p className="text-[10px] font-black uppercase tracking-[0.24em]">Não foi possível carregar os horários</p>
+              <p className="mt-2 text-[11px] font-light leading-relaxed">{erro}</p>
             </div>
           </div>
         )}
@@ -196,16 +196,15 @@ export default function StepHorario({ booking, set, next, cor }) {
           ))}
         </div>
 
-        <div className="rounded-2xl border border-gray-100 bg-gray-50 px-4 py-3 text-[11px] font-bold text-gray-500">
-          {multiItens.filter((item) => item.hora).length} de {multiItens.length} horarios selecionados
+        <div className="rounded-2xl border border-[#d4af37]/20 bg-[#d4af37]/5 px-5 py-4 text-center text-[10px] font-black uppercase tracking-[0.2em] text-[#d4af37]">
+          {multiItens.filter((item) => item.hora).length} de {multiItens.length} horários selecionados
         </div>
 
         <button
           type="button"
           onClick={next}
           disabled={!multiCompleto}
-          style={{ backgroundColor: cor }}
-          className="w-full rounded-[2rem] py-5 text-sm font-black uppercase tracking-[0.22em] text-white shadow-xl transition-all disabled:cursor-not-allowed disabled:opacity-50"
+          className="premium-btn-primary w-full disabled:cursor-not-allowed disabled:opacity-50 disabled:filter-grayscale"
         >
           Revisar comanda
         </button>
@@ -217,14 +216,14 @@ export default function StepHorario({ booking, set, next, cor }) {
 
   return (
     <div className="space-y-10">
-      <div className="flex flex-col justify-between gap-4 rounded-[2rem] border border-gray-100/50 bg-gray-50/50 p-6 md:flex-row md:items-center">
-        <div className="flex items-center gap-4">
-          <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-white text-purple-600 shadow-lg">
+      <div className="flex flex-col justify-between gap-4 rounded-[2rem] border border-[#d4af37]/20 bg-black/40 p-6 backdrop-blur-md md:flex-row md:items-center">
+        <div className="flex items-center gap-5">
+          <div className="flex h-12 w-12 items-center justify-center rounded-2xl border border-white/5 bg-black/60 shadow-lg text-[#d4af37]">
             <Clock size={24} />
           </div>
           <div>
-            <p className="mb-1 text-[10px] font-black uppercase tracking-widest text-gray-400">Data escolhida</p>
-            <p className="text-sm font-black uppercase tracking-tight text-gray-900">
+            <p className="mb-1 text-[10px] font-black uppercase tracking-[0.2em] text-[#b299a0]">Data escolhida</p>
+            <p className="text-sm font-brand-display font-black uppercase tracking-tight text-[#f4ecd8]">
               {new Date(`${booking.data}T00:00:00`).toLocaleDateString('pt-BR', { day: '2-digit', month: 'long', weekday: 'long' })}
             </p>
           </div>
@@ -232,13 +231,13 @@ export default function StepHorario({ booking, set, next, cor }) {
       </div>
 
       {erro && (
-        <div className="flex items-start gap-4 rounded-[2rem] border border-rose-100 bg-rose-50 p-5 text-rose-700">
-          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-white shadow-sm">
+        <div className="flex items-start gap-4 rounded-[2rem] border border-rose-500/20 bg-rose-500/10 p-5 text-rose-400 backdrop-blur-md">
+          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl border border-white/5 bg-black/40 shadow-sm">
             <AlertCircle size={20} />
           </div>
           <div>
-            <p className="text-xs font-black uppercase tracking-[0.24em]">Nao foi possivel carregar os horarios</p>
-            <p className="mt-2 text-sm font-medium leading-relaxed">{erro}</p>
+            <p className="text-[10px] font-black uppercase tracking-[0.24em]">Não foi possível carregar os horários</p>
+            <p className="mt-2 text-[11px] font-light leading-relaxed">{erro}</p>
           </div>
         </div>
       )}
@@ -253,8 +252,8 @@ export default function StepHorario({ booking, set, next, cor }) {
             className="space-y-6"
           >
             <div className="flex items-center gap-4">
-              <h4 className="text-[10px] font-black uppercase tracking-[0.4em] text-gray-900">{name}</h4>
-              <div className="h-px flex-1 bg-gray-100" />
+              <h4 className="text-[10px] font-black uppercase tracking-[0.4em] text-[#d4af37]">{name}</h4>
+              <div className="h-px flex-1 bg-gradient-to-r from-[#d4af37]/30 to-transparent" />
             </div>
 
             <div className="grid grid-cols-3 gap-3 sm:grid-cols-4">
@@ -265,15 +264,15 @@ export default function StepHorario({ booking, set, next, cor }) {
                   whileTap={{ scale: 0.95 }}
                   onClick={() => selecionar(hora)}
                   className={cn(
-                    'flex min-h-16 items-center justify-center rounded-2xl border-2 text-sm font-black transition-all shadow-sm',
-                    booking.hora === hora ? 'border-purple-500 bg-white text-purple-600 shadow-xl shadow-purple-500/10' : 'border-gray-50 bg-white text-gray-900 hover:border-purple-500/20'
+                    'flex min-h-16 items-center justify-center rounded-2xl border transition-all shadow-sm',
+                    booking.hora === hora ? 'border-[#d4af37] bg-[#d4af37]/10 text-[#d4af37] shadow-[0_0_15px_rgba(212,175,55,0.15)]' : 'border-white/10 bg-black/40 text-[#b299a0] hover:border-[#d4af37]/40 hover:text-[#f4ecd8]'
                   )}
                   style={{
                     borderColor: booking.hora === hora ? cor : undefined,
                     color: booking.hora === hora ? cor : undefined,
                   }}
                 >
-                  {hora}
+                  <span className="text-sm font-black tracking-widest">{hora}</span>
                 </motion.button>
               ))}
             </div>
@@ -282,14 +281,14 @@ export default function StepHorario({ booking, set, next, cor }) {
       </div>
 
       {!erro && slots.length === 0 && (
-        <div className="space-y-4 rounded-[2.5rem] border-2 border-dashed border-gray-100 bg-gray-50/50 p-12 text-center">
-          <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-white text-gray-300 shadow-lg">
+        <div className="space-y-5 rounded-[2.5rem] border border-dashed border-white/10 bg-black/40 p-12 text-center backdrop-blur-md">
+          <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl border border-white/5 bg-black/60 text-[#8a6c74] shadow-lg">
             <Coffee size={32} />
           </div>
           <div>
-            <p className="text-lg font-black uppercase tracking-tight text-gray-900">Sem horarios nesta data</p>
-            <p className="mx-auto max-w-[240px] text-xs font-medium text-gray-400">
-              Nao encontramos vagas para esse profissional neste dia. Tente outra data ou escolha outro especialista.
+            <p className="text-lg font-brand-display font-black tracking-tight text-[#f4ecd8]">Sem horários nesta data</p>
+            <p className="mx-auto mt-2 max-w-[260px] text-[11px] font-light leading-relaxed text-[#b299a0]">
+              Não encontramos vagas para este especialista neste dia. Tente outra data no calendário.
             </p>
           </div>
         </div>

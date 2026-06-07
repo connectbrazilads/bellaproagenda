@@ -62,73 +62,72 @@ export default function StepConfirmacao({ booking, back, cor, salao, onSuccess }
 
   return (
     <div className="space-y-8">
-      <div className="space-y-4 rounded-3xl bg-gray-50 p-6">
+      <div className="glass-card-neon space-y-6 rounded-[2.5rem] p-8">
         {booking.multiProfissional && (
-          <div className="rounded-2xl border border-amber-100 bg-amber-50 px-4 py-3 text-[11px] font-bold leading-relaxed text-amber-800">
-            Cada servico sera executado pelo profissional escolhido e tudo ficara na mesma comanda para o checkout final.
+          <div className="rounded-2xl border border-[#d4af37]/30 bg-[#d4af37]/10 px-5 py-4 text-[11px] font-light leading-relaxed text-[#f4ecd8] backdrop-blur-sm">
+            Cada serviço será executado pelo especialista escolhido. Tudo ficará centralizado na mesma comanda para sua conveniência.
           </div>
         )}
 
-        <div className="border-b border-gray-200 pb-3">
-          <span className="mb-2 block text-xs font-black uppercase tracking-widest text-gray-400">Servicos</span>
-          <div className="space-y-2">
+        <div className="border-b border-[#d4af37]/20 pb-4">
+          <span className="mb-3 block text-[9px] font-black uppercase tracking-[0.3em] text-[#8a6c74]">Serviços Selecionados</span>
+          <div className="space-y-3">
             {(booking.multiProfissional ? booking.multiItens : booking.servicos).map((item) => (
               <div key={item.servicoId || item.id} className="flex items-start justify-between gap-4">
                 <div>
-                  <span className="text-sm font-black text-gray-900">{item.servicoNome || item.nome}</span>
+                  <span className="text-sm font-brand-display font-black text-[#f4ecd8] uppercase tracking-tight">{item.servicoNome || item.nome}</span>
                   {booking.multiProfissional && (
-                    <p className="mt-1 text-[11px] font-bold uppercase tracking-[0.16em] text-gray-400">
-                      {item.profissionalNome} · {item.hora}
+                    <p className="mt-1 text-[9px] font-black uppercase tracking-[0.2em] text-[#b299a0]">
+                      {item.profissionalNome} · <span className="text-[#d4af37]">{item.hora}</span>
                     </p>
                   )}
                 </div>
-                <span className="text-xs font-bold text-gray-400">R$ {Number(item.preco || 0).toFixed(2).replace('.', ',')}</span>
+                <span className="text-sm font-brand-display font-black text-[#d4af37]">R$ {Number(item.preco || 0).toFixed(2).replace('.', ',')}</span>
               </div>
             ))}
-            <div className="mt-2 flex items-center justify-between border-t border-dashed border-gray-200 pt-2">
-              <span className="text-xs font-black uppercase text-gray-900">Total</span>
-              <span className="text-sm font-black text-purple-600">R$ {total.toFixed(2).replace('.', ',')}</span>
+            <div className="mt-4 flex items-center justify-between border-t border-dashed border-white/10 pt-4">
+              <span className="text-[10px] font-black uppercase tracking-widest text-[#b299a0]">Investimento</span>
+              <span className="text-xl font-brand-display font-black text-[#d4af37]">R$ {total.toFixed(2).replace('.', ',')}</span>
             </div>
           </div>
         </div>
 
-        <div className="flex justify-between border-b border-gray-200 pb-3">
-          <span className="text-xs font-black uppercase tracking-widest text-gray-400">Data</span>
-          <span className="text-right text-sm font-black text-gray-900">{dataFormatada}</span>
+        <div className="flex justify-between border-b border-[#d4af37]/20 pb-4">
+          <span className="text-[10px] font-black uppercase tracking-[0.3em] text-[#8a6c74]">Data</span>
+          <span className="text-right text-xs font-brand-display font-black uppercase tracking-widest text-[#f4ecd8]">{dataFormatada}</span>
         </div>
 
         {!booking.multiProfissional && (
-          <div className="flex justify-between border-b border-gray-200 pb-3">
-            <span className="text-xs font-black uppercase tracking-widest text-gray-400">Profissional</span>
-            <span className="text-sm font-black text-gray-900">{booking.profissional.nome}</span>
+          <div className="flex justify-between border-b border-[#d4af37]/20 pb-4">
+            <span className="text-[10px] font-black uppercase tracking-[0.3em] text-[#8a6c74]">Profissional</span>
+            <span className="text-xs font-brand-display font-black uppercase tracking-widest text-[#f4ecd8]">{booking.profissional.nome}</span>
           </div>
         )}
 
         {!booking.multiProfissional && (
           <div className="flex justify-between">
-            <span className="text-xs font-black uppercase tracking-widest text-gray-400">Horario</span>
-            <span className="text-sm font-black text-gray-900">{booking.hora}</span>
+            <span className="text-[10px] font-black uppercase tracking-[0.3em] text-[#8a6c74]">Horário</span>
+            <span className="text-xs font-brand-display font-black uppercase tracking-widest text-[#d4af37]">{booking.hora}</span>
           </div>
         )}
       </div>
 
-      {erro && <p className="text-center text-xs font-bold text-red-500">{erro}</p>}
+      {erro && <p className="text-center text-[11px] font-black uppercase tracking-[0.1em] text-rose-400 bg-rose-500/10 p-4 rounded-xl border border-rose-500/20">{erro}</p>}
 
-      <div className="flex gap-3">
+      <div className="flex flex-col gap-4 sm:flex-row">
         <button
           onClick={back}
           type="button"
-          className="w-full rounded-2xl bg-gray-100 py-5 text-lg font-black text-gray-500 transition-all hover:bg-gray-200"
+          className="premium-btn-secondary w-full sm:w-1/3 text-sm py-5"
         >
           Voltar
         </button>
         <button
           onClick={finalizar}
           disabled={loading}
-          style={{ backgroundColor: cor }}
-          className="w-full rounded-2xl py-5 text-lg font-black text-white shadow-xl shadow-purple-900/20 transition-all hover:scale-[1.02] active:scale-95 disabled:opacity-70"
+          className="premium-btn-primary w-full sm:w-2/3 text-sm py-5 disabled:opacity-50 disabled:filter-grayscale"
         >
-          {loading ? 'PROCESSANDO...' : 'CONFIRMAR AGENDAMENTO'}
+          {loading ? 'Processando...' : 'Confirmar Agendamento'}
         </button>
       </div>
     </div>

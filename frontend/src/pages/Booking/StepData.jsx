@@ -140,58 +140,58 @@ export default function StepData({ booking, set, next, cor }) {
 
   return (
     <div className="space-y-8 pb-6">
-      <div className="flex items-center gap-5 rounded-3xl border border-gray-100/50 bg-gray-50/50 p-5 backdrop-blur-sm">
-        <div className="flex h-14 w-14 flex-shrink-0 items-center justify-center overflow-hidden rounded-2xl border border-gray-50 bg-white shadow-xl">
+      <div className="flex items-center gap-5 rounded-[2rem] border border-[#d4af37]/20 bg-black/40 p-5 backdrop-blur-md">
+        <div className="flex h-14 w-14 flex-shrink-0 items-center justify-center overflow-hidden rounded-2xl border border-white/5 bg-black/60 shadow-[0_0_15px_rgba(212,175,55,0.15)]">
           {booking.multiProfissional ? (
-            <Users size={24} className="text-[#d48997]" />
+            <Users size={24} className="text-[#d4af37]" />
           ) : booking.profissional?.fotoUrl ? (
             <img src={booking.profissional.fotoUrl} alt={booking.profissional.nome} className="h-full w-full object-cover" />
           ) : (
-            <div className="flex h-full w-full items-center justify-center bg-gray-50 text-gray-300">
+            <div className="flex h-full w-full items-center justify-center bg-black/40 text-[#8a6c74]">
               <User size={24} />
             </div>
           )}
         </div>
         <div>
-          <p className="mb-1 text-[10px] font-black uppercase tracking-[0.2em] text-gray-400">
+          <p className="mb-1 text-[10px] font-black uppercase tracking-[0.2em] text-[#b299a0]">
             {booking.multiProfissional ? 'Com equipe' : 'Agendando com'}
           </p>
-          <p className="text-lg font-black uppercase leading-none tracking-tight text-gray-900">
-            {booking.multiProfissional ? 'Profissionais separados por servico' : booking.profissional?.nome}
+          <p className="text-lg font-brand-display font-black uppercase leading-none tracking-tight text-[#f4ecd8]">
+            {booking.multiProfissional ? 'Especialistas por serviço' : booking.profissional?.nome}
           </p>
         </div>
       </div>
 
-      <div className="overflow-hidden rounded-[2.5rem] border border-gray-100 bg-white shadow-2xl shadow-gray-200/20">
-        <div className="relative overflow-hidden bg-gray-900 p-8 text-white">
-          <div className="absolute right-0 top-0 h-32 w-32 -translate-y-1/2 translate-x-1/2 rounded-full bg-white/10 blur-3xl" />
+      <div className="glass-card-neon overflow-hidden rounded-[2.5rem]">
+        <div className="relative overflow-hidden bg-black/60 p-8 border-b border-[#d4af37]/20">
+          <div className="absolute right-0 top-0 h-40 w-40 -translate-y-1/2 translate-x-1/2 rounded-full bg-[#d4af37]/10 blur-[40px]" />
 
           <div className="relative z-10 flex items-center justify-between">
             <button
               onClick={mesAnterior}
-              className="flex h-12 w-12 items-center justify-center rounded-2xl border border-white/10 bg-white/10 transition-all hover:bg-white/20 active:scale-95"
+              className="flex h-12 w-12 items-center justify-center rounded-2xl border border-[#d4af37]/20 bg-[#d4af37]/5 transition-all hover:bg-[#d4af37]/10 active:scale-95 text-[#f4ecd8]"
             >
-              <ChevronLeft size={20} strokeWidth={3} />
+              <ChevronLeft size={20} strokeWidth={2.5} />
             </button>
 
             <div className="text-center">
-              <p className="mb-1 text-[10px] font-black uppercase tracking-[0.3em] text-white/40">{ano}</p>
-              <h3 className="text-xl font-black uppercase tracking-widest">{MESES[mais]}</h3>
+              <p className="mb-1 text-[10px] font-black uppercase tracking-[0.3em] text-[#b299a0]">{ano}</p>
+              <h3 className="text-xl font-brand-display font-black uppercase tracking-widest text-[#d4af37]">{MESES[mais]}</h3>
             </div>
 
             <button
               onClick={proximoMes}
-              className="flex h-12 w-12 items-center justify-center rounded-2xl border border-white/10 bg-white/10 transition-all hover:bg-white/20 active:scale-95"
+              className="flex h-12 w-12 items-center justify-center rounded-2xl border border-[#d4af37]/20 bg-[#d4af37]/5 transition-all hover:bg-[#d4af37]/10 active:scale-95 text-[#f4ecd8]"
             >
-              <ChevronRight size={20} strokeWidth={3} />
+              <ChevronRight size={20} strokeWidth={2.5} />
             </button>
           </div>
         </div>
 
-        <div className="p-8">
+        <div className="p-8 bg-black/20">
           <div className="mb-6 grid grid-cols-7 gap-2">
             {DIAS_SEMANA.map((d) => (
-              <div key={d} className="text-center text-[10px] font-black uppercase tracking-widest text-gray-300">
+              <div key={d} className="text-center text-[10px] font-black uppercase tracking-widest text-[#8a6c74]">
                 {d}
               </div>
             ))}
@@ -215,25 +215,25 @@ export default function StepData({ booking, set, next, cor }) {
               return (
                 <motion.button
                   key={d}
-                  whileHover={!disabled ? { scale: 1.1, y: -2 } : {}}
+                  whileHover={!disabled ? { scale: 1.15, y: -2 } : {}}
                   whileTap={!disabled ? { scale: 0.95 } : {}}
                   onClick={() => selecionar(d)}
                   disabled={disabled}
                   className={cn(
                     'relative flex aspect-square flex-col items-center justify-center rounded-2xl text-sm font-black transition-all',
-                    selecionado ? 'z-10 shadow-2xl' : !disabled ? 'hover:bg-gray-50' : ''
+                    selecionado ? 'z-10 border border-[#d4af37]' : !disabled ? 'hover:bg-[#d4af37]/10 border border-transparent hover:border-[#d4af37]/30' : ''
                   )}
                   style={{
-                    backgroundColor: selecionado ? cor : 'transparent',
-                    boxShadow: selecionado ? `0 15px 30px -10px ${cor}88` : 'none',
-                    color: selecionado ? 'white' : past ? '#f3f4f6' : !disponivel ? '#d1d5db' : '#1f2937',
+                    backgroundColor: selecionado ? '#d4af37' : 'transparent',
+                    boxShadow: selecionado ? '0 15px 30px -10px rgba(212,175,55,0.4)' : 'none',
+                    color: selecionado ? '#000' : past ? '#3b2a35' : !disponivel ? '#5d4d57' : '#f4ecd8',
                     opacity: loadingDisponibilidade && !past ? 0.45 : 1,
                     cursor: disabled ? 'not-allowed' : 'pointer',
                   }}
                 >
                   <span className="relative z-10">{d}</span>
                   {!past && !selecionado && disponivel && (
-                    <div className="relative z-10 mt-1 h-1 w-1 rounded-full bg-emerald-400" />
+                    <div className="relative z-10 mt-1 h-1.5 w-1.5 rounded-full bg-[#d4af37] shadow-[0_0_8px_rgba(212,175,55,0.8)]" />
                   )}
                 </motion.button>
               );
@@ -242,13 +242,13 @@ export default function StepData({ booking, set, next, cor }) {
         </div>
       </div>
 
-      <div className="flex items-center justify-center gap-3 text-[10px] font-black uppercase tracking-widest text-gray-300">
-        <CalendarIcon size={12} />
-        {loadingDisponibilidade ? 'Consultando dias com vaga' : 'Selecione um dia com vaga para toda a equipe'}
+      <div className="flex items-center justify-center gap-3 text-[10px] font-black uppercase tracking-widest text-[#8a6c74]">
+        <CalendarIcon size={12} className={loadingDisponibilidade ? 'animate-pulse text-[#d4af37]' : ''} />
+        {loadingDisponibilidade ? 'Consultando agenda...' : 'Selecione uma data para o atendimento'}
       </div>
 
       {erroDisponibilidade && (
-        <div className="rounded-3xl border border-rose-100 bg-rose-50 px-5 py-4 text-center text-sm font-semibold text-rose-700">
+        <div className="rounded-[2rem] border border-rose-500/20 bg-rose-500/10 px-6 py-5 text-center text-[11px] font-black uppercase tracking-[0.1em] text-rose-400 backdrop-blur-md">
           {erroDisponibilidade}
         </div>
       )}
