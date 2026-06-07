@@ -86,7 +86,7 @@ export default function Pacotes() {
       descricao: pacote.descricao || '',
       preco: pacote.preco || '',
       validadeDias: pacote.validadeDias || 30,
-      servicosIds: pacote.itens?.map((item) => item.servicoId).filter(Boolean) || [],
+      servicosIds: pacote.servicos?.map((item) => item.servicoId).filter(Boolean) || [],
     });
     setModalOpen(true);
   }
@@ -233,10 +233,10 @@ export default function Pacotes() {
                       Serviços inclusos
                     </span>
                     <div className="flex flex-wrap gap-1.5 max-h-[88px] overflow-y-auto pr-1">
-                      {(pacote.itens || []).length > 0 ? (
-                        pacote.itens.map((item) => (
+                      {(pacote.servicos || []).length > 0 ? (
+                        pacote.servicos.map((item) => (
                           <span
-                            key={item.id}
+                            key={item.servicoId}
                             className="inline-flex items-center rounded-lg bg-gray-50 dark:bg-white/[0.03] border border-black/[0.03] dark:border-white/5 px-2 py-1 text-[10px] font-medium text-gray-600 dark:text-gray-300"
                           >
                             {item.servico?.nome || 'Serviço'}
@@ -282,7 +282,7 @@ export default function Pacotes() {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              onClick={fecharModal}
+              onClick={() => setModalOpen(false)}
               className="absolute inset-0 bg-black/40 backdrop-blur-sm dark:bg-black/60"
             />
 

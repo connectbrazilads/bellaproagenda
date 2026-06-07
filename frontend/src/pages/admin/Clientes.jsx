@@ -156,7 +156,7 @@ export default function Clientes() {
       ...prev,
       pacoteId,
       precoPago: pkg ? String(pkg.preco) : '',
-      sessoesRestantes: pkg ? (pkg.itens?.length || 10) : 10
+      sessoesRestantes: pkg ? (pkg.servicos?.length || 10) : 10
     }));
   }
 
