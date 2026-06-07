@@ -1772,150 +1772,155 @@ function ModalDetalhesAgendamento({ agendamento: initialAgendamento, allAgendame
     return (
       <motion.div
         initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-        className="fixed inset-0 bg-black/90 backdrop-blur-3xl z-[200] flex items-center justify-center overflow-y-auto overscroll-contain p-3 sm:p-4"
+        className="fixed inset-0 bg-black/60 backdrop-blur-md z-[200] flex items-center justify-center overflow-y-auto overscroll-contain p-3 sm:p-4"
       >
         <motion.div
-          initial={{ scale: 0.95, y: 50, opacity: 0 }} animate={{ scale: 1, y: 0, opacity: 1 }} exit={{ scale: 0.95, y: 50, opacity: 0 }}
-          className="bg-white dark:bg-[#0c0c0e] rounded-t-[2rem] md:rounded-[3rem] xl:rounded-[4rem] w-full max-w-5xl h-[95dvh] md:max-h-[92dvh] flex flex-col shadow-[0_60px_120px_-20px_rgba(0,0,0,0.7)] border border-gray-200 dark:border-white/5 overflow-hidden"
+          initial={{ scale: 0.98, y: 30, opacity: 0 }} animate={{ scale: 1, y: 0, opacity: 1 }} exit={{ scale: 0.98, y: 30, opacity: 0 }}
+          transition={{ duration: 0.3, ease: 'easeOut' }}
+          className="bg-white dark:bg-[#0c0c0e] rounded-t-3xl md:rounded-3xl w-full max-w-5xl h-[95dvh] md:max-h-[92dvh] flex flex-col shadow-2xl border border-black/[0.04] dark:border-white/[0.05] overflow-hidden"
         >
-          <div className="px-5 py-5 md:px-10 md:py-8 border-b border-gray-100 dark:border-white/5 flex items-start justify-between gap-4 bg-white dark:bg-[#0c0c0e]/80 backdrop-blur-3xl shrink-0 z-10">
-            <div className="flex items-start gap-4 min-w-0">
-              <div className="w-16 h-16 bg-gradient-to-br from-[#d48997] to-indigo-700 rounded-[2rem] flex items-center justify-center text-white shadow-2xl shadow-[#E29BA8]/40 relative shrink-0">
-                <User size={30} />
-                <div className="absolute -bottom-1 -right-1 w-5 h-5 bg-[#E29BA8] border-4 border-white dark:border-[#0c0c0e] rounded-full" />
+          {/* Header */}
+          <div className="px-6 py-5 md:px-10 md:py-6 border-b border-black/[0.03] dark:border-white/[0.03] flex items-start justify-between gap-4 bg-white/95 dark:bg-[#0c0c0e]/95 backdrop-blur-md shrink-0 z-10">
+            <div className="flex items-center gap-4 min-w-0">
+              <div className="w-12 h-12 rounded-full bg-gradient-to-tr from-[#d48997]/20 to-[#e29ba8]/20 border border-[#d48997]/30 flex items-center justify-center text-[#d48997] dark:text-[#f4d1d6] shadow-sm relative shrink-0">
+                <User size={20} />
+                <div className="absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 bg-[#d48997] border-2 border-white dark:border-[#0c0c0e] rounded-full" />
               </div>
               <div className="min-w-0">
-                <h2 className="text-2xl md:text-4xl font-black text-gray-900 dark:text-white uppercase tracking-tighter leading-none break-words">{agendamento.clienteNome}</h2>
-                <div className="flex flex-wrap items-center gap-3 mt-2">
-                  <span className="text-[10px] font-black text-[#E29BA8] uppercase tracking-[0.3em]">Gestao de Agenda BellaPro</span>
+                <h2 className="text-xl md:text-2xl font-serif font-normal text-gray-900 dark:text-white tracking-wide leading-tight break-words">{agendamento.clienteNome}</h2>
+                <div className="flex flex-wrap items-center gap-2 mt-1.5">
+                  <span className="text-[10px] font-medium text-[#d48997] tracking-wider">Gestão de Agenda BellaPro</span>
                   {isAgendamentoOnline(agendamento) && (
-                    <span className="rounded-full border border-[#14b8a6]/25 bg-[#14b8a6]/12 px-3 py-1 text-[9px] font-black uppercase tracking-[0.24em] text-[#0f9a8c] dark:text-[#6ee7d8]">
+                    <span className="rounded-full border border-teal-500/20 bg-teal-500/10 px-2 py-0.5 text-[9px] font-medium tracking-wide text-[#0f9a8c] dark:text-[#72f1c5]">
                       Online
                     </span>
                   )}
-                  <div className="w-1.5 h-1.5 rounded-full bg-gray-200 dark:bg-white/20" />
-                  <span className="text-[10px] font-black text-gray-400 uppercase tracking-[0.3em]">{formatDateBR(agendamento.data)} - {agendamento.inicioHora} - {agendamento.profissional?.nome}</span>
+                  <div className="w-1 h-1 rounded-full bg-gray-255 dark:bg-white/20" />
+                  <span className="text-[10px] font-medium text-gray-400 dark:text-gray-500 tracking-wide">{formatDateBR(agendamento.data)} - {agendamento.inicioHora} - {agendamento.profissional?.nome}</span>
                 </div>
               </div>
             </div>
             <button
               onClick={onClose}
-              className="w-14 h-14 rounded-full bg-gray-50 dark:bg-white/5 flex items-center justify-center text-gray-400 hover:text-red-500 transition-all hover:scale-110 active:scale-95 group shrink-0"
+              className="w-10 h-10 rounded-full border border-black/[0.04] dark:border-white/[0.04] bg-white/50 dark:bg-white/5 flex items-center justify-center text-gray-400 hover:text-red-500 transition-all hover:scale-105 active:scale-95 group shrink-0 shadow-sm"
             >
-              <X size={24} className="group-hover:rotate-90 transition-transform" />
+              <X size={16} className="group-hover:rotate-90 transition-transform duration-300" />
             </button>
           </div>
 
-          <div className="flex-1 overflow-y-auto bg-white dark:bg-[#060608]">
-            <div className="border-b border-gray-100 bg-bellapro-blush/5 px-5 py-4 dark:border-white/5 md:px-10">
-              <div className="flex flex-wrap items-start justify-between gap-4">
-                <div className="flex flex-wrap items-center gap-3">
-                <div className={cn('px-3 py-1.5 rounded-xl text-[8px] font-black uppercase tracking-[0.2em] border', STATUS_CONFIG[agendamento.status]?.bg, STATUS_CONFIG[agendamento.status]?.text, STATUS_CONFIG[agendamento.status]?.border)}>
-                  {STATUS_CONFIG[agendamento.status]?.label || agendamento.status}
+          <div className="flex-1 overflow-y-auto bg-white dark:bg-[#060608] modal-scrollbar">
+            {/* Top Bar with Actions & Badges */}
+            <div className="border-b border-black/[0.03] dark:border-white/[0.03] bg-gradient-to-r from-[#d48997]/[0.01] to-transparent px-6 py-4 md:px-10">
+              <div className="flex flex-wrap items-center justify-between gap-4">
+                <div className="flex flex-wrap items-center gap-2">
+                  <div className={cn('px-3 py-1 rounded-full text-[10px] font-medium tracking-wide border', STATUS_CONFIG[agendamento.status]?.bg, STATUS_CONFIG[agendamento.status]?.text, STATUS_CONFIG[agendamento.status]?.border)}>
+                    {STATUS_CONFIG[agendamento.status]?.label || agendamento.status}
+                  </div>
+                  <div className={cn('px-3 py-1 rounded-full text-[10px] font-medium tracking-wide border', agendamento.statusPagamento === 'pago' ? 'bg-[#d48997]/10 text-[#d48997] border-[#d48997]/20' : 'bg-rose-500/10 text-rose-500 border-rose-500/20')}>
+                    {agendamento.statusPagamento === 'pago' ? 'Pagamento OK' : 'Pagamento Pendente'}
+                  </div>
                 </div>
-                <div className={cn('px-3 py-1.5 rounded-xl text-[8px] font-black uppercase tracking-[0.2em] border', agendamento.statusPagamento === 'pago' ? 'bg-[#E29BA8]/10 text-[#E29BA8] border-[#E29BA8]/20' : 'bg-bellapro-blush/10 text-bellapro-blush border-bellapro-blush/20')}>
-                  {agendamento.statusPagamento === 'pago' ? 'Pagamento ok' : 'Pag. pendente'}
-                </div>
-              </div>
 
-              <div className="grid grid-cols-1 sm:flex sm:flex-wrap items-center gap-2">
-                <div className="grid grid-cols-2 gap-2 sm:flex sm:flex-wrap">
+                <div className="flex flex-wrap items-center gap-2">
                   <button
                     type="button"
                     onClick={() => {
                       setShowMoreActions(false);
                       setTab('comanda');
                     }}
-                    className="w-full sm:w-auto rounded-2xl bg-[#d48997] px-3 py-3 text-[9px] sm:text-[10px] font-black uppercase tracking-[0.18em] text-white transition hover:bg-[#c77787]"
+                    className="rounded-xl bg-gradient-to-r from-[#d48997] to-[#e29ba8] hover:from-[#c97b8a] hover:to-[#d48997] px-4.5 py-2 text-xs font-semibold text-white shadow-sm hover:shadow transition-all hover:-translate-y-0.5 active:translate-y-0"
                   >
-                    Abrir comanda
+                    Abrir Comanda
                   </button>
                   <button
                     type="button"
                     onClick={goToPagamento}
                     className={cn(
-                      'w-full sm:w-auto rounded-2xl px-3 py-3 text-[9px] sm:text-[10px] font-black uppercase tracking-[0.18em] transition',
+                      'rounded-xl px-4.5 py-2 text-xs font-semibold transition-all hover:-translate-y-0.5 active:translate-y-0',
                       agendamento.statusPagamento === 'pago'
-                        ? 'border border-[#E29BA8]/20 bg-[#E29BA8]/10 text-[#d48997]'
-                        : 'bg-[#0f172a] text-white hover:bg-[#1e293b]'
+                        ? 'border border-[#d48997]/20 bg-[#d48997]/5 text-[#d48997]'
+                        : 'bg-gray-950 dark:bg-white text-white dark:text-gray-950 hover:bg-black dark:hover:bg-gray-100 shadow-sm'
                     )}
                   >
-                    {agendamento.statusPagamento === 'pago' ? 'Pagamento' : 'Ir para pagamento'}
+                    {agendamento.statusPagamento === 'pago' ? 'Visualizar Recibo' : 'Ir para Pagamento'}
                   </button>
-                </div>
-                <div className="relative w-full sm:w-auto">
-                  <button
-                    type="button"
-                    onClick={() => setShowMoreActions((current) => !current)}
-                    className="w-full justify-center sm:w-auto inline-flex items-center gap-2 rounded-2xl border border-gray-200 bg-white px-4 py-3 text-[10px] font-black uppercase tracking-[0.18em] text-gray-700 transition hover:bg-gray-50 dark:border-white/10 dark:bg-white/5 dark:text-white/80 dark:hover:bg-white/10"
-                  >
-                    <MoreVertical size={14} />
-                    Mais acoes
-                  </button>
+                  
+                  <div className="relative">
+                    <button
+                      type="button"
+                      onClick={() => setShowMoreActions((current) => !current)}
+                      className="inline-flex items-center gap-1.5 rounded-xl border border-black/[0.06] dark:border-white/10 bg-white dark:bg-white/5 px-4.5 py-2 text-xs font-semibold text-gray-700 dark:text-white/80 transition-all hover:bg-gray-50 dark:hover:bg-white/10"
+                    >
+                      <MoreVertical size={14} />
+                      Ações
+                    </button>
 
-                  {showMoreActions && (
-                    <div className="absolute left-0 sm:left-auto sm:right-0 top-full z-[100] mt-2 w-56 rounded-[1.5rem] border border-gray-200 bg-white p-2 shadow-[0_24px_70px_-32px_rgba(0,0,0,0.55)] dark:border-white/10 dark:bg-[#151219]">
-                      <div className="space-y-1">
-                        {agendamento.status === 'confirmado' && (
-                          <button type="button" onClick={() => handleAtualizarStatus('em_atendimento')} className="w-full rounded-xl px-3 py-3 text-left text-[10px] font-black uppercase tracking-[0.16em] text-gray-700 transition hover:bg-gray-100 dark:text-white/80 dark:hover:bg-white/10">
-                            Iniciar atendimento
-                          </button>
-                        )}
-                        {(agendamento.status === 'confirmado' || agendamento.status === 'em_atendimento') && (
-                          <button type="button" onClick={() => handleAtualizarStatus('concluido')} className="w-full rounded-xl px-3 py-3 text-left text-[10px] font-black uppercase tracking-[0.16em] text-gray-700 transition hover:bg-gray-100 dark:text-white/80 dark:hover:bg-white/10">
-                            Concluir atendimento
-                          </button>
-                        )}
-                        {agendamento.status !== 'cancelado' && (
-                          <>
-                            <button type="button" onClick={() => { setShowMoreActions(false); setTab('ajustes'); }} className="w-full rounded-xl px-3 py-3 text-left text-[10px] font-black uppercase tracking-[0.16em] text-gray-700 transition hover:bg-gray-100 dark:text-white/80 dark:hover:bg-white/10">
-                              Ver ajustes
+                    {showMoreActions && (
+                      <div className="absolute right-0 top-full z-[100] mt-2 w-52 rounded-2xl border border-black/[0.04] bg-white p-2 shadow-xl dark:border-white/10 dark:bg-[#121214]">
+                        <div className="space-y-1">
+                          {agendamento.status === 'confirmado' && (
+                            <button type="button" onClick={() => handleAtualizarStatus('em_atendimento')} className="w-full rounded-xl px-3.5 py-2.5 text-left text-xs font-medium text-gray-700 hover:text-[#d48997] hover:bg-[#d48997]/5 transition-all dark:text-white/80 dark:hover:bg-white/10">
+                              Iniciar atendimento
                             </button>
-                            <button type="button" onClick={() => { setShowMoreActions(false); onAjustar?.(agendamento); }} className="w-full rounded-xl px-3 py-3 text-left text-[10px] font-black uppercase tracking-[0.16em] text-gray-700 transition hover:bg-gray-100 dark:text-white/80 dark:hover:bg-white/10">
-                              Editar servico
+                          )}
+                          {(agendamento.status === 'confirmado' || agendamento.status === 'em_atendimento') && (
+                            <button type="button" onClick={() => handleAtualizarStatus('concluido')} className="w-full rounded-xl px-3.5 py-2.5 text-left text-xs font-medium text-gray-700 hover:text-[#d48997] hover:bg-[#d48997]/5 transition-all dark:text-white/80 dark:hover:bg-white/10">
+                              Concluir atendimento
                             </button>
-                            <button type="button" onClick={() => { setShowMoreActions(false); onReagendar?.(agendamento); }} className="w-full rounded-xl px-3 py-3 text-left text-[10px] font-black uppercase tracking-[0.16em] text-gray-700 transition hover:bg-gray-100 dark:text-white/80 dark:hover:bg-white/10">
-                              Reagendar
+                          )}
+                          {agendamento.status !== 'cancelado' && (
+                            <>
+                              <button type="button" onClick={() => { setShowMoreActions(false); setTab('ajustes'); }} className="w-full rounded-xl px-3.5 py-2.5 text-left text-xs font-medium text-gray-700 hover:text-[#d48997] hover:bg-[#d48997]/5 transition-all dark:text-white/80 dark:hover:bg-white/10">
+                                Ver detalhes/ajustes
+                              </button>
+                              <button type="button" onClick={() => { setShowMoreActions(false); onAjustar?.(agendamento); }} className="w-full rounded-xl px-3.5 py-2.5 text-left text-xs font-medium text-gray-700 hover:text-[#d48997] hover:bg-[#d48997]/5 transition-all dark:text-white/80 dark:hover:bg-white/10">
+                                Editar serviço
+                              </button>
+                              <button type="button" onClick={() => { setShowMoreActions(false); onReagendar?.(agendamento); }} className="w-full rounded-xl px-3.5 py-2.5 text-left text-xs font-medium text-gray-700 hover:text-[#d48997] hover:bg-[#d48997]/5 transition-all dark:text-white/80 dark:hover:bg-white/10">
+                                Reagendar data
+                              </button>
+                              <button type="button" onClick={() => handleAtualizarStatus('cancelado')} className="w-full rounded-xl px-3.5 py-2.5 text-left text-xs font-medium text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10 transition-all">
+                                Cancelar agendamento
+                              </button>
+                            </>
+                          )}
+                          {agendamento.statusPagamento === 'pago' && (
+                            <button type="button" onClick={async () => { setShowMoreActions(false); await handleReabrirComanda(); }} className="w-full rounded-xl px-3.5 py-2.5 text-left text-xs font-medium text-amber-600 hover:bg-amber-50 dark:text-amber-300 dark:hover:bg-amber-500/10 transition-all">
+                              Reabrir comanda
                             </button>
-                            <button type="button" onClick={() => handleAtualizarStatus('cancelado')} className="w-full rounded-xl px-3 py-3 text-left text-[10px] font-black uppercase tracking-[0.16em] text-red-500 transition hover:bg-red-50 dark:hover:bg-red-500/10">
-                              Cancelar atendimento
-                            </button>
-                          </>
-                        )}
-                        {agendamento.statusPagamento === 'pago' && (
-                          <button type="button" onClick={async () => { setShowMoreActions(false); await handleReabrirComanda(); }} className="w-full rounded-xl px-3 py-3 text-left text-[10px] font-black uppercase tracking-[0.16em] text-amber-600 transition hover:bg-amber-50 dark:text-amber-300 dark:hover:bg-amber-500/10">
-                            Reabrir comanda
-                          </button>
-                        )}
+                          )}
+                        </div>
                       </div>
-                    </div>
-                  )}
+                    )}
+                  </div>
+                </div>
+              </div>
+
+              {/* Glass Info Cards */}
+              <div className="mt-5 grid gap-4 grid-cols-1 sm:grid-cols-3">
+                <div className="rounded-2xl border border-black/[0.04] dark:border-white/[0.04] bg-white/60 dark:bg-white/[0.02] backdrop-blur-md px-5 py-4 hover:shadow-md transition-all duration-300">
+                  <p className="text-[10px] font-medium text-gray-400 dark:text-gray-500 tracking-wide">Serviço</p>
+                  <p className="mt-1 text-sm font-semibold text-gray-800 dark:text-gray-100 normal-case leading-tight">{getAgendamentoTitulo(agendamento)}</p>
+                </div>
+                <div className="rounded-2xl border border-black/[0.04] dark:border-white/[0.04] bg-white/60 dark:bg-white/[0.02] backdrop-blur-md px-5 py-4 hover:shadow-md transition-all duration-300">
+                  <p className="text-[10px] font-medium text-gray-400 dark:text-gray-500 tracking-wide">Profissional</p>
+                  <p className="mt-1 text-sm font-semibold text-gray-800 dark:text-gray-100 normal-case leading-tight">{agendamento.profissional?.nome || 'Equipe'}</p>
+                </div>
+                <div className="rounded-2xl border border-[#d48997]/30 bg-gradient-to-br from-[#d48997]/10 to-[#e29ba8]/5 dark:from-[#d48997]/15 dark:to-transparent px-5 py-4 shadow-[0_8px_30px_rgba(212,137,151,0.08)] hover:shadow-[0_8px_30px_rgba(212,137,151,0.12)] transition-all duration-300">
+                  <p className="text-[10px] font-semibold text-[#d48997] dark:text-[#efbac2] tracking-wide">Total Atual</p>
+                  <p className="mt-0.5 text-xl font-serif font-semibold text-[#d48997] dark:text-white leading-tight">{Number(calculateTotal()).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</p>
                 </div>
               </div>
             </div>
 
-            <div className="mt-5 grid gap-3 md:grid-cols-3">
-              <div className="rounded-[1.5rem] border border-gray-200 bg-white px-4 py-4 dark:border-white/10 dark:bg-white/[0.04]">
-                <p className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-400">Servico</p>
-                <p className="mt-2 text-sm font-black uppercase text-gray-900 dark:text-white">{getAgendamentoTitulo(agendamento)}</p>
-              </div>
-              <div className="rounded-[1.5rem] border border-gray-200 bg-white px-4 py-4 dark:border-white/10 dark:bg-white/[0.04]">
-                <p className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-400">Profissional</p>
-                <p className="mt-2 text-sm font-black uppercase text-gray-900 dark:text-white">{agendamento.profissional?.nome || 'Equipe'}</p>
-              </div>
-              <div className="rounded-[1.5rem] border border-[#E29BA8]/20 bg-[#E29BA8]/8 px-4 py-4 dark:bg-[#E29BA8]/10">
-                <p className="text-[10px] font-black uppercase tracking-[0.2em] text-[#b96a79] dark:text-[#efbac2]">Total atual</p>
-                <p className="mt-2 text-lg font-black text-[#d48997] dark:text-white">{Number(calculateTotal()).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</p>
-              </div>
-            </div>
-            </div>
-
-            <div className="mx-auto w-full max-w-4xl p-5 md:p-8 xl:p-10">
-              <div className="sticky top-0 z-[10] mb-6 rounded-[2rem] bg-white/95 px-1 py-1 backdrop-blur dark:bg-[#060608]/95">
-                <div className="grid grid-cols-3 gap-1 rounded-[2rem] border border-gray-100 bg-gray-50 p-1 dark:border-white/10 dark:bg-white/5 sm:gap-2 sm:p-2">
+            {/* Inner Content Area */}
+            <div className="mx-auto w-full max-w-4xl p-6 md:p-10">
+              {/* Tab Selector */}
+              <div className="sticky top-0 z-10 mb-6 rounded-2xl bg-white/95 px-1 py-1 backdrop-blur dark:bg-[#060608]/95">
+                <div className="grid grid-cols-3 gap-1 rounded-2xl border border-black/[0.03] dark:border-white/[0.04] bg-gray-50/50 dark:bg-white/[0.02] p-1">
                   {[
                     { id: 'comanda', label: 'Comanda', icon: Plus },
-                    { id: 'ajustes', label: 'Ajustes', icon: Scissors },
+                    { id: 'ajustes', label: 'Detalhes', icon: Scissors },
                     { id: 'pagamento', label: 'Pagamento', icon: CreditCard },
                   ].map((item) => (
                     <button
@@ -1930,13 +1935,13 @@ function ModalDetalhesAgendamento({ agendamento: initialAgendamento, allAgendame
                         setTab(item.id);
                       }}
                       className={cn(
-                        'flex items-center justify-center gap-1.5 sm:gap-3 rounded-[1.5rem] px-2 py-3 sm:px-4 sm:py-4 text-[9px] sm:text-[10px] font-black uppercase tracking-[0.18em] transition-all',
+                        'flex items-center justify-center gap-1.5 rounded-xl px-2 py-3 sm:px-4 text-xs font-semibold transition-all duration-300',
                         tab === item.id
-                          ? 'bg-white text-[#d48997] shadow-sm dark:bg-[#1a1a1c] dark:text-white'
-                          : 'text-gray-400 hover:bg-white/50 hover:text-gray-900 dark:text-white/40 dark:hover:bg-white/5 dark:hover:text-white'
+                          ? 'bg-white dark:bg-white/10 text-[#d48997] dark:text-white shadow-sm dark:shadow-md'
+                          : 'text-gray-400 hover:text-gray-750 dark:text-gray-500 dark:hover:text-white'
                       )}
                     >
-                      <item.icon size={14} className="shrink-0" />
+                      <item.icon size={13} className="shrink-0" />
                       <span className="truncate">{item.label}</span>
                     </button>
                   ))}
@@ -1945,38 +1950,39 @@ function ModalDetalhesAgendamento({ agendamento: initialAgendamento, allAgendame
 
               {tab === 'comanda' ? (
                 <div className="space-y-4">
-                  <section className="rounded-[2rem] border border-gray-100 bg-gray-50 p-4 dark:border-white/10 dark:bg-white/[0.04]">
-                    <button type="button" onClick={() => toggleComandaSection('itens')} className="flex w-full items-center justify-between gap-4 text-left">
+                  {/* Itens da Comanda */}
+                  <section className="rounded-3xl border border-black/[0.04] dark:border-white/[0.04] bg-white/40 dark:bg-white/[0.01] p-5 shadow-sm">
+                    <button type="button" onClick={() => toggleComandaSection('itens')} className="flex w-full items-center justify-between gap-4 text-left group">
                       <div>
-                        <p className="text-[11px] font-black uppercase tracking-[0.3em] text-gray-900 dark:text-white">Itens da comanda</p>
-                        <p className="mt-2 text-sm text-gray-500 dark:text-white/55">Veja o que ja esta no atendimento e remova apenas se precisar.</p>
+                        <p className="text-sm font-semibold text-gray-900 dark:text-white transition-colors group-hover:text-[#d48997]">Itens da Comanda</p>
+                        <p className="mt-1 text-xs text-gray-400 dark:text-gray-555 font-normal">Veja os procedimentos no atendimento e gerencie os itens extras.</p>
                       </div>
-                      <div className="rounded-2xl border border-gray-200 bg-white p-3 dark:border-white/10 dark:bg-white/5">
-                        {activeComandaSection === 'itens' ? <Minimize2 size={16} /> : <Maximize2 size={16} />}
+                      <div className="rounded-xl border border-black/[0.04] dark:border-white/5 bg-white dark:bg-white/5 p-2.5 transition-all hover:scale-105 active:scale-95 shadow-sm text-gray-400">
+                        {activeComandaSection === 'itens' ? <Minimize2 size={14} /> : <Maximize2 size={14} />}
                       </div>
                     </button>
 
                     {activeComandaSection === 'itens' && (
                       <div className="mt-5 space-y-3">
-                        <div className="rounded-[1.5rem] border border-[#E29BA8]/20 bg-white px-4 py-4 dark:bg-white/[0.04]">
+                        <div className="rounded-2xl border border-black/[0.04] dark:border-white/[0.04] bg-white/60 dark:bg-white/[0.02] px-5 py-4">
                           <div className="flex items-start justify-between gap-3">
                             <div>
-                              <p className="text-[10px] font-black uppercase tracking-[0.18em] text-[#E29BA8]">Servico principal</p>
-                              <p className="mt-2 text-sm font-black uppercase text-gray-900 dark:text-white">{getAgendamentoTitulo(agendamento)}</p>
+                              <p className="text-[10px] font-semibold text-[#d48997]">Serviço Principal</p>
+                              <p className="mt-1 text-sm font-semibold text-gray-800 dark:text-gray-100 normal-case leading-tight">{getAgendamentoTitulo(agendamento)}</p>
                             </div>
-                            <p className="text-sm font-black text-[#d48997]">{precoBaseCheckout.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</p>
+                            <p className="text-sm font-semibold text-[#d48997]">{precoBaseCheckout.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</p>
                           </div>
                         </div>
 
                         {itensExtras.map((item) => (
-                          <div key={item.id} className="flex flex-col gap-3 rounded-[1.5rem] border border-gray-100 bg-white px-4 py-4 dark:border-white/10 dark:bg-white/[0.04] sm:flex-row sm:items-center sm:justify-between">
+                          <div key={item.id} className="flex flex-col gap-3 rounded-2xl border border-black/[0.04] dark:border-white/[0.04] bg-white/60 dark:bg-white/[0.02] px-5 py-4 sm:flex-row sm:items-center sm:justify-between">
                             <div>
-                              <p className="text-[10px] font-black uppercase tracking-[0.18em] text-gray-400">Servico extra</p>
-                              <p className="mt-1 text-sm font-black uppercase text-gray-900 dark:text-white">{item.servico?.nome || item.nome}</p>
+                              <p className="text-[10px] font-medium text-gray-400 dark:text-gray-500">Serviço Extra</p>
+                              <p className="mt-1 text-sm font-semibold text-gray-800 dark:text-gray-100 normal-case leading-tight">{item.servico?.nome || item.nome}</p>
                             </div>
-                            <div className="flex items-center gap-3">
-                              <p className="text-sm font-black text-gray-900 dark:text-white">{Number(item.preco || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</p>
-                              <button type="button" onClick={() => handleRemoveItem(item.id)} className="rounded-xl border border-red-200 px-3 py-2 text-[9px] font-black uppercase tracking-[0.16em] text-red-500 transition hover:bg-red-50">
+                            <div className="flex items-center justify-between gap-4 sm:justify-end">
+                              <p className="text-sm font-semibold text-gray-800 dark:text-white">{Number(item.preco || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</p>
+                              <button type="button" onClick={() => handleRemoveItem(item.id)} className="rounded-lg border border-red-500/15 text-red-500 hover:bg-red-500/5 px-3 py-1.5 text-xs font-semibold transition-all duration-300">
                                 Remover
                               </button>
                             </div>
@@ -1984,14 +1990,14 @@ function ModalDetalhesAgendamento({ agendamento: initialAgendamento, allAgendame
                         ))}
 
                         {(agendamento.produtos || []).map((item) => (
-                          <div key={item.id} className="flex flex-col gap-3 rounded-[1.5rem] border border-gray-100 bg-white px-4 py-4 dark:border-white/10 dark:bg-white/[0.04] sm:flex-row sm:items-center sm:justify-between">
+                          <div key={item.id} className="flex flex-col gap-3 rounded-2xl border border-black/[0.04] dark:border-white/[0.04] bg-white/60 dark:bg-white/[0.02] px-5 py-4 sm:flex-row sm:items-center sm:justify-between">
                             <div>
-                              <p className="text-[10px] font-black uppercase tracking-[0.18em] text-gray-400">Produto</p>
-                              <p className="mt-1 text-sm font-black uppercase text-gray-900 dark:text-white">{item.produto?.nome || item.nome} x{item.quantidade}</p>
+                              <p className="text-[10px] font-medium text-gray-400 dark:text-gray-500">Produto</p>
+                              <p className="mt-1 text-sm font-semibold text-gray-800 dark:text-gray-100 normal-case leading-tight">{item.produto?.nome || item.nome} <span className="text-gray-400 dark:text-gray-500 font-normal">x{item.quantidade}</span></p>
                             </div>
-                            <div className="flex items-center gap-3">
-                              <p className="text-sm font-black text-gray-900 dark:text-white">{Number((item.preco || 0) * (item.quantidade || 0)).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</p>
-                              <button type="button" onClick={() => handleRemoveProduto(item.id)} className="rounded-xl border border-red-200 px-3 py-2 text-[9px] font-black uppercase tracking-[0.16em] text-red-500 transition hover:bg-red-50">
+                            <div className="flex items-center justify-between gap-4 sm:justify-end">
+                              <p className="text-sm font-semibold text-gray-800 dark:text-white">{Number((item.preco || 0) * (item.quantidade || 0)).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</p>
+                              <button type="button" onClick={() => handleRemoveProduto(item.id)} className="rounded-lg border border-red-500/15 text-red-500 hover:bg-red-500/5 px-3 py-1.5 text-xs font-semibold transition-all duration-300">
                                 Remover
                               </button>
                             </div>
@@ -1999,35 +2005,35 @@ function ModalDetalhesAgendamento({ agendamento: initialAgendamento, allAgendame
                         ))}
 
                         {itensExtras.length === 0 && (agendamento.produtos || []).length === 0 && (
-                          <div className="rounded-[1.5rem] border border-dashed border-gray-200 px-4 py-4 text-sm text-gray-500 dark:border-white/10 dark:text-white/55">
-                            Esta comanda ainda tem apenas o servico principal.
+                          <div className="rounded-2xl border border-dashed border-gray-200 dark:border-white/10 px-5 py-4 text-xs text-gray-400 dark:text-gray-500">
+                            Esta comanda ainda possui apenas o serviço principal.
                           </div>
                         )}
 
                         {agendamentosMesmoClienteNoDia.length > 1 && (
-                          <div className="rounded-[1.5rem] border border-gray-100 bg-white px-4 py-4 dark:border-white/10 dark:bg-white/[0.04]">
+                          <div className="rounded-2xl border border-black/[0.04] bg-gray-50/50 p-4 dark:border-white/[0.04] dark:bg-white/[0.02]">
                             <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
                               <div>
-                                <p className="text-[10px] font-black uppercase tracking-[0.18em] text-[#E29BA8]">Comanda agrupada</p>
-                                <p className="mt-1 text-sm font-black uppercase text-gray-900 dark:text-white">{agendamentosMesmoClienteNoDia.length} procedimentos no dia</p>
+                                <p className="text-[10px] font-semibold text-[#E29BA8]">Comanda Agrupada</p>
+                                <p className="mt-0.5 text-sm font-semibold text-gray-900 dark:text-white">{agendamentosMesmoClienteNoDia.length} procedimentos no dia</p>
                               </div>
-                              <p className="text-sm font-black text-[#d48997]">{calculateGroupedAgendamentosTotal(agendamentosMesmoClienteNoDia).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</p>
+                              <p className="text-sm font-semibold text-[#d48997]">{calculateGroupedAgendamentosTotal(agendamentosMesmoClienteNoDia).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</p>
                             </div>
                             <div className="mt-4 space-y-2">
                               {agendamentosMesmoClienteNoDia.map((item) => (
-                                <div key={item.id} className="flex flex-col gap-3 rounded-[1.25rem] bg-gray-50 px-4 py-3 dark:bg-white/[0.04] lg:flex-row lg:items-center lg:justify-between">
+                                <div key={item.id} className="flex flex-col gap-3 rounded-xl bg-white border border-black/[0.03] p-4.5 dark:bg-white/[0.01] dark:border-white/[0.03] lg:flex-row lg:items-center lg:justify-between">
                                   <div>
-                                    <p className="text-[10px] font-black uppercase tracking-[0.16em] text-gray-900 dark:text-white">{item.inicioHora} · {getAgendamentoTitulo(item)}</p>
-                                    <p className="mt-1 text-[10px] font-bold uppercase tracking-[0.16em] text-gray-400">{item.profissional?.nome || 'Equipe'} · {item.statusPagamento === 'pago' ? 'Pago' : 'Pendente'}</p>
+                                    <p className="text-xs font-semibold text-gray-900 dark:text-white">{item.inicioHora} · {getAgendamentoTitulo(item)}</p>
+                                    <p className="mt-1 text-[10px] font-medium text-gray-400 dark:text-gray-500">{item.profissional?.nome || 'Equipe'} · {item.statusPagamento === 'pago' ? 'Pago' : 'Pendente'}</p>
                                   </div>
                                   <div className="flex flex-wrap items-center gap-2">
-                                    <button type="button" onClick={() => handleAbrirAgendamentoGrupo(item)} className="rounded-xl border border-gray-200 px-3 py-2 text-[9px] font-black uppercase tracking-[0.16em] text-gray-500 transition hover:bg-white dark:border-white/10 dark:text-white/70">
+                                    <button type="button" onClick={() => handleAbrirAgendamentoGrupo(item)} className="rounded-lg border border-black/[0.08] dark:border-white/10 px-3 py-1.5 text-xs font-semibold text-gray-600 dark:text-white/70 transition hover:bg-gray-50 dark:hover:bg-white/5">
                                       Abrir
                                     </button>
-                                    <button type="button" onClick={() => onAjustar?.(item)} className="rounded-xl border border-[#d48997]/20 px-3 py-2 text-[9px] font-black uppercase tracking-[0.16em] text-[#d48997] transition hover:bg-[#d48997]/10">
+                                    <button type="button" onClick={() => onAjustar?.(item)} className="rounded-lg border border-[#d48997]/25 px-3 py-1.5 text-xs font-semibold text-[#d48997] transition hover:bg-[#d48997]/5">
                                       Ajustar
                                     </button>
-                                    <button type="button" onClick={() => handleExcluirAgendamentoDaComanda(item)} className="rounded-xl border border-red-200 px-3 py-2 text-[9px] font-black uppercase tracking-[0.16em] text-red-500 transition hover:bg-red-50">
+                                    <button type="button" onClick={() => handleExcluirAgendamentoDaComanda(item)} className="rounded-lg border border-red-500/15 px-3 py-1.5 text-xs font-semibold text-red-500 transition hover:bg-red-500/5">
                                       Remover
                                     </button>
                                   </div>
@@ -2040,14 +2046,15 @@ function ModalDetalhesAgendamento({ agendamento: initialAgendamento, allAgendame
                     )}
                   </section>
 
-                  <section className="rounded-[2rem] border border-gray-100 bg-gray-50 p-4 dark:border-white/10 dark:bg-white/[0.04]">
-                    <button type="button" onClick={() => toggleComandaSection('observacao')} className="flex w-full items-center justify-between gap-4 text-left">
+                  {/* Observações */}
+                  <section className="rounded-3xl border border-black/[0.04] dark:border-white/[0.04] bg-white/40 dark:bg-white/[0.01] p-5 shadow-sm">
+                    <button type="button" onClick={() => toggleComandaSection('observacao')} className="flex w-full items-center justify-between gap-4 text-left group">
                       <div>
-                        <p className="text-[11px] font-black uppercase tracking-[0.3em] text-gray-900 dark:text-white">Observacoes</p>
-                        <p className="mt-2 text-sm text-gray-500 dark:text-white/55">Use este campo para deixar instrucoes simples para a equipe.</p>
+                        <p className="text-sm font-semibold text-gray-900 dark:text-white transition-colors group-hover:text-[#d48997]">Observações</p>
+                        <p className="mt-1 text-xs text-gray-400 dark:text-gray-500 font-normal">Use este campo para registrar informações relevantes para a equipe.</p>
                       </div>
-                      <div className="rounded-2xl border border-gray-200 bg-white p-3 dark:border-white/10 dark:bg-white/5">
-                        {activeComandaSection === 'observacao' ? <Minimize2 size={16} /> : <Maximize2 size={16} />}
+                      <div className="rounded-xl border border-black/[0.04] dark:border-white/5 bg-white dark:bg-white/5 p-2.5 transition-all hover:scale-105 active:scale-95 shadow-sm text-gray-400">
+                        {activeComandaSection === 'observacao' ? <Minimize2 size={14} /> : <Maximize2 size={14} />}
                       </div>
                     </button>
 
@@ -2056,27 +2063,28 @@ function ModalDetalhesAgendamento({ agendamento: initialAgendamento, allAgendame
                         <textarea
                           value={observacaoDraft}
                           onChange={(event) => setObservacaoDraft(event.target.value)}
-                          rows={4}
-                          placeholder="Ex.: cliente pediu tonalidade rosa, teste de mecha, alergia ou preferencia de atendimento."
-                          className="w-full rounded-[1.75rem] border border-gray-200 bg-white px-5 py-4 text-sm text-gray-900 outline-none placeholder:text-gray-400 dark:border-white/10 dark:bg-[#111113] dark:text-white dark:placeholder:text-gray-500"
+                          rows={3}
+                          placeholder="Ex.: cliente pediu tonalidade específica, possui restrições ou preferências."
+                          className="w-full rounded-2xl border border-black/[0.08] bg-white dark:border-white/10 dark:bg-[#111113] px-5 py-4 text-sm text-gray-900 outline-none placeholder:text-gray-400 dark:text-white dark:placeholder:text-gray-500 transition-all focus:border-[#d48997] focus:ring-2 focus:ring-[#d48997]/10"
                         />
                         <div className="flex justify-end">
-                          <button type="button" onClick={handleSalvarObservacao} disabled={savingObservacao} className="rounded-2xl bg-[#E29BA8] px-5 py-3 text-[10px] font-black uppercase tracking-[0.2em] text-white transition hover:bg-[#d48997] disabled:opacity-60">
-                            {savingObservacao ? 'Salvando' : 'Salvar observacao'}
+                          <button type="button" onClick={handleSalvarObservacao} disabled={savingObservacao} className="rounded-xl bg-[#E29BA8] hover:bg-[#d48997] px-5 py-2.5 text-xs font-semibold text-white transition-all disabled:opacity-60 shadow-sm shadow-[#E29BA8]/10 hover:-translate-y-0.5 active:translate-y-0">
+                            {savingObservacao ? 'Salvando...' : 'Salvar Observação'}
                           </button>
                         </div>
                       </div>
                     )}
                   </section>
 
-                  <section className="rounded-[2rem] border border-gray-100 bg-gray-50 p-4 dark:border-white/10 dark:bg-white/[0.04]">
-                    <button type="button" onClick={() => toggleComandaSection('novo-item')} className="flex w-full items-center justify-between gap-4 text-left">
+                  {/* Adicionar Atendimento */}
+                  <section className="rounded-3xl border border-black/[0.04] dark:border-white/[0.04] bg-white/40 dark:bg-white/[0.01] p-5 shadow-sm">
+                    <button type="button" onClick={() => toggleComandaSection('novo-item')} className="flex w-full items-center justify-between gap-4 text-left group">
                       <div>
-                        <p className="text-[11px] font-black uppercase tracking-[0.3em] text-gray-900 dark:text-white">Adicionar atendimento</p>
-                        <p className="mt-2 text-sm text-gray-500 dark:text-white/55">Inclua outro servico com horario e profissional proprios na mesma comanda.</p>
+                        <p className="text-sm font-semibold text-gray-900 dark:text-white transition-colors group-hover:text-[#d48997]">Adicionar Atendimento</p>
+                        <p className="mt-1 text-xs text-gray-400 dark:text-gray-500 font-normal">Inclua outro serviço com horário e profissional na mesma comanda.</p>
                       </div>
-                      <div className="rounded-2xl border border-gray-200 bg-white p-3 dark:border-white/10 dark:bg-white/5">
-                        {activeComandaSection === 'novo-item' ? <Minimize2 size={16} /> : <Maximize2 size={16} />}
+                      <div className="rounded-xl border border-black/[0.04] dark:border-white/5 bg-white dark:bg-white/5 p-2.5 transition-all hover:scale-105 active:scale-95 shadow-sm text-gray-400">
+                        {activeComandaSection === 'novo-item' ? <Minimize2 size={14} /> : <Maximize2 size={14} />}
                       </div>
                     </button>
 
@@ -2086,9 +2094,9 @@ function ModalDetalhesAgendamento({ agendamento: initialAgendamento, allAgendame
                           <select
                             value={novoItemComanda.servicoId}
                             onChange={(event) => setNovoItemComanda((prev) => ({ ...prev, servicoId: event.target.value, profissionalId: '' }))}
-                            className="w-full rounded-[1.75rem] border border-gray-200 bg-white px-5 py-4 text-sm text-gray-900 outline-none dark:border-white/10 dark:bg-[#111113] dark:text-white"
+                            className="w-full rounded-2xl border border-black/[0.08] bg-white dark:border-white/10 dark:bg-[#111113] px-4.5 py-3 text-sm text-gray-900 outline-none dark:text-white transition-all focus:border-[#d48997] focus:ring-2 focus:ring-[#d48997]/10"
                           >
-                            <option value="">Selecione o servico</option>
+                            <option value="">Selecione o serviço</option>
                             {servicos.map((servico) => (
                               <option key={servico.id} value={servico.id}>{servico.nome}</option>
                             ))}
@@ -2097,7 +2105,7 @@ function ModalDetalhesAgendamento({ agendamento: initialAgendamento, allAgendame
                           <select
                             value={novoItemComanda.profissionalId}
                             onChange={(event) => setNovoItemComanda((prev) => ({ ...prev, profissionalId: event.target.value }))}
-                            className="w-full rounded-[1.75rem] border border-gray-200 bg-white px-5 py-4 text-sm text-gray-900 outline-none dark:border-white/10 dark:bg-[#111113] dark:text-white"
+                            className="w-full rounded-2xl border border-black/[0.08] bg-white dark:border-white/10 dark:bg-[#111113] px-4.5 py-3 text-sm text-gray-900 outline-none dark:text-white transition-all focus:border-[#d48997] focus:ring-2 focus:ring-[#d48997]/10"
                           >
                             <option value="">Selecione o profissional</option>
                             {profissionaisCompativeisNovoItem.map((profissional) => (
@@ -2109,85 +2117,87 @@ function ModalDetalhesAgendamento({ agendamento: initialAgendamento, allAgendame
                             type="time"
                             value={novoItemComanda.hora}
                             onChange={(event) => setNovoItemComanda((prev) => ({ ...prev, hora: event.target.value }))}
-                            className="w-full rounded-[1.75rem] border border-gray-200 bg-white px-5 py-4 text-sm text-gray-900 outline-none dark:border-white/10 dark:bg-[#111113] dark:text-white"
+                            className="w-full rounded-2xl border border-black/[0.08] bg-white dark:border-white/10 dark:bg-[#111113] px-4.5 py-3 text-sm text-gray-900 outline-none dark:text-white transition-all focus:border-[#d48997] focus:ring-2 focus:ring-[#d48997]/10"
                           />
 
                           <input
                             value={novoItemComanda.observacao}
                             onChange={(event) => setNovoItemComanda((prev) => ({ ...prev, observacao: event.target.value }))}
-                            placeholder="Observacao do novo item"
-                            className="w-full rounded-[1.75rem] border border-gray-200 bg-white px-5 py-4 text-sm text-gray-900 outline-none placeholder:text-gray-400 dark:border-white/10 dark:bg-[#111113] dark:text-white"
+                            placeholder="Observação (opcional)"
+                            className="w-full rounded-2xl border border-black/[0.08] bg-white dark:border-white/10 dark:bg-[#111113] px-4.5 py-3 text-sm text-gray-900 outline-none dark:text-white transition-all focus:border-[#d48997] focus:ring-2 focus:ring-[#d48997]/10 placeholder:text-gray-400"
                           />
                         </div>
                         <div className="flex justify-end">
-                          <button type="button" onClick={handleAddItemNaComanda} disabled={!novoItemComanda.servicoId || !novoItemComanda.profissionalId || !novoItemComanda.hora} className="rounded-2xl bg-[#d48997] px-5 py-3 text-[10px] font-black uppercase tracking-[0.2em] text-white transition hover:bg-[#c77787] disabled:cursor-not-allowed disabled:opacity-50">
-                            Adicionar a comanda
+                          <button type="button" onClick={handleAddItemNaComanda} disabled={!novoItemComanda.servicoId || !novoItemComanda.profissionalId || !novoItemComanda.hora} className="rounded-xl bg-[#d48997] hover:bg-[#c77787] px-5 py-2.5 text-xs font-semibold text-white transition-all disabled:cursor-not-allowed disabled:opacity-50 shadow-sm shadow-[#d48997]/10 hover:-translate-y-0.5 active:translate-y-0">
+                            Adicionar à Comanda
                           </button>
                         </div>
                       </div>
                     )}
                   </section>
 
-                  <section className="rounded-[2rem] border border-gray-100 bg-gray-50 p-4 dark:border-white/10 dark:bg-white/[0.04]">
-                    <button type="button" onClick={() => toggleComandaSection('servicos')} className="flex w-full items-center justify-between gap-4 text-left">
+                  {/* Adicionar Serviço Rápido */}
+                  <section className="rounded-3xl border border-black/[0.04] dark:border-white/[0.04] bg-white/40 dark:bg-white/[0.01] p-5 shadow-sm">
+                    <button type="button" onClick={() => toggleComandaSection('servicos')} className="flex w-full items-center justify-between gap-4 text-left group">
                       <div>
-                        <p className="text-[11px] font-black uppercase tracking-[0.3em] text-gray-900 dark:text-white">Adicionar servico rapido</p>
-                        <p className="mt-2 text-sm text-gray-500 dark:text-white/55">Escolha um servico da lista para incluir sem preencher outro formulario.</p>
+                        <p className="text-sm font-semibold text-gray-900 dark:text-white transition-colors group-hover:text-[#d48997]">Adicionar Serviço Rápido</p>
+                        <p className="mt-1 text-xs text-gray-400 dark:text-gray-550 font-normal">Escolha um serviço da lista para incluir instantaneamente.</p>
                       </div>
-                      <div className="rounded-2xl border border-gray-200 bg-white p-3 dark:border-white/10 dark:bg-white/5">
-                        {activeComandaSection === 'servicos' ? <Minimize2 size={16} /> : <Maximize2 size={16} />}
+                      <div className="rounded-xl border border-black/[0.04] dark:border-white/5 bg-white dark:bg-white/5 p-2.5 transition-all hover:scale-105 active:scale-95 shadow-sm text-gray-400">
+                        {activeComandaSection === 'servicos' ? <Minimize2 size={14} /> : <Maximize2 size={14} />}
                       </div>
                     </button>
 
                     {activeComandaSection === 'servicos' && (
                       <div className="mt-5 space-y-4">
-                        <div className="flex items-center gap-3 rounded-[1.75rem] border border-gray-200 bg-white px-4 py-3 dark:border-white/10 dark:bg-[#111113]">
+                        <div className="flex items-center gap-3 rounded-2xl border border-black/[0.08] bg-white px-4.5 py-3 dark:border-white/10 dark:bg-[#111113]">
                           <Search size={16} className="text-gray-400" />
                           <input
                             value={servicosBusca}
                             onChange={(event) => setServicosBusca(event.target.value)}
-                            placeholder="Buscar servico por nome"
+                            placeholder="Buscar serviço por nome"
                             className="w-full bg-transparent text-sm text-gray-900 outline-none placeholder:text-gray-400 dark:text-white"
                           />
                         </div>
 
                         {servicosFiltrados.length > 0 ? (
-                          <div className="space-y-3">
+                          <div className="space-y-2">
                             {servicosFiltrados.map((servico) => (
-                              <div key={servico.id} className="flex flex-col gap-3 rounded-[1.5rem] border border-gray-100 bg-white px-4 py-4 dark:border-white/10 dark:bg-white/[0.04] sm:flex-row sm:items-center sm:justify-between">
+                              <div key={servico.id} className="flex flex-col gap-3 rounded-2xl border border-black/[0.04] dark:border-white/[0.04] bg-white/60 dark:bg-white/[0.02] px-5 py-4 sm:flex-row sm:items-center sm:justify-between">
                                 <div>
-                                  <p className="text-sm font-black uppercase text-gray-900 dark:text-white">{servico.nome}</p>
-                                  <p className="mt-1 text-[10px] font-bold uppercase tracking-[0.16em] text-gray-400">{formatDurationLabel(servico.duracaoMin)} · {Number(servico.preco || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</p>
+                                  <p className="text-sm font-semibold text-gray-800 dark:text-white normal-case">{servico.nome}</p>
+                                  <p className="mt-1 text-xs font-normal text-gray-400 dark:text-gray-500">{formatDurationLabel(servico.duracaoMin)} · {Number(servico.preco || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</p>
                                 </div>
-                                <button type="button" onClick={() => handleAddItem(servico.id)} className="rounded-2xl border border-[#d48997]/20 px-4 py-3 text-[10px] font-black uppercase tracking-[0.18em] text-[#d48997] transition hover:bg-[#d48997]/10">
+                                <button type="button" onClick={() => handleAddItem(servico.id)} className="rounded-xl border border-[#d48997]/25 hover:border-[#d48997]/40 px-4 py-2 text-xs font-semibold text-[#d48997] hover:bg-[#d48997]/5 transition-all duration-300">
                                   Adicionar
                                 </button>
                               </div>
                             ))}
                           </div>
                         ) : (
-                          <div className="rounded-[1.5rem] border border-dashed border-gray-200 px-4 py-4 text-sm text-gray-500 dark:border-white/10 dark:text-white/55">
-                            Nenhum servico encontrado com esse filtro.
+                          <div className="rounded-2xl border border-dashed border-gray-200 dark:border-white/10 px-5 py-4 text-xs text-gray-400 dark:text-gray-500">
+                            Nenhum serviço encontrado com esse filtro.
                           </div>
                         )}
                       </div>
                     )}
                   </section>
 
-                  <section className="rounded-[2rem] border border-gray-100 bg-gray-50 p-4 dark:border-white/10 dark:bg-white/[0.04]">
-                    <button type="button" onClick={() => toggleComandaSection('produtos')} className="flex w-full items-center justify-between gap-4 text-left">
+                  {/* Adicionar Produto */}
+                  <section className="rounded-3xl border border-black/[0.04] dark:border-white/[0.04] bg-white/40 dark:bg-white/[0.01] p-5 shadow-sm">
+                    <button type="button" onClick={() => toggleComandaSection('produtos')} className="flex w-full items-center justify-between gap-4 text-left group">
                       <div>
-                        <p className="text-[11px] font-black uppercase tracking-[0.3em] text-gray-900 dark:text-white">Adicionar produto</p>
-                        <p className="mt-2 text-sm text-gray-500 dark:text-white/55">Inclua consumo, bebida ou produto vendido no mesmo atendimento.</p>
+                        <p className="text-sm font-semibold text-gray-900 dark:text-white transition-colors group-hover:text-[#d48997]">Adicionar Produto</p>
+                        <p className="mt-1 text-xs text-gray-400 dark:text-gray-555 font-normal">Inclua consumo de bebidas, acessórios ou cosméticos vendidos.</p>
                       </div>
-                      <div className="rounded-2xl border border-gray-200 bg-white p-3 dark:border-white/10 dark:bg-white/5">
-                        {activeComandaSection === 'produtos' ? <Minimize2 size={16} /> : <Maximize2 size={16} />}
+                      <div className="rounded-xl border border-black/[0.04] dark:border-white/5 bg-white dark:bg-white/5 p-2.5 transition-all hover:scale-105 active:scale-95 shadow-sm text-gray-400">
+                        {activeComandaSection === 'produtos' ? <Minimize2 size={14} /> : <Maximize2 size={14} />}
                       </div>
                     </button>
 
                     {activeComandaSection === 'produtos' && (
                       <div className="mt-5 space-y-4">
-                        <div className="flex items-center gap-3 rounded-[1.75rem] border border-gray-200 bg-white px-4 py-3 dark:border-white/10 dark:bg-[#111113]">
+                        <div className="flex items-center gap-3 rounded-2xl border border-black/[0.08] bg-white px-4.5 py-3 dark:border-white/10 dark:bg-[#111113]">
                           <Search size={16} className="text-gray-400" />
                           <input
                             value={produtosBusca}
@@ -2198,21 +2208,21 @@ function ModalDetalhesAgendamento({ agendamento: initialAgendamento, allAgendame
                         </div>
 
                         {produtosFiltrados.length > 0 ? (
-                          <div className="space-y-3">
+                          <div className="space-y-2">
                             {produtosFiltrados.map((produto) => (
-                              <div key={produto.id} className="flex flex-col gap-3 rounded-[1.5rem] border border-gray-100 bg-white px-4 py-4 dark:border-white/10 dark:bg-white/[0.04] sm:flex-row sm:items-center sm:justify-between">
+                              <div key={produto.id} className="flex flex-col gap-3 rounded-2xl border border-black/[0.04] dark:border-white/[0.04] bg-white/60 dark:bg-white/[0.02] px-5 py-4 sm:flex-row sm:items-center sm:justify-between">
                                 <div>
-                                  <p className="text-sm font-black uppercase text-gray-900 dark:text-white">{produto.nome}</p>
-                                  <p className="mt-1 text-[10px] font-bold uppercase tracking-[0.16em] text-gray-400">{Number(produto.preco || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</p>
+                                  <p className="text-sm font-semibold text-gray-800 dark:text-white normal-case">{produto.nome}</p>
+                                  <p className="mt-1 text-xs font-normal text-gray-400 dark:text-gray-500">{Number(produto.preco || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</p>
                                 </div>
-                                <button type="button" onClick={() => handleAddProduto(produto.id)} className="rounded-2xl border border-[#d48997]/20 px-4 py-3 text-[10px] font-black uppercase tracking-[0.18em] text-[#d48997] transition hover:bg-[#d48997]/10">
+                                <button type="button" onClick={() => handleAddProduto(produto.id)} className="rounded-xl border border-[#d48997]/25 hover:border-[#d48997]/40 px-4 py-2 text-xs font-semibold text-[#d48997] hover:bg-[#d48997]/5 transition-all duration-300">
                                   Adicionar
                                 </button>
                               </div>
                             ))}
                           </div>
                         ) : (
-                          <div className="rounded-[1.5rem] border border-dashed border-gray-200 px-4 py-4 text-sm text-gray-500 dark:border-white/10 dark:text-white/55">
+                          <div className="rounded-2xl border border-dashed border-gray-200 dark:border-white/10 px-5 py-4 text-xs text-gray-400 dark:text-gray-500">
                             Nenhum produto encontrado com esse filtro.
                           </div>
                         )}
@@ -2222,93 +2232,96 @@ function ModalDetalhesAgendamento({ agendamento: initialAgendamento, allAgendame
                 </div>
               ) : tab === 'ajustes' ? (
                 <div className="space-y-4">
-                  <section className="rounded-[2rem] border border-gray-100 bg-gray-50 p-5 dark:border-white/10 dark:bg-white/[0.04]">
+                  {/* Resumo do Atendimento */}
+                  <section className="rounded-3xl border border-black/[0.04] dark:border-white/[0.04] bg-white/40 dark:bg-white/[0.01] backdrop-blur-md p-6 shadow-sm">
                     <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
                       <div>
-                        <p className="text-[11px] font-black uppercase tracking-[0.3em] text-[#E29BA8]">Resumo do servico</p>
-                        <h3 className="mt-2 text-xl font-black uppercase text-gray-900 dark:text-white">{getAgendamentoTitulo(agendamento)}</h3>
-                        <p className="mt-3 text-sm text-gray-500 dark:text-white/55">Veja o valor atual e abra a edicao somente quando realmente precisar mudar o servico.</p>
+                        <p className="text-xs font-semibold text-[#d48997]">Resumo do Atendimento</p>
+                        <h3 className="mt-2 text-lg font-serif font-normal text-gray-900 dark:text-white normal-case leading-tight">{getAgendamentoTitulo(agendamento)}</h3>
+                        <p className="mt-2 text-xs text-gray-400 dark:text-gray-500">Veja os valores originais e ajustes aplicados para este serviço.</p>
                       </div>
-                      <button type="button" onClick={() => onAjustar?.(agendamento)} className="rounded-2xl bg-[#d48997] px-5 py-3 text-[10px] font-black uppercase tracking-[0.18em] text-white transition hover:bg-[#c77787]">
-                        Editar servico
+                      <button type="button" onClick={() => onAjustar?.(agendamento)} className="rounded-xl bg-[#d48997] px-5 py-2.5 text-xs font-semibold text-white shadow-sm shadow-[#d48997]/15 hover:bg-[#c97b8a] transition-all">
+                        Editar serviço
                       </button>
                     </div>
 
                     <div className="mt-5 grid gap-3 md:grid-cols-3">
-                      <div className="rounded-[1.5rem] border border-gray-200 bg-white px-4 py-4 dark:border-white/10 dark:bg-[#111113]">
-                        <p className="text-[10px] font-black uppercase tracking-[0.18em] text-gray-400">Original</p>
-                        <p className="mt-2 text-lg font-black text-gray-900 dark:text-white">{precoBaseOriginal.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</p>
+                      <div className="rounded-2xl border border-black/[0.04] bg-white px-4 py-4 dark:border-white/10 dark:bg-[#111113]">
+                        <p className="text-[10px] font-medium text-gray-400 dark:text-gray-500">Original</p>
+                        <p className="mt-1 text-base font-semibold text-gray-900 dark:text-white">{precoBaseOriginal.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</p>
                       </div>
-                      <div className="rounded-[1.5rem] border border-gray-200 bg-white px-4 py-4 dark:border-white/10 dark:bg-[#111113]">
-                        <p className="text-[10px] font-black uppercase tracking-[0.18em] text-gray-400">Ajuste aplicado</p>
-                        <p className="mt-2 text-lg font-black text-gray-900 dark:text-white">
+                      <div className="rounded-2xl border border-black/[0.04] bg-white px-4 py-4 dark:border-white/10 dark:bg-[#111113]">
+                        <p className="text-[10px] font-medium text-gray-400 dark:text-gray-500">Ajuste Aplicado</p>
+                        <p className="mt-1 text-base font-semibold text-gray-900 dark:text-white">
                           {valorBaseAjustadoAtivo
-                            ? `${pagamentoAjusteTipo === 'acrescimo' ? 'Acrescimo' : 'Desconto'} ${ajusteAplicado.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}`
+                            ? `${pagamentoAjusteTipo === 'acrescimo' ? 'Acréscimo' : 'Desconto'} ${ajusteAplicado.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}`
                             : 'Sem ajuste'}
                         </p>
                       </div>
-                      <div className="rounded-[1.5rem] border border-[#E29BA8]/20 bg-[#E29BA8]/8 px-4 py-4 dark:bg-[#E29BA8]/10">
-                        <p className="text-[10px] font-black uppercase tracking-[0.18em] text-[#b96a79] dark:text-[#efbac2]">Valor final</p>
-                        <p className="mt-2 text-lg font-black text-[#d48997] dark:text-white">{precoBaseCheckout.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</p>
+                      <div className="rounded-2xl border border-[#d48997]/20 bg-[#d48997]/5 px-4 py-4">
+                        <p className="text-[10px] font-semibold text-[#d48997] dark:text-[#efbac2]">Valor Final</p>
+                        <p className="mt-1 text-base font-semibold text-[#d48997] dark:text-white">{precoBaseCheckout.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</p>
                       </div>
                     </div>
                   </section>
 
-                  <section className="rounded-[2rem] border border-gray-100 bg-gray-50 p-5 dark:border-white/10 dark:bg-white/[0.04]">
-                    <p className="text-[11px] font-black uppercase tracking-[0.3em] text-gray-900 dark:text-white">Dados do atendimento</p>
-                    <div className="mt-5 grid gap-3 md:grid-cols-2">
-                      <div className="rounded-[1.5rem] border border-gray-200 bg-white px-4 py-4 dark:border-white/10 dark:bg-[#111113]">
-                        <p className="text-[10px] font-black uppercase tracking-[0.18em] text-gray-400">Horario</p>
-                        <p className="mt-2 text-sm font-black uppercase text-gray-900 dark:text-white">{formatDateBR(agendamento.data)} · {agendamento.inicioHora}</p>
+                  {/* Dados Complementares */}
+                  <section className="rounded-3xl border border-black/[0.04] dark:border-white/[0.04] bg-white/40 dark:bg-white/[0.01] backdrop-blur-md p-6 shadow-sm">
+                    <p className="text-xs font-semibold text-gray-900 dark:text-white">Dados do Atendimento</p>
+                    <div className="mt-4 grid gap-3 md:grid-cols-2">
+                      <div className="rounded-2xl border border-black/[0.04] bg-white px-4 py-4 dark:border-white/10 dark:bg-[#111113]">
+                        <p className="text-[10px] font-medium text-gray-400">Horário</p>
+                        <p className="mt-1.5 text-xs font-semibold text-gray-900 dark:text-white">{formatDateBR(agendamento.data)} · {agendamento.inicioHora}</p>
                       </div>
-                      <div className="rounded-[1.5rem] border border-gray-200 bg-white px-4 py-4 dark:border-white/10 dark:bg-[#111113]">
-                        <p className="text-[10px] font-black uppercase tracking-[0.18em] text-gray-400">Status</p>
-                        <p className="mt-2 text-sm font-black uppercase text-gray-900 dark:text-white">{STATUS_CONFIG[agendamento.status]?.label || agendamento.status} · {agendamento.statusPagamento === 'pago' ? 'Pago' : 'Pendente'}</p>
+                      <div className="rounded-2xl border border-black/[0.04] bg-white px-4 py-4 dark:border-white/10 dark:bg-[#111113]">
+                        <p className="text-[10px] font-medium text-gray-400">Status</p>
+                        <p className="mt-1.5 text-xs font-semibold text-gray-905 dark:text-white">{STATUS_CONFIG[agendamento.status]?.label || agendamento.status} · {agendamento.statusPagamento === 'pago' ? 'Pago' : 'Pendente'}</p>
                       </div>
                     </div>
                   </section>
 
-                  <section className="rounded-[2rem] border border-gray-100 bg-gray-50 p-5 dark:border-white/10 dark:bg-white/[0.04]">
-                    <p className="text-[11px] font-black uppercase tracking-[0.3em] text-gray-900 dark:text-white">Observacoes</p>
-                    <div className="mt-5 grid gap-3 md:grid-cols-2">
-                      <div className="rounded-[1.5rem] border border-gray-200 bg-white px-4 py-4 dark:border-white/10 dark:bg-[#111113]">
-                        <p className="text-[10px] font-black uppercase tracking-[0.18em] text-[#E29BA8]">Do agendamento</p>
-                        <p className="mt-2 text-sm leading-6 text-gray-600 dark:text-gray-300 whitespace-pre-wrap">{agendamento.observacao?.trim() || 'Nenhuma observacao registrada para este atendimento.'}</p>
+                  {/* Observações Registradas */}
+                  <section className="rounded-3xl border border-black/[0.04] dark:border-white/[0.04] bg-white/40 dark:bg-white/[0.01] backdrop-blur-md p-6 shadow-sm">
+                    <p className="text-xs font-semibold text-gray-900 dark:text-white">Observações e Histórico</p>
+                    <div className="mt-4 grid gap-3 md:grid-cols-2">
+                      <div className="rounded-2xl border border-black/[0.04] bg-white px-4 py-4 dark:border-white/10 dark:bg-[#111113]">
+                        <p className="text-[10px] font-medium text-[#d48997]">Do Agendamento</p>
+                        <p className="mt-1.5 text-xs text-gray-600 dark:text-gray-300 leading-relaxed whitespace-pre-wrap">{agendamento.observacao?.trim() || 'Nenhuma observação registrada.'}</p>
                       </div>
-                      <div className="rounded-[1.5rem] border border-gray-200 bg-white px-4 py-4 dark:border-white/10 dark:bg-[#111113]">
-                        <p className="text-[10px] font-black uppercase tracking-[0.18em] text-[#E29BA8]">Do ajuste</p>
-                        <p className="mt-2 text-sm leading-6 text-gray-600 dark:text-gray-300 whitespace-pre-wrap">{pagamentoAjusteObservacao.trim() || 'Nenhuma observacao registrada para este ajuste.'}</p>
+                      <div className="rounded-2xl border border-black/[0.04] bg-white px-4 py-4 dark:border-white/10 dark:bg-[#111113]">
+                        <p className="text-[10px] font-medium text-[#d48997]">Do Ajuste de Cobrança</p>
+                        <p className="mt-1.5 text-xs text-gray-600 dark:text-gray-300 leading-relaxed whitespace-pre-wrap">{pagamentoAjusteObservacao.trim() || 'Nenhuma observação registrada para o ajuste.'}</p>
                       </div>
                     </div>
                   </section>
                 </div>
               ) : (
-                <div className="space-y-8 py-2">
+                <div className="space-y-6 py-2">
                   {concluidoSucesso ? (
-                    <div className="mx-auto flex max-w-xl flex-col items-center justify-center p-5 text-center">
-                      <div className="mb-8 flex h-24 w-24 items-center justify-center rounded-[2rem] bg-[#E29BA8] text-white shadow-2xl shadow-[#E29BA8]/20">
-                        <CheckCircle2 size={48} />
+                    <div className="mx-auto flex max-w-md flex-col items-center justify-center p-5 text-center">
+                      <div className="mb-6 flex h-20 w-20 items-center justify-center rounded-2xl bg-[#d48997]/10 text-[#d48997] shadow-sm">
+                        <CheckCircle2 size={36} />
                       </div>
-                      <h2 className="text-2xl font-black uppercase tracking-tighter text-gray-900 dark:text-white sm:text-4xl">Pagamento concluido</h2>
-                      <p className="mt-4 text-base font-medium text-gray-500">O atendimento foi fechado e os valores ja foram para o financeiro.</p>
-                      <div className="mt-8 w-full space-y-3">
-                        <button type="button" onClick={() => enviarComprovanteWhatsapp()} className="w-full rounded-[2rem] bg-[#25D366] py-5 text-[11px] font-black uppercase tracking-[0.2em] text-white transition hover:scale-[1.01]">
+                      <h2 className="text-xl md:text-2xl font-serif font-normal text-gray-900 dark:text-white tracking-wide">Pagamento Concluído</h2>
+                      <p className="mt-2 text-sm text-gray-400 dark:text-gray-500">O atendimento foi encerrado com sucesso e os registros financeiros foram consolidados.</p>
+                      <div className="mt-8 w-full space-y-2">
+                        <button type="button" onClick={() => enviarComprovanteWhatsapp()} className="w-full rounded-xl bg-[#25D366] py-3.5 text-xs font-semibold text-white transition hover:scale-[1.01] shadow-sm shadow-[#25D366]/10">
                           Enviar comprovante no WhatsApp
                         </button>
-                        <button type="button" onClick={onClose} className="w-full rounded-[2rem] bg-gray-100 py-5 text-[11px] font-black uppercase tracking-[0.2em] text-gray-500 transition hover:bg-gray-200 dark:bg-white/5 dark:text-white/70 dark:hover:bg-white/10">
+                        <button type="button" onClick={onClose} className="w-full rounded-xl bg-gray-50 border border-black/[0.04] py-3.5 text-xs font-semibold text-gray-500 hover:bg-[#d48997]/10 hover:text-[#d48997] transition-all dark:bg-white/5 dark:text-white/70 dark:hover:bg-white/10 dark:border-white/5">
                           Voltar para agenda
                         </button>
                       </div>
                     </div>
                   ) : agendamento.statusPagamento === 'pago' ? (
-                    <div className="mx-auto max-w-2xl space-y-4">
-                      <div className="rounded-[2rem] border border-[#E29BA8]/20 bg-[#E29BA8]/8 p-5 dark:bg-[#E29BA8]/10">
-                        <p className="text-[11px] font-black uppercase tracking-[0.3em] text-[#b96a79] dark:text-[#efbac2]">Pagamento confirmado</p>
-                        <p className="mt-3 text-2xl font-black text-[#d48997] dark:text-white">{Number(calculateTotal()).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</p>
+                    <div className="mx-auto max-w-xl space-y-4">
+                      <div className="rounded-3xl border border-[#d48997]/25 bg-[#d48997]/5 p-6 shadow-sm">
+                        <p className="text-xs font-semibold text-[#d48997] dark:text-[#efbac2]">Pagamento Confirmado</p>
+                        <p className="mt-1 text-2xl font-serif font-semibold text-[#d48997] dark:text-white">{Number(calculateTotal()).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</p>
                         {agendamento.pagamentos && agendamento.pagamentos.length > 0 && (
-                          <div className="mt-3 flex flex-wrap gap-2">
+                          <div className="mt-4 flex flex-wrap gap-2">
                             {agendamento.pagamentos.map((pag, idx) => (
-                              <span key={idx} className="inline-flex items-center gap-1.5 rounded-xl bg-white/60 dark:bg-white/10 px-3 py-1.5 text-[10px] font-black uppercase tracking-[0.12em] text-[#d48997] dark:text-white border border-[#E29BA8]/20">
+                              <span key={idx} className="inline-flex items-center gap-1.5 rounded-full bg-white dark:bg-white/10 px-3.5 py-1.5 text-xs font-semibold text-[#d48997] dark:text-white border border-[#d48997]/20 shadow-sm">
                                 {pag.forma === 'PIX' ? '⚡ PIX' 
                                  : pag.forma === 'Dinheiro' ? '💵 Dinheiro' 
                                  : pag.forma === 'Cartao de Credito' ? '💳 Crédito' 
@@ -2320,39 +2333,39 @@ function ModalDetalhesAgendamento({ agendamento: initialAgendamento, allAgendame
                             ))}
                           </div>
                         )}
-                        <p className="mt-3 text-sm text-gray-600 dark:text-white/55">Se precisar mudar algo, reabra a comanda e depois refaça o fechamento.</p>
+                        <p className="mt-4 text-xs text-gray-400 dark:text-gray-500 leading-normal">Se for necessário corrigir alguma informação ou reabrir o fechamento financeiro, utilize a opção abaixo.</p>
                       </div>
                       <div className="grid gap-3 sm:grid-cols-2">
-                        <button type="button" onClick={() => enviarComprovanteWhatsapp({ reenvio: true })} className="rounded-[2rem] bg-[#25D366] px-5 py-5 text-[11px] font-black uppercase tracking-[0.2em] text-white transition hover:scale-[1.01]">
+                        <button type="button" onClick={() => enviarComprovanteWhatsapp({ reenvio: true })} className="rounded-xl bg-[#25D366] px-5 py-3.5 text-xs font-semibold text-white transition hover:scale-[1.01] shadow-sm shadow-[#25D366]/10">
                           Reenviar comprovante
                         </button>
-                        <button type="button" onClick={handleReabrirComanda} className="rounded-[2rem] border border-amber-300 bg-amber-50 px-5 py-5 text-[11px] font-black uppercase tracking-[0.2em] text-amber-700 transition hover:bg-amber-100 dark:border-amber-300/20 dark:bg-amber-500/10 dark:text-amber-200">
+                        <button type="button" onClick={handleReabrirComanda} className="rounded-xl border border-amber-500/20 bg-amber-500/5 px-5 py-3.5 text-xs font-semibold text-amber-600 dark:text-amber-300 hover:bg-amber-500/10 transition-all">
                           Reabrir comanda
                         </button>
                       </div>
                     </div>
                   ) : (
-                    <div className="mx-auto max-w-2xl space-y-6">
+                    <div className="mx-auto max-w-xl space-y-6">
                       {!caixaPagamentoStatus.aberto && (
-                        <div className="rounded-[2rem] border border-amber-300/30 bg-amber-400/10 px-5 py-4 text-sm font-semibold text-amber-100">
-                          {caixaPagamentoStatus.mensagem || 'Abra o caixa antes de registrar pagamentos.'}
+                        <div className="rounded-2xl border border-amber-500/20 bg-amber-500/10 px-5 py-4 text-xs font-semibold text-amber-600 dark:text-amber-300">
+                          {caixaPagamentoStatus.mensagem || 'Atenção: Abra o caixa antes de registrar pagamentos.'}
                         </div>
                       )}
 
-                      {/* Seção de Pacotes do Cliente */}
+                      {/* Consumo de Pacotes */}
                       {temAlgumPacoteApt && (
-                        <div className="rounded-[2rem] border border-gray-100 bg-gray-50 p-5 dark:border-white/10 dark:bg-white/[0.04] space-y-4">
-                          <div className="flex items-center justify-between border-b border-gray-200 dark:border-white/5 pb-3">
-                            <p className="text-[11px] font-black uppercase tracking-[0.3em] text-gray-900 dark:text-white">Consumo de Pacotes</p>
+                        <div className="rounded-3xl border border-black/[0.04] dark:border-white/[0.04] bg-white/40 dark:bg-white/[0.01] p-5 space-y-4">
+                          <div className="flex items-center justify-between border-b border-black/[0.04] dark:border-white/5 pb-3">
+                            <p className="text-sm font-semibold text-gray-900 dark:text-white">Consumo de Pacotes</p>
                             <button
                               type="button"
                               onClick={loadClientePacotes}
-                              className="text-[9px] font-black uppercase tracking-widest text-[#d48997] hover:underline"
+                              className="text-xs font-semibold text-[#d48997] hover:underline"
                             >
-                              Atualizar Pacotes
+                              Atualizar pacotes
                             </button>
                           </div>
-                          <div className="space-y-3">
+                          <div className="space-y-2.5">
                             {(grupoComandaPendente.length ? grupoComandaPendente : [agendamentoCheckout]).map((item) => {
                               const cp = clientePacotes.find(p => 
                                 p.sessoesRestantes > 0 &&
@@ -2364,12 +2377,12 @@ function ModalDetalhesAgendamento({ agendamento: initialAgendamento, allAgendame
                               const isConsumido = !!consumosPacote[item.id];
 
                               return (
-                                <div key={item.id} className="flex items-center justify-between rounded-[1.5rem] border border-gray-200 bg-white p-4 dark:border-white/10 dark:bg-[#111113]">
+                                <div key={item.id} className="flex items-center justify-between rounded-2xl border border-black/[0.04] bg-white p-4 dark:border-white/[0.04] dark:bg-white/[0.02]">
                                   <div className="min-w-0">
-                                    <p className="text-xs font-black uppercase tracking-[0.14em] text-gray-900 dark:text-white">
+                                    <p className="text-xs font-semibold text-gray-900 dark:text-white">
                                       {item.inicioHora} · {getAgendamentoTitulo(item)}
                                     </p>
-                                    <p className="mt-1 text-[10px] font-bold text-gray-400 uppercase tracking-[0.12em]">
+                                    <p className="mt-1 text-[10px] font-medium text-gray-400 dark:text-gray-500">
                                       Pacote: {cp.pacote.nome} ({cp.sessoesRestantes} restantes)
                                     </p>
                                   </div>
@@ -2387,10 +2400,10 @@ function ModalDetalhesAgendamento({ agendamento: initialAgendamento, allAgendame
                                       });
                                     }}
                                     className={cn(
-                                      'rounded-xl border px-4 py-2 text-[10px] font-black uppercase tracking-[0.16em] transition-all',
+                                      'rounded-xl border px-4 py-2 text-xs font-semibold transition-all',
                                       isConsumido
-                                        ? 'bg-[#E29BA8] border-[#E29BA8] text-white'
-                                        : 'border-[#d48997]/30 text-[#d48997] hover:bg-[#d48997]/10'
+                                        ? 'bg-[#E29BA8] border-[#E29BA8] text-white shadow-sm'
+                                        : 'border-[#d48997]/30 text-[#d48997] hover:bg-[#d48997]/5'
                                     )}
                                   >
                                     {isConsumido ? 'Usando crédito' : 'Usar crédito'}
@@ -2402,23 +2415,24 @@ function ModalDetalhesAgendamento({ agendamento: initialAgendamento, allAgendame
                         </div>
                       )}
 
-                      <div className="rounded-[2rem] border border-gray-100 bg-gray-50 p-5 dark:border-white/10 dark:bg-white/[0.04]">
-                        <div className="flex items-center justify-between border-b border-gray-200 dark:border-white/5 pb-3 mb-4">
-                          <p className="text-[11px] font-black uppercase tracking-[0.3em] text-gray-900 dark:text-white">Forma de pagamento</p>
+                      {/* Formas de Pagamento */}
+                      <div className="rounded-3xl border border-black/[0.04] dark:border-white/[0.04] bg-white/40 dark:bg-white/[0.01] p-5">
+                        <div className="flex items-center justify-between border-b border-black/[0.04] dark:border-white/5 pb-3 mb-4">
+                          <p className="text-sm font-semibold text-gray-900 dark:text-white">Forma de Pagamento</p>
                           <button
                             type="button"
                             onClick={handleZerarPagamentos}
-                            className="text-[9px] font-black uppercase tracking-widest text-gray-500 hover:text-gray-900 dark:hover:text-white"
+                            className="text-xs font-medium text-gray-400 hover:text-gray-600 dark:hover:text-white"
                           >
-                            Zerar Valores
+                            Zerar valores
                           </button>
                         </div>
-                        <div className="space-y-4">
+                        <div className="space-y-3">
                           {[
                             { label: 'PIX', forma: 'PIX', icon: Smartphone, color: 'text-[#E29BA8]' },
                             { label: 'Cartão de Crédito', forma: 'Cartao de Credito', icon: CreditCard, color: 'text-[#E29BA8]' },
-                            { label: 'Cartão de Débito', forma: 'Cartao de Debito', icon: CreditCard, color: 'text-indigo-500' },
-                            { label: 'Dinheiro', forma: 'Dinheiro', icon: Banknote, color: 'text-bellapro-blush' },
+                            { label: 'Cartão de Débito', forma: 'Cartao de Debito', icon: CreditCard, color: 'text-[#d48997]' },
+                            { label: 'Dinheiro', forma: 'Dinheiro', icon: Banknote, color: 'text-[#d48997]' },
                           ].map((item) => {
                             const isPrincipal = metodoPrincipal === item.forma;
                             const valorAtual = pagamentoValores[item.forma] || '';
@@ -2427,8 +2441,8 @@ function ModalDetalhesAgendamento({ agendamento: initialAgendamento, allAgendame
                               <div
                                 key={item.forma}
                                 className={cn(
-                                  'flex flex-col sm:flex-row sm:items-center gap-4 rounded-[1.5rem] border p-4 transition-all bg-white dark:bg-[#111113]',
-                                  isPrincipal ? 'border-[#d48997] shadow-sm' : 'border-gray-200 hover:border-[#E29BA8]/30 dark:border-white/10'
+                                  'flex flex-col sm:flex-row sm:items-center gap-4 rounded-2xl border p-4 transition-all bg-white dark:bg-white/[0.02]',
+                                  isPrincipal ? 'border-[#d48997] bg-[#d48997]/[0.01] shadow-sm' : 'border-black/[0.04] hover:border-[#d48997]/20 dark:border-white/[0.05]'
                                 )}
                               >
                                 <button
@@ -2436,18 +2450,18 @@ function ModalDetalhesAgendamento({ agendamento: initialAgendamento, allAgendame
                                   onClick={() => selectMetodoPrincipal(item.forma)}
                                   className="flex flex-1 items-center gap-3 text-left"
                                 >
-                                  <div className={cn('flex h-11 w-11 items-center justify-center rounded-2xl bg-gray-100 dark:bg-gray-800', isPrincipal ? 'bg-[#d48997]/10 text-[#d48997]' : item.color)}>
-                                    <item.icon size={20} />
+                                  <div className={cn('flex h-10 w-10 items-center justify-center rounded-xl bg-gray-50 dark:bg-white/5', isPrincipal ? 'bg-[#d48997]/10 text-[#d48997]' : item.color)}>
+                                    <item.icon size={18} />
                                   </div>
                                   <div>
-                                    <p className="text-sm font-black uppercase tracking-[0.16em] text-gray-900 dark:text-white">{item.label}</p>
-                                    <p className="text-[9px] font-bold uppercase tracking-[0.16em] text-gray-400">
-                                      {isPrincipal ? 'Método Principal (Auto)' : 'Clique para usar saldo restante'}
+                                    <p className="text-sm font-semibold text-gray-900 dark:text-white">{item.label}</p>
+                                    <p className="text-[10px] font-medium text-gray-400 dark:text-gray-500 mt-0.5">
+                                      {isPrincipal ? 'Método Principal (Auto)' : 'Clique para transferir saldo restante'}
                                     </p>
                                   </div>
                                 </button>
-                                <div className="relative flex items-center w-full sm:w-48">
-                                  <span className="absolute left-4 text-xs font-black text-gray-400">R$</span>
+                                <div className="relative flex items-center w-full sm:w-40">
+                                  <span className="absolute left-3.5 text-xs font-semibold text-gray-400">R$</span>
                                   <input
                                     type="number"
                                     min="0"
@@ -2461,7 +2475,7 @@ function ModalDetalhesAgendamento({ agendamento: initialAgendamento, allAgendame
                                         [item.forma]: val
                                       }));
                                     }}
-                                    className="w-full pl-10 pr-4 py-3 rounded-xl border border-gray-200 dark:border-white/10 bg-gray-50 dark:bg-[#18181b] text-sm font-black text-gray-900 dark:text-white outline-none focus:border-[#d48997]"
+                                    className="w-full pl-9 pr-3.5 py-2.5 rounded-xl border border-black/[0.08] dark:border-white/10 bg-gray-50/50 dark:bg-[#18181b] text-sm font-semibold text-gray-900 dark:text-white outline-none focus:border-[#d48997] focus:ring-2 focus:ring-[#d48997]/10 transition-all"
                                   />
                                 </div>
                               </div>
@@ -2470,26 +2484,27 @@ function ModalDetalhesAgendamento({ agendamento: initialAgendamento, allAgendame
                         </div>
                       </div>
 
-                      <div className="rounded-[2rem] border border-gray-100 bg-gray-50 p-5 dark:border-white/10 dark:bg-white/[0.04]">
-                        <p className="text-[11px] font-black uppercase tracking-[0.3em] text-gray-900 dark:text-white">Ajuste e fechamento</p>
-                        <div className="mt-4 space-y-4">
+                      {/* Ajustes no Fechamento */}
+                      <div className="rounded-3xl border border-black/[0.04] dark:border-white/[0.04] bg-white/40 dark:bg-white/[0.01] p-5">
+                        <p className="text-sm font-semibold text-gray-950 dark:text-white mb-4">Ajustes & Taxas</p>
+                        <div className="space-y-4">
                           <div>
                             <div className="mb-2 flex flex-wrap items-center justify-between gap-3">
-                              <p className="text-[10px] font-black uppercase tracking-[0.18em] text-gray-400">Ajuste no servico</p>
-                              <div className="flex flex-wrap gap-2">
+                              <p className="text-[10px] font-medium text-gray-400">Ajuste de Valor (Serviço)</p>
+                              <div className="flex flex-wrap gap-1">
                                 {[
                                   { id: 'desconto', label: 'Desconto' },
-                                  { id: 'acrescimo', label: 'Acrescimo' },
+                                  { id: 'acrescimo', label: 'Acréscimo' },
                                 ].map((tipo) => (
                                   <button
                                     key={tipo.id}
                                     type="button"
                                     onClick={() => setPagamentoAjusteTipo(tipo.id)}
                                     className={cn(
-                                      'rounded-xl border px-3 py-2 text-[10px] font-black uppercase tracking-[0.16em] transition-all',
+                                      'rounded-lg border px-3 py-1.5 text-xs font-medium transition-all duration-300',
                                       pagamentoAjusteTipo === tipo.id
-                                        ? 'border-[#d48997] bg-[#d48997] text-white'
-                                        : 'border-gray-200 text-gray-500 hover:border-[#d48997]/30 dark:border-white/10 dark:text-white/70'
+                                        ? 'border-[#d48997] bg-[#d48997] text-white shadow-sm'
+                                        : 'border-black/[0.06] text-gray-500 hover:border-[#d48997]/30 dark:border-white/10 dark:text-white/70'
                                     )}
                                   >
                                     {tipo.label}
@@ -2504,10 +2519,10 @@ function ModalDetalhesAgendamento({ agendamento: initialAgendamento, allAgendame
                                     type="button"
                                     onClick={() => setPagamentoDescontoModo(modo.id)}
                                     className={cn(
-                                      'rounded-xl border px-3 py-2 text-[10px] font-black uppercase tracking-[0.16em] transition-all',
+                                      'rounded-lg border px-3 py-1.5 text-xs font-medium transition-all duration-300',
                                       pagamentoDescontoModo === modo.id
-                                        ? 'border-[#d48997] bg-[#d48997] text-white'
-                                        : 'border-gray-200 text-gray-500 hover:border-[#d48997]/30 dark:border-white/10 dark:text-white/70'
+                                        ? 'border-[#d48997] bg-[#d48997] text-white shadow-sm'
+                                        : 'border-black/[0.06] text-gray-500 hover:border-[#d48997]/30 dark:border-white/10 dark:text-white/70'
                                     )}
                                   >
                                     {modo.label}
@@ -2523,73 +2538,73 @@ function ModalDetalhesAgendamento({ agendamento: initialAgendamento, allAgendame
                               max={pagamentoDescontoModo === 'percentual' ? '100' : undefined}
                               step={pagamentoDescontoModo === 'percentual' ? '1' : '0.01'}
                               placeholder={pagamentoDescontoModo === 'percentual' ? '0' : '0,00'}
-                              className="w-full rounded-2xl border border-gray-200 bg-white px-5 py-4 text-sm font-black text-gray-900 outline-none dark:border-white/10 dark:bg-[#111113] dark:text-white"
+                              className="w-full rounded-xl border border-black/[0.08] bg-white px-4.5 py-3 text-sm font-semibold text-gray-900 outline-none dark:border-white/10 dark:bg-[#111113] dark:text-white focus:border-[#d48997] focus:ring-2 focus:ring-[#d48997]/10"
                             />
-                            <div className="mt-2 flex flex-wrap items-center justify-between gap-3 text-[10px] font-bold uppercase tracking-[0.16em]">
-                              <span className="text-gray-400">Original {precoBaseOriginal.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</span>
+                            <div className="mt-2 flex flex-wrap items-center justify-between gap-3 text-[10px] font-medium text-gray-400">
+                              <span>Original: {precoBaseOriginal.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</span>
                               {valorBaseAjustadoAtivo && (
-                                <span className="text-bellapro-blush">
-                                  {pagamentoAjusteTipo === 'acrescimo' ? 'Acrescimo' : 'Desconto'} {pagamentoDescontoModo === 'percentual'
+                                <span className="text-[#d48997] font-semibold">
+                                  {pagamentoAjusteTipo === 'acrescimo' ? 'Acréscimo' : 'Desconto'}: {pagamentoDescontoModo === 'percentual'
                                     ? `${Number.isFinite(descontoDigitado) ? descontoDigitado : 0}%`
                                     : ajusteAplicado.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
                                 </span>
                               )}
                             </div>
-                            <p className="mt-2 text-[10px] font-bold uppercase tracking-[0.16em] text-gray-400">
-                              Final do servico {precoBaseCheckout.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
+                            <p className="mt-1 text-[10px] font-semibold text-[#d48997] dark:text-white">
+                              Final do Serviço: {precoBaseCheckout.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
                             </p>
                           </div>
 
                           <div>
-                            <p className="mb-2 text-[10px] font-black uppercase tracking-[0.18em] text-gray-400">Observacao do ajuste</p>
+                            <p className="mb-2 text-[10px] font-medium text-gray-400">Observação do Ajuste</p>
                             <textarea
                               value={pagamentoAjusteObservacao}
                               onChange={(e) => setPagamentoAjusteObservacao(e.target.value)}
-                              rows={3}
-                              placeholder="Ex.: desconto por cortesia, acrescimo por horario especial..."
-                              className="w-full resize-none rounded-2xl border border-gray-200 bg-white px-5 py-4 text-sm font-medium text-gray-900 outline-none dark:border-white/10 dark:bg-[#111113] dark:text-white"
+                              rows={2}
+                              placeholder="Motivo do ajuste (ex: cortesia, taxa extra...)"
+                              className="w-full resize-none rounded-xl border border-black/[0.08] bg-white px-4.5 py-3.5 text-sm font-medium text-gray-900 outline-none dark:border-white/10 dark:bg-[#111113] dark:text-white focus:border-[#d48997] focus:ring-2 focus:ring-[#d48997]/10"
                             />
                           </div>
 
                           <div>
-                            <p className="mb-2 text-[10px] font-black uppercase tracking-[0.18em] text-gray-400">Taxa da maquininha</p>
+                            <p className="mb-2 text-[10px] font-medium text-gray-400">Taxa Adicional da Operadora (Opcional)</p>
                             <input
                               type="number"
                               value={pagamentoTaxa}
                               onChange={(e) => setPagamentoTaxa(e.target.value)}
                               min="0"
                               step="0.01"
-                              className="w-full rounded-2xl border border-gray-200 bg-white px-5 py-4 text-sm font-black text-gray-900 outline-none dark:border-white/10 dark:bg-[#111113] dark:text-white"
+                              className="w-full rounded-xl border border-black/[0.08] bg-white px-4.5 py-3 text-sm font-semibold text-gray-900 outline-none dark:border-white/10 dark:bg-[#111113] dark:text-white focus:border-[#d48997] focus:ring-2 focus:ring-[#d48997]/10"
                             />
                           </div>
 
-                          <div className="rounded-[1.5rem] border border-gray-200 bg-white p-5 dark:border-white/10 dark:bg-[#111113] space-y-3">
-                            <div className="flex justify-between text-xs font-bold text-gray-500 uppercase tracking-widest">
+                          <div className="rounded-2xl border border-black/[0.04] bg-white p-5 dark:border-white/[0.04] dark:bg-white/[0.01] space-y-3">
+                            <div className="flex justify-between text-xs font-semibold text-gray-500 dark:text-gray-400 normal-case">
                               <span>Total da Comanda:</span>
-                              <span className="font-black text-gray-900 dark:text-white">{Number(totalGrupoComanda).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</span>
+                              <span className="font-semibold text-gray-900 dark:text-white">{Number(totalGrupoComanda).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</span>
                             </div>
                             {totalPacote > 0 && (
-                              <div className="flex justify-between text-xs font-bold text-bellapro-blush uppercase tracking-widest">
+                              <div className="flex justify-between text-xs font-semibold text-[#d48997] normal-case">
                                 <span>Coberto por Pacotes:</span>
-                                <span className="font-black">-{Number(totalPacote).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</span>
+                                <span className="font-semibold">-{Number(totalPacote).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</span>
                               </div>
                             )}
-                            <div className="flex justify-between text-xs font-bold text-gray-900 dark:text-white uppercase tracking-widest border-t border-dashed border-gray-200 dark:border-white/5 pt-2">
-                              <span>A Pagar em Dinheiro/Cartão/PIX:</span>
-                              <span className="font-black">{Number(totalRestante).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</span>
+                            <div className="flex justify-between text-xs font-semibold text-gray-900 dark:text-white normal-case border-t border-dashed border-black/[0.04] dark:border-white/5 pt-2">
+                              <span>A pagar em Dinheiro/Cartão/PIX:</span>
+                              <span className="font-semibold">{Number(totalRestante).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</span>
                             </div>
-                            <div className="flex justify-between text-xs font-bold text-[#E29BA8] uppercase tracking-widest">
+                            <div className="flex justify-between text-xs font-semibold text-[#d48997] normal-case">
                               <span>Pago Registrado:</span>
-                              <span className="font-black">{Number(totalManualPago).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</span>
+                              <span className="font-semibold">{Number(totalManualPago).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</span>
                             </div>
-                            <div className="flex justify-between text-xs font-bold uppercase tracking-widest border-t border-dashed border-gray-200 dark:border-white/5 pt-2">
-                              <span>Status do Pagamento:</span>
+                            <div className="flex justify-between text-xs font-semibold normal-case border-t border-dashed border-black/[0.04] dark:border-white/5 pt-2">
+                              <span>Status da Diferença:</span>
                               {Math.abs(diferencaPagamento) < 0.05 ? (
-                                <span className="font-black text-emerald-500">Valor Correto</span>
+                                <span className="font-semibold text-emerald-500">Valor Correto</span>
                               ) : diferencaPagamento > 0 ? (
-                                <span className="font-black text-amber-500">Falta {Number(diferencaPagamento).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</span>
+                                <span className="font-semibold text-amber-500">Falta {Number(diferencaPagamento).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</span>
                               ) : (
-                                <span className="font-black text-rose-500">Excesso {Number(Math.abs(diferencaPagamento)).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</span>
+                                <span className="font-semibold text-rose-500">Excesso {Number(Math.abs(diferencaPagamento)).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</span>
                               )}
                             </div>
                           </div>
@@ -2598,9 +2613,9 @@ function ModalDetalhesAgendamento({ agendamento: initialAgendamento, allAgendame
                             type="button"
                             onClick={() => handleCheckout()}
                             disabled={loading || agendamento.statusPagamento === 'pago' || !caixaPagamentoStatus.aberto || !pagamentoDescontoValido || Math.abs(diferencaPagamento) > 0.05}
-                            className="w-full rounded-[2rem] bg-[#E29BA8] py-5 text-[11px] font-black uppercase tracking-[0.2em] text-white transition hover:bg-[#d48997] disabled:cursor-not-allowed disabled:opacity-40"
+                            className="w-full rounded-xl bg-[#E29BA8] hover:bg-[#d48997] py-4 text-xs font-semibold text-white transition-all shadow-md shadow-[#E29BA8]/10 hover:shadow-lg disabled:cursor-not-allowed disabled:opacity-40"
                           >
-                            {loading ? 'Processando...' : 'Finalizar cobranca'}
+                            {loading ? 'Processando...' : 'Finalizar Cobrança'}
                           </button>
                         </div>
                       </div>
@@ -2614,6 +2629,7 @@ function ModalDetalhesAgendamento({ agendamento: initialAgendamento, allAgendame
       </motion.div>
     );
   }
+
 
   if (!agendamento) return null;
 
