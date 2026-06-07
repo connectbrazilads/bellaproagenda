@@ -430,7 +430,7 @@ export default function AdminLayout() {
       <aside className={cn(
         "hidden lg:flex flex-col transition-all duration-500 ease-in-out relative group/sidebar",
         effectiveCollapsed ? "w-24" : "w-[290px]",
-        dark ? "bg-[#121116]/80 backdrop-blur-3xl border-r border-white/[0.02]" : "bg-[#fcfafa]/80 backdrop-blur-3xl border-r border-black/[0.03] shadow-[0_24px_60px_-32px_rgba(140,107,117,0.06)]"
+        dark ? "bg-gradient-to-b from-[#121116] via-[#16141a] to-[#0c0a0f] border-r border-white/[0.03]" : "bg-[#fcfafa]/80 backdrop-blur-3xl border-r border-black/[0.03] shadow-[0_24px_60px_-32px_rgba(140,107,117,0.06)]"
       )}>
         {/* Toggle Button */}
         <div className={cn("absolute -right-4 top-24 z-50", !canToggleSidebar && "hidden")}>
@@ -516,20 +516,20 @@ export default function AdminLayout() {
                     title={effectiveCollapsed ? item.label : ""}
                     className={({ isActive }) =>
                       cn(
-                        "flex items-center rounded-[1.25rem] transition-all duration-300 group relative",
-                        effectiveCollapsed ? "justify-center p-4" : "gap-4 px-5 py-3",
+                        "flex items-center rounded-[1.25rem] transition-all duration-300 group relative overflow-hidden border-l-2",
+                        effectiveCollapsed ? "justify-center p-4" : "gap-4 px-5 py-3.5",
                         isActive
-                            ? dark
-                            ? "bg-white/10 text-white shadow-lg shadow-black/20 translate-x-1"
-                            : "bg-[#fff0f1] text-[#b56f7c] translate-x-1"
+                          ? dark
+                            ? "bg-gradient-to-r from-[#d48997]/15 to-[#d48997]/5 text-white border-[#d48997] shadow-[inset_0_1px_0_0_rgba(255,255,255,0.05)] translate-x-1"
+                            : "bg-gradient-to-r from-[#fff0f1] to-white text-[#b56f7c] border-[#d48997] shadow-sm translate-x-1"
                           : cn(
-                              "hover:translate-x-1",
+                              "border-transparent hover:translate-x-1",
                               dark ? "text-[#a98690] hover:text-[#faf7f6] hover:bg-white/[0.02]" : "text-[#8c6b75] hover:text-[#1a1a1f] hover:bg-[#fff2f1]"
                             )
                       )
                     }
                   >
-                    <item.icon className={cn("w-4 h-4 flex-shrink-0", "transition-transform group-hover:scale-110")} />
+                    <item.icon className={cn("w-4 h-4 flex-shrink-0", "transition-transform group-hover:scale-110 group-hover:translate-x-0.5 duration-300")} />
                     {!effectiveCollapsed && (
                       <span className="text-[11px] font-black uppercase tracking-widest whitespace-nowrap">
                         {item.label}
@@ -644,12 +644,15 @@ export default function AdminLayout() {
                           type="button"
                           onClick={() => handleMobileNavigate(item.to)}
                           className={cn(
-                            "w-full flex items-center gap-4 px-5 py-4 rounded-[1.25rem] text-[11px] font-black uppercase tracking-widest transition-all text-left",
+                            "w-full flex items-center gap-4 px-5 py-4 rounded-[1.25rem] text-[11px] font-black uppercase tracking-widest transition-all text-left border-l-2",
                             isItemActive(item)
                               ? dark
-                                ? "bg-white/10 text-white shadow-lg"
-                                : "bg-[#fff0f1] text-[#b56f7c]"
-                              : dark ? "text-[#d6b6bc]" : "text-[#8c6b75]"
+                                ? "bg-gradient-to-r from-[#d48997]/15 to-[#d48997]/5 text-white border-[#d48997]"
+                                : "bg-[#fff0f1] text-[#b56f7c] border-[#d48997]"
+                              : cn(
+                                  "border-transparent",
+                                  dark ? "text-[#d6b6bc] hover:text-[#faf7f6]" : "text-[#8c6b75] hover:text-[#1a1a1f]"
+                                )
                           )}
                         >
                           <item.icon className="w-4 h-4" />

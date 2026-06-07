@@ -68,41 +68,46 @@ const END_HOUR = 22;
 const STATUS_CONFIG = {
   pendente: {
     label: 'Pendente',
-    bg: 'bg-amber-500/[0.08] dark:bg-amber-500/[0.08] backdrop-blur-xl',
-    border: 'border-amber-500/20 dark:border-amber-500/20',
-    text: 'text-amber-700 dark:text-amber-400',
+    bg: 'bg-white/85 dark:bg-[#1a191f]/65 backdrop-blur-md',
+    border: 'border-black/[0.04] dark:border-white/[0.04] hover:border-amber-500/30 dark:hover:border-amber-400/40',
+    text: 'text-amber-700 dark:text-[#f3c16e]',
+    accent: 'bg-amber-500 dark:bg-amber-400 shadow-[0_0_12px_rgba(245,158,11,0.3)]',
     dot: 'bg-amber-500',
     icon: Clock3
   },
   confirmado: {
     label: 'Confirmado',
-    bg: 'bg-black/[0.03] dark:bg-white/[0.05] backdrop-blur-xl',
-    border: 'border-[#E29BA8]/30 dark:border-[#d48997]/40',
-    text: 'text-[#b96a79] dark:text-[#f4d1d6]',
-    dot: 'bg-[#E29BA8] shadow-sm',
+    bg: 'bg-white/85 dark:bg-[#1a191f]/65 backdrop-blur-md',
+    border: 'border-black/[0.04] dark:border-white/[0.04] hover:border-[#d48997]/30 dark:hover:border-[#d48997]/40',
+    text: 'text-[#9c515f] dark:text-[#f4d1d6]',
+    accent: 'bg-[#d48997] dark:bg-[#e29ba8] shadow-[0_0_12px_rgba(212,137,151,0.3)]',
+    dot: 'bg-[#d48997]',
     icon: CalendarDays
   },
   em_atendimento: {
     label: 'Em Agenda',
-    bg: 'bg-blue-500/[0.05] dark:bg-blue-500/[0.08] backdrop-blur-xl',
-    border: 'border-blue-500/20 dark:border-blue-500/20',
-    text: 'text-blue-700 dark:text-blue-400',
+    bg: 'bg-white/85 dark:bg-[#1a191f]/65 backdrop-blur-md',
+    border: 'border-black/[0.04] dark:border-white/[0.04] hover:border-blue-500/30 dark:hover:border-blue-400/40',
+    text: 'text-blue-700 dark:text-[#7bb0ff]',
+    accent: 'bg-blue-500 dark:bg-blue-400 shadow-[0_0_12px_rgba(59,130,246,0.3)]',
     dot: 'bg-blue-500',
     icon: Zap
   },
   concluido: {
     label: 'Concluido',
-    bg: 'bg-emerald-500/[0.05] dark:bg-emerald-500/[0.08] backdrop-blur-xl',
-    border: 'border-emerald-500/20 dark:border-emerald-500/20',
-    text: 'text-emerald-700 dark:text-emerald-400',
+    bg: 'bg-white/85 dark:bg-[#1a191f]/65 backdrop-blur-md',
+    border: 'border-black/[0.04] dark:border-white/[0.04] hover:border-emerald-500/30 dark:hover:border-emerald-400/40',
+    text: 'text-emerald-700 dark:text-[#72f1c5]',
+    accent: 'bg-emerald-500 dark:bg-emerald-400 shadow-[0_0_12px_rgba(16,185,129,0.3)]',
     dot: 'bg-emerald-500',
     icon: CheckCircle2
   },
   cancelado: {
     label: 'Cancelado',
-    bg: 'bg-red-500/[0.05] dark:bg-red-500/[0.08] backdrop-blur-xl',
-    border: 'border-red-500/20 dark:border-red-500/20',
-    text: 'text-red-600 dark:text-red-400',
+    bg: 'bg-white/85 dark:bg-[#1a191f]/65 backdrop-blur-md',
+    border: 'border-black/[0.04] dark:border-white/[0.04] hover:border-red-500/30 dark:hover:border-red-400/40',
+    text: 'text-red-600 dark:text-[#f87171]',
+    accent: 'bg-red-500 dark:bg-red-400 shadow-[0_0_12px_rgba(239,68,68,0.3)]',
     dot: 'bg-red-500',
     icon: AlertCircle
   },
@@ -3904,50 +3909,50 @@ export default function Agenda() {
       <motion.div 
         initial={false} 
         animate={{ width: sidebarOpen ? 280 : 0 }} 
-        className="bg-white/70 dark:bg-[#0c0c0e]/60 backdrop-blur-2xl border-r border-gray-200/50 dark:border-white/5 flex flex-col z-[60] shrink-0 shadow-[0_24px_60px_-32px_rgba(0,0,0,0.5)] overflow-hidden"
+        className="bg-gradient-to-b from-white/90 to-white/75 dark:from-[#0d0d10]/95 dark:to-[#09090b]/90 backdrop-blur-3xl border-r border-black/[0.03] dark:border-white/[0.03] flex flex-col z-[60] shrink-0 shadow-[20px_0_60px_-20px_rgba(0,0,0,0.05)] dark:shadow-none overflow-hidden"
       >
         <div className="p-4 md:p-8 space-y-8 w-[280px]">
           <div>
-            <h3 className="text-2xl font-black text-gray-900 dark:text-white tracking-tighter uppercase leading-none mb-2">Escala</h3>
-            <p className="text-[9px] font-black text-[#d48997] uppercase tracking-widest bg-[#d48997]/10 px-3 py-1.5 rounded-lg inline-flex">Customizacao Visual</p>
+            <h3 className="text-xl font-serif font-normal text-gray-900 dark:text-white tracking-wide mb-1">Escala</h3>
+            <p className="text-[8px] font-bold text-[#d48997] uppercase tracking-[0.2em] bg-[#d48997]/10 px-2.5 py-1 rounded-md inline-flex">Customização Visual</p>
           </div>
           
           <div className="space-y-6">
-            <div className="space-y-6 p-4 sm:p-6 bg-white dark:bg-white/5 rounded-3xl border border-gray-100 dark:border-white/5 shadow-xl shadow-gray-200/20 dark:shadow-none">
+            <div className="space-y-6 p-4 sm:p-5 bg-white/40 dark:bg-white/[0.01] rounded-3xl border border-black/[0.03] dark:border-white/[0.03] shadow-inner shadow-gray-200/10">
               <div className="space-y-3">
-                <div className="flex justify-between text-[10px] font-black uppercase tracking-widest">
-                  <span className="text-gray-500">Largura Coluna</span>
-                  <span className="text-[#d48997]">{colWidth}px</span>
+                <div className="flex justify-between text-[10px] font-bold uppercase tracking-widest text-gray-400">
+                  <span>Largura Coluna</span>
+                  <span className="text-[#d48997] font-semibold">{colWidth}px</span>
                 </div>
-                <input type="range" min="140" max="300" value={colWidth} onChange={e => setColWidth(Number(e.target.value))} className="w-full h-1.5 bg-gray-100 dark:bg-gray-800 rounded-lg appearance-none cursor-pointer accent-[#d48997]" />
+                <input type="range" min="140" max="300" value={colWidth} onChange={e => setColWidth(Number(e.target.value))} className="w-full h-1 bg-gray-100 dark:bg-gray-800 rounded-lg appearance-none cursor-pointer accent-[#d48997]" />
               </div>
               <div className="space-y-3">
-                <div className="flex justify-between text-[10px] font-black uppercase tracking-widest">
-                  <span className="text-gray-500">Altura Hora</span>
-                  <span className="text-[#d48997]">{hourHeight}px</span>
+                <div className="flex justify-between text-[10px] font-bold uppercase tracking-widest text-gray-400">
+                  <span>Altura Hora</span>
+                  <span className="text-[#d48997] font-semibold">{hourHeight}px</span>
                 </div>
-                <input type="range" min="50" max="150" value={hourHeight} onChange={e => setHourHeight(Number(e.target.value))} className="w-full h-1.5 bg-gray-100 dark:bg-gray-800 rounded-lg appearance-none cursor-pointer accent-[#d48997]" />
+                <input type="range" min="50" max="150" value={hourHeight} onChange={e => setHourHeight(Number(e.target.value))} className="w-full h-1 bg-gray-100 dark:bg-gray-800 rounded-lg appearance-none cursor-pointer accent-[#d48997]" />
               </div>
             </div>
 
             <div className="space-y-4">
               <div className="flex items-center justify-between px-2">
-                <h4 className="text-[10px] font-black text-gray-400 uppercase tracking-widest flex items-center gap-2"><Target size={12} className="text-[#E29BA8]"/> Lista de Espera</h4>
-                <button onClick={adicionarListaEsperaRapida} className="px-2 py-1 bg-[#E29BA8]/10 text-[#d48997] rounded-md text-[9px] font-black uppercase tracking-widest">
+                <h4 className="text-[10px] font-bold text-gray-400 uppercase tracking-widest flex items-center gap-2"><Target size={12} className="text-[#E29BA8]"/> Lista de Espera</h4>
+                <button onClick={adicionarListaEsperaRapida} className="px-2 py-1 bg-[#E29BA8]/10 text-[#d48997] rounded-md text-[9px] font-bold uppercase tracking-widest transition-all hover:bg-[#E29BA8]/20">
                   Novo
                 </button>
               </div>
               <div className="grid grid-cols-1 gap-2 max-h-[28vh] overflow-y-auto pr-2 custom-scrollbar">
                 {(listaEspera || []).length === 0 ? (
-                  <div className="rounded-2xl border border-dashed border-gray-200 dark:border-white/10 px-4 py-4 text-[10px] font-black uppercase tracking-[0.18em] text-gray-400">
+                  <div className="rounded-2xl border border-dashed border-black/[0.04] dark:border-white/5 px-4 py-4 text-[10px] font-medium tracking-wider text-gray-400 dark:text-gray-500">
                     Nenhum cliente aguardando
                   </div>
                 ) : (
                   (listaEspera || []).map((item) => (
-                    <div key={item.id} className="rounded-2xl border border-gray-100 dark:border-white/5 bg-white dark:bg-white/5 px-4 py-4">
-                      <p className="text-[11px] font-black uppercase tracking-tight text-gray-900 dark:text-white">{item.clienteNome}</p>
-                      <p className="mt-1 text-[9px] font-bold uppercase tracking-[0.16em] text-gray-400">
-                        {item.servico?.nome || 'Sem servico definido'}
+                    <div key={item.id} className="rounded-2xl border border-black/[0.03] dark:border-white/5 bg-white/40 dark:bg-white/[0.01] px-4 py-4 hover:shadow-md transition-all duration-300">
+                      <p className="text-xs font-semibold text-gray-900 dark:text-white leading-tight">{item.clienteNome}</p>
+                      <p className="mt-1 text-[10px] font-normal text-gray-400 dark:text-gray-500">
+                        {item.servico?.nome || 'Sem serviço definido'}
                       </p>
                       <div className="mt-3 flex items-center gap-2">
                         <button
@@ -3960,13 +3965,13 @@ export default function Agenda() {
                             });
                             setModalNovo(true);
                           }}
-                          className="flex-1 rounded-xl bg-[#d48997] px-3 py-2 text-[9px] font-black uppercase tracking-[0.18em] text-white"
+                          className="flex-1 rounded-xl bg-gradient-to-r from-[#d48997] to-[#e29ba8] px-3 py-2 text-[9px] font-bold uppercase tracking-widest text-white shadow-sm hover:opacity-90"
                         >
                           Agendar
                         </button>
                         <button
                           onClick={() => removerDaListaEspera(item.id)}
-                          className="rounded-xl border border-gray-200 dark:border-white/10 px-3 py-2 text-[9px] font-black uppercase tracking-[0.18em] text-gray-500"
+                          className="rounded-xl border border-gray-200 dark:border-white/10 px-3 py-2 text-[9px] font-bold uppercase tracking-widest text-gray-400 dark:text-gray-500 hover:border-red-200 hover:text-red-500 transition-colors"
                         >
                           Remover
                         </button>
@@ -3979,23 +3984,34 @@ export default function Agenda() {
 
             <div className="space-y-4">
               <div className="flex items-center justify-between px-2">
-                <h4 className="text-[10px] font-black text-gray-400 uppercase tracking-widest flex items-center gap-2"><Users size={12} className="text-[#E29BA8]"/> Equipe</h4>
-                <div className="px-2 py-1 bg-[#d48997]/10 text-[#d48997] rounded-md text-[9px] font-black uppercase tracking-widest">{profsDisplay.length}/{profissionais.length}</div>
+                <h4 className="text-[10px] font-bold text-gray-400 uppercase tracking-widest flex items-center gap-2"><Users size={12} className="text-[#E29BA8]"/> Equipe</h4>
+                <div className="px-2 py-1 bg-[#d48997]/10 text-[#d48997] rounded-md text-[9px] font-bold uppercase tracking-widest">{profsDisplay.length}/{profissionais.length}</div>
               </div>
               <div className="grid grid-cols-1 gap-2 max-h-[45vh] overflow-y-auto pr-2 custom-scrollbar">
                 {(profissionais || []).map(p => (
                   <button 
                     key={p.id}
                     onClick={() => setProfVisiveis({...profVisiveis, [p.id]: !profVisiveis[p.id]})}
-                    className={`flex items-center gap-4 p-3 rounded-2xl border transition-all duration-300 group ${profVisiveis[p.id] ? 'bg-white dark:bg-white/10 border-gray-200 dark:border-white/10 shadow-lg shadow-gray-200/50 dark:shadow-none' : 'bg-transparent border-transparent opacity-50 hover:opacity-100 hover:bg-gray-50 dark:hover:bg-white/5'}`}
+                    className={cn(
+                      "flex items-center gap-3.5 p-3 rounded-2xl border transition-all duration-300 group w-full text-left",
+                      profVisiveis[p.id]
+                        ? "bg-white dark:bg-white/[0.04] border-[#d48997]/20 dark:border-white/10 shadow-[0_10px_30px_-10px_rgba(212,137,151,0.15)] dark:shadow-none translate-x-0.5"
+                        : "bg-transparent border-transparent opacity-40 hover:opacity-85 hover:bg-gray-100/50 dark:hover:bg-white/[0.01]"
+                    )}
                   >
-                    <div className={`w-10 h-10 rounded-xl flex items-center justify-center font-black text-xs relative overflow-hidden transition-all duration-300 ${profVisiveis[p.id] ? 'bg-[#E29BA8]/10 dark:bg-[#E29BA8]/20 text-[#d48997] dark:text-[#f4d1d6]' : 'bg-gray-100 dark:bg-gray-800 text-gray-500'}`}>
+                    <div className={cn(
+                      "w-10 h-10 rounded-xl flex items-center justify-center font-black text-xs relative overflow-hidden transition-all duration-500 shrink-0",
+                      profVisiveis[p.id] ? "bg-[#d48997]/10 text-[#d48997] dark:text-[#f4d1d6]" : "bg-gray-100 dark:bg-gray-800 text-gray-400"
+                    )}>
                       {p.fotoUrl ? <img src={p.fotoUrl} className="w-full h-full object-cover" /> : p.nome?.[0]}
-                      {profVisiveis[p.id] && <div className="absolute inset-0 border-2 border-[#E29BA8]/50 rounded-xl pointer-events-none" />}
+                      {profVisiveis[p.id] && <div className="absolute inset-0 border border-[#d48997]/30 rounded-xl pointer-events-none" />}
                     </div>
-                    <div className="text-left overflow-hidden flex-1">
-                      <p className={`text-[11px] font-black uppercase tracking-tight truncate leading-none ${profVisiveis[p.id] ? 'text-gray-900 dark:text-white' : 'text-gray-500'}`}>{p.nome}</p>
-                      {profVisiveis[p.id] && <p className="text-[8px] text-[#E29BA8] uppercase tracking-[0.2em] mt-1 font-bold">Visivel</p>}
+                    <div className="overflow-hidden flex-1">
+                      <p className={cn(
+                        "text-xs font-semibold tracking-wide truncate transition-colors",
+                        profVisiveis[p.id] ? "text-gray-900 dark:text-white" : "text-gray-400"
+                      )}>{p.nome}</p>
+                      {profVisiveis[p.id] && <p className="text-[8px] text-[#d48997] uppercase tracking-[0.2em] mt-1 font-bold">Visível</p>}
                     </div>
                   </button>
                 ))}
@@ -4066,9 +4082,8 @@ export default function Agenda() {
           </div>
         </div>
 
-        <div className="hidden md:flex px-4 md:px-6 py-3 md:py-4 items-center justify-between gap-3 border-b border-gray-100 dark:border-white/5 bg-white/70 dark:bg-[#0c0c0e]/70 backdrop-blur-3xl sticky top-[var(--admin-mobile-header-height,73px)] md:top-0 z-50 shadow-sm">
-          <div className="flex items-center gap-3">
-            {/* Se??o BellaPro */}
+        <div className="hidden md:flex px-4 md:px-6 py-3.5 items-center justify-between gap-3 border-b border-black/[0.03] dark:border-white/[0.03] bg-white/70 dark:bg-[#0c0c0e]/70 backdrop-blur-3xl sticky top-[var(--admin-mobile-header-height,73px)] md:top-0 z-50 shadow-[0_1px_3px_0_rgba(0,0,0,0.02)]">
+          <div className="flex items-center gap-4">
             <button 
               onClick={() => setSidebarOpen(!sidebarOpen)} 
               className="hidden md:flex w-12 h-12 items-center justify-center rounded-2xl border bg-white dark:bg-white/5 border-gray-200 dark:border-white/5 text-gray-500 hover:text-[#d48997] hover:border-[#E29BA8]/30 hover:bg-[#E29BA8]/5 transition-all shadow-sm group"
@@ -4078,23 +4093,21 @@ export default function Agenda() {
               </div>
             </button>
             <div className="flex flex-col">
-              <h2 className="text-lg md:text-2xl font-black uppercase tracking-tighter text-gray-900 dark:text-white leading-none">Agenda</h2>
-              <p className="text-gray-400 text-[9px] font-black uppercase tracking-[0.3em] mt-0.5 hidden md:block">Painel Operacional</p>
-              <p className="text-[#d48997] text-[8px] font-black uppercase tracking-[0.28em] mt-1 hidden md:block">
+              <h2 className="text-xl md:text-2xl font-serif font-normal text-gray-900 dark:text-white tracking-wide">Agenda</h2>
+              <p className="text-[#d48997] text-[8px] font-bold uppercase tracking-[0.25em] mt-1 hidden md:block">
                 {savingProfessionalOrder ? 'Salvando ordem da equipe...' : 'Arraste os profissionais do topo para reorganizar'}
               </p>
             </div>
           </div>
 
           <div className="flex items-center gap-2 md:gap-4">
-            {/* Se??o BellaPro */}
-            <div className="flex items-center bg-gray-50 dark:bg-[#121214] rounded-2xl p-1 border border-gray-200 dark:border-white/5 shadow-inner">
+            <div className="flex items-center bg-white/50 dark:bg-white/[0.02] backdrop-blur-md rounded-2xl p-1 border border-black/[0.04] dark:border-white/[0.04] shadow-sm">
               <button onClick={() => setDataFiltro(addDays(dataFiltro, -1))} className="w-9 h-9 flex items-center justify-center text-gray-400 hover:text-[#d48997] hover:bg-white dark:hover:bg-white/10 rounded-xl transition-all">
                 <ChevronLeft size={16} />
               </button>
               <div className="relative px-2 md:px-4 flex items-center gap-1 md:gap-2">
                 <CalendarDays size={14} className="text-[#d48997] hidden md:block" />
-                <span className="font-black text-[11px] text-gray-900 dark:text-white uppercase tracking-[0.2em] w-[90px] md:w-[120px] text-center">{formatDateBR(dataFiltro)}</span>
+                <span className="font-semibold text-xs text-gray-800 dark:text-gray-200 tracking-wider w-[90px] md:w-[120px] text-center">{formatDateBR(dataFiltro)}</span>
                 <input type="date" value={dataFiltro} onChange={e => setDataFiltro(e.target.value)} className="absolute inset-0 opacity-0 cursor-pointer" aria-label="Selecionar data da agenda" />
               </div>
               <button onClick={() => setDataFiltro(addDays(dataFiltro, 1))} className="w-9 h-9 flex items-center justify-center text-gray-400 hover:text-[#d48997] hover:bg-white dark:hover:bg-white/10 rounded-xl transition-all">
@@ -4105,8 +4118,8 @@ export default function Agenda() {
             <button onClick={carregar} className="w-10 h-10 md:w-12 md:h-12 flex items-center justify-center text-gray-400 hover:text-[#d48997] transition-all bg-white dark:bg-white/5 border border-gray-200 dark:border-white/5 rounded-2xl shadow-sm group">
               <RefreshCw size={16} className="group-active:rotate-180 transition-transform duration-500" />
             </button>
-            <button onClick={() => setModalNovo(true)} className="bg-gray-900 dark:bg-[#d48997] hover:bg-black dark:hover:bg-[#E29BA8] text-white px-4 md:px-6 py-3 h-10 md:h-12 rounded-2xl font-black text-[11px] shadow-xl dark:shadow-[#E29BA8]/20 transition-all uppercase tracking-widest flex items-center gap-2">
-              <Plus size={16} strokeWidth={3} className="text-[#efbac2]" />
+            <button onClick={() => setModalNovo(true)} className="bg-gradient-to-r from-[#d48997] to-[#e29ba8] hover:from-[#c97b8a] hover:to-[#d48997] text-white px-5 md:px-7 py-3 h-10 md:h-12 rounded-2xl font-semibold text-xs shadow-lg shadow-[#E29BA8]/20 hover:shadow-xl hover:shadow-[#E29BA8]/35 transition-all uppercase tracking-widest flex items-center gap-2 hover:-translate-y-0.5 active:translate-y-0 duration-300">
+              <Plus size={16} strokeWidth={2.5} />
               <span className="hidden sm:inline">Reservar</span>
             </button>
           </div>
@@ -4144,12 +4157,12 @@ export default function Agenda() {
 
                   <div className="flex relative">
                     {profsDisplay.map((p) => (
-                      <div key={p.id} className="relative flex-shrink-0 border-r border-black/[0.04] dark:border-white/[0.04]" style={{ width: mobileColWidth, height: hours.length * mobileHourHeight + 52 }}>
-                        <div className="sticky top-0 z-20 h-[52px] border-b border-gray-200 dark:border-white/10 bg-white dark:bg-[#111214] flex items-center justify-center px-2">
-                          <p className="text-[11px] font-black text-gray-900 dark:text-white truncate">{p.nome}</p>
+                      <div key={p.id} className="relative flex-shrink-0 border-r border-black/[0.03] dark:border-white/[0.03]" style={{ width: mobileColWidth, height: hours.length * mobileHourHeight + 52 }}>
+                        <div className="sticky top-0 z-20 h-[52px] border-b border-black/[0.03] dark:border-white/[0.03] bg-white dark:bg-[#111214] flex items-center justify-center px-2">
+                          <p className="text-xs font-semibold text-gray-800 dark:text-gray-100 truncate">{p.nome}</p>
                         </div>
                         {hours.map((h) => (
-                          <div key={h} onClick={(e) => handleGridClick(e, p.id, h)} className="w-full border-b border-gray-200/70 dark:border-white/5 relative" style={{ height: mobileHourHeight }}>
+                          <div key={h} onClick={(e) => handleGridClick(e, p.id, h)} className="w-full border-b border-dashed border-black/[0.04] dark:border-white/[0.03] relative" style={{ height: mobileHourHeight }}>
                             <div className="absolute inset-0 bg-[linear-gradient(135deg,rgba(148,163,184,0.06)_0,rgba(148,163,184,0.06)_48%,transparent_48%,transparent_100%)] opacity-70" />
                           </div>
                         ))}
@@ -4168,6 +4181,7 @@ export default function Agenda() {
                           const duracaoTotal = calculateAgendamentoDuration(a);
                           const mobileLayout = getMobileAppointmentLayout(a.inicioHora, duracaoTotal, mobileHourHeight);
                           const isOnline = isAgendamentoOnline(a);
+                          const config = STATUS_CONFIG[a.status] || STATUS_CONFIG.confirmado;
                           return (
                             <motion.div
                               key={`grid-${a.id}`}
@@ -4176,34 +4190,32 @@ export default function Agenda() {
                               onClick={(e) => { e.stopPropagation(); setAgendamentoSelecionado(a); setModalDetalhes(true); }}
                               style={{ top: mobileLayout.top, height: mobileLayout.height, width: `calc(${mobileColWidth}px - 8px)` }}
                               className={cn(
-                                "absolute left-1 rounded-[14px] border shadow-sm px-2.5 py-2 overflow-hidden z-20 cursor-pointer",
-                                isOnline ? "border-[#5dd7c7] bg-[#d8fbf4]" : "border-blue-300 bg-[#bcd4fb]"
+                                "absolute left-1 rounded-[14px] border pl-3.5 pr-2 py-2 overflow-hidden z-20 cursor-pointer shadow-sm",
+                                config.bg,
+                                config.border,
+                                isOnline && 'border-teal-500/20 dark:border-teal-400/20 shadow-[0_6px_12px_rgba(20,184,166,0.1)]'
                               )}
                             >
+                              <div className={cn("absolute left-0 top-0 bottom-0 w-[3.5px]", config.accent)} />
                               <div className="flex h-full flex-col justify-between">
                                 <div>
                                   <div className="flex items-center justify-between gap-2">
-                                    <p className={cn("text-slate-700 leading-none", mobileLayout.compact ? "text-[9px]" : "text-[10px]")}>
-                                      {a.inicioHora} - {a.fimHora}
+                                    <p className={cn("leading-none font-semibold text-[9px]", config.text)}>
+                                      {a.inicioHora}
                                     </p>
                                     {isOnline && !mobileLayout.compact && (
-                                      <span className="rounded-full bg-[#14b8a6] px-2 py-0.5 text-[8px] font-black uppercase tracking-[0.18em] text-white">
+                                      <span className="rounded-full bg-[#14b8a6]/10 text-[#14b8a6] border border-[#14b8a6]/25 px-1.5 py-0.5 text-[7px] font-bold uppercase tracking-widest leading-none">
                                         Online
                                       </span>
                                     )}
                                   </div>
-                                  <p className={cn("mt-1 font-black text-slate-900 leading-tight", mobileLayout.compact ? "text-[10px] line-clamp-1" : "text-[11px] line-clamp-2")}>
+                                  <p className={cn("mt-1 font-semibold text-gray-800 dark:text-gray-100 leading-tight truncate normal-case tracking-wide", mobileLayout.compact ? "text-[9px]" : "text-xs")}>
                                     {a.clienteNome}
                                   </p>
                                   {!mobileLayout.compact && (
-                                    <p className="mt-1 text-[9px] text-slate-800 line-clamp-2">{getAgendamentoTitulo(a)}</p>
+                                    <p className="mt-0.5 text-[10px] text-gray-500 dark:text-gray-400 truncate normal-case tracking-wide leading-none">{getAgendamentoTitulo(a)}</p>
                                   )}
                                 </div>
-                                {mobileLayout.height >= 46 && (
-                                  <p className="mt-1 text-[8px] font-black uppercase tracking-[0.16em] text-slate-700/70">
-                                    {formatDurationLabel(duracaoTotal)}
-                                  </p>
-                                )}
                               </div>
                             </motion.div>
                           );
@@ -4279,7 +4291,7 @@ export default function Agenda() {
         {/* Se??o BellaPro */}
         <div ref={gridRef} className="hidden md:block flex-1 overflow-auto relative custom-scrollbar z-10 scroll-smooth">
           {/* Se??o BellaPro */}
-          <div className="sticky top-0 z-40 flex bg-white/80 dark:bg-[#0c0c0e]/80 backdrop-blur-3xl border-b border-gray-200 dark:border-white/5" style={{ marginLeft: 60 }}>
+          <div className="sticky top-0 z-40 flex bg-white/70 dark:bg-[#0c0c0e]/75 backdrop-blur-3xl border-b border-black/[0.03] dark:border-white/[0.03]" style={{ marginLeft: 60 }}>
             {profsDisplay.map(p => (
               <div
                 key={p.id}
@@ -4289,31 +4301,36 @@ export default function Agenda() {
                 onDrop={handleProfessionalDrop(p.id)}
                 onDragEnd={handleProfessionalDragEnd}
                 className={cn(
-                  "py-5 px-3 flex flex-col items-center justify-center border-r border-gray-100 dark:border-white/5 flex-shrink-0 relative group cursor-grab active:cursor-grabbing transition-all",
-                  dragOverProfId === p.id && draggedProfId !== p.id && "bg-[#e29ba8]/10 dark:bg-[#e29ba8]/12",
-                  draggedProfId === p.id && "opacity-60"
+                  "py-4 px-3 flex flex-col items-center justify-center border-r border-black/[0.02] dark:border-white/[0.02] flex-shrink-0 relative group cursor-grab active:cursor-grabbing hover:bg-black/[0.01] dark:hover:bg-white/[0.01] transition-all duration-300",
+                  dragOverProfId === p.id && draggedProfId !== p.id && "bg-[#d48997]/10 dark:bg-[#d48997]/15",
+                  draggedProfId === p.id && "opacity-50"
                 )}
                 style={{ width: colWidth }}
               >
-                <div className="absolute inset-0 bg-gradient-to-b from-[#E29BA8]/0 to-[#E29BA8]/5 opacity-0 group-hover:opacity-100 transition-opacity" />
-                <div className="absolute right-2 top-2 z-20 flex h-7 w-7 items-center justify-center rounded-full bg-white/80 text-[#d48997] shadow-sm dark:bg-white/10 dark:text-[#f1bcc4]">
-                  <MoreVertical size={14} />
+                <div className="absolute right-2 top-2 z-20 flex h-6 w-6 items-center justify-center rounded-full bg-white/60 dark:bg-white/5 text-[#d48997] dark:text-[#f1bcc4] opacity-0 group-hover:opacity-100 transition-opacity hover:scale-105 active:scale-95 shadow-sm">
+                  <MoreVertical size={12} />
                 </div>
-                <div className="w-14 h-14 rounded-[1.25rem] overflow-hidden bg-gray-50 dark:bg-white/5 relative z-10 shadow-lg border-2 border-white dark:border-[#1a1a1c] group-hover:border-[#E29BA8]/50 transition-all">
-                  {p.fotoUrl ? <img src={p.fotoUrl} className="w-full h-full object-cover" /> : <div className="w-full h-full flex items-center justify-center font-black text-gray-300 dark:text-gray-600 text-xl uppercase">{p.nome[0]}</div>}
+                <div className="w-12 h-12 rounded-full overflow-hidden bg-gray-100 dark:bg-white/[0.03] relative z-10 shadow-sm border-2 border-white dark:border-[#131118] group-hover:border-[#d48997] group-hover:shadow-md transition-all duration-500">
+                  {p.fotoUrl ? (
+                    <img src={p.fotoUrl} className="w-full h-full object-cover" />
+                  ) : (
+                    <div className="w-full h-full flex items-center justify-center font-bold text-gray-400 text-lg uppercase bg-gradient-to-tr from-gray-50 to-gray-200 dark:from-white/5 dark:to-white/10">
+                      {p.nome[0]}
+                    </div>
+                  )}
                 </div>
-                <div className="text-center mt-3 overflow-hidden w-full relative z-10">
-                  <p className="text-[11px] font-black text-gray-900 dark:text-white uppercase tracking-tight truncate px-2">{p.nome}</p>
+                <div className="text-center mt-2.5 overflow-hidden w-full relative z-10">
+                  <p className="text-xs font-semibold text-gray-800 dark:text-gray-100 tracking-wide truncate px-2 group-hover:text-[#d48997] transition-colors">{p.nome}</p>
                 </div>
               </div>
             ))}
           </div>
 
           <div className="relative flex" style={{ width: profsDisplay.length * colWidth + 60 }}>
-            <div className="sticky left-0 w-[60px] bg-white/80 dark:bg-[#0c0c0e]/80 backdrop-blur-2xl border-r border-gray-200 dark:border-white/5 z-30 shadow-[10px_0_20px_-10px_rgba(0,0,0,0.1)] dark:shadow-none">
+            <div className="sticky left-0 w-[60px] bg-white/70 dark:bg-[#0c0c0e]/75 backdrop-blur-2xl border-r border-black/[0.03] dark:border-white/[0.03] z-30 shadow-[10px_0_20px_-10px_rgba(0,0,0,0.02)] dark:shadow-none">
               {hours.map(h => (
-                <div key={h} className="relative border-b border-gray-100 dark:border-white/5 flex items-center justify-center" style={{ height: hourHeight }}>
-                  <span className="text-[9px] font-black text-gray-400 dark:text-gray-500 uppercase tracking-widest relative -top-1/2">
+                <div key={h} className="relative border-b border-dashed border-black/[0.03] dark:border-white/[0.03] flex items-center justify-center" style={{ height: hourHeight }}>
+                  <span className="text-[10px] font-light text-gray-400 dark:text-gray-500 tracking-wider relative -top-1/2">
                     {String(h).padStart(2, '0')}:00
                   </span>
                 </div>
@@ -4322,16 +4339,16 @@ export default function Agenda() {
 
             <div className="flex relative">
               {profsDisplay.map(p => (
-                <div key={p.id} className="relative border-r border-black/[0.04] dark:border-white/[0.04] last:border-r-0 flex-shrink-0" style={{ width: colWidth, height: hours.length * hourHeight }}>
+                <div key={p.id} className="relative border-r border-black/[0.03] dark:border-white/[0.03] last:border-r-0 flex-shrink-0" style={{ width: colWidth, height: hours.length * hourHeight }}>
                   {hours.map(h => (
                     <div 
                       key={h} 
                       onClick={(e) => handleGridClick(e, p.id, h)}
-                      className="w-full border-b border-gray-100 dark:border-white/5 group relative cursor-pointer hover:bg-[#d48997]/[0.02] dark:hover:bg-[#E29BA8]/[0.05] transition-all" 
+                      className="w-full border-b border-dashed border-black/[0.04] dark:border-white/[0.03] group relative cursor-pointer hover:bg-[#d48997]/[0.02] dark:hover:bg-[#E29BA8]/[0.05] transition-all" 
                       style={{ height: hourHeight }}
                     >
                        <div className="absolute inset-0 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity pointer-events-none scale-90 group-hover:scale-100 duration-300">
-                          <div className="px-4 py-2 rounded-xl bg-[#d48997] text-white font-black text-[9px] uppercase tracking-widest shadow-lg shadow-[#E29BA8]/30 flex items-center gap-2">
+                          <div className="px-4 py-2 rounded-xl bg-[#d48997] text-white font-semibold text-[9px] uppercase tracking-widest shadow-lg shadow-[#E29BA8]/30 flex items-center gap-2">
                             <Plus size={12} /> Reservar
                           </div>
                        </div>
@@ -4378,31 +4395,32 @@ export default function Agenda() {
                             width: `calc(${colWidth}px - 12px)`,
                           }} 
                           className={cn(
-                            `absolute left-1.5 rounded-[1.25rem] border shadow-lg ${config.bg} ${config.border} p-3 cursor-pointer overflow-hidden group hover:z-50 transition-all`,
-                            isOnline && 'border-[#5dd7c7] ring-1 ring-[#14b8a6]/35 shadow-[0_26px_52px_-36px_rgba(20,184,166,0.65)]'
+                            `absolute left-1.5 rounded-[1.25rem] border shadow-sm ${config.bg} ${config.border} pl-4 pr-3 py-3 cursor-pointer overflow-hidden group hover:z-50 hover:-translate-y-0.5 hover:shadow-xl transition-all duration-300`,
+                            isOnline ? 'border-teal-500/20 dark:border-teal-400/20 shadow-[0_10px_20px_-10px_rgba(20,184,166,0.15)]' : 'shadow-black/[0.02]'
                           )}
                         >
-                          <div className="flex justify-between items-center mb-2">
+                          <div className={cn("absolute left-0 top-0 bottom-0 w-[4.5px]", config.accent)} />
+                          <div className="flex justify-between items-center mb-1.5">
                             <div className="flex items-center gap-1.5">
-                              <StatusIcon size={10} className={config.text} />
-                              <span className={`text-[9px] font-black uppercase tracking-widest ${config.text}`}>{a.inicioHora}</span>
+                              <span className={cn("text-[10px] font-semibold tracking-wider", config.text)}>{a.inicioHora}</span>
                             </div>
-                            <div className="flex items-center gap-2">
+                            <div className="flex items-center gap-1.5">
                               {isOnline && (
-                                <span className="rounded-full bg-[#14b8a6] px-2 py-0.5 text-[7px] font-black uppercase tracking-[0.22em] text-white">
+                                <span className="rounded-full bg-[#14b8a6]/10 text-[#14b8a6] border border-[#14b8a6]/20 px-1.5 py-0.5 text-[7px] font-bold uppercase tracking-widest">
                                   Online
                                 </span>
                               )}
-                              <div className={`w-2 h-2 rounded-full ${config.dot}`} />
                             </div>
                           </div>
                           
-                          <p className={`text-[10px] font-black truncate uppercase tracking-tighter leading-none mb-1 ${config.text} dark:text-white`}>{a.clienteNome}</p>
-                          <p className={`text-[8px] font-bold truncate uppercase tracking-widest opacity-80 ${config.text}`}>{getAgendamentoTitulo(a)}</p>
+                          <p className="text-xs font-semibold text-gray-800 dark:text-gray-100 truncate normal-case tracking-wide leading-tight mb-0.5">{a.clienteNome}</p>
+                          <p className="text-[10px] font-normal text-gray-500 dark:text-gray-400 truncate normal-case tracking-wide leading-none">{getAgendamentoTitulo(a)}</p>
 
                           {pos.height > 60 && (
-                            <div className="absolute bottom-2 left-3 right-3 pt-2 border-t border-black/5 dark:border-white/5 flex items-center justify-between opacity-50">
-                               <p className={`text-[7px] font-black uppercase tracking-widest ${config.text}`}>{formatDurationLabel(duracaoTotal)}</p>
+                            <div className="absolute bottom-2.5 left-4 right-3 pt-1.5 border-t border-black/[0.03] dark:border-white/[0.03] flex items-center justify-between opacity-70">
+                               <p className="text-[9px] font-medium text-gray-400 dark:text-gray-500 flex items-center gap-1">
+                                 <Clock size={8} /> {formatDurationLabel(duracaoTotal)}
+                               </p>
                             </div>
                           )}
                         </motion.div>
