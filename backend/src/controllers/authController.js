@@ -41,10 +41,6 @@ function getAdminTokenFromRequest(req) {
     return auth.split(' ')[1];
   }
 
-  if (req.query?.token) {
-    return req.query.token;
-  }
-
   return getCookieValue(req, ADMIN_COOKIE_NAME);
 }
 

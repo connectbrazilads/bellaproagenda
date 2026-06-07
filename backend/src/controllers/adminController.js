@@ -160,12 +160,18 @@ function isSameCalendarDay(a, b) {
 function isSameClientRecord(base, candidate) {
   if (!base || !candidate) return false;
 
-  if (base.comandaId || candidate.comandaId) {
+  if (base.comandaId && candidate.comandaId && base.comandaId === candidate.comandaId) {
+    return true;
+  }
+
+  const basePendente = base.statusPagamento !== 'pago' && base.status !== 'concluido';
+  const candidatePendente = candidate.statusPagamento !== 'pago' && candidate.status !== 'concluido';
+  if ((base.comandaId || candidate.comandaId) && (!basePendente || !candidatePendente)) {
     return base.comandaId === candidate.comandaId;
   }
 
-  if (base.grupoAtendimentoId || candidate.grupoAtendimentoId) {
-    return base.grupoAtendimentoId === candidate.grupoAtendimentoId;
+  if (base.grupoAtendimentoId && candidate.grupoAtendimentoId && base.grupoAtendimentoId === candidate.grupoAtendimentoId) {
+    return true;
   }
 
   if (base.clienteId && candidate.clienteId) {
@@ -186,11 +192,16 @@ function isSameClientRecord(base, candidate) {
 
 function isSameAttendanceGroup(base, candidate) {
   if (!base || !candidate) return false;
-  if (base.comandaId || candidate.comandaId) {
+  if (base.comandaId && candidate.comandaId && base.comandaId === candidate.comandaId) {
+    return true;
+  }
+  const basePendente = base.statusPagamento !== 'pago' && base.status !== 'concluido';
+  const candidatePendente = candidate.statusPagamento !== 'pago' && candidate.status !== 'concluido';
+  if ((base.comandaId || candidate.comandaId) && (!basePendente || !candidatePendente)) {
     return base.comandaId === candidate.comandaId;
   }
-  if (base.grupoAtendimentoId || candidate.grupoAtendimentoId) {
-    return base.grupoAtendimentoId === candidate.grupoAtendimentoId;
+  if (base.grupoAtendimentoId && candidate.grupoAtendimentoId && base.grupoAtendimentoId === candidate.grupoAtendimentoId) {
+    return true;
   }
   return isSameCalendarDay(base.data, candidate.data) && isSameClientRecord(base, candidate);
 }
@@ -2357,31 +2368,38 @@ async function updateAgendamento(req, res) {
     }
   }
 
-  if (agendamento.pacoteId) {
-    const servicoIdsDoPacote = await getServicoIdsDoPacote(agendamento.pacoteId, req.user.salaoId);
-    const profissionalCompativelPacote = await profissionalAtendeTodosServicos(profissionalIdFinal, servicoIdsDoPacote, req.user.salaoId);
-    if (!profissionalCompativelPacote) {
-      return res.status(400).json({ error: 'O profissional selecionado nao atende todos os servicos deste pacote.' });
-    }
-  } else {
-    const servicosIds = [agendamento.servicoId, ...getAgendamentoItensExtras(agendamento).map((item) => item.servicoId)].filter(Boolean);
-    const profissionalCompativel = await profissionalAtendeTodosServicos(profissionalIdFinal, servicosIds, req.user.salaoId);
-    if (!profissionalCompativel) {
-      return res.status(400).json({ error: 'O profissional selecionado nao atende todos os servicos desta comanda.' });
-    }
-  }
+  const dataMesma = new Date(agendamento.data).toISOString().slice(0, 10) === new Date(`${data}T00:00:00`).toISOString().slice(0, 10);
+  const horaMesma = agendamento.inicioHora === hora;
+  const profissionalMesmo = agendamento.profissionalId === profissionalIdFinal;
+  const precisaValidar = !dataMesma || !horaMesma || !profissionalMesmo;
 
-  const indisponibilidade = await validarDisponibilidadeAgendamento({
-    salaoId: req.user.salaoId,
-    profissionalId: profissionalIdFinal,
-    data: new Date(`${data}T00:00:00`),
-    inicioHora: hora,
-    fimHora,
-    ignoreAgendamentoId: id,
-  });
+  if (precisaValidar) {
+    if (agendamento.pacoteId) {
+      const servicoIdsDoPacote = await getServicoIdsDoPacote(agendamento.pacoteId, req.user.salaoId);
+      const profissionalCompativelPacote = await profissionalAtendeTodosServicos(profissionalIdFinal, servicoIdsDoPacote, req.user.salaoId);
+      if (!profissionalCompativelPacote) {
+        return res.status(400).json({ error: 'O profissional selecionado nao atende todos os servicos deste pacote.' });
+      }
+    } else {
+      const servicosIds = [agendamento.servicoId, ...getAgendamentoItensExtras(agendamento).map((item) => item.servicoId)].filter(Boolean);
+      const profissionalCompativel = await profissionalAtendeTodosServicos(profissionalIdFinal, servicosIds, req.user.salaoId);
+      if (!profissionalCompativel) {
+        return res.status(400).json({ error: 'O profissional selecionado nao atende todos os servicos desta comanda.' });
+      }
+    }
 
-  if (indisponibilidade) {
-    return res.status(400).json({ error: indisponibilidade });
+    const indisponibilidade = await validarDisponibilidadeAgendamento({
+      salaoId: req.user.salaoId,
+      profissionalId: profissionalIdFinal,
+      data: new Date(`${data}T00:00:00`),
+      inicioHora: hora,
+      fimHora,
+      ignoreAgendamentoId: id,
+    });
+
+    if (indisponibilidade) {
+      return res.status(400).json({ error: indisponibilidade });
+    }
   }
 
   await prisma.agendamento.update({
@@ -2599,122 +2617,30 @@ async function criarVendaPDV(req, res) {
   res.status(201).json(agendamento);
 }
 
-async function updatePagamentoAgendamento(req, res) {
-  const { id } = req.params;
-  const { pagamentos, taxaOperadora, valorBaseAjustado, ajusteObservacao } = req.body;
-  const salaoId = req.user.salaoId;
-  const pagamentosLista = Array.isArray(pagamentos) ? pagamentos : [];
-  const totalPagoSolicitado = pagamentosLista.reduce((sum, pagamento) => sum + Number(pagamento?.valor || 0), 0);
-  const campoValorBaseAjustadoPresente = Object.prototype.hasOwnProperty.call(req.body, 'valorBaseAjustado');
-  const campoAjusteObservacaoPresente = Object.prototype.hasOwnProperty.call(req.body, 'ajusteObservacao');
 
-  // Segurança: verificar que o agendamento pertence ao salão
-  const agExiste = await getScopedAgendamento(req, id, {
-    servico: { select: { preco: true } },
-    pacote: { select: { preco: true } },
-  });
-  if (!agExiste) return res.status(404).json({ error: 'Agendamento não encontrado' });
-
-  let valorBaseAjustadoNormalizado = agExiste?.valorBaseAjustado ?? null;
-  let ajusteObservacaoNormalizada = agExiste?.ajusteObservacao ?? null;
-  if (campoValorBaseAjustadoPresente) {
-    if (valorBaseAjustado === null || valorBaseAjustado === '') {
-      valorBaseAjustadoNormalizado = null;
-    } else {
-      const valorBaseAjustadoNumero = Number(valorBaseAjustado);
-      if (!Number.isFinite(valorBaseAjustadoNumero) || valorBaseAjustadoNumero < 0) {
-        return res.status(400).json({ error: 'Informe um valor ajustado valido para o servico.' });
-      }
-
-      const precoBaseOriginal = getAgendamentoPrecoBaseOriginal(agExiste);
-      valorBaseAjustadoNormalizado = Math.abs(valorBaseAjustadoNumero - precoBaseOriginal) < 0.001
-        ? null
-        : valorBaseAjustadoNumero;
-    }
-  }
-
-  if (campoAjusteObservacaoPresente) {
-    ajusteObservacaoNormalizada = typeof ajusteObservacao === 'string'
-      ? ajusteObservacao.trim() || null
-      : null;
-  }
-
-  if (totalPagoSolicitado > 0) {
-    const caixaAberto = await getCaixaAberto(req.user.salaoId);
-    if (!caixaAberto) {
-      return res.status(400).json({ error: 'Abra o caixa antes de registrar pagamentos ou vendas.' });
-    }
-  }
-
-  await prisma.agendamentoPagamento.deleteMany({ where: { agendamentoId: id } });
-
-  await Promise.all(pagamentosLista.map(p => 
-    prisma.agendamentoPagamento.create({
-      data: { agendamentoId: id, forma: p.forma, valor: p.valor }
-    })
-  ));
-
-  const ag = await prisma.agendamento.findUnique({ 
-    where: { id },
-    include: { servico: true, pacote: true, itens: true, produtos: true }
-  });
-  
-  const totalDevido = calcularTotalAgendamento({ ...ag, valorBaseAjustado: valorBaseAjustadoNormalizado });
-  
-  const totalPago = pagamentosLista.reduce((s,p) => s + Number(p.valor || 0), 0);
-  const taxa = parseFloat(taxaOperadora) || 0;
-  // Valor líquido = total pago menos taxa da maquininha
-  const totalLiquido = totalPago - taxa;
-
-  const novoStatusPagamento = totalPago >= totalDevido ? 'pago' 
-    : totalPago > 0 ? 'parcial' 
-    : 'pendente';
-
-  await prisma.agendamento.update({
-    where: { id },
-    data: { 
-      statusPagamento: novoStatusPagamento,
-      taxaOperadora: taxa,
-      valorBaseAjustado: valorBaseAjustadoNormalizado,
-      ajusteObservacao: ajusteObservacaoNormalizada,
-    }
-  });
-
-  // Se o pagamento for total (ou quase total, tolerância de 0.10 para arredondamentos)
-  // E o status ainda não for concluído, concluímos automaticamente.
-  let resultado = {};
-  if (totalPago >= (totalDevido - 0.1) && ag.status !== 'concluido') {
-    resultado = await executarConclusaoAgendamento(id, salaoId);
-  }
-
-  const updatedAg = await prisma.agendamento.findUnique({
-    where: { id },
-    include: { pagamentos: true }
-  });
-
-  await createAuditLog({
-    salaoId: req.user.salaoId,
-    usuarioId: req.user.id,
-    acao: 'agenda.pagamento',
-    entidade: 'agendamento',
-    entidadeId: id,
-    mensagem: 'Pagamento de agendamento atualizado',
-    contexto: { totalPago, taxa, statusPagamento: novoStatusPagamento, valorBaseAjustado: valorBaseAjustadoNormalizado, ajusteObservacao: ajusteObservacaoNormalizada },
-    req,
-  });
-
-  res.json({ ...updatedAg, totalLiquido, ...resultado });
-}
 
 async function updatePagamentoAgendamento(req, res) {
   const { id } = req.params;
-  const { pagamentos, taxaOperadora, valorBaseAjustado, ajusteObservacao, agendamentoIds } = req.body;
+  const { pagamentos, taxaOperadora, valorBaseAjustado, ajusteObservacao, agendamentoIds, consumosPacote } = req.body;
   const salaoId = req.user.salaoId;
   const pagamentosLista = Array.isArray(pagamentos) ? pagamentos : [];
-  const totalPagoSolicitado = pagamentosLista.reduce((sum, pagamento) => sum + Number(pagamento?.valor || 0), 0);
   const campoValorBaseAjustadoPresente = Object.prototype.hasOwnProperty.call(req.body, 'valorBaseAjustado');
   const campoAjusteObservacaoPresente = Object.prototype.hasOwnProperty.call(req.body, 'ajusteObservacao');
   const idsSolicitados = Array.isArray(agendamentoIds) && agendamentoIds.length > 0 ? [...new Set(agendamentoIds)] : [id];
+
+  // Atualizar consumos de pacote primeiro
+  const consumosPacoteMap = consumosPacote || {};
+  await Promise.all(
+    Object.entries(consumosPacoteMap).map(([agId, pacoteId]) => {
+      if (idsSolicitados.includes(agId)) {
+        return prisma.agendamento.update({
+          where: { id: agId },
+          data: { pacoteId }
+        });
+      }
+      return Promise.resolve();
+    })
+  );
 
   const agExiste = await getScopedAgendamento(req, id, {
     cliente: {
@@ -2734,7 +2660,7 @@ async function updatePagamentoAgendamento(req, res) {
   });
   if (!agExiste) return res.status(404).json({ error: 'Agendamento nao encontrado' });
 
-  const agendamentosGrupo = await prisma.agendamento.findMany({
+  let agendamentosGrupo = await prisma.agendamento.findMany({
     where: {
       id: { in: idsSolicitados },
       salaoId: req.user.salaoId,
@@ -2773,6 +2699,23 @@ async function updatePagamentoAgendamento(req, res) {
   if (!grupoValido) {
     return res.status(400).json({ error: 'Somente atendimentos do mesmo cliente e do mesmo dia podem ser agrupados na comanda.' });
   }
+
+  // Gerar pagamentos automáticos de consumo de pacote
+  const automaticPayments = [];
+  for (const [agId, pacoteId] of Object.entries(consumosPacoteMap)) {
+    if (idsSolicitados.includes(agId)) {
+      const agItem = agendamentosGrupo.find(a => a.id === agId);
+      if (agItem) {
+        automaticPayments.push({
+          forma: 'Consumo de Pacote',
+          valor: getAgendamentoPrecoBase(agItem)
+        });
+      }
+    }
+  }
+
+  const todosPagamentos = [...pagamentosLista, ...automaticPayments];
+  const totalPagoSolicitado = todosPagamentos.reduce((sum, pagamento) => sum + Number(pagamento?.valor || 0), 0);
 
   let valorBaseAjustadoNormalizado = agExiste?.valorBaseAjustado ?? null;
   let ajusteObservacaoNormalizada = agExiste?.ajusteObservacao ?? null;
@@ -2818,19 +2761,23 @@ async function updatePagamentoAgendamento(req, res) {
 
   await prisma.agendamentoPagamento.deleteMany({ where: { agendamentoId: { in: idsSolicitados } } });
 
-  await Promise.all(pagamentosLista.map((pagamento) =>
+  await Promise.all(todosPagamentos.map((pagamento) =>
     prisma.agendamentoPagamento.create({
       data: { agendamentoId: id, forma: pagamento.forma, valor: pagamento.valor }
     })
   ));
 
-  const totalPago = pagamentosLista.reduce((sum, pagamento) => sum + Number(pagamento.valor || 0), 0);
+  const totalPago = todosPagamentos.reduce((sum, pagamento) => sum + Number(pagamento.valor || 0), 0);
   const taxa = parseFloat(taxaOperadora) || 0;
   const totalLiquido = totalPago - taxa;
   const pagamentoIntegral = totalPago >= (totalDevido - 0.1);
   const novoStatusPagamento = pagamentoIntegral
     ? 'pago'
     : totalPago > 0 ? 'parcial' : 'pendente';
+
+  const oldComandaIds = agendamentosGrupo
+    .map(a => a.comandaId)
+    .filter(cid => cid && cid !== agExiste.comandaId);
 
   await Promise.all(agendamentosGrupo.map((agendamentoAtual) =>
     prisma.agendamento.update({
@@ -2840,6 +2787,7 @@ async function updatePagamentoAgendamento(req, res) {
         taxaOperadora: agendamentoAtual.id === id ? taxa : 0,
         valorBaseAjustado: agendamentoAtual.id === id ? valorBaseAjustadoNormalizado : agendamentoAtual.valorBaseAjustado,
         ajusteObservacao: agendamentoAtual.id === id ? ajusteObservacaoNormalizada : agendamentoAtual.ajusteObservacao,
+        comandaId: agExiste.comandaId,
       },
     })
   ));
@@ -2855,6 +2803,9 @@ async function updatePagamentoAgendamento(req, res) {
   }
 
   await syncComandaStatus(agExiste.comandaId);
+  for (const oldCid of oldComandaIds) {
+    await cleanupEmptyComanda(oldCid);
+  }
 
   const updatedAg = await getAgendamentoCompleto(id);
 
@@ -3535,6 +3486,35 @@ async function getHistoricoCliente(req, res) {
   });
 
   res.json(clientes.map(serializarClienteCRM));
+}
+
+async function getClientePacotes(req, res) {
+  const { clienteId } = req.params;
+  try {
+    const pacotes = await prisma.clientePacote.findMany({
+      where: {
+        clienteId,
+        sessoesRestantes: { gt: 0 },
+        pacote: { salaoId: req.user.salaoId }
+      },
+      include: {
+        pacote: {
+          include: {
+            servicos: {
+              include: {
+                servico: {
+                  select: { id: true, nome: true, preco: true }
+                }
+              }
+            }
+          }
+        }
+      }
+    });
+    res.json(pacotes);
+  } catch (error) {
+    res.status(500).json({ error: 'Erro ao buscar pacotes do cliente' });
+  }
 }
 
 // ─── RELATÓRIO ───────────────────────────────────────────────────────────────
@@ -4676,6 +4656,11 @@ async function createLancamentoRemuneracao(req, res) {
 
   const { profissionalId, tipo, origem, valor, descricao, data } = req.body;
   const tipoNormalizado = String(tipo || '').trim().toLowerCase();
+
+  if (tipoNormalizado === 'bonificacao' && req.user?.role?.toLowerCase() !== 'admin') {
+    return res.status(403).json({ error: 'Somente o administrador pode registrar bonificacoes.' });
+  }
+
   let origemNormalizada = origem ? String(origem).trim().toLowerCase() : null;
   const valorNumerico = Number(valor || 0);
 
@@ -4954,6 +4939,7 @@ module.exports = {
   dispararIAProativa,
   importarClientesCSV,
   getHistoricoCliente,
+  getClientePacotes,
   getRelatorio,
   getFinanceiro,
   getDashboardExecutivo,

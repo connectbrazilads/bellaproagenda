@@ -95,12 +95,18 @@ export function normalizePhone(value = '') {
 export function isSameClientDayAgendamento(base, candidate) {
   if (!base || !candidate) return false;
 
-  if (base.comandaId || candidate.comandaId) {
+  if (base.comandaId && candidate.comandaId && base.comandaId === candidate.comandaId) {
+    return true;
+  }
+
+  const basePendente = base.statusPagamento !== 'pago' && base.status !== 'concluido';
+  const candidatePendente = candidate.statusPagamento !== 'pago' && candidate.status !== 'concluido';
+  if ((base.comandaId || candidate.comandaId) && (!basePendente || !candidatePendente)) {
     return base.comandaId === candidate.comandaId;
   }
 
-  if (base.grupoAtendimentoId || candidate.grupoAtendimentoId) {
-    return base.grupoAtendimentoId === candidate.grupoAtendimentoId;
+  if (base.grupoAtendimentoId && candidate.grupoAtendimentoId && base.grupoAtendimentoId === candidate.grupoAtendimentoId) {
+    return true;
   }
 
   const baseDate = String(base.data || '').slice(0, 10);

@@ -160,7 +160,9 @@ function LancamentoModal({
               >
                 <option value="adiantamento">Adiantamento / Vale</option>
                 <option value="desconto">Desconto</option>
-                <option value="bonificacao">Bonificação</option>
+                {localStorage.getItem('salao_user_role')?.toLowerCase() === 'admin' && (
+                  <option value="bonificacao">Bonificação</option>
+                )}
               </select>
             </Field>
 
@@ -582,22 +584,24 @@ export default function Remuneracao() {
 
           {!isScopedProfessional && (
             <div className="flex flex-wrap gap-3">
-              <button
-                type="button"
-                onClick={() => {
-                  setFormLancamento((prev) => ({
-                    ...prev,
-                    tipo: 'bonificacao',
-                    profissionalId: profissionalId || prev.profissionalId,
-                    data: format(new Date(), 'yyyy-MM-dd'),
-                  }));
-                  setShowModal(true);
-                }}
-                className="inline-flex min-h-[56px] items-center justify-center gap-3 rounded-full bg-emerald-600 px-7 text-sm font-black uppercase tracking-[0.24em] text-white shadow-xl shadow-emerald-600/25 transition hover:bg-emerald-700"
-              >
-                <PlusCircle size={18} />
-                Bonificar
-              </button>
+              {role?.toLowerCase() === 'admin' && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setFormLancamento((prev) => ({
+                      ...prev,
+                      tipo: 'bonificacao',
+                      profissionalId: profissionalId || prev.profissionalId,
+                      data: format(new Date(), 'yyyy-MM-dd'),
+                    }));
+                    setShowModal(true);
+                  }}
+                  className="inline-flex min-h-[56px] items-center justify-center gap-3 rounded-full bg-emerald-600 px-7 text-sm font-black uppercase tracking-[0.24em] text-white shadow-xl shadow-emerald-600/25 transition hover:bg-emerald-700"
+                >
+                  <PlusCircle size={18} />
+                  Bonificar
+                </button>
+              )}
 
               <button
                 type="button"

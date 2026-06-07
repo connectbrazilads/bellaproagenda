@@ -3,7 +3,7 @@ const prisma = require('../lib/prisma');
 const { enviarLembrete } = require('./whatsappService');
 
 function iniciarLembretes() {
-  // Toda sexta às 18h envia lembretes para agendamentos do dia seguinte
+  // Disparado diariamente às 18h para enviar lembretes aos agendamentos confirmados do dia seguinte
   cron.schedule('0 18 * * *', async () => {
     const amanha = new Date();
     amanha.setDate(amanha.getDate() + 1);

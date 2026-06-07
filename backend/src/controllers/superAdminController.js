@@ -5,7 +5,7 @@ const { clearCookie, getCookieOptions, getCookieValue, validateStrongPassword } 
 const { enviarCredenciaisAcesso, enviarComunicado } = require('../services/emailService');
 const { getPlanPrices } = require('./operationsController');
 
-const SA_SECRET = process.env.SUPERADMIN_SECRET || `${process.env.JWT_SECRET}_sa`;
+const SA_SECRET = process.env.SUPERADMIN_SECRET;
 const SUPERADMIN_COOKIE_NAME = 'athena_superadmin_session';
 const SUPERADMIN_SESSION_MAX_AGE_MS = 12 * 60 * 60 * 1000;
 

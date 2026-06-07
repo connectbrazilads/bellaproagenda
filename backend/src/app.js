@@ -59,9 +59,14 @@ function validateRuntimeSecrets() {
 
   const superAdminEmail = String(process.env.SUPERADMIN_EMAIL || '').trim().toLowerCase();
   const superAdminPassword = String(process.env.SUPERADMIN_SENHA || '');
+  const superAdminSecret = String(process.env.SUPERADMIN_SECRET || '').trim();
 
   if (!superAdminEmail || !superAdminPassword) {
     throw new Error('SUPERADMIN_EMAIL e SUPERADMIN_SENHA sao obrigatorios');
+  }
+
+  if (!superAdminSecret) {
+    throw new Error('SUPERADMIN_SECRET obrigatorio para proteger o painel master');
   }
 
   if (superAdminEmail === 'superadmin@athena.com' || superAdminPassword === 'Athena@2026') {

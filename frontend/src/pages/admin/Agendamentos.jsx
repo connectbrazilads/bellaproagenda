@@ -45,8 +45,8 @@ const STATUS_CONFIG = {
 
 const FORMAS = [
   { id: 'PIX', icon: Smartphone },
-  { id: 'Cartao', icon: CreditCard },
-  { id: 'Debito', icon: CreditCard },
+  { id: 'Cartao de Credito', icon: CreditCard },
+  { id: 'Cartao de Debito', icon: CreditCard },
   { id: 'Dinheiro', icon: Banknote },
 ];
 

@@ -378,36 +378,8 @@ async function criarAgendamento(req, res) {
   const salao = await findSalao(slug);
   if (!salao) return res.status(404).json({ error: 'Salão não encontrado' });
 
-  let chosenProfId = profissionalId;
-
-  if (profissionalId === 'any') {
-    const profissionaisAtivos = await prisma.profissional.findMany({
-      where: { salaoId: salao.id, ativo: true },
-      select: { id: true }
-    });
-
-    for (const p of profissionaisAtivos) {
-      const availSlots = await getHorariosDisponiveis(p.id, null, data, 1, salao.id); // Check at least 1 min to see if they work that day
-      if (availSlots.length > 0) {
-        // Need to be more precise: check if the SPECIFIC hour is available for the SPECIFIC duration
-        // Actually, we can just call getHorariosDisponiveis with full duration
-        const fullSlots = await getHorariosDisponiveis(p.id, null, data, 10, salao.id); // Just a quick check
-        // Let's just use the logic below to verify the specific chosen slot
-        const slotsForProf = await getHorariosDisponiveis(p.id, null, data, 30, salao.id); // Placeholder duration
-        if (slotsForProf.includes(hora)) {
-           chosenProfId = p.id;
-           break;
-        }
-      }
-    }
-    
-    if (chosenProfId === 'any') {
-      return res.status(409).json({ error: 'Nenhum profissional disponível para este horário específico.' });
-    }
-  }
-
   const sIds = servicoIds ? (Array.isArray(servicoIds) ? servicoIds : [servicoIds]) : (servicoId ? [servicoId] : []);
-  if (!chosenProfId || (sIds.length === 0 && !pacoteId) || !clienteNome || !clienteTelefone || !data || !hora) {
+  if ((sIds.length === 0 && !pacoteId) || !clienteNome || !clienteTelefone || !data || !hora) {
     return res.status(400).json({ error: 'Campos obrigatórios ausentes' });
   }
 
@@ -419,11 +391,6 @@ async function criarAgendamento(req, res) {
   if (pacoteId) {
     const pacote = await prisma.pacote.findFirst({ where: { id: pacoteId, salaoId: salao.id } });
     if (!pacote) return res.status(404).json({ error: 'Pacote não encontrado' });
-    const servicoIdsDoPacote = await getServicoIdsDoPacote(pacoteId, salao.id);
-    const profissionalCompativelPacote = await profissionalAtendeTodosServicos(chosenProfId, servicoIdsDoPacote, salao.id);
-    if (!profissionalCompativelPacote) {
-      console.log(`[Agendamento] Profissional ${chosenProfId} não atende oficialmente este pacote.`);
-    }
     totalDuracao = pacote.duracaoMin;
     totalPreco = pacote.preco;
     nomeItem = pacote.nome;
@@ -431,14 +398,51 @@ async function criarAgendamento(req, res) {
     const servicos = await prisma.servico.findMany({ where: { id: { in: sIds }, salaoId: salao.id } });
     if (servicos.length === 0) return res.status(404).json({ error: 'Serviços não encontrados' });
     if (servicos.length !== sIds.length) return res.status(404).json({ error: 'Serviços não encontrados' });
-    const profissionalCompativelServicos = await profissionalAtendeTodosServicos(chosenProfId, sIds, salao.id);
-    if (!profissionalCompativelServicos) {
-       console.log(`[Agendamento] Profissional ${chosenProfId} gravando agendamento flexível.`);
-    }
     totalDuracao = servicos.reduce((acc, s) => acc + s.duracaoMin, 0);
     totalPreco = servicos.reduce((acc, s) => acc + s.preco, 0);
     itensData = servicos.map(s => ({ servicoId: s.id, nome: s.nome, preco: s.preco, duracaoMin: s.duracaoMin }));
     nomeItem = servicos.map(s => s.nome).join(' + ');
+  }
+
+  let chosenProfId = profissionalId;
+
+  if (profissionalId === 'any') {
+    const profissionaisAtivos = await prisma.profissional.findMany({
+      where: { salaoId: salao.id, ativo: true },
+      select: { id: true }
+    });
+
+    const profsDisponiveis = await Promise.all(
+      profissionaisAtivos.map(async (p) => {
+        const slots = await getHorariosDisponiveis(p.id, null, data, totalDuracao, salao.id);
+        return { id: p.id, slots };
+      })
+    );
+    
+    const compativel = profsDisponiveis.find((p) => p.slots.includes(hora));
+    
+    if (compativel) {
+      chosenProfId = compativel.id;
+    } else {
+      return res.status(409).json({ error: 'Nenhum profissional disponível para este horário específico.' });
+    }
+  }
+
+  if (!chosenProfId) {
+    return res.status(400).json({ error: 'Profissional não especificado' });
+  }
+
+  if (pacoteId) {
+    const servicoIdsDoPacote = await getServicoIdsDoPacote(pacoteId, salao.id);
+    const profissionalCompativelPacote = await profissionalAtendeTodosServicos(chosenProfId, servicoIdsDoPacote, salao.id);
+    if (!profissionalCompativelPacote) {
+      console.log(`[Agendamento] Profissional ${chosenProfId} não atende oficialmente este pacote.`);
+    }
+  } else {
+    const profissionalCompativelServicos = await profissionalAtendeTodosServicos(chosenProfId, sIds, salao.id);
+    if (!profissionalCompativelServicos) {
+       console.log(`[Agendamento] Profissional ${chosenProfId} gravando agendamento flexível.`);
+    }
   }
 
   const [hh, mm] = hora.split(':').map(Number);

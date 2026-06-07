@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useMemo } from 'react';
+import React, { useEffect, useState, useMemo, useCallback } from 'react';
 import { motion, AnimatePresence, LayoutGroup } from 'framer-motion';
 import { useLocation } from 'react-router-dom';
 import { 
@@ -44,7 +44,7 @@ import {
   criarAgendamentoAdmin, criarAgendamentoAdminMultiplo, updateAgendamentoAdmin, updateStatusAgendamento, deleteAgendamento, 
   buscarClientes, addItemAgendamento, addItemComandaAgendamento, removeItemAgendamento, addProdutoAgendamento, removeProdutoAgendamento, updatePagamentoAgendamento, updateObservacaoAgendamento,
   createBloqueio, getListaEspera, createListaEspera, deleteListaEspera, reagendarAgendamento, getCaixaStatusPagamento, reorderProfissionais,
-  reabrirComandaAgendamento
+  reabrirComandaAgendamento, getClientePacotes
 } from '../../services/api';
 import {
   addDays,
@@ -1295,13 +1295,24 @@ function ModalDetalhesAgendamento({ agendamento: initialAgendamento, allAgendame
   const [tab, setTab] = useState('comanda');
   const [showMoreActions, setShowMoreActions] = useState(false);
   const [activeComandaSection, setActiveComandaSection] = useState('itens');
-  const [pagamentoForma, setPagamentoForma] = useState('');
   const [pagamentoTaxa, setPagamentoTaxa] = useState('0');
   const [pagamentoAjusteTipo, setPagamentoAjusteTipo] = useState(() => getCheckoutDiscountDefaults(initialAgendamento).tipo);
   const [pagamentoDescontoModo, setPagamentoDescontoModo] = useState(() => getCheckoutDiscountDefaults(initialAgendamento).modo);
   const [pagamentoDesconto, setPagamentoDesconto] = useState(() => getCheckoutDiscountDefaults(initialAgendamento).valor);
   const [pagamentoAjusteObservacao, setPagamentoAjusteObservacao] = useState(initialAgendamento?.ajusteObservacao || '');
   const [caixaPagamentoStatus, setCaixaPagamentoStatus] = useState({ aberto: true, mensagem: '' });
+
+  // Estados de Split Payment e Pacotes do Cliente
+  const [clientePacotes, setClientePacotes] = useState([]);
+  const [loadingPacotes, setLoadingPacotes] = useState(false);
+  const [consumosPacote, setConsumosPacote] = useState({});
+  const [metodoPrincipal, setMetodoPrincipal] = useState('PIX');
+  const [pagamentoValores, setPagamentoValores] = useState({
+    PIX: '',
+    'Cartao de Credito': '',
+    'Cartao de Debito': '',
+    Dinheiro: '',
+  });
   const [observacaoDraft, setObservacaoDraft] = useState(initialAgendamento?.observacao || '');
   const [servicosBusca, setServicosBusca] = useState('');
   const [produtosBusca, setProdutosBusca] = useState('');
@@ -1340,7 +1351,6 @@ function ModalDetalhesAgendamento({ agendamento: initialAgendamento, allAgendame
     setShowMoreActions(false);
     setActiveComandaSection('itens');
     setConcluidoSucesso(false);
-    setPagamentoForma('');
     setPagamentoTaxa('0');
     setObservacaoDraft(initialAgendamento?.observacao || '');
     setServicosBusca('');
@@ -1358,7 +1368,37 @@ function ModalDetalhesAgendamento({ agendamento: initialAgendamento, allAgendame
       hora: '',
       observacao: '',
     });
+    setConsumosPacote({});
+    setMetodoPrincipal('PIX');
+    setPagamentoValores({
+      PIX: '',
+      'Cartao de Credito': '',
+      'Cartao de Debito': '',
+      Dinheiro: '',
+    });
   }, [initialAgendamento]);
+
+  const loadClientePacotes = useCallback(async () => {
+    if (!agendamento?.clienteId) {
+      setClientePacotes([]);
+      return;
+    }
+    setLoadingPacotes(true);
+    try {
+      const res = await getClientePacotes(agendamento.clienteId);
+      setClientePacotes(res.data || []);
+    } catch (e) {
+      console.error('Erro ao carregar pacotes do cliente:', e);
+    } finally {
+      setLoadingPacotes(false);
+    }
+  }, [agendamento?.clienteId]);
+
+  useEffect(() => {
+    if (tab === 'pagamento' && agendamento?.clienteId) {
+      loadClientePacotes();
+    }
+  }, [tab, agendamento?.clienteId, loadClientePacotes]);
 
   const servicosFiltrados = useMemo(() => {
     const termo = servicosBusca.trim().toLowerCase();
@@ -1434,6 +1474,71 @@ function ModalDetalhesAgendamento({ agendamento: initialAgendamento, allAgendame
       return sum + calculateAgendamentoTotal(item);
     }, 0);
   }, [agendamentoCheckout, grupoComandaPendente]);
+
+  // Cálculos de pacotes e split payment
+  const totalPacote = useMemo(() => {
+    let sum = 0;
+    const items = grupoComandaPendente.length ? grupoComandaPendente : [agendamentoCheckout];
+    for (const [agId, pacId] of Object.entries(consumosPacote)) {
+      const agItem = items.find(a => a.id === agId);
+      if (agItem) {
+        sum += getAgendamentoBasePrice(agItem);
+      }
+    }
+    return sum;
+  }, [consumosPacote, grupoComandaPendente, agendamentoCheckout]);
+
+  const totalRestante = Math.max(0, totalGrupoComanda - totalPacote);
+
+  const totalManualPago = useMemo(() => {
+    return Object.entries(pagamentoValores).reduce((sum, [forma, val]) => {
+      return sum + (Number(val) || 0);
+    }, 0);
+  }, [pagamentoValores]);
+
+  const diferencaPagamento = totalRestante - totalManualPago;
+
+  const selectMetodoPrincipal = (forma) => {
+    setMetodoPrincipal(forma);
+    setPagamentoValores(prev => {
+      const otherPaid = Object.entries(prev).reduce((sum, [f, val]) => {
+        if (f === forma) return sum;
+        return sum + (Number(val) || 0);
+      }, 0);
+      const remainder = Math.max(0, totalRestante - otherPaid);
+      return {
+        ...prev,
+        [forma]: remainder > 0 ? String(Number(remainder.toFixed(2))) : ''
+      };
+    });
+  };
+
+  useEffect(() => {
+    setPagamentoValores(prev => {
+      const next = { PIX: '', 'Cartao de Credito': '', 'Cartao de Debito': '', Dinheiro: '' };
+      next[metodoPrincipal] = totalRestante > 0 ? String(Number(totalRestante.toFixed(2))) : '';
+      return next;
+    });
+  }, [totalRestante, metodoPrincipal]);
+
+  const handleZerarPagamentos = () => {
+    setPagamentoValores({
+      PIX: '',
+      'Cartao de Credito': '',
+      'Cartao de Debito': '',
+      Dinheiro: '',
+    });
+  };
+
+  const temAlgumPacoteApt = useMemo(() => {
+    const items = grupoComandaPendente.length ? grupoComandaPendente : [agendamentoCheckout];
+    return items.some(item => 
+      clientePacotes.some(p => 
+        p.sessoesRestantes > 0 &&
+        (p.pacote?.servicos || []).some(ps => ps.servicoId === item.servicoId)
+      )
+    );
+  }, [clientePacotes, grupoComandaPendente, agendamentoCheckout]);
 
   async function handleSalvarObservacao() {
     if (!agendamento?.id) return;
@@ -1529,7 +1634,7 @@ function ModalDetalhesAgendamento({ agendamento: initialAgendamento, allAgendame
     }
   }
 
-  async function handleCheckout(forma) {
+  async function handleCheckout() {
     if (!pagamentoDescontoValido) {
       alert('Informe um ajuste valido antes de finalizar a cobranca.');
       return;
@@ -1540,11 +1645,20 @@ function ModalDetalhesAgendamento({ agendamento: initialAgendamento, allAgendame
       return;
     }
 
+    if (Math.abs(diferencaPagamento) > 0.05) {
+      alert('O valor total pago deve corresponder ao valor total da cobranca.');
+      return;
+    }
+
     setLoading(true);
     try {
-      const total = totalGrupoComanda;
+      const pagamentos = Object.entries(pagamentoValores)
+        .map(([forma, valor]) => ({ forma, valor: Number(valor) || 0 }))
+        .filter(p => p.valor > 0);
+
       const res = await updatePagamentoAgendamento(agendamento.id, { 
-        pagamentos: [{ forma, valor: total }],
+        pagamentos,
+        consumosPacote,
         taxaOperadora: Number(pagamentoTaxa) || 0,
         valorBaseAjustado: valorBaseAjustadoAtivo ? precoBaseCheckout : null,
         ajusteObservacao: pagamentoAjusteObservacao.trim() || null,
@@ -2220,38 +2334,134 @@ function ModalDetalhesAgendamento({ agendamento: initialAgendamento, allAgendame
                         </div>
                       )}
 
+                      {/* Seção de Pacotes do Cliente */}
+                      {temAlgumPacoteApt && (
+                        <div className="rounded-[2rem] border border-gray-100 bg-gray-50 p-5 dark:border-white/10 dark:bg-white/[0.04] space-y-4">
+                          <div className="flex items-center justify-between border-b border-gray-200 dark:border-white/5 pb-3">
+                            <p className="text-[11px] font-black uppercase tracking-[0.3em] text-gray-900 dark:text-white">Consumo de Pacotes</p>
+                            <button
+                              type="button"
+                              onClick={loadClientePacotes}
+                              className="text-[9px] font-black uppercase tracking-widest text-[#d48997] hover:underline"
+                            >
+                              Atualizar Pacotes
+                            </button>
+                          </div>
+                          <div className="space-y-3">
+                            {(grupoComandaPendente.length ? grupoComandaPendente : [agendamentoCheckout]).map((item) => {
+                              const cp = clientePacotes.find(p => 
+                                p.sessoesRestantes > 0 &&
+                                (p.pacote?.servicos || []).some(ps => ps.servicoId === item.servicoId)
+                              );
+
+                              if (!cp) return null;
+
+                              const isConsumido = !!consumosPacote[item.id];
+
+                              return (
+                                <div key={item.id} className="flex items-center justify-between rounded-[1.5rem] border border-gray-200 bg-white p-4 dark:border-white/10 dark:bg-[#111113]">
+                                  <div className="min-w-0">
+                                    <p className="text-xs font-black uppercase tracking-[0.14em] text-gray-900 dark:text-white">
+                                      {item.inicioHora} · {getAgendamentoTitulo(item)}
+                                    </p>
+                                    <p className="mt-1 text-[10px] font-bold text-gray-400 uppercase tracking-[0.12em]">
+                                      Pacote: {cp.pacote.nome} ({cp.sessoesRestantes} restantes)
+                                    </p>
+                                  </div>
+                                  <button
+                                    type="button"
+                                    onClick={() => {
+                                      setConsumosPacote(prev => {
+                                        const next = { ...prev };
+                                        if (isConsumido) {
+                                          delete next[item.id];
+                                        } else {
+                                          next[item.id] = cp.pacote.id;
+                                        }
+                                        return next;
+                                      });
+                                    }}
+                                    className={cn(
+                                      'rounded-xl border px-4 py-2 text-[10px] font-black uppercase tracking-[0.16em] transition-all',
+                                      isConsumido
+                                        ? 'bg-[#E29BA8] border-[#E29BA8] text-white'
+                                        : 'border-[#d48997]/30 text-[#d48997] hover:bg-[#d48997]/10'
+                                    )}
+                                  >
+                                    {isConsumido ? 'Usando crédito' : 'Usar crédito'}
+                                  </button>
+                                </div>
+                              );
+                            })}
+                          </div>
+                        </div>
+                      )}
+
                       <div className="rounded-[2rem] border border-gray-100 bg-gray-50 p-5 dark:border-white/10 dark:bg-white/[0.04]">
-                        <p className="text-[11px] font-black uppercase tracking-[0.3em] text-gray-900 dark:text-white">Forma de pagamento</p>
-                        <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2">
+                        <div className="flex items-center justify-between border-b border-gray-200 dark:border-white/5 pb-3 mb-4">
+                          <p className="text-[11px] font-black uppercase tracking-[0.3em] text-gray-900 dark:text-white">Forma de pagamento</p>
+                          <button
+                            type="button"
+                            onClick={handleZerarPagamentos}
+                            className="text-[9px] font-black uppercase tracking-widest text-gray-500 hover:text-gray-900 dark:hover:text-white"
+                          >
+                            Zerar Valores
+                          </button>
+                        </div>
+                        <div className="space-y-4">
                           {[
                             { label: 'PIX', forma: 'PIX', icon: Smartphone, color: 'text-[#E29BA8]' },
-                            { label: 'Cartão Parcelado', forma: 'Cartao Parcelado', icon: CreditCard, color: 'text-rose-500' },
-                            { label: 'Cartao de Credito', forma: 'Cartao de Credito', icon: CreditCard, color: 'text-[#E29BA8]' },
-                            { label: 'Cartao de Debito', forma: 'Cartao de Debito', icon: CreditCard, color: 'text-indigo-500' },
+                            { label: 'Cartão de Crédito', forma: 'Cartao de Credito', icon: CreditCard, color: 'text-[#E29BA8]' },
+                            { label: 'Cartão de Débito', forma: 'Cartao de Debito', icon: CreditCard, color: 'text-indigo-500' },
                             { label: 'Dinheiro', forma: 'Dinheiro', icon: Banknote, color: 'text-bellapro-blush' },
-                          ].map((item) => (
-                            <button
-                              key={item.forma}
-                              type="button"
-                              onClick={() => setPagamentoForma(item.forma)}
-                              className={cn(
-                                'rounded-[1.5rem] border p-4 text-left transition-all',
-                                pagamentoForma === item.forma
-                                  ? 'border-[#d48997] bg-[#d48997] text-white shadow-lg'
-                                  : 'border-gray-200 bg-white hover:border-[#E29BA8]/30 dark:border-white/10 dark:bg-[#111113]'
-                              )}
-                            >
-                              <div className="flex items-center gap-3">
-                                <div className={cn('flex h-11 w-11 items-center justify-center rounded-2xl bg-white dark:bg-gray-800', pagamentoForma === item.forma ? 'text-gray-900 dark:text-white bg-white/10' : item.color)}>
-                                  <item.icon size={20} />
-                                </div>
-                                <div>
-                                  <p className="text-sm font-black uppercase tracking-[0.16em]">{item.label}</p>
-                                  <p className={cn('mt-1 text-[10px] font-bold uppercase tracking-[0.16em]', pagamentoForma === item.forma ? 'text-white/75' : 'text-gray-400')}>Toque para selecionar</p>
+                          ].map((item) => {
+                            const isPrincipal = metodoPrincipal === item.forma;
+                            const valorAtual = pagamentoValores[item.forma] || '';
+
+                            return (
+                              <div
+                                key={item.forma}
+                                className={cn(
+                                  'flex flex-col sm:flex-row sm:items-center gap-4 rounded-[1.5rem] border p-4 transition-all bg-white dark:bg-[#111113]',
+                                  isPrincipal ? 'border-[#d48997] shadow-sm' : 'border-gray-200 hover:border-[#E29BA8]/30 dark:border-white/10'
+                                )}
+                              >
+                                <button
+                                  type="button"
+                                  onClick={() => selectMetodoPrincipal(item.forma)}
+                                  className="flex flex-1 items-center gap-3 text-left"
+                                >
+                                  <div className={cn('flex h-11 w-11 items-center justify-center rounded-2xl bg-gray-100 dark:bg-gray-800', isPrincipal ? 'bg-[#d48997]/10 text-[#d48997]' : item.color)}>
+                                    <item.icon size={20} />
+                                  </div>
+                                  <div>
+                                    <p className="text-sm font-black uppercase tracking-[0.16em] text-gray-900 dark:text-white">{item.label}</p>
+                                    <p className="text-[9px] font-bold uppercase tracking-[0.16em] text-gray-400">
+                                      {isPrincipal ? 'Método Principal (Auto)' : 'Clique para usar saldo restante'}
+                                    </p>
+                                  </div>
+                                </button>
+                                <div className="relative flex items-center w-full sm:w-48">
+                                  <span className="absolute left-4 text-xs font-black text-gray-400">R$</span>
+                                  <input
+                                    type="number"
+                                    min="0"
+                                    step="0.01"
+                                    placeholder="0,00"
+                                    value={valorAtual}
+                                    onChange={(e) => {
+                                      const val = e.target.value;
+                                      setPagamentoValores(prev => ({
+                                        ...prev,
+                                        [item.forma]: val
+                                      }));
+                                    }}
+                                    className="w-full pl-10 pr-4 py-3 rounded-xl border border-gray-200 dark:border-white/10 bg-gray-50 dark:bg-[#18181b] text-sm font-black text-gray-900 dark:text-white outline-none focus:border-[#d48997]"
+                                  />
                                 </div>
                               </div>
-                            </button>
-                          ))}
+                            );
+                          })}
                         </div>
                       </div>
 
@@ -2348,15 +2558,41 @@ function ModalDetalhesAgendamento({ agendamento: initialAgendamento, allAgendame
                             />
                           </div>
 
-                          <div className="rounded-[1.5rem] border border-[#E29BA8]/20 bg-[#E29BA8]/8 px-4 py-4 dark:bg-[#E29BA8]/10">
-                            <p className="text-[10px] font-black uppercase tracking-[0.18em] text-[#b96a79] dark:text-[#efbac2]">Total para cobrar</p>
-                            <p className="mt-2 text-2xl font-black text-[#d48997] dark:text-white">{Number(calculateTotal()).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</p>
+                          <div className="rounded-[1.5rem] border border-gray-200 bg-white p-5 dark:border-white/10 dark:bg-[#111113] space-y-3">
+                            <div className="flex justify-between text-xs font-bold text-gray-500 uppercase tracking-widest">
+                              <span>Total da Comanda:</span>
+                              <span className="font-black text-gray-900 dark:text-white">{Number(totalGrupoComanda).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</span>
+                            </div>
+                            {totalPacote > 0 && (
+                              <div className="flex justify-between text-xs font-bold text-bellapro-blush uppercase tracking-widest">
+                                <span>Coberto por Pacotes:</span>
+                                <span className="font-black">-{Number(totalPacote).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</span>
+                              </div>
+                            )}
+                            <div className="flex justify-between text-xs font-bold text-gray-900 dark:text-white uppercase tracking-widest border-t border-dashed border-gray-200 dark:border-white/5 pt-2">
+                              <span>A Pagar em Dinheiro/Cartão/PIX:</span>
+                              <span className="font-black">{Number(totalRestante).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</span>
+                            </div>
+                            <div className="flex justify-between text-xs font-bold text-[#E29BA8] uppercase tracking-widest">
+                              <span>Pago Registrado:</span>
+                              <span className="font-black">{Number(totalManualPago).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</span>
+                            </div>
+                            <div className="flex justify-between text-xs font-bold uppercase tracking-widest border-t border-dashed border-gray-200 dark:border-white/5 pt-2">
+                              <span>Status do Pagamento:</span>
+                              {Math.abs(diferencaPagamento) < 0.05 ? (
+                                <span className="font-black text-emerald-500">Valor Correto</span>
+                              ) : diferencaPagamento > 0 ? (
+                                <span className="font-black text-amber-500">Falta {Number(diferencaPagamento).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</span>
+                              ) : (
+                                <span className="font-black text-rose-500">Excesso {Number(Math.abs(diferencaPagamento)).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</span>
+                              )}
+                            </div>
                           </div>
 
                           <button
                             type="button"
-                            onClick={() => handleCheckout(pagamentoForma)}
-                            disabled={!pagamentoForma || loading || agendamento.statusPagamento === 'pago' || !caixaPagamentoStatus.aberto || !pagamentoDescontoValido}
+                            onClick={() => handleCheckout()}
+                            disabled={loading || agendamento.statusPagamento === 'pago' || !caixaPagamentoStatus.aberto || !pagamentoDescontoValido || Math.abs(diferencaPagamento) > 0.05}
                             className="w-full rounded-[2rem] bg-[#E29BA8] py-5 text-[11px] font-black uppercase tracking-[0.2em] text-white transition hover:bg-[#d48997] disabled:cursor-not-allowed disabled:opacity-40"
                           >
                             {loading ? 'Processando...' : 'Finalizar cobranca'}

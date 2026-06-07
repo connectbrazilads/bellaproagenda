@@ -120,7 +120,7 @@ async function executarFerramenta(nome, args, salaoId) {
       const { profissionalId, servicoId, pacoteId, data } = args;
       const identificador = servicoId || pacoteId;
       if (!identificador) return { erro: 'Informe servicoId ou pacoteId' };
-      const slots = await getHorariosDisponiveis(profissionalId, identificador, data);
+      const slots = await getHorariosDisponiveis(profissionalId, identificador, data, null, salaoId);
       return { data, horarios: slots.length ? slots : 'Nenhum horário disponível nesta data' };
     }
 

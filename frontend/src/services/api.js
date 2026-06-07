@@ -125,6 +125,7 @@ export const getClientes = () => api.get('/admin/clientes');
 export const createCliente = (data) => api.post('/admin/clientes', data);
 export const updateCliente = (id, data) => api.put(`/admin/clientes/${id}`, data);
 export const getHistoricoCliente = (busca) => api.get('/admin/clientes/historico', { params: { busca } });
+export const getClientePacotes = (clienteId) => api.get(`/admin/clientes/${clienteId}/pacotes`);
 
 // ADMIN PRODUTOS
 export const getProdutos = () => api.get('/admin/produtos');
