@@ -422,27 +422,18 @@ export default function AdminLayout() {
   }, [location.pathname]);
 
   return (
-    <div className={cn(
-      "admin-panel flex min-h-screen md:h-screen font-sans overflow-x-hidden md:overflow-hidden",
-      dark ? "bg-[#121116] text-white" : "bg-[#faf7f6] text-slate-900"
-    )} style={{ '--admin-mobile-header-height': '73px' }}>
+    <div className="admin-panel flex min-h-screen md:h-screen font-sans overflow-x-hidden md:overflow-hidden bg-[#0a0a0c] text-[#f4ecd8]" style={{ '--admin-mobile-header-height': '73px' }}>
       {/* Sidebar — desktop */}
       <aside className={cn(
         "hidden lg:flex flex-col transition-all duration-500 ease-in-out relative group/sidebar",
         effectiveCollapsed ? "w-24" : "w-72",
-        dark ? "bg-slate-950/40 backdrop-blur-2xl border-r border-white/5" : "bg-white/70 backdrop-blur-2xl border-r border-[#edd7d4] shadow-[0_24px_60px_-32px_rgba(140,107,117,0.15)]"
+        "bg-[#120e11]/80 backdrop-blur-3xl border-r border-[#d4af37]/10 shadow-[4px_0_24px_rgba(0,0,0,0.5)]"
       )}>
         {/* Toggle Button */}
         <div className={cn("absolute -right-4 top-24 z-50", !canToggleSidebar && "hidden")}>
           <button 
             onClick={() => setCollapsed(!collapsed)}
-            className={cn(
-              "w-8 h-8 rounded-full border flex items-center justify-center transition-all duration-300",
-              dark 
-                ? "bg-slate-900 border-gray-200 dark:border-white/10 text-gray-900 dark:text-white hover:bg-violet-600 hover:border-violet-500" 
-                : "bg-white border-slate-300 text-slate-500 hover:text-violet-700 hover:border-violet-300 shadow-xl shadow-slate-200/70",
-              "scale-100 active:scale-90"
-            )}
+            className="w-8 h-8 rounded-full flex items-center justify-center transition-all duration-300 bg-[#1a1518] border border-[#d4af37]/30 text-[#d4af37] hover:bg-[#d4af37]/10 hover:border-[#d4af37] shadow-[0_0_15px_rgba(212,175,55,0.15)] scale-100 active:scale-90"
             title={effectiveCollapsed ? "Expandir Menu" : "Recolher Menu"}
           >
             <motion.div
@@ -458,11 +449,11 @@ export default function AdminLayout() {
           <div className={cn("flex items-center justify-between", effectiveCollapsed ? "flex-col gap-4 sm:p-6" : "mb-2")}>
             <div className={cn("flex items-center gap-3", effectiveCollapsed && "flex-col")}>
               {effectiveCollapsed ? (
-                <div className="flex h-10 w-10 items-center justify-center rounded-xl border border-[#e7c4c8] bg-[linear-gradient(180deg,#fff8f7_0%,#f9e0dd_100%)] text-[#a45f69] shadow-[0_18px_38px_-22px_rgba(226,155,168,0.9)]">
-                  <span className="font-brand-display text-2xl leading-none">B</span>
+                <div className="flex h-10 w-10 items-center justify-center rounded-xl border border-[#d4af37]/20 bg-[#d4af37]/10 text-[#d4af37] shadow-[0_0_15px_rgba(212,175,55,0.15)]">
+                  <span className="font-brand-display text-2xl font-black leading-none">B</span>
                 </div>
               ) : (
-                <BrandLogo compact variant={dark ? 'darkBg' : 'lightBg'} />
+                <BrandLogo compact variant="darkBg" />
               )}
             </div>
             <div className={cn("flex items-center gap-2", effectiveCollapsed && "flex-col")}>
@@ -472,29 +463,17 @@ export default function AdminLayout() {
                     setAlertasOpen(true);
                     carregarAlertas({ silent: true });
                   }}
-                  className={cn(
-                    "relative p-2 rounded-xl transition-all hover:scale-110 active:scale-90",
-                    dark ? "bg-white/5 text-[#d6b6bc] hover:text-white" : "bg-[#fff2f1] text-[#8c6b75] hover:text-[#c2737f]"
-                  )}
+                  className="relative p-2 rounded-xl transition-all hover:scale-110 active:scale-90 bg-white/5 text-[#b299a0] hover:text-[#d4af37] hover:bg-[#d4af37]/10"
                   title="Central de notificacoes"
                 >
                   <Bell className="w-4 h-4" />
                   {alertasUnread > 0 && (
-                    <span className="absolute -right-1 -top-1 min-w-[18px] rounded-full bg-[#e29ba8] px-1.5 py-0.5 text-[9px] font-black leading-none text-[#1a1a1f]">
+                    <span className="absolute -right-1 -top-1 min-w-[18px] rounded-full bg-[#d4af37] px-1.5 py-0.5 text-[9px] font-black leading-none text-black">
                       {alertasUnread > 9 ? '9+' : alertasUnread}
                     </span>
                   )}
                 </button>
               )}
-              <button
-                onClick={toggle}
-                className={cn(
-                  "p-2 rounded-xl transition-all hover:scale-110 active:scale-90",
-                  dark ? "bg-white/5 text-[#d6b6bc] hover:text-white" : "bg-[#fff2f1] text-[#8c6b75] hover:text-[#c2737f]"
-                )}
-              >
-                {dark ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
-              </button>
             </div>
           </div>
         </div>
@@ -503,7 +482,7 @@ export default function AdminLayout() {
           {visibleGroups.map((group) => (
             <div key={group.label} className="space-y-2">
               {!effectiveCollapsed && (
-                <h3 className="px-5 text-[9px] font-black uppercase tracking-[0.3em] text-gray-400/80 dark:text-gray-400/30">
+                <h3 className="px-5 text-[9px] font-black uppercase tracking-[0.3em] text-[#8a6c74]">
                   {group.label}
                 </h3>
               )}
@@ -517,15 +496,10 @@ export default function AdminLayout() {
                     className={({ isActive }) =>
                       cn(
                         "flex items-center rounded-2xl transition-all duration-300 group relative",
-                        effectiveCollapsed ? "justify-center p-4" : "gap-4 px-5 py-3",
+                        effectiveCollapsed ? "justify-center p-4" : "gap-4 px-5 py-3.5",
                         isActive
-                            ? dark
-                            ? "bg-gradient-to-r from-[#d68c99] to-[#b26a78] text-white shadow-xl shadow-[#d68c9955] translate-x-1"
-                            : "bg-[#fff0f1] text-[#b56f7c] ring-1 ring-[#efcbd1] shadow-[0_18px_38px_-28px_rgba(210,133,149,0.55)] translate-x-1"
-                          : cn(
-                              "hover:translate-x-1",
-                              dark ? "text-[#a98690] hover:text-[#faf7f6] hover:bg-white/5" : "text-[#8c6b75] hover:text-[#1a1a1f] hover:bg-[#fff2f1]"
-                            )
+                            ? "bg-[#d4af37]/10 border border-[#d4af37]/30 text-[#d4af37] shadow-[0_0_15px_rgba(212,175,55,0.1)] translate-x-1"
+                            : "text-[#b299a0] hover:text-[#f4ecd8] hover:bg-white/5 hover:translate-x-1"
                       )
                     }
                   >
@@ -542,14 +516,13 @@ export default function AdminLayout() {
           ))}
         </nav>
 
-        <div className="p-4 sm:p-6 border-t border-gray-200 dark:border-white/5">
+        <div className="p-4 sm:p-6 border-t border-[#d4af37]/10">
           <button
             onClick={logout}
             title={effectiveCollapsed ? "Encerrar Sessao" : ""}
             className={cn(
-              "w-full flex items-center transition-all rounded-2xl text-[10px] font-black uppercase tracking-[0.2em]",
-              effectiveCollapsed ? "justify-center p-4" : "gap-3 px-5 py-4",
-              dark ? "text-slate-500 hover:text-red-400 hover:bg-red-400/10" : "text-slate-600 hover:text-red-600 hover:bg-red-50"
+              "w-full flex items-center transition-all rounded-2xl text-[10px] font-black uppercase tracking-[0.2em] text-[#8a6c74] hover:text-rose-400 hover:bg-rose-400/10",
+              effectiveCollapsed ? "justify-center p-4" : "gap-3 px-5 py-4"
             )}
           >
             <LogOut className="w-4 h-4 flex-shrink-0" />
@@ -559,23 +532,17 @@ export default function AdminLayout() {
       </aside>
 
       {/* Topbar — mobile */}
-      <div className={cn(
-        "lg:hidden fixed top-0 left-0 right-0 z-[70] flex items-center justify-between px-4 py-4 sm:px-6 border-b",
-        dark ? "bg-[#16151bdd] backdrop-blur-xl border-white/5" : "bg-[#fffaf9d9] backdrop-blur-xl border-[#f0dfdc] shadow-[0_4px_30px_rgba(226,155,168,0.03)]"
-      )}>
+      <div className="lg:hidden fixed top-0 left-0 right-0 z-[70] flex items-center justify-between px-4 py-4 sm:px-6 border-b bg-[#120e11]/90 backdrop-blur-2xl border-[#d4af37]/10 shadow-lg">
         <div className="flex items-center gap-3">
           {isSubPage && (
             <button 
               onClick={() => navigate(-1)}
-              className={cn(
-                "w-9 h-9 flex items-center justify-center rounded-xl mr-1 transition-all",
-                dark ? "bg-white/5 text-gray-400" : "bg-gray-100 text-gray-500"
-              )}
+              className="w-9 h-9 flex items-center justify-center rounded-xl mr-1 transition-all bg-white/5 text-[#b299a0] hover:text-[#d4af37]"
             >
               <ChevronLeft size={20} />
             </button>
           )}
-          <BrandLogo compact variant={dark ? 'darkBg' : 'lightBg'} imageClassName="w-[148px]" />
+          <BrandLogo compact variant="darkBg" imageClassName="w-[148px]" />
         </div>
         <div className="flex items-center gap-4">
           {podeVerAlertas && (
@@ -584,23 +551,22 @@ export default function AdminLayout() {
                 setAlertasOpen(true);
                 carregarAlertas({ silent: true });
               }}
-              className="relative text-[#a98690]"
+              className="relative text-[#b299a0] hover:text-[#d4af37] transition-colors"
               aria-label="Abrir notificacoes"
             >
               <Bell className="w-5 h-5" />
               {alertasUnread > 0 && (
-                <span className="absolute -right-2 -top-2 min-w-[18px] rounded-full bg-[#e29ba8] px-1.5 py-0.5 text-[9px] font-black leading-none text-[#1a1a1f]">
+                <span className="absolute -right-2 -top-2 min-w-[18px] rounded-full bg-[#d4af37] px-1.5 py-0.5 text-[9px] font-black leading-none text-black">
                   {alertasUnread > 9 ? '9+' : alertasUnread}
                 </span>
               )}
             </button>
           )}
-          <button onClick={toggle} className="text-[#a98690]">{dark ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}</button>
           <button
             onClick={() => setMenuOpen((open) => !open)}
             aria-label={menuOpen ? 'Fechar menu' : 'Abrir menu'}
             aria-expanded={menuOpen}
-            className="text-gray-900 dark:text-white"
+            className="text-[#f4ecd8]"
           >
             {menuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
           </button>
@@ -622,19 +588,16 @@ export default function AdminLayout() {
               animate={{ x: 0 }}
               exit={{ x: -280 }}
               transition={{ type: "spring", damping: 25, stiffness: 200 }}
-              className={cn(
-                "w-72 h-full shadow-2xl overflow-y-auto overscroll-contain px-4 py-8 z-[80]",
-                dark ? "bg-slate-950/95 backdrop-blur-2xl border-r border-white/5" : "bg-white/95 backdrop-blur-2xl border-r border-[#edd7d4]"
-              )} 
+              className="w-72 h-full shadow-2xl overflow-y-auto overscroll-contain px-4 py-8 z-[80] bg-[#120e11]/95 backdrop-blur-3xl border-r border-[#d4af37]/10" 
               onClick={(e) => e.stopPropagation()}
             >
               <div className="mb-10 px-4">
-                 <BrandLogo variant={dark ? 'darkBg' : 'lightBg'} />
+                 <BrandLogo variant="darkBg" />
               </div>
               <nav className="space-y-8">
                 {visibleGroups.map((group) => (
                   <div key={group.label} className="space-y-2">
-                    <h3 className="px-5 text-[9px] font-black uppercase tracking-[0.3em] text-gray-500/60 dark:text-gray-400/30">
+                    <h3 className="px-5 text-[9px] font-black uppercase tracking-[0.3em] text-[#8a6c74]">
                       {group.label}
                     </h3>
                     <div className="space-y-1">
@@ -644,12 +607,10 @@ export default function AdminLayout() {
                           type="button"
                           onClick={() => handleMobileNavigate(item.to)}
                           className={cn(
-                            "w-full flex items-center gap-4 px-5 py-3.5 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all text-left",
+                            "w-full flex items-center gap-4 px-5 py-3.5 rounded-2xl text-[10px] font-black uppercase tracking-[0.2em] transition-all text-left",
                             isItemActive(item)
-                              ? dark
-                                ? "bg-gradient-to-r from-[#d68c99] to-[#b26a78] text-white shadow-xl shadow-[#d68c9955]"
-                                : "bg-[#fff0f1] text-[#b56f7c] ring-1 ring-[#efcbd1] shadow-[0_18px_38px_-28px_rgba(210,133,149,0.55)]"
-                              : dark ? "text-[#d6b6bc]" : "text-[#8c6b75]"
+                                ? "bg-[#d4af37]/10 border border-[#d4af37]/30 text-[#d4af37] shadow-[0_0_15px_rgba(212,175,55,0.1)]"
+                                : "text-[#b299a0] hover:text-[#f4ecd8] hover:bg-white/5"
                           )}
                         >
                           <item.icon className="w-4 h-4" />
@@ -665,7 +626,7 @@ export default function AdminLayout() {
                   closeMobileMenu();
                   logout();
                 }}
-                className="mt-10 flex items-center gap-4 px-5 py-4 text-[10px] font-black text-red-500 uppercase tracking-widest w-full"
+                className="mt-10 flex items-center gap-4 px-5 py-4 text-[10px] font-black text-rose-500 uppercase tracking-widest w-full hover:bg-rose-500/10 rounded-2xl transition-colors"
               >
                 <LogOut className="w-4 h-4" /> Encerrar Sessao
               </button>
@@ -688,70 +649,55 @@ export default function AdminLayout() {
               animate={{ x: 0 }}
               exit={{ x: 360 }}
               transition={{ type: 'spring', damping: 26, stiffness: 220 }}
-              className={cn(
-                "ml-auto flex h-full w-full max-w-md flex-col border-l shadow-2xl",
-                dark ? "bg-[#17151b] border-white/5" : "bg-[#fff9f8] border-[#edd7d4]"
-              )}
+              className="ml-auto flex h-full w-full max-w-md flex-col border-l border-[#d4af37]/20 shadow-2xl bg-[#120e11]/95 backdrop-blur-3xl"
               onClick={(event) => event.stopPropagation()}
             >
-              <div className="border-b border-gray-200 px-5 py-5 dark:border-white/5">
+              <div className="border-b border-[#d4af37]/10 px-6 py-6">
                 <div className="flex items-start justify-between gap-4">
                   <div>
-                    <p className="text-[10px] font-black uppercase tracking-[0.28em] text-[#e29ba8]">Central de alertas</p>
-                    <h2 className="mt-2 text-2xl font-brand-display text-gray-900 dark:text-white">Agendamentos</h2>
-                    <p className="mt-2 text-sm text-[#8c6b75] dark:text-white/55">
-                      {alertasUnread > 0 ? `${alertasUnread} notificacao(oes) sem leitura.` : 'Tudo em dia por aqui.'}
+                    <p className="text-[9px] font-black uppercase tracking-[0.3em] text-[#d4af37]">Central de Alertas</p>
+                    <h2 className="mt-2 text-2xl font-brand-display font-black text-[#f4ecd8]">Notificacoes</h2>
+                    <p className="mt-1 text-xs text-[#b299a0]">
+                      {alertasUnread > 0 ? `${alertasUnread} notificacao(oes) pendente(s).` : 'Tudo em dia por aqui.'}
                     </p>
                   </div>
                   <button
                     onClick={() => setAlertasOpen(false)}
-                    className={cn(
-                      "rounded-2xl p-3 transition-all",
-                      dark ? "bg-white/5 text-white/60 hover:text-white" : "bg-[#fff0f1] text-[#8c6b75] hover:text-[#1a1a1f]"
-                    )}
+                    className="rounded-2xl p-3 transition-all bg-white/5 text-[#b299a0] hover:text-[#d4af37] hover:bg-[#d4af37]/10"
                   >
                     <X className="h-5 w-5" />
                   </button>
                 </div>
 
-                <div className="mt-5 flex items-center justify-between gap-3">
+                <div className="mt-6 flex items-center justify-between gap-3">
                   <button
                     onClick={() => carregarAlertas()}
-                    className={cn(
-                      "rounded-[1.1rem] border px-4 py-3 text-[10px] font-black uppercase tracking-[0.22em] transition-all",
-                      dark ? "border-white/10 bg-white/5 text-white/70 hover:text-white" : "border-[#edd7d4] bg-white text-[#8c6b75] hover:text-[#1a1a1f]"
-                    )}
+                    className="rounded-[1rem] border border-[#d4af37]/20 bg-white/5 px-4 py-2.5 text-[9px] font-black uppercase tracking-[0.2em] text-[#b299a0] hover:text-[#d4af37] hover:bg-[#d4af37]/10 transition-all"
                   >
                     {loadingAlertas ? 'Atualizando...' : 'Atualizar'}
                   </button>
                   <button
                     onClick={handleMarcarTodasLidas}
                     disabled={alertasUnread === 0}
-                    className={cn(
-                      "inline-flex items-center gap-2 rounded-[1.1rem] px-4 py-3 text-[10px] font-black uppercase tracking-[0.22em] transition-all disabled:cursor-not-allowed disabled:opacity-45",
-                      dark ? "bg-[#e29ba8] text-[#1a1a1f]" : "bg-[#2f242d] text-white"
-                    )}
+                    className="inline-flex items-center gap-2 rounded-[1rem] px-4 py-2.5 text-[9px] font-black uppercase tracking-[0.2em] bg-[#d4af37]/20 text-[#d4af37] hover:bg-[#d4af37]/30 transition-all disabled:opacity-40 disabled:cursor-not-allowed border border-[#d4af37]/30"
                   >
-                    <CheckCheck className="h-4 w-4" />
-                    Marcar tudo como lido
+                    <CheckCheck className="h-3 w-3" />
+                    Marcar lidas
                   </button>
                 </div>
               </div>
 
-              <div className="flex-1 overflow-y-auto px-4 py-4 custom-scrollbar">
+              <div className="flex-1 overflow-y-auto px-6 py-6 custom-scrollbar">
                 {alertas.length === 0 ? (
-                  <div className={cn(
-                    "mt-6 rounded-[2rem] border border-dashed p-8 text-center",
-                    dark ? "border-white/10 bg-white/[0.03]" : "border-[#edd7d4] bg-white"
-                  )}>
-                    <Bell className="mx-auto h-10 w-10 text-[#e29ba8]" />
-                    <p className="mt-4 text-lg font-black text-gray-900 dark:text-white">Nenhum alerta por enquanto</p>
-                    <p className="mt-2 text-sm text-[#8c6b75] dark:text-white/55">
+                  <div className="mt-6 rounded-[2.5rem] border border-dashed border-[#d4af37]/20 bg-black/40 p-8 text-center">
+                    <Bell className="mx-auto h-10 w-10 text-[#d4af37]/50" />
+                    <p className="mt-4 text-sm font-brand-display font-black text-[#f4ecd8]">Nenhum alerta por enquanto</p>
+                    <p className="mt-2 text-[11px] text-[#b299a0]">
                       Novos agendamentos online vao aparecer aqui automaticamente.
                     </p>
                   </div>
                 ) : (
-                  <div className="space-y-3">
+                  <div className="space-y-4">
                     {alertas.map((alerta) => {
                       const lida = Array.isArray(alerta.lidaPorUserIds) && alerta.lidaPorUserIds.includes(userId);
                       return (
@@ -760,30 +706,26 @@ export default function AdminLayout() {
                           type="button"
                           onClick={() => handleOpenAlerta(alerta)}
                           className={cn(
-                            "w-full rounded-[1.6rem] border p-4 text-left transition-all",
+                            "w-full rounded-[2rem] p-5 text-left transition-all border",
                             lida
-                              ? dark
-                                ? "border-white/5 bg-white/[0.03] text-white/72"
-                                : "border-[#edd7d4] bg-white text-[#5d4750]"
-                              : dark
-                                ? "border-[#e29ba8]/28 bg-[#e29ba8]/10 text-white shadow-[0_24px_48px_-32px_rgba(226,155,168,0.6)]"
-                                : "border-[#efc8ce] bg-[#fff4f5] text-[#2f242d] shadow-[0_24px_48px_-34px_rgba(226,155,168,0.45)]"
+                                ? "border-white/5 bg-black/40 text-[#b299a0]"
+                                : "border-[#d4af37]/30 bg-[#d4af37]/10 text-[#f4ecd8] shadow-[0_0_20px_rgba(212,175,55,0.05)]"
                           )}
                         >
                           <div className="flex items-start justify-between gap-4">
                             <div className="min-w-0">
                               <div className="flex items-center gap-2">
-                                {!lida && <span className="h-2.5 w-2.5 rounded-full bg-[#10b981]" />}
-                                <p className="truncate text-[11px] font-black uppercase tracking-[0.22em] text-[#e29ba8]">
-                                  {alerta.tipo === 'agendamento_online_novo' ? 'Agendamento online' : 'Alerta'}
+                                {!lida && <span className="h-2 w-2 rounded-full bg-[#d4af37] shadow-[0_0_8px_rgba(212,175,55,0.8)]" />}
+                                <p className={cn("truncate text-[9px] font-black uppercase tracking-[0.2em]", lida ? "text-[#8a6c74]" : "text-[#d4af37]")}>
+                                  {alerta.tipo === 'agendamento_online_novo' ? 'Agendamento Online' : 'Alerta'}
                                 </p>
                               </div>
-                              <p className="mt-2 text-base font-black text-gray-900 dark:text-white">{alerta.titulo}</p>
-                              <p className="mt-2 text-sm leading-relaxed">{alerta.mensagem}</p>
+                              <p className={cn("mt-3 text-sm font-brand-display font-black", lida ? "text-[#f4ecd8]" : "text-white")}>{alerta.titulo}</p>
+                              <p className={cn("mt-2 text-xs leading-relaxed", lida ? "text-[#b299a0]" : "text-[#f4ecd8]")}>{alerta.mensagem}</p>
                             </div>
-                            <ChevronRight className="mt-1 h-4 w-4 flex-shrink-0 opacity-50" />
+                            <ChevronRight className={cn("mt-1 h-4 w-4 flex-shrink-0 transition-transform", lida ? "opacity-30" : "text-[#d4af37]")} />
                           </div>
-                          <p className="mt-3 text-[10px] font-black uppercase tracking-[0.22em] text-[#8c6b75] dark:text-white/38">
+                          <p className="mt-4 text-[9px] font-black uppercase tracking-[0.2em] text-[#8a6c74]">
                             {formatAlertaData(alerta.createdAt)}
                           </p>
                         </button>
