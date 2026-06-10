@@ -44,6 +44,33 @@ function getAdminTokenFromRequest(req) {
   return getCookieValue(req, ADMIN_COOKIE_NAME);
 }
 
+async function loadCurrentAdminPayload(tokenPayload) {
+  if (!tokenPayload?.id) return null;
+
+  const user = await prisma.usuario.findUnique({
+    where: { id: tokenPayload.id },
+    select: {
+      id: true,
+      salaoId: true,
+      email: true,
+      role: true,
+      profissionalId: true,
+      permissions: true,
+      actionPermissions: true,
+      passwordUpdatedAt: true,
+    },
+  });
+
+  if (!user) return null;
+
+  const tokenIssuedAt = tokenPayload.iat ? tokenPayload.iat * 1000 : null;
+  if (tokenIssuedAt && user.passwordUpdatedAt && user.passwordUpdatedAt.getTime() > tokenIssuedAt) {
+    return null;
+  }
+
+  return buildAdminPayload(user);
+}
+
 async function signup(req, res) {
   const { nome, email, senha, salaoNome, slug } = req.body;
 
@@ -275,13 +302,19 @@ async function resetPassword(req, res) {
   return res.json({ ok: true });
 }
 
-function authenticate(req, res, next) {
+async function authenticate(req, res, next) {
   const token = getAdminTokenFromRequest(req);
   if (!token) return res.status(401).json({ error: 'Nao autorizado' });
 
   try {
     const payload = jwt.verify(token, process.env.JWT_SECRET);
-    req.user = payload;
+    const currentPayload = await loadCurrentAdminPayload(payload);
+    if (!currentPayload) {
+      clearCookie(res, ADMIN_COOKIE_NAME);
+      return res.status(401).json({ error: 'Sessao expirada' });
+    }
+
+    req.user = { ...payload, ...currentPayload };
     next();
   } catch {
     clearCookie(res, ADMIN_COOKIE_NAME);
@@ -289,15 +322,21 @@ function authenticate(req, res, next) {
   }
 }
 
-function getSession(req, res) {
+async function getSession(req, res) {
   const token = getAdminTokenFromRequest(req);
   if (!token) return res.status(401).json({ error: 'Sessao indisponivel' });
 
   try {
     const payload = jwt.verify(token, process.env.JWT_SECRET);
+    const currentPayload = await loadCurrentAdminPayload(payload);
+    if (!currentPayload) {
+      clearCookie(res, ADMIN_COOKIE_NAME);
+      return res.status(401).json({ error: 'Sessao expirada' });
+    }
+
     res.json({
       ok: true,
-      user: payload,
+      user: currentPayload,
       expiresAt: payload.exp ? payload.exp * 1000 : null,
     });
   } catch {

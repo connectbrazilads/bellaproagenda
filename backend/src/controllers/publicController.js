@@ -48,6 +48,43 @@ function calcularFimHora(inicioHora, duracaoMin) {
   return `${String(Math.floor(total / 60)).padStart(2, '0')}:${String(total % 60).padStart(2, '0')}`;
 }
 
+function horaParaMinutos(hora) {
+  const [h, m] = String(hora || '').split(':').map(Number);
+  if (Number.isNaN(h) || Number.isNaN(m)) return null;
+  return (h * 60) + m;
+}
+
+function isAgendamentoItemDuplicadoBase(agendamento, item) {
+  if (!agendamento?.servicoId || !agendamento?.servico || !item?.servicoId) return false;
+  if (item.servicoId !== agendamento.servicoId) return false;
+
+  const createdAtAgendamento = agendamento?.createdAt ? new Date(agendamento.createdAt).getTime() : null;
+  const createdAtItem = item?.createdAt ? new Date(item.createdAt).getTime() : null;
+  const createdTogether = createdAtAgendamento && createdAtItem
+    ? Math.abs(createdAtItem - createdAtAgendamento) < 60 * 1000
+    : false;
+
+  return createdTogether
+    && Number(item.preco || 0) === Number(agendamento.servico?.preco || 0)
+    && Number(item.duracaoMin || 0) === Number(agendamento.servico?.duracaoMin || 0);
+}
+
+function getFimHoraEfetiva(agendamento) {
+  const inicioMin = horaParaMinutos(agendamento?.inicioHora);
+  if (inicioMin === null) return agendamento?.fimHora || null;
+
+  const fimSalvoMin = horaParaMinutos(agendamento?.fimHora);
+  const duracaoBase = Number(agendamento?.servico?.duracaoMin || agendamento?.pacote?.duracaoMin || 0);
+  const duracaoItens = (agendamento?.itens || [])
+    .filter((item) => !isAgendamentoItemDuplicadoBase(agendamento, item))
+    .reduce((sum, item) => sum + Number(item.duracaoMin || 0), 0);
+  const fimCalculadoMin = duracaoBase + duracaoItens > 0 ? inicioMin + duracaoBase + duracaoItens : null;
+  const fimEfetivoMin = Math.max(fimSalvoMin || 0, fimCalculadoMin || 0);
+
+  if (!fimEfetivoMin || fimEfetivoMin <= inicioMin) return agendamento?.fimHora || null;
+  return `${String(Math.floor(fimEfetivoMin / 60)).padStart(2, '0')}:${String(fimEfetivoMin % 60).padStart(2, '0')}`;
+}
+
 async function findOrCreateClientePublico(salaoId, clienteNome, clienteTelefone) {
   const numeroLimpo = normalizarTelefone(clienteTelefone);
   const sufixo = numeroLimpo.slice(-9);
@@ -458,12 +495,17 @@ async function criarAgendamento(req, res) {
       profissionalId: chosenProfId, 
       status: { not: 'cancelado' }, 
       data: { gte: inicioDia, lte: fimDia } 
-    }
+    },
+    include: {
+      servico: { select: { preco: true, duracaoMin: true } },
+      pacote: { select: { duracaoMin: true } },
+      itens: { select: { servicoId: true, preco: true, duracaoMin: true, createdAt: true } },
+    },
   });
 
   const temColisao = colisoes.some(a => {
-    const aI = a.inicioHora.split(':').map(Number).reduce((h, m) => h * 60 + m);
-    const aF = a.fimHora.split(':').map(Number).reduce((h, m) => h * 60 + m);
+    const aI = horaParaMinutos(a.inicioHora);
+    const aF = horaParaMinutos(getFimHoraEfetiva(a));
     const sI = hh * 60 + mm;
     const sF = sI + totalDuracao;
     return sI < aF && sF > aI;

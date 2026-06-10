@@ -213,6 +213,24 @@ function calcularFimHora(inicioHora, duracaoMin) {
   return `${String(Math.floor(totalMin / 60)).padStart(2, '0')}:${String(totalMin % 60).padStart(2, '0')}`;
 }
 
+function calcularDuracaoAgendamento(agendamento) {
+  const duracaoBase = Number(agendamento?.servico?.duracaoMin ?? agendamento?.pacote?.duracaoMin ?? 0);
+  return duracaoBase + getAgendamentoDuracaoExtra(agendamento);
+}
+
+function getFimHoraEfetiva(agendamento) {
+  const inicioMin = horaParaMinutos(agendamento?.inicioHora);
+  if (inicioMin === null) return agendamento?.fimHora || null;
+
+  const fimSalvoMin = horaParaMinutos(agendamento?.fimHora);
+  const duracaoCalculada = calcularDuracaoAgendamento(agendamento);
+  const fimCalculadoMin = duracaoCalculada > 0 ? inicioMin + duracaoCalculada : null;
+  const fimEfetivoMin = Math.max(fimSalvoMin || 0, fimCalculadoMin || 0);
+
+  if (!fimEfetivoMin || fimEfetivoMin <= inicioMin) return agendamento?.fimHora || null;
+  return `${String(Math.floor(fimEfetivoMin / 60)).padStart(2, '0')}:${String(fimEfetivoMin % 60).padStart(2, '0')}`;
+}
+
 function createGrupoAtendimentoId() {
   return crypto.randomUUID();
 }
@@ -410,7 +428,17 @@ async function validarDisponibilidadeAgendamento({
         data: { gte: inicio, lte: fim },
         ...(ignoreAgendamentoId ? { id: { not: ignoreAgendamentoId } } : {}),
       },
-      select: { id: true, inicioHora: true, fimHora: true, clienteNome: true },
+      select: {
+        id: true,
+        inicioHora: true,
+        fimHora: true,
+        clienteNome: true,
+        servicoId: true,
+        createdAt: true,
+        servico: { select: { preco: true, duracaoMin: true } },
+        pacote: { select: { duracaoMin: true } },
+        itens: { select: { servicoId: true, preco: true, duracaoMin: true, createdAt: true } },
+      },
     }),
     prisma.bloqueio.findMany({
       where: {
@@ -429,7 +457,7 @@ async function validarDisponibilidadeAgendamento({
 
   const temConflitoAgenda = agendamentos.some((item) => {
     const itemInicio = horaParaMinutos(item.inicioHora);
-    const itemFim = horaParaMinutos(item.fimHora);
+    const itemFim = horaParaMinutos(getFimHoraEfetiva(item));
     return inicioMin < itemFim && fimMin > itemInicio;
   });
 
@@ -1671,9 +1699,10 @@ async function criarAgendamentoAdmin(req, res) {
       : [];
   }
 
-  const [hh, mm] = hora.split(':').map(Number);
-  const fimMin = hh * 60 + mm + totalDuracao;
-  const fimHora = `${String(Math.floor(fimMin / 60)).padStart(2, '0')}:${String(fimMin % 60).padStart(2, '0')}`;
+  const fimHora = calcularFimHora(hora, totalDuracao);
+  if (!fimHora) {
+    return res.status(400).json({ error: 'Nao foi possivel calcular o horario final do atendimento.' });
+  }
 
   const clienteId = await findOrCreateCliente(req.user.salaoId, clienteNome, clienteTelefone);
   const salao = await prisma.salao.findUnique({ where: { id: req.user.salaoId } });
@@ -1685,6 +1714,20 @@ async function criarAgendamentoAdmin(req, res) {
       const novaData = new Date(datas[0]);
       novaData.setDate(novaData.getDate() + (i * 7));
       datas.push(novaData);
+    }
+  }
+
+  for (const d of datas) {
+    const indisponibilidade = await validarDisponibilidadeAgendamento({
+      salaoId: req.user.salaoId,
+      profissionalId,
+      data: d,
+      inicioHora: hora,
+      fimHora,
+    });
+
+    if (indisponibilidade) {
+      return res.status(400).json({ error: indisponibilidade });
     }
   }
 

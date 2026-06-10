@@ -126,6 +126,10 @@ function addMinutesToTime(horaStr, minutes = 60) {
   return `${String(nextHours).padStart(2, '0')}:${String(nextMinutes).padStart(2, '0')}`;
 }
 
+function getApiErrorMessage(error, fallback) {
+  return error?.response?.data?.error || error?.message || fallback;
+}
+
 function reorderProfessionalsList(list, draggedId, targetId) {
   const fromIndex = list.findIndex((item) => item.id === draggedId);
   const toIndex = list.findIndex((item) => item.id === targetId);
@@ -3761,7 +3765,10 @@ export default function Agenda() {
         motivo
       });
       carregar();
-    } catch (e) { alert('Erro ao bloquear'); }
+    } catch (e) {
+      console.error('Erro ao bloquear horario:', e);
+      alert(getApiErrorMessage(e, 'Erro ao bloquear'));
+    }
     setContextMenu(null);
   }
 
@@ -3778,7 +3785,7 @@ export default function Agenda() {
       setModalBloqueioPeriodo(null);
       carregar();
     } catch (e) {
-      throw new Error(e.response?.data?.error || 'Erro ao bloquear periodo');
+      throw new Error(getApiErrorMessage(e, 'Erro ao bloquear periodo'));
     }
   }
 
@@ -3795,7 +3802,10 @@ export default function Agenda() {
         motivo,
       });
       carregar();
-    } catch (e) { alert(e.response?.data?.error || 'Erro ao bloquear o dia inteiro'); }
+    } catch (e) {
+      console.error('Erro ao bloquear dia inteiro:', e);
+      alert(getApiErrorMessage(e, 'Erro ao bloquear o dia inteiro'));
+    }
     setContextMenu(null);
   }
 

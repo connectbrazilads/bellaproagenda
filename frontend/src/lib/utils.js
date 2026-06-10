@@ -43,6 +43,12 @@ export function formatDurationLabel(totalMinutes = 0) {
   return `${rest}min`;
 }
 
+function timeToMinutes(time) {
+  const [hours, minutes] = String(time || '').split(':').map(Number);
+  if (Number.isNaN(hours) || Number.isNaN(minutes)) return null;
+  return (hours * 60) + minutes;
+}
+
 export function getAgendamentoOriginalBasePrice(agendamento) {
   return Number(agendamento?.servico?.preco || agendamento?.pacote?.preco || 0);
 }
@@ -148,7 +154,12 @@ export function calculateAgendamentoTotal(agendamento) {
 export function calculateAgendamentoDuration(agendamento) {
   const duracaoBase = Number(agendamento?.servico?.duracaoMin || agendamento?.pacote?.duracaoMin || 0);
   const duracaoItens = getAgendamentoItensExtras(agendamento).reduce((sum, item) => sum + Number(item.duracaoMin || 0), 0);
-  return duracaoBase + duracaoItens;
+  const duracaoCalculada = duracaoBase + duracaoItens;
+  const inicioMin = timeToMinutes(agendamento?.inicioHora);
+  const fimMin = timeToMinutes(agendamento?.fimHora);
+  const duracaoSalva = inicioMin !== null && fimMin !== null && fimMin > inicioMin ? fimMin - inicioMin : 0;
+
+  return Math.max(duracaoCalculada, duracaoSalva);
 }
 
 export function calculateGroupedAgendamentosTotal(agendamentos = []) {
