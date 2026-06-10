@@ -933,9 +933,10 @@ function MensagemMidia({ m, isClient }) {
 function MensagemBolha({ m }) {
   const isClient = m.direcao === 'entrada';
   const isIA = m.origem === 'ia';
-  const exibirTexto = Boolean(m.conteudo) && (!isDescricaoGenericaDeMidia(m) || !getMensagemMediaSrc(m));
+  const conteudo = String(m.conteudo || '');
+  const exibirTexto = Boolean(conteudo) && (!isDescricaoGenericaDeMidia(m) || !getMensagemMediaSrc(m));
   
-  if (isIA && m.conteudo.startsWith('[RESUMO]')) {
+  if (isIA && conteudo.startsWith('[RESUMO]')) {
     return (
       <motion.div 
         initial={{ opacity: 0, y: 10 }}
@@ -948,7 +949,7 @@ function MensagemBolha({ m }) {
             <span className="text-[9px] font-semibold uppercase tracking-wider">Resumo de Atendimento por IA</span>
           </div>
           <p className="text-xs text-gray-500 dark:text-gray-400 leading-relaxed italic">
-            "{m.conteudo.replace('[RESUMO]', '').trim()}"
+            "{conteudo.replace('[RESUMO]', '').trim()}"
           </p>
         </div>
       </motion.div>
@@ -983,7 +984,7 @@ function MensagemBolha({ m }) {
       )}>
         {m.tipo && m.tipo !== 'texto' ? <MensagemMidia m={m} isClient={isClient} /> : null}
         {exibirTexto ? (
-          <p className="text-xs whitespace-pre-wrap leading-relaxed break-words font-normal">{m.conteudo}</p>
+          <p className="text-xs whitespace-pre-wrap leading-relaxed break-words font-normal">{conteudo}</p>
         ) : null}
         <div className={cn(
           "flex items-center gap-1 mt-1.5 opacity-60",

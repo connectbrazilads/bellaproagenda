@@ -1,7 +1,6 @@
 const prisma = require('../lib/prisma');
 const { enviarMensagem } = require('../services/whatsappService');
 const {
-  fetchEvolutionProfilePictureUrl,
   sendEvolutionAudio,
   sendEvolutionMedia,
 } = require('../services/evolutionService');
@@ -45,25 +44,6 @@ function buildOutgoingMediaLabel(tipoMensagem, legenda, nomeArquivo) {
   return nomeArquivo ? `Anexo: ${nomeArquivo}` : 'Arquivo enviado';
 }
 
-async function hydrateConversaAvatar(conversa, salao) {
-  if (!conversa?.telefone) return conversa?.avatarUrl || null;
-  if (conversa?.avatarUrl) return conversa.avatarUrl;
-
-  try {
-    const avatarUrl = await fetchEvolutionProfilePictureUrl(salao, conversa.telefone);
-    if (!avatarUrl) return null;
-
-    await prisma.conversa.update({
-      where: { id: conversa.id },
-      data: { avatarUrl },
-    });
-
-    return avatarUrl;
-  } catch {
-    return null;
-  }
-}
-
 async function getConversas(req, res) {
   const { status, atendimento } = req.query;
   const where = {
@@ -84,28 +64,16 @@ async function getConversas(req, res) {
     },
   });
 
-  const salao = await prisma.salao.findUnique({
-    where: { id: req.user.salaoId },
-    select: {
-      slug: true,
-      evolutionUrl: true,
-      evolutionKey: true,
-      evolutionInstance: true,
-    },
-  });
-
-  const payload = await Promise.all(
-    conversas.map(async (conversa) => ({
+  const payload = conversas.map((conversa) => ({
       id: conversa.id,
       telefone: conversa.telefone,
       nomeCliente: conversa.nomeCliente,
-      avatarUrl: await hydrateConversaAvatar(conversa, salao),
+      avatarUrl: conversa.avatarUrl || null,
       atendimento: conversa.atendimento,
       status: conversa.status,
       updatedAt: conversa.updatedAt,
       ultimaMensagem: conversa.mensagens[0] || null,
-    }))
-  );
+    }));
 
   res.json(payload);
 }
