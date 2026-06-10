@@ -59,6 +59,29 @@ function getMensagemMediaSrc(mensagem) {
   return String(mensagem?.mediaUrl || '').trim();
 }
 
+function normalizeMensagem(mensagem, index = 0) {
+  if (!mensagem || typeof mensagem !== 'object') {
+    return {
+      id: `mensagem-invalida-${index}`,
+      conteudo: '',
+      direcao: 'entrada',
+      origem: 'sistema',
+      tipo: 'texto',
+      createdAt: new Date().toISOString(),
+    };
+  }
+
+  return {
+    ...mensagem,
+    id: mensagem.id || `mensagem-sem-id-${index}`,
+    conteudo: mensagem.conteudo ?? '',
+    direcao: mensagem.direcao || 'entrada',
+    origem: mensagem.origem || 'sistema',
+    tipo: mensagem.tipo || 'texto',
+    createdAt: mensagem.createdAt || new Date().toISOString(),
+  };
+}
+
 function getMensagemResumo(mensagem) {
   if (!mensagem) return 'Iniciando conversa...';
 
@@ -172,7 +195,8 @@ export default function Inbox() {
     if (!silent) setLoadingMensagens(true);
     try {
       const r = await getMensagens(selecionada.id);
-      setMensagens(r.data || []);
+      const nextMensagens = Array.isArray(r.data) ? r.data.map(normalizeMensagem) : [];
+      setMensagens(nextMensagens);
     } catch {
       setErro('Não foi possível carregar as mensagens desta conversa.');
     } finally {
@@ -641,8 +665,8 @@ export default function Inbox() {
 
               <div className="space-y-4 max-w-3xl mx-auto">
                 <AnimatePresence mode="popLayout">
-                  {mensagens.map((m) => (
-                    <MensagemBolha key={m.id} m={m} />
+                  {mensagens.map((m, index) => (
+                    <MensagemBolha key={m.id || `mensagem-${index}`} m={m} />
                   ))}
                 </AnimatePresence>
               </div>
@@ -931,10 +955,11 @@ function MensagemMidia({ m, isClient }) {
 }
 
 function MensagemBolha({ m }) {
-  const isClient = m.direcao === 'entrada';
-  const isIA = m.origem === 'ia';
-  const conteudo = String(m.conteudo || '');
-  const exibirTexto = Boolean(conteudo) && (!isDescricaoGenericaDeMidia(m) || !getMensagemMediaSrc(m));
+  const mensagem = normalizeMensagem(m);
+  const isClient = mensagem.direcao === 'entrada';
+  const isIA = mensagem.origem === 'ia';
+  const conteudo = String(mensagem.conteudo || '');
+  const exibirTexto = Boolean(conteudo) && (!isDescricaoGenericaDeMidia(mensagem) || !getMensagemMediaSrc(mensagem));
   
   if (isIA && conteudo.startsWith('[RESUMO]')) {
     return (
@@ -973,7 +998,7 @@ function MensagemBolha({ m }) {
           {isClient ? 'Cliente' : isIA ? 'Assistente IA' : 'Atendente'}
         </span>
         <div className="w-1 h-1 rounded-full bg-gray-200 dark:bg-zinc-800" />
-        <span>{formatarHora(m.createdAt)}</span>
+        <span>{formatarHora(mensagem.createdAt)}</span>
       </div>
       
       <div className={cn(
@@ -982,7 +1007,7 @@ function MensagemBolha({ m }) {
         ? "bg-white dark:bg-[#18181b] border-black/[0.04] dark:border-white/5 rounded-tl-none text-gray-800 dark:text-gray-200" 
         : "bg-[#d48997]/10 dark:bg-[#d48997]/15 border-[#d48997]/20 dark:border-[#d48997]/20 rounded-tr-none text-gray-950 dark:text-white"
       )}>
-        {m.tipo && m.tipo !== 'texto' ? <MensagemMidia m={m} isClient={isClient} /> : null}
+        {mensagem.tipo && mensagem.tipo !== 'texto' ? <MensagemMidia m={mensagem} isClient={isClient} /> : null}
         {exibirTexto ? (
           <p className="text-xs whitespace-pre-wrap leading-relaxed break-words font-normal">{conteudo}</p>
         ) : null}
