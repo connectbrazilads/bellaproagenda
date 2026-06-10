@@ -39,6 +39,7 @@ COPY --from=builder --chown=expressjs:nodejs /app/node_modules ./node_modules
 COPY --from=builder --chown=expressjs:nodejs /app/package*.json ./
 COPY --from=builder --chown=expressjs:nodejs /app/prisma ./prisma
 COPY --from=builder --chown=expressjs:nodejs /app/src ./src
+COPY --from=builder --chown=expressjs:nodejs /app/clean-financials.js ./clean-financials.js
 
 # Create uploads directory and set permissions
 RUN mkdir -p /app/uploads && chown -R expressjs:nodejs /app/uploads
