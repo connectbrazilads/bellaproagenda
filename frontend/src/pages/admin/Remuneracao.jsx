@@ -120,7 +120,7 @@ function LancamentoModal({
                 <select
                   value={form.profissionalId}
                   disabled={isScopedProfessional}
-                  onChange={(event) => setForm((prev) => ({ ...prev, profesionalId: event.target.value }))}
+                  onChange={(event) => setForm((prev) => ({ ...prev, profissionalId: event.target.value }))}
                   className="h-11 w-full rounded-xl border border-black/[0.08] dark:border-white/10 bg-white dark:bg-[#111113] px-3.5 text-xs text-gray-900 dark:text-white outline-none focus:border-[#d48997] focus:ring-2 focus:ring-[#d48997]/10"
                 >
                   <option value="">Selecione o profissional...</option>

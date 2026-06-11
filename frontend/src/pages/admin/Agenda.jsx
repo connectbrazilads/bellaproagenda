@@ -1116,14 +1116,14 @@ function ModalAjusteAgendamento({ agendamento, profissionais, onClose, onSave })
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
-      className="fixed inset-0 bg-black/80 backdrop-blur-2xl z-[210] flex items-center justify-center overflow-y-auto overscroll-contain p-3 sm:p-4"
+      className="fixed inset-0 bg-black/80 backdrop-blur-2xl z-[210] flex items-start justify-center overflow-y-auto overscroll-contain p-3 sm:items-center sm:p-4"
     >
       <motion.form
         initial={{ scale: 0.96, y: 24, opacity: 0 }}
         animate={{ scale: 1, y: 0, opacity: 1 }}
         exit={{ scale: 0.96, y: 24, opacity: 0 }}
         onSubmit={salvar}
-        className="relative w-full max-w-xl rounded-[2.4rem] border border-gray-200 dark:border-white/5 bg-white dark:bg-[#0c0c0e] p-5 shadow-[0_40px_90px_-40px_rgba(0,0,0,0.92)] sm:p-8"
+        className="relative max-h-[calc(100dvh-1.5rem)] w-full max-w-xl overflow-y-auto rounded-[1.6rem] border border-gray-200 bg-white p-5 shadow-[0_40px_90px_-40px_rgba(0,0,0,0.92)] dark:border-white/5 dark:bg-[#0c0c0e] sm:max-h-[calc(100dvh-2rem)] sm:rounded-[2.4rem] sm:p-8"
       >
         <button
           type="button"
@@ -3694,9 +3694,15 @@ export default function Agenda() {
   const mobileHourHeight = 92;
 
   const handleGridClick = (e, profId, hour) => {
+    const menuWidth = 196;
+    const menuHeight = 260;
+    const margin = 8;
+    const viewportWidth = window.innerWidth || document.documentElement.clientWidth || menuWidth;
+    const viewportHeight = window.innerHeight || document.documentElement.clientHeight || menuHeight;
+
     setContextMenu({
-      x: e.clientX,
-      y: e.clientY,
+      x: Math.min(Math.max(e.clientX, margin), Math.max(margin, viewportWidth - menuWidth)),
+      y: Math.min(Math.max(e.clientY, margin), Math.max(margin, viewportHeight - menuHeight)),
       profId,
       hora: `${String(hour).padStart(2, '0')}:00`
     });
