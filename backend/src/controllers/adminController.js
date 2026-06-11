@@ -417,6 +417,7 @@ async function validarDisponibilidadeAgendamento({
   inicioHora,
   fimHora,
   ignoreAgendamentoId,
+  permitirSobreposicao = false,
 }) {
   const { inicio, fim } = getDateBounds(data);
   const [agendamentos, bloqueios] = await Promise.all([
@@ -455,14 +456,16 @@ async function validarDisponibilidadeAgendamento({
     return 'Horario invalido para este agendamento.';
   }
 
-  const temConflitoAgenda = agendamentos.some((item) => {
-    const itemInicio = horaParaMinutos(item.inicioHora);
-    const itemFim = horaParaMinutos(getFimHoraEfetiva(item));
-    return inicioMin < itemFim && fimMin > itemInicio;
-  });
+  if (!permitirSobreposicao) {
+    const temConflitoAgenda = agendamentos.some((item) => {
+      const itemInicio = horaParaMinutos(item.inicioHora);
+      const itemFim = horaParaMinutos(getFimHoraEfetiva(item));
+      return inicioMin < itemFim && fimMin > itemInicio;
+    });
 
-  if (temConflitoAgenda) {
-    return 'Ja existe outro agendamento neste horario para o profissional selecionado.';
+    if (temConflitoAgenda) {
+      return 'Ja existe outro agendamento neste horario para o profissional selecionado.';
+    }
   }
 
   const temBloqueio = bloqueios.some((item) => {
@@ -1665,7 +1668,7 @@ async function findOrCreateCliente(salaoId, nome, telefone) {
 // ─── AGENDAMENTOS ────────────────────────────────────────────────────────────
 
 async function criarAgendamentoAdmin(req, res) {
-  const { servicoId, servicoIds, pacoteId, clienteNome, clienteTelefone, data, hora, observacao, recorrente, semanas } = req.body;
+  const { servicoId, servicoIds, pacoteId, clienteNome, clienteTelefone, data, hora, observacao, recorrente, semanas, encaixe } = req.body;
   const profissionalId = getAgendaProfessionalId(req, req.body.profissionalId, { defaultToSelf: true });
 
   const sIds = servicoIds ? (Array.isArray(servicoIds) ? servicoIds : [servicoIds]) : (servicoId ? [servicoId] : []);
@@ -1724,6 +1727,7 @@ async function criarAgendamentoAdmin(req, res) {
       data: d,
       inicioHora: hora,
       fimHora,
+      permitirSobreposicao: !!encaixe,
     });
 
     if (indisponibilidade) {
@@ -1776,7 +1780,7 @@ async function criarAgendamentoAdmin(req, res) {
     entidade: 'agendamento',
     entidadeId: agendamentos[0]?.id || null,
     mensagem: 'Agendamento criado',
-    contexto: { quantidade: agendamentos.length, clienteNome, profissionalId, data, hora },
+    contexto: { quantidade: agendamentos.length, clienteNome, profissionalId, data, hora, encaixe: !!encaixe },
     req,
   });
 
@@ -2372,7 +2376,7 @@ async function updateObservacaoAgendamento(req, res) {
 
 async function updateAgendamento(req, res) {
   const { id } = req.params;
-  const { data, hora, profissionalId, valorBaseAjustado } = req.body;
+  const { data, hora, profissionalId, valorBaseAjustado, encaixe } = req.body;
   const profissionalIdFinal = getScopedProfessionalId(req, profissionalId);
   const campoValorBaseAjustadoPresente = Object.prototype.hasOwnProperty.call(req.body, 'valorBaseAjustado');
   const agendamento = await getScopedAgendamento(req, id, {
@@ -2438,6 +2442,7 @@ async function updateAgendamento(req, res) {
       inicioHora: hora,
       fimHora,
       ignoreAgendamentoId: id,
+      permitirSobreposicao: !!encaixe,
     });
 
     if (indisponibilidade) {
@@ -2463,7 +2468,7 @@ async function updateAgendamento(req, res) {
     entidade: 'agendamento',
     entidadeId: id,
     mensagem: 'Agendamento ajustado na agenda',
-    contexto: { data, hora, profissionalId: profissionalIdFinal, valorBaseAjustado: valorBaseAjustadoNormalizado },
+    contexto: { data, hora, profissionalId: profissionalIdFinal, valorBaseAjustado: valorBaseAjustadoNormalizado, encaixe: !!encaixe },
     req,
   });
 

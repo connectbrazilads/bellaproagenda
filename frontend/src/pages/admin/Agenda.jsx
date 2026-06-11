@@ -43,7 +43,7 @@ import {
   getProfissionais, getAgendamentos, getServicos, getPacotes, getProdutos,
   criarAgendamentoAdmin, criarAgendamentoAdminMultiplo, updateAgendamentoAdmin, updateStatusAgendamento, deleteAgendamento, 
   buscarClientes, addItemAgendamento, addItemComandaAgendamento, removeItemAgendamento, addProdutoAgendamento, removeProdutoAgendamento, updatePagamentoAgendamento, updateObservacaoAgendamento,
-  createBloqueio, getListaEspera, createListaEspera, deleteListaEspera, reagendarAgendamento, getCaixaStatusPagamento, reorderProfissionais,
+  createBloqueio, getListaEspera, createListaEspera, deleteListaEspera, getCaixaStatusPagamento, reorderProfissionais,
   reabrirComandaAgendamento, getClientePacotes
 } from '../../services/api';
 import {
@@ -1066,6 +1066,7 @@ function ModalAjusteAgendamento({ agendamento, profissionais, onClose, onSave })
     data: String(agendamento?.data || '').slice(0, 10),
     hora: agendamento?.inicioHora || '',
     profissionalId: agendamento?.profissionalId || '',
+    encaixe: false,
   });
   const [ajusteTipo, setAjusteTipo] = useState(ajusteInicial.tipo);
   const [ajusteValor, setAjusteValor] = useState(ajusteInicial.valor);
@@ -1133,8 +1134,8 @@ function ModalAjusteAgendamento({ agendamento, profissionais, onClose, onSave })
         </button>
 
         <div className="mb-8">
-          <p className="text-[10px] font-black uppercase tracking-[0.3em] text-[#E29BA8]">Ajuste rapido</p>
-          <h2 className="mt-3 text-3xl font-black uppercase tracking-tight text-gray-900 dark:text-white">Editar servico</h2>
+          <p className="text-[10px] font-black uppercase tracking-[0.3em] text-[#E29BA8]">Alteracao de agenda</p>
+          <h2 className="mt-3 text-3xl font-black uppercase tracking-tight text-gray-900 dark:text-white">Alterar horario</h2>
           <p className="mt-3 text-sm text-gray-500 dark:text-gray-400">
             {agendamento?.clienteNome} · {getAgendamentoTitulo(agendamento)}
           </p>
@@ -1182,6 +1183,18 @@ function ModalAjusteAgendamento({ agendamento, profissionais, onClose, onSave })
               <option key={profissional.id} value={profissional.id}>{profissional.nome}</option>
             ))}
           </select>
+        </label>
+
+        <label className="mt-5 flex items-center gap-4 rounded-[1.5rem] border border-gray-200 bg-[#f8f3f5] p-4 dark:border-white/5 dark:bg-[#111113]">
+          <input
+            type="checkbox"
+            checked={form.encaixe}
+            onChange={(event) => setForm((prev) => ({ ...prev, encaixe: event.target.checked }))}
+            className="h-5 w-5 cursor-pointer rounded-lg accent-[#d48997]"
+          />
+          <span className="cursor-pointer text-[10px] font-black uppercase tracking-[0.18em] text-gray-600 dark:text-gray-300">
+            Forcar encaixe
+          </span>
         </label>
 
         <div className="mt-5 grid gap-4 sm:grid-cols-[minmax(0,1fr)_220px]">
@@ -1274,7 +1287,7 @@ function ModalAjusteAgendamento({ agendamento, profissionais, onClose, onSave })
             disabled={saving}
             className="inline-flex min-h-[50px] items-center justify-center rounded-full bg-[#E29BA8] px-6 text-[11px] font-black uppercase tracking-[0.18em] text-white transition hover:bg-[#d48997] disabled:opacity-60"
           >
-            {saving ? 'Salvando...' : 'Salvar ajuste'}
+            {saving ? 'Salvando...' : 'Salvar alteracao'}
           </button>
         </div>
       </motion.form>
@@ -1282,7 +1295,7 @@ function ModalAjusteAgendamento({ agendamento, profissionais, onClose, onSave })
   );
 }
 
-function ModalDetalhesAgendamento({ agendamento: initialAgendamento, allAgendamentos = [], onClose, onUpdate, onReagendar, onAjustar }) {
+function ModalDetalhesAgendamento({ agendamento: initialAgendamento, allAgendamentos = [], onClose, onUpdate, onAjustar }) {
   function getCheckoutDiscountDefaults(agendamentoAtual) {
     const original = getAgendamentoOriginalBasePrice(agendamentoAtual);
     const atual = getAgendamentoBasePrice(agendamentoAtual);
@@ -1878,10 +1891,7 @@ function ModalDetalhesAgendamento({ agendamento: initialAgendamento, allAgendame
                                 Ver detalhes/ajustes
                               </button>
                               <button type="button" onClick={() => { setShowMoreActions(false); onAjustar?.(agendamento); }} className="w-full rounded-xl px-3.5 py-2.5 text-left text-xs font-medium text-gray-700 hover:text-[#d48997] hover:bg-[#d48997]/5 transition-all dark:text-white/80 dark:hover:bg-white/10">
-                                Editar serviço
-                              </button>
-                              <button type="button" onClick={() => { setShowMoreActions(false); onReagendar?.(agendamento); }} className="w-full rounded-xl px-3.5 py-2.5 text-left text-xs font-medium text-gray-700 hover:text-[#d48997] hover:bg-[#d48997]/5 transition-all dark:text-white/80 dark:hover:bg-white/10">
-                                Reagendar data
+                                Alterar horario
                               </button>
                               <button type="button" onClick={() => handleAtualizarStatus('cancelado')} className="w-full rounded-xl px-3.5 py-2.5 text-left text-xs font-medium text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10 transition-all">
                                 Cancelar agendamento
@@ -2245,7 +2255,7 @@ function ModalDetalhesAgendamento({ agendamento: initialAgendamento, allAgendame
                         <p className="mt-2 text-xs text-gray-400 dark:text-gray-500">Veja os valores originais e ajustes aplicados para este serviço.</p>
                       </div>
                       <button type="button" onClick={() => onAjustar?.(agendamento)} className="rounded-xl bg-[#d48997] px-5 py-2.5 text-xs font-semibold text-white shadow-sm shadow-[#d48997]/15 hover:bg-[#c97b8a] transition-all">
-                        Editar serviço
+                        Alterar horario
                       </button>
                     </div>
 
@@ -2734,15 +2744,7 @@ function ModalDetalhesAgendamento({ agendamento: initialAgendamento, allAgendame
                   onClick={() => onAjustar?.(agendamento)}
                   className="px-4 py-2.5 rounded-xl bg-white text-[#3b2a35] text-[9px] font-black uppercase tracking-widest hover:bg-gray-100 transition-all shadow-lg dark:bg-white/10 dark:text-white"
                 >
-                  Ajustar
-                </button>
-              )}
-              {agendamento.status !== 'cancelado' && (
-                <button
-                  onClick={() => onReagendar?.(agendamento)}
-                  className="px-4 py-2.5 rounded-xl bg-slate-900 text-gray-900 dark:text-white text-[9px] font-black uppercase tracking-widest hover:bg-slate-700 transition-all shadow-lg"
-                >
-                  Reagendar
+                  Alterar horario
                 </button>
               )}
               {agendamento.statusPagamento === 'pago' && (
@@ -3912,17 +3914,6 @@ export default function Agenda() {
                 carregar();
               }
             }} 
-            onReagendar={(agendamento) => {
-              setPrefillAgendaData({
-                clienteNome: agendamento.clienteNome,
-                clienteTelefone: agendamento.clienteTelefone,
-                profissionalId: agendamento.profissionalId,
-                servicoIds: agendamento.servicoId ? [agendamento.servicoId] : [],
-              });
-              setModalDetalhes(false);
-              setAgendamentoSelecionado(null);
-              setModalNovo(true);
-            }}
             onAjustar={(agendamento) => {
               setModalDetalhes(false);
               setModalAjuste(agendamento);
