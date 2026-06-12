@@ -1062,12 +1062,46 @@ function ModalAjusteAgendamento({ agendamento, profissionais, onClose, onSave })
 
   const ajusteInicial = getAjusteRapidoDefaults(agendamento);
   const precoBaseOriginal = getAgendamentoOriginalBasePrice(agendamento);
+  function formatIsoDateForEdit(value) {
+    const match = String(value || '').match(/^(\d{4})-(\d{2})-(\d{2})/);
+    return match ? `${match[3]}/${match[2]}/${match[1]}` : '';
+  }
+
+  function maskDateForEdit(value) {
+    const digits = String(value || '').replace(/\D/g, '').slice(0, 8);
+    if (digits.length <= 2) return digits;
+    if (digits.length <= 4) return `${digits.slice(0, 2)}/${digits.slice(2)}`;
+    return `${digits.slice(0, 2)}/${digits.slice(2, 4)}/${digits.slice(4)}`;
+  }
+
+  function parseEditDateToIso(value) {
+    const digits = String(value || '').replace(/\D/g, '');
+    if (digits.length !== 8) return '';
+
+    const day = Number(digits.slice(0, 2));
+    const month = Number(digits.slice(2, 4));
+    const year = Number(digits.slice(4, 8));
+    const parsed = new Date(year, month - 1, day);
+
+    if (
+      parsed.getFullYear() !== year
+      || parsed.getMonth() !== month - 1
+      || parsed.getDate() !== day
+    ) {
+      return '';
+    }
+
+    return `${String(year).padStart(4, '0')}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+  }
+
+  const initialDate = String(agendamento?.data || '').slice(0, 10);
   const [form, setForm] = useState({
-    data: String(agendamento?.data || '').slice(0, 10),
+    data: initialDate,
     hora: agendamento?.inicioHora || '',
     profissionalId: agendamento?.profissionalId || '',
     encaixe: false,
   });
+  const [dataText, setDataText] = useState(formatIsoDateForEdit(initialDate));
   const [ajusteTipo, setAjusteTipo] = useState(ajusteInicial.tipo);
   const [ajusteValor, setAjusteValor] = useState(ajusteInicial.valor);
   const [saving, setSaving] = useState(false);
@@ -1149,9 +1183,15 @@ function ModalAjusteAgendamento({ agendamento, profissionais, onClose, onSave })
           <label className="space-y-3">
             <span className="text-[10px] font-black uppercase tracking-[0.28em] text-gray-500">Dia</span>
             <input
-              type="date"
-              value={form.data}
-              onChange={(event) => setForm((prev) => ({ ...prev, data: event.target.value }))}
+              type="text"
+              inputMode="numeric"
+              value={dataText}
+              onChange={(event) => {
+                const nextText = maskDateForEdit(event.target.value);
+                setDataText(nextText);
+                setForm((prev) => ({ ...prev, data: parseEditDateToIso(nextText) }));
+              }}
+              placeholder="dd/mm/aaaa"
               className="h-14 w-full rounded-[1.5rem] border border-gray-200 dark:border-white/5 bg-white dark:bg-[#111113] px-5 text-sm font-black text-gray-900 dark:text-white outline-none"
             />
           </label>
