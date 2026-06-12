@@ -43,7 +43,7 @@ import {
   getProfissionais, getAgendamentos, getServicos, getPacotes, getProdutos,
   criarAgendamentoAdmin, criarAgendamentoAdminMultiplo, updateAgendamentoAdmin, updateStatusAgendamento, deleteAgendamento, 
   buscarClientes, addItemAgendamento, addItemComandaAgendamento, removeItemAgendamento, addProdutoAgendamento, removeProdutoAgendamento, updatePagamentoAgendamento, updateObservacaoAgendamento,
-  createBloqueio, getListaEspera, createListaEspera, deleteListaEspera, getCaixaStatusPagamento, reorderProfissionais,
+  createBloqueio, deleteBloqueio, getListaEspera, createListaEspera, deleteListaEspera, getCaixaStatusPagamento, reorderProfissionais,
   reabrirComandaAgendamento, getClientePacotes
 } from '../../services/api';
 import {
@@ -1081,12 +1081,16 @@ function ModalAjusteAgendamento({ agendamento, profissionais, onClose, onSave })
     : precoBaseOriginal + ajusteAplicado;
   const valorBaseAjustadoAtivo = ajusteAplicado >= 0.001;
 
-  function dismissActiveField(event) {
-    event?.preventDefault?.();
+  function blurActiveField() {
     const activeElement = document.activeElement;
     if (activeElement instanceof HTMLElement) {
       activeElement.blur();
     }
+  }
+
+  function dismissActiveField(event) {
+    event?.preventDefault?.();
+    blurActiveField();
   }
 
   async function salvar(event) {
@@ -1156,6 +1160,8 @@ function ModalAjusteAgendamento({ agendamento, profissionais, onClose, onSave })
             <span className="text-[10px] font-black uppercase tracking-[0.28em] text-gray-500">Horario</span>
             <select
               value={form.hora}
+              onMouseDown={blurActiveField}
+              onTouchStart={blurActiveField}
               onChange={(event) => setForm((prev) => ({ ...prev, hora: event.target.value }))}
               className="h-14 w-full rounded-[1.5rem] border border-gray-200 dark:border-white/5 bg-white dark:bg-[#111113] px-5 text-sm font-black text-gray-900 dark:text-white outline-none"
             >
@@ -1175,6 +1181,8 @@ function ModalAjusteAgendamento({ agendamento, profissionais, onClose, onSave })
           <span className="text-[10px] font-black uppercase tracking-[0.28em] text-gray-500">Profissional</span>
           <select
             value={form.profissionalId}
+            onMouseDown={blurActiveField}
+            onTouchStart={blurActiveField}
             onChange={(event) => setForm((prev) => ({ ...prev, profissionalId: event.target.value }))}
             className="h-14 w-full rounded-[1.5rem] border border-gray-200 dark:border-white/5 bg-white dark:bg-[#111113] px-5 text-sm font-black text-gray-900 dark:text-white outline-none"
           >
@@ -3817,6 +3825,24 @@ export default function Agenda() {
     setContextMenu(null);
   }
 
+  async function handleDesbloquearBloqueio(bloqueio, event) {
+    event?.stopPropagation?.();
+    const profissionalNome = profissionais.find((profissional) => profissional.id === bloqueio.profissionalId)?.nome || bloqueio.profissional?.nome || 'profissional';
+    const periodo = bloqueio.inicioHora && bloqueio.fimHora
+      ? `${bloqueio.inicioHora} - ${bloqueio.fimHora}`
+      : 'dia inteiro';
+    const confirmar = window.confirm(`Desfazer bloqueio de ${profissionalNome} (${periodo})?`);
+    if (!confirmar) return;
+
+    try {
+      await deleteBloqueio(bloqueio.id);
+      await carregar();
+    } catch (error) {
+      console.error('Erro ao desfazer bloqueio:', error);
+      alert(getApiErrorMessage(error, 'Nao foi possivel desfazer o bloqueio.'));
+    }
+  }
+
   async function adicionarListaEsperaRapida() {
     const clienteNome = window.prompt('Nome do cliente para lista de espera:');
     if (!clienteNome) return;
@@ -4195,9 +4221,17 @@ export default function Agenda() {
                           const [fh, fm] = fimBloqueio.split(':').map(Number);
                           const duracao = Math.max(((fh * 60 + fm) - (bh * 60 + bm)), 30);
                           return (
-                            <div key={b.id} style={{ top: ((bh - START_HOUR) * mobileHourHeight) + ((bm / 60) * mobileHourHeight) + 52, height: Math.max((duracao / 60) * mobileHourHeight, 30) }} className="absolute left-1 right-1 rounded-2xl border border-dashed border-slate-300 bg-slate-100/80 dark:bg-white/5 flex items-center justify-center z-10">
-                              <span className="text-[8px] font-black text-slate-500 uppercase tracking-widest">{b.motivo || 'Bloqueio'}</span>
-                            </div>
+                            <button
+                              key={b.id}
+                              type="button"
+                              onClick={(event) => handleDesbloquearBloqueio(b, event)}
+                              title="Clique para desfazer este bloqueio"
+                              style={{ top: ((bh - START_HOUR) * mobileHourHeight) + ((bm / 60) * mobileHourHeight) + 52, height: Math.max((duracao / 60) * mobileHourHeight, 30) }}
+                              className="absolute left-1 right-1 z-10 flex cursor-pointer flex-col items-center justify-center rounded-2xl border border-dashed border-slate-300 bg-slate-100/80 px-2 text-center transition hover:border-red-300 hover:bg-red-50 dark:bg-white/5 dark:hover:bg-red-500/10"
+                            >
+                              <span className="text-[8px] font-black uppercase tracking-widest text-slate-500">{b.motivo || 'Bloqueio'}</span>
+                              <span className="mt-1 text-[7px] font-black uppercase tracking-widest text-red-400">Desfazer</span>
+                            </button>
                           );
                         })}
                         {agendamentos.filter(a => a.profissionalId === p.id && a.status !== 'cancelado').map((a) => {
@@ -4385,13 +4419,17 @@ export default function Agenda() {
                     const duracao = Math.max(((fh * 60 + fm) - (bh * 60 + bm)), 30);
                     const pos = getPosition(inicioBloqueio, duracao);
                     return (
-                      <div 
+                      <button
                         key={b.id}
+                        type="button"
+                        onClick={(event) => handleDesbloquearBloqueio(b, event)}
+                        title="Clique para desfazer este bloqueio"
                         style={{ top: pos.top, height: pos.height }}
-                        className="absolute left-0.5 right-0.5 bg-gray-100/40 dark:bg-white/[0.02] border border-dashed border-gray-200 dark:border-white/10 z-10 flex items-center justify-center overflow-hidden rounded-[1rem]"
+                        className="group absolute left-0.5 right-0.5 z-10 flex cursor-pointer flex-col items-center justify-center overflow-hidden rounded-[1rem] border border-dashed border-gray-200 bg-gray-100/40 px-2 text-center transition hover:border-red-300 hover:bg-red-50 dark:border-white/10 dark:bg-white/[0.02] dark:hover:bg-red-500/10"
                       >
-                         <span className="text-[8px] font-black text-gray-400 dark:text-gray-500 uppercase tracking-widest opacity-60">{b.motivo || 'Bloqueado'}</span>
-                      </div>
+                         <span className="text-[8px] font-black uppercase tracking-widest text-gray-400 opacity-70 dark:text-gray-500">{b.motivo || 'Bloqueado'}</span>
+                         <span className="mt-1 text-[7px] font-black uppercase tracking-widest text-red-400 opacity-0 transition group-hover:opacity-100">Desfazer</span>
+                      </button>
                     );
                   })}
 
