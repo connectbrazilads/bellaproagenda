@@ -1383,12 +1383,17 @@ async function getPacotes(req, res) {
 }
 
 async function createPacote(req, res) {
-  const { nome, descricao, preco, duracaoMin, servicoIds } = req.body;
+  const { nome, descricao, preco, duracaoMin, validadeDias, servicoIds, servicosIds } = req.body;
+  const sids = servicoIds || servicosIds;
   const pacote = await prisma.pacote.create({
     data: {
       salaoId: req.user.salaoId,
-      nome, descricao, preco, duracaoMin,
-      servicos: servicoIds?.length ? { create: servicoIds.map((id) => ({ servicoId: id })) } : undefined,
+      nome, 
+      descricao, 
+      preco, 
+      duracaoMin: duracaoMin || 0,
+      validadeDias: validadeDias || 30,
+      servicos: sids?.length ? { create: sids.map((id) => ({ servicoId: id })) } : undefined,
     },
     include: { servicos: { include: { servico: true } } },
   });
@@ -1397,23 +1402,31 @@ async function createPacote(req, res) {
 
 async function updatePacote(req, res) {
   const { id } = req.params;
-  const { nome, descricao, preco, duracaoMin, ativo, servicoIds } = req.body;
+  const { nome, descricao, preco, duracaoMin, validadeDias, ativo, servicoIds, servicosIds } = req.body;
+  const sids = servicoIds || servicosIds;
 
   const exist = await prisma.pacote.findFirst({ where: { id, salaoId: req.user.salaoId } });
   if (!exist) return res.status(403).json({ error: 'Proibido' });
 
-  if (servicoIds !== undefined) {
+  if (sids !== undefined) {
     await prisma.pacoteServico.deleteMany({ where: { pacoteId: id } });
-    if (servicoIds.length > 0) {
+    if (sids.length > 0) {
       await prisma.pacoteServico.createMany({
-        data: servicoIds.map((sid) => ({ pacoteId: id, servicoId: sid })),
+        data: sids.map((sid) => ({ pacoteId: id, servicoId: sid })),
       });
     }
   }
 
   const pacote = await prisma.pacote.update({
     where: { id },
-    data: { nome, descricao, preco, duracaoMin, ativo },
+    data: { 
+      nome, 
+      descricao, 
+      preco, 
+      duracaoMin: duracaoMin !== undefined ? duracaoMin : exist.duracaoMin, 
+      validadeDias: validadeDias !== undefined ? validadeDias : exist.validadeDias, 
+      ativo 
+    },
     include: { servicos: { include: { servico: true } } },
   });
   res.json(pacote);

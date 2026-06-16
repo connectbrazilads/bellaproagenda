@@ -307,7 +307,8 @@ model Pacote {
   nome         String
   descricao    String?
   preco        Float
-  duracaoMin   Int
+  duracaoMin   Int             @default(0)
+  validadeDias Int             @default(30)
   ativo        Boolean         @default(true)
   createdAt    DateTime        @default(now())
   salao        Salao           @relation(fields: [salaoId], references: [id], onDelete: Cascade)
