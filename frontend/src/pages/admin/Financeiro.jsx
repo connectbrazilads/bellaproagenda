@@ -84,6 +84,7 @@ const FINANCEIRO_MOBILE_MODULES = [
   { id: 'stat-lucro', label: 'Lucro líquido' },
   { id: 'chart-faturamento', label: 'Evolução do faturamento' },
   { id: 'mix-receita', label: 'Mix de receita' },
+  { id: 'formas-pagamento', label: 'Formas de pagamento' },
   { id: 'relatorio-caixa', label: 'Relatório diário de caixa' },
   { id: 'caixa-operacional', label: 'Caixa operacional' },
   { id: 'historico-turnos', label: 'Histórico de turnos' },
@@ -507,6 +508,96 @@ export default function Financeiro() {
     );
   }
 
+  function imprimirRelatorioPeriodo() {
+    if (!data) return;
+    
+    const formatter = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' });
+    const money = (val) => formatter.format(val || 0);
+
+    const periodStr = `${datas.inicio.split('-').reverse().join('/')} a ${datas.fim.split('-').reverse().join('/')}`;
+
+    const formasStr = (data.porForma || []).map(item => `
+      <tr>
+        <td style="padding: 8px; border-bottom: 1px solid #eee;">${item.nome}</td>
+        <td style="padding: 8px; border-bottom: 1px solid #eee; text-align: right;">${money(item.valor)}</td>
+      </tr>
+    `).join('');
+
+    const servicosStr = [...(data.porServico || [])].sort((a, b) => b.valor - a.valor).slice(0, 10).map(item => `
+      <tr>
+        <td style="padding: 8px; border-bottom: 1px solid #eee;">${item.nome}</td>
+        <td style="padding: 8px; border-bottom: 1px solid #eee; text-align: right;">${money(item.valor)}</td>
+      </tr>
+    `).join('');
+
+    const equipeStr = (data.porProfissional || []).sort((a,b) => b.bruto - a.bruto).map(item => `
+      <tr>
+        <td style="padding: 8px; border-bottom: 1px solid #eee;">${item.nome}</td>
+        <td style="padding: 8px; border-bottom: 1px solid #eee; text-align: right;">${item.atendimentos}</td>
+        <td style="padding: 8px; border-bottom: 1px solid #eee; text-align: right;">${money(item.bruto)}</td>
+        <td style="padding: 8px; border-bottom: 1px solid #eee; text-align: right;">${money(item.comissao)}</td>
+      </tr>
+    `).join('');
+
+    printHtml(
+      'Relatório Financeiro do Período',
+      `
+      <div style="font-family: sans-serif; max-width: 800px; margin: 0 auto; color: #333;">
+        <h1 style="text-align: center; border-bottom: 1px solid #ccc; padding-bottom: 10px;">Relatório Comercial</h1>
+        <p style="text-align: center; color: #666; margin-bottom: 30px;">Período: ${periodStr}</p>
+        
+        <h2>Resumo Geral</h2>
+        <div style="display: flex; justify-content: space-between; margin-bottom: 30px; background: #f9f9f9; padding: 15px; border-radius: 8px;">
+          <div><strong style="color: #666; display: block; font-size: 12px;">Receita Bruta</strong> <span style="font-size: 18px;">${money(data.totalBruto)}</span></div>
+          <div><strong style="color: #666; display: block; font-size: 12px;">Comissões</strong> <span style="font-size: 18px;">${money(data.totalComissoes)}</span></div>
+          <div><strong style="color: #666; display: block; font-size: 12px;">Despesas</strong> <span style="font-size: 18px;">${money(data.totalDespesas)}</span></div>
+          <div><strong style="color: #666; display: block; font-size: 12px;">Lucro Líquido</strong> <span style="font-size: 18px; color: ${data.lucroLiquido >= 0 ? '#10b981' : '#ef4444'}">${money(data.lucroLiquido)}</span></div>
+        </div>
+
+        <div style="display: flex; gap: 30px; margin-bottom: 30px;">
+          <div style="flex: 1;">
+            <h2>Métricas</h2>
+            <table style="width: 100%; border-collapse: collapse;">
+              <tr><td style="padding: 8px; border-bottom: 1px solid #eee;">Total de Atendimentos</td><td style="padding: 8px; border-bottom: 1px solid #eee; text-align: right;">${data.qtdAgendamentos || 0}</td></tr>
+              <tr><td style="padding: 8px; border-bottom: 1px solid #eee;">Ticket Médio</td><td style="padding: 8px; border-bottom: 1px solid #eee; text-align: right;">${money(data.ticketMedio)}</td></tr>
+            </table>
+          </div>
+          <div style="flex: 1;">
+            <h2>Formas de Pagamento</h2>
+            <table style="width: 100%; border-collapse: collapse;">
+              ${formasStr || '<tr><td colspan="2">Sem dados</td></tr>'}
+            </table>
+          </div>
+        </div>
+
+        <h2>Top Serviços</h2>
+        <table style="width: 100%; border-collapse: collapse; margin-bottom: 30px; font-size: 14px;">
+          <thead>
+            <tr>
+              <th style="padding: 8px; border-bottom: 2px solid #ccc; text-align: left;">Serviço</th>
+              <th style="padding: 8px; border-bottom: 2px solid #ccc; text-align: right;">Receita</th>
+            </tr>
+          </thead>
+          <tbody>${servicosStr || '<tr><td colspan="2" style="text-align: center; padding: 10px;">Sem dados</td></tr>'}</tbody>
+        </table>
+
+        <h2>Desempenho da Equipe</h2>
+        <table style="width: 100%; border-collapse: collapse; margin-bottom: 30px; font-size: 14px;">
+          <thead>
+            <tr>
+              <th style="padding: 8px; border-bottom: 2px solid #ccc; text-align: left;">Profissional</th>
+              <th style="padding: 8px; border-bottom: 2px solid #ccc; text-align: right;">Atendimentos</th>
+              <th style="padding: 8px; border-bottom: 2px solid #ccc; text-align: right;">Bruto</th>
+              <th style="padding: 8px; border-bottom: 2px solid #ccc; text-align: right;">Comissão</th>
+            </tr>
+          </thead>
+          <tbody>${equipeStr || '<tr><td colspan="4" style="text-align: center; padding: 10px;">Sem dados</td></tr>'}</tbody>
+        </table>
+      </div>
+      `
+    );
+  }
+
   function exportarCsv() {
     if (!data) return;
     downloadCsv(`financeiro-${datas.inicio}-a-${datas.fim}.csv`, [
@@ -641,6 +732,34 @@ export default function Financeiro() {
                 Ver Equipe
               </button>
             ) : null}
+          </div>
+        );
+      case 'formas-pagamento':
+        return (
+          <div className="rounded-2xl border border-black/[0.04] dark:border-white/[0.04] bg-white/60 dark:bg-white/[0.02] backdrop-blur-md p-6 shadow-sm">
+            <div className="mb-6 flex items-center gap-2.5">
+              <Wallet className="h-5 w-5 text-[#d48997]" />
+              <div>
+                <h3 className="font-serif text-lg font-normal text-gray-900 dark:text-white">Formas de Pagamento</h3>
+                <p className="mt-1 text-xs text-gray-400 dark:text-gray-500">Receitas por método no período.</p>
+              </div>
+            </div>
+            <div className="space-y-4">
+              {[...(data?.porForma || [])].sort((a, b) => b.valor - a.valor).map((item) => (
+                <div key={item.nome}>
+                  <div className="mb-1.5 flex items-end justify-between gap-4">
+                    <p className="text-xs font-semibold text-gray-700 dark:text-gray-300">{item.nome}</p>
+                    <p className="text-xs font-semibold text-gray-900 dark:text-white">{formatMoney(item.valor)}</p>
+                  </div>
+                  <div className="h-1.5 overflow-hidden rounded-full bg-black/[0.04] dark:bg-white/[0.06]">
+                    <div
+                      className="h-full rounded-full bg-[#d48997]"
+                      style={{ width: `${((item.valor || 0) / Math.max(data?.totalBruto || 1, 1)) * 100}%` }}
+                    />
+                  </div>
+                </div>
+              ))}
+            </div>
           </div>
         );
       case 'relatorio-caixa':
@@ -1020,6 +1139,16 @@ export default function Financeiro() {
 
           <button
             type="button"
+            onClick={imprimirRelatorioPeriodo}
+            disabled={!data}
+            className="inline-flex h-11 w-11 items-center justify-center rounded-xl bg-[#d48997]/10 hover:bg-[#d48997]/20 text-[#d48997] transition disabled:opacity-50"
+            title="Imprimir Relatório"
+          >
+            <Printer className="h-4 w-4" />
+          </button>
+
+          <button
+            type="button"
             onClick={exportarCsv}
             disabled={!data}
             className="inline-flex h-11 w-11 items-center justify-center rounded-xl bg-[#d48997]/10 hover:bg-[#d48997]/20 text-[#d48997] transition disabled:opacity-50"
@@ -1208,39 +1337,68 @@ export default function Financeiro() {
               </div>
             </div>
 
-            <div className="rounded-2xl border border-black/[0.04] dark:border-white/[0.04] bg-white/60 dark:bg-white/[0.02] backdrop-blur-md p-6 shadow-sm">
-              <div className="mb-6 flex items-center gap-2.5">
-                <BarChart3 className="h-5 w-5 text-[#d48997]" />
-                <div>
-                  <h3 className="font-serif text-lg font-normal text-gray-900 dark:text-white">Mix de Receita</h3>
-                  <p className="mt-1 text-xs text-gray-400 dark:text-gray-500">Serviços que geram mais receita.</p>
+            <div className="flex flex-col gap-6">
+              <div className="rounded-2xl border border-black/[0.04] dark:border-white/[0.04] bg-white/60 dark:bg-white/[0.02] backdrop-blur-md p-6 shadow-sm">
+                <div className="mb-6 flex items-center gap-2.5">
+                  <BarChart3 className="h-5 w-5 text-[#d48997]" />
+                  <div>
+                    <h3 className="font-serif text-lg font-normal text-gray-900 dark:text-white">Mix de Receita</h3>
+                    <p className="mt-1 text-xs text-gray-400 dark:text-gray-500">Serviços que geram mais receita.</p>
+                  </div>
+                </div>
+
+                <div className="space-y-4">
+                  {[...(data?.porServico || [])].sort((a, b) => b.valor - a.valor).slice(0, 6).map((item) => (
+                    <div key={item.nome}>
+                      <div className="mb-1.5 flex items-end justify-between gap-4 text-xs">
+                        <p className="font-semibold text-gray-700 dark:text-gray-300 truncate">{item.nome}</p>
+                        <p className="font-semibold text-gray-900 dark:text-white shrink-0">{formatMoney(item.valor)}</p>
+                      </div>
+                      <div className="h-1.5 overflow-hidden rounded-full bg-black/[0.04] dark:bg-white/[0.06]">
+                        <div
+                          className="h-full rounded-full bg-[#d48997]"
+                          style={{ width: `${((item.valor || 0) / Math.max(data?.totalBruto || 1, 1)) * 100}%` }}
+                        />
+                      </div>
+                    </div>
+                  ))}
+                </div>
+
+                <button
+                  type="button"
+                  onClick={scrollToEquipe}
+                  className="mt-6 inline-flex h-9 w-full items-center justify-center rounded-xl border border-black/[0.08] dark:border-white/10 px-4 text-xs font-semibold text-gray-500 hover:text-gray-800 dark:text-gray-400 dark:hover:text-zinc-250 transition"
+                >
+                  Ver Desempenho Equipe
+                </button>
+              </div>
+
+              <div className="rounded-2xl border border-black/[0.04] dark:border-white/[0.04] bg-white/60 dark:bg-white/[0.02] backdrop-blur-md p-6 shadow-sm">
+                <div className="mb-6 flex items-center gap-2.5">
+                  <Wallet className="h-5 w-5 text-[#d48997]" />
+                  <div>
+                    <h3 className="font-serif text-lg font-normal text-gray-900 dark:text-white">Formas de Pagamento</h3>
+                    <p className="mt-1 text-xs text-gray-400 dark:text-gray-500">Receitas por método no período.</p>
+                  </div>
+                </div>
+
+                <div className="space-y-4">
+                  {[...(data?.porForma || [])].sort((a, b) => b.valor - a.valor).map((item) => (
+                    <div key={item.nome}>
+                      <div className="mb-1.5 flex items-end justify-between gap-4 text-xs">
+                        <p className="font-semibold text-gray-700 dark:text-gray-300 truncate">{item.nome}</p>
+                        <p className="font-semibold text-gray-900 dark:text-white shrink-0">{formatMoney(item.valor)}</p>
+                      </div>
+                      <div className="h-1.5 overflow-hidden rounded-full bg-black/[0.04] dark:bg-white/[0.06]">
+                        <div
+                          className="h-full rounded-full bg-[#d48997]"
+                          style={{ width: `${((item.valor || 0) / Math.max(data?.totalBruto || 1, 1)) * 100}%` }}
+                        />
+                      </div>
+                    </div>
+                  ))}
                 </div>
               </div>
-
-              <div className="space-y-4">
-                {[...(data?.porServico || [])].sort((a, b) => b.valor - a.valor).slice(0, 6).map((item) => (
-                  <div key={item.nome}>
-                    <div className="mb-1.5 flex items-end justify-between gap-4 text-xs">
-                      <p className="font-semibold text-gray-700 dark:text-gray-300 truncate">{item.nome}</p>
-                      <p className="font-semibold text-gray-900 dark:text-white shrink-0">{formatMoney(item.valor)}</p>
-                    </div>
-                    <div className="h-1.5 overflow-hidden rounded-full bg-black/[0.04] dark:bg-white/[0.06]">
-                      <div
-                        className="h-full rounded-full bg-[#d48997]"
-                        style={{ width: `${((item.valor || 0) / Math.max(data?.totalBruto || 1, 1)) * 100}%` }}
-                      />
-                    </div>
-                  </div>
-                ))}
-              </div>
-
-              <button
-                type="button"
-                onClick={scrollToEquipe}
-                className="mt-6 inline-flex h-9 w-full items-center justify-center rounded-xl border border-black/[0.08] dark:border-white/10 px-4 text-xs font-semibold text-gray-500 hover:text-gray-800 dark:text-gray-400 dark:hover:text-zinc-250 transition"
-              >
-                Ver Desempenho Equipe
-              </button>
             </div>
           </div>
 

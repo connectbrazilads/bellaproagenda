@@ -20,6 +20,7 @@ import {
   Zap,
   MessageSquare,
   X,
+  Plus,
 } from 'lucide-react';
 import {
   connectWhatsapp,
@@ -598,6 +599,7 @@ function SecaoUsuarios() {
   const [editingUserId, setEditingUserId] = useState(null);
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState('');
+  const [modalOpen, setModalOpen] = useState(false);
 
   useEffect(() => {
     loadData();
@@ -621,10 +623,16 @@ function SecaoUsuarios() {
     }));
   }
 
+  function handleStartCreate() {
+    setEditingUserId(null);
+    setMessage('');
+    setForm(INITIAL_USER);
+    setModalOpen(true);
+  }
+
   function handleStartEdit(usuario) {
     setEditingUserId(usuario.id);
     setMessage('');
-    window.scrollTo({ top: 0, behavior: 'smooth' });
     setForm({
       nome: usuario.nome || '',
       email: usuario.email || '',
@@ -634,12 +642,14 @@ function SecaoUsuarios() {
       permissions: [...(usuario.permissions || DEFAULT_ROLE_PERMISSIONS[usuario.role] || [])],
       actionPermissions: [...(usuario.actionPermissions || DEFAULT_ROLE_ACTION_PERMISSIONS[usuario.role] || [])],
     });
+    setModalOpen(true);
   }
 
   function handleCancelEdit() {
     setEditingUserId(null);
     setMessage('');
     setForm(INITIAL_USER);
+    setModalOpen(false);
   }
 
   function togglePermission(permission) {
@@ -674,6 +684,7 @@ function SecaoUsuarios() {
       }
       setEditingUserId(null);
       setForm(INITIAL_USER);
+      setModalOpen(false);
       await loadData();
     } catch (error) {
       setMessage(error.response?.data?.error || (editingUserId ? 'Não foi possível atualizar o acesso.' : 'Não foi possível criar o acesso.'));
@@ -697,98 +708,19 @@ function SecaoUsuarios() {
 
   return (
     <div className="space-y-6">
-      <SectionCard title={editingUserId ? 'Editar Acesso de Login' : 'Cadastrar Novo Login'} icon={<Users size={18} />}>
-        <form onSubmit={handleSubmit} className="space-y-6">
-          <div className="grid gap-5 md:grid-cols-2">
-            <Field
-              label="Nome Completo"
-              value={form.nome}
-              onChange={(value) => setForm((prev) => ({ ...prev, nome: value }))}
-              icon={<User size={14} />}
-            />
-            <Field
-              label="E-mail de Login"
-              value={form.email}
-              onChange={(value) => setForm((prev) => ({ ...prev, email: value }))}
-              icon={<Globe size={14} />}
-            />
-          </div>
-
-          <div className="grid gap-5 md:grid-cols-3">
-            <Field
-              label={editingUserId ? 'Nova Senha (Opcional)' : 'Senha de Login'}
-              value={form.senha}
-              onChange={(value) => setForm((prev) => ({ ...prev, senha: value }))}
-              type="password"
-              icon={<Lock size={14} />}
-              helper={editingUserId ? 'Deixe em branco para manter a senha atual.' : 'Mínimo de 6 caracteres.'}
-            />
-
-            <SelectField
-              label="Perfil de Usuário"
-              value={form.role}
-              onChange={handleRoleChange}
-              options={[
-                { value: 'gestor', label: 'Gestor (Acesso Amplo)' },
-                { value: 'recepcao', label: 'Recepção' },
-                { value: 'profissional', label: 'Profissional da Equipe' },
-              ]}
-            />
-
-            <SelectField
-              label="Profissional Vinculado"
-              value={form.profissionalId}
-              onChange={(value) => setForm((prev) => ({ ...prev, profissionalId: value }))}
-              options={[
-                { value: '', label: 'Sem vínculo (Uso geral)' },
-                ...profissionais.map((p) => ({ value: p.id, label: p.nome })),
-              ]}
-            />
-          </div>
-
-          <PermissionGrid
-            title="Abas e Módulos do Sistema Habilitados"
-            items={AVAILABLE_PERMISSIONS}
-            activeItems={form.permissions}
-            getLabel={(permission) => PERMISSION_LABELS[permission] || permission}
-            onToggle={togglePermission}
-            activeClassName="border-[#d48997] bg-[#d48997]/5 text-[#d48997]"
-          />
-
-          {form.permissions.includes('agenda.ver_colegas') && (
-            <div className="rounded-xl border border-[#d48997]/20 bg-[#d48997]/5 p-3.5 text-xs text-[#d48997] font-medium">
-              Nota: Para que o colaborador marque na agenda de colegas, garanta que a ação <strong>Criar agendamentos</strong> também esteja habilitada abaixo.
-            </div>
-          )}
-
-          <PermissionGrid
-            title="Ações e Operações Autorizadas"
-            items={AVAILABLE_ACTIONS}
-            activeItems={form.actionPermissions}
-            getLabel={(permission) => ACTION_PERMISSION_LABELS[permission] || permission}
-            onToggle={toggleAction}
-            activeClassName="border-emerald-500 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400"
-          />
-
-          <div className="flex flex-col gap-4 border-t border-black/[0.03] dark:border-white/5 pt-5 sm:flex-row sm:items-center sm:justify-between">
-            <InlineMessage text={message} />
-            <div className="flex flex-wrap gap-2.5">
-              {editingUserId && (
-                <button
-                  type="button"
-                  onClick={handleCancelEdit}
-                  className="inline-flex h-10 items-center justify-center rounded-xl border border-black/[0.08] dark:border-white/10 px-4 text-xs font-semibold text-gray-500 dark:text-gray-400 hover:text-gray-800 transition"
-                >
-                  Cancelar Edição
-                </button>
-              )}
-              <PrimaryButton type="submit" loading={saving} label={editingUserId ? 'Salvar Acesso' : 'Criar Acesso'} />
-            </div>
-          </div>
-        </form>
-      </SectionCard>
-
-      <SectionCard title="Usuários com Acesso à Unidade" icon={<Users size={18} />}>
+      <SectionCard
+        title="Usuários com Acesso à Unidade"
+        icon={<Users size={18} />}
+        action={
+          <button
+            type="button"
+            onClick={handleStartCreate}
+            className="inline-flex items-center gap-2 rounded-xl bg-[#d48997] hover:bg-[#c97b8a] text-white px-4 py-2 text-xs font-semibold shadow-sm transition-all shrink-0"
+          >
+            <Plus className="h-4 w-4" /> Novo Login
+          </button>
+        }
+      >
         <div className="overflow-x-auto rounded-xl border border-black/[0.04] dark:border-white/5 custom-scrollbar text-xs">
           <table className="w-full text-left">
             <thead className="bg-gray-50 dark:bg-white/[0.02]">
@@ -845,6 +777,145 @@ function SecaoUsuarios() {
           </table>
         </div>
       </SectionCard>
+
+      {/* Modal Cadastro/Edição de Usuários */}
+      <AnimatePresence>
+        {modalOpen && (
+          <div className="fixed inset-0 z-[210] flex items-center justify-center p-4">
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={handleCancelEdit}
+              className="absolute inset-0 bg-black/40 backdrop-blur-sm dark:bg-black/60"
+            />
+
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95, y: 10 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 10 }}
+              className="relative z-10 w-full max-w-3xl overflow-hidden rounded-2xl border border-black/[0.04] dark:border-white/[0.04] bg-white dark:bg-[#18181b] shadow-xl"
+            >
+              <form onSubmit={handleSubmit} className="flex flex-col max-h-[85dvh]">
+                {/* Modal Header */}
+                <div className="flex items-center justify-between border-b border-black/[0.04] dark:border-white/5 px-6 py-4">
+                  <div className="flex items-center gap-3">
+                    <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#d48997]/10 text-[#d48997]">
+                      <Users size={18} />
+                    </div>
+                    <div>
+                      <span className="text-[9px] font-semibold uppercase tracking-wider text-[#d48997]">
+                        Acesso de Login
+                      </span>
+                      <h2 className="mt-0.5 font-serif text-lg font-normal text-gray-900 dark:text-white">
+                        {editingUserId ? 'Editar Acesso de Login' : 'Cadastrar Novo Login'}
+                      </h2>
+                    </div>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={handleCancelEdit}
+                    className="rounded-full border border-black/[0.04] dark:border-white/10 p-2 text-gray-400 hover:text-red-500 transition shadow-sm"
+                  >
+                    <X className="h-4 w-4" />
+                  </button>
+                </div>
+
+                {/* Modal Body */}
+                <div className="overflow-y-auto px-6 py-6 space-y-5">
+                  <div className="grid gap-5 md:grid-cols-2">
+                    <Field
+                      label="Nome Completo"
+                      value={form.nome}
+                      onChange={(value) => setForm((prev) => ({ ...prev, nome: value }))}
+                      icon={<User size={14} />}
+                    />
+                    <Field
+                      label="E-mail de Login"
+                      value={form.email}
+                      onChange={(value) => setForm((prev) => ({ ...prev, email: value }))}
+                      icon={<Globe size={14} />}
+                    />
+                  </div>
+
+                  <div className="grid gap-5 md:grid-cols-3">
+                    <Field
+                      label={editingUserId ? 'Nova Senha (Opcional)' : 'Senha de Login'}
+                      value={form.senha}
+                      onChange={(value) => setForm((prev) => ({ ...prev, senha: value }))}
+                      type="password"
+                      icon={<Lock size={14} />}
+                      helper={editingUserId ? 'Deixe em branco para manter a senha atual.' : 'Mínimo de 6 caracteres.'}
+                    />
+
+                    <SelectField
+                      label="Perfil de Usuário"
+                      value={form.role}
+                      onChange={handleRoleChange}
+                      options={[
+                        { value: 'gestor', label: 'Gestor (Acesso Amplo)' },
+                        { value: 'recepcao', label: 'Recepção' },
+                        { value: 'profissional', label: 'Profissional da Equipe' },
+                      ]}
+                    />
+
+                    <SelectField
+                      label="Profissional Vinculado"
+                      value={form.profissionalId}
+                      onChange={(value) => setForm((prev) => ({ ...prev, profissionalId: value }))}
+                      options={[
+                        { value: '', label: 'Sem vínculo (Uso geral)' },
+                        ...profissionais.map((p) => ({ value: p.id, label: p.nome })),
+                      ]}
+                    />
+                  </div>
+
+                  <PermissionGrid
+                    title="Abas e Módulos do Sistema Habilitados"
+                    items={AVAILABLE_PERMISSIONS}
+                    activeItems={form.permissions}
+                    getLabel={(permission) => PERMISSION_LABELS[permission] || permission}
+                    onToggle={togglePermission}
+                    activeClassName="border-[#d48997] bg-[#d48997]/5 text-[#d48997]"
+                  />
+
+                  {form.permissions.includes('agenda.ver_colegas') && (
+                    <div className="rounded-xl border border-[#d48997]/20 bg-[#d48997]/5 p-3.5 text-xs text-[#d48997] font-medium">
+                      Nota: Para que o colaborador marque na agenda de colegas, garanta que a ação <strong>Criar agendamentos</strong> também esteja habilitada abaixo.
+                    </div>
+                  )}
+
+                  <PermissionGrid
+                    title="Ações e Operações Autorizadas"
+                    items={AVAILABLE_ACTIONS}
+                    activeItems={form.actionPermissions}
+                    getLabel={(permission) => ACTION_PERMISSION_LABELS[permission] || permission}
+                    onToggle={toggleAction}
+                    activeClassName="border-emerald-500 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400"
+                  />
+                </div>
+
+                {/* Modal Footer */}
+                <div className="flex items-center justify-between border-t border-black/[0.04] dark:border-white/5 bg-gray-50/50 dark:bg-white/[0.01] px-6 py-4">
+                  <div className="max-w-[50%]">
+                    <InlineMessage text={message} />
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <button
+                      type="button"
+                      onClick={handleCancelEdit}
+                      className="h-10 rounded-xl border border-black/[0.08] dark:border-white/10 px-4 text-xs font-semibold text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 transition"
+                    >
+                      Cancelar
+                    </button>
+                    <PrimaryButton type="submit" loading={saving} label={editingUserId ? 'Salvar Acesso' : 'Criar Acesso'} />
+                  </div>
+                </div>
+              </form>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }
@@ -994,14 +1065,17 @@ function SecaoSeguranca() {
   );
 }
 
-function SectionCard({ title, icon, children }) {
+function SectionCard({ title, icon, children, action }) {
   return (
     <div className="rounded-2xl border border-black/[0.04] dark:border-white/[0.04] bg-white/60 dark:bg-white/[0.02] backdrop-blur-md p-6 shadow-sm">
-      <div className="mb-6 flex items-center gap-3.5 border-b border-black/[0.03] dark:border-white/5 pb-4">
-        <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#d48997]/10 text-[#d48997]">
-          {icon}
+      <div className="mb-6 flex items-center justify-between border-b border-black/[0.03] dark:border-white/5 pb-4">
+        <div className="flex items-center gap-3.5">
+          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#d48997]/10 text-[#d48997]">
+            {icon}
+          </div>
+          <h2 className="font-serif text-lg font-normal text-gray-900 dark:text-white leading-none">{title}</h2>
         </div>
-        <h2 className="font-serif text-lg font-normal text-gray-900 dark:text-white leading-none">{title}</h2>
+        {action}
       </div>
       {children}
     </div>

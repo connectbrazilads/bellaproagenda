@@ -3930,6 +3930,7 @@ async function getFinanceiro(req, res) {
   const porDia = {};
   const porProfissional = {};
   const porServico = {};
+  const porForma = {};
 
   agendamentos.forEach(ag => {
     const dataKey = ag.data.toISOString().split('T')[0];
@@ -3961,6 +3962,19 @@ async function getFinanceiro(req, res) {
         porServico[item.servico.nome] = (porServico[item.servico.nome] || 0) + item.preco;
       }
     });
+
+    if (ag.pagamentos && ag.pagamentos.length > 0) {
+      ag.pagamentos.forEach(pagamento => {
+        const forma = pagamento.forma || 'Nao informado';
+        const valor = Number(pagamento.valor || 0);
+        porForma[forma] = (porForma[forma] || 0) + valor;
+      });
+    } else if (ag.status === 'concluido') {
+      const valor = totalAg;
+      if (valor > 0) {
+         porForma['Nao informado'] = (porForma['Nao informado'] || 0) + valor;
+      }
+    }
   });
 
   const chartData = Object.entries(porDia).map(([date, value]) => ({ date, value })).sort((a,b) => a.date.localeCompare(b.date));
@@ -3974,6 +3988,7 @@ async function getFinanceiro(req, res) {
     chartData,
     porProfissional: Object.values(porProfissional),
     porServico: Object.entries(porServico).map(([nome, valor]) => ({ nome, valor })),
+    porForma: Object.entries(porForma).map(([nome, valor]) => ({ nome, valor })),
     qtdAgendamentos: agendamentos.length,
     ticketMedio: agendamentos.length > 0 ? totalBruto / agendamentos.length : 0,
     despesas: despesas.slice(0, 50)
