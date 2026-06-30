@@ -81,6 +81,7 @@ export default function Notificacoes() {
     templateConfirmacao: '',
     templateLembrete: '',
     templateCancelamento: '',
+    lembreteAntecedencia: 6,
   });
 
   useEffect(() => {
@@ -97,6 +98,7 @@ export default function Notificacoes() {
           templateConfirmacao: salao?.templateConfirmacao || '',
           templateLembrete: salao?.templateLembrete || '',
           templateCancelamento: salao?.templateCancelamento || '',
+          lembreteAntecedencia: salao?.lembreteAntecedencia ?? 6,
         });
       } finally {
         if (ativo) setLoading(false);
@@ -189,7 +191,7 @@ export default function Notificacoes() {
                   </div>
                   <div>
                     <h3 className="font-serif text-base font-normal text-gray-900 dark:text-white">
-                      {section.titulo}
+                      {section.key === 'templateLembrete' ? `Lembrete (${form.lembreteAntecedencia}h antes)` : section.titulo}
                     </h3>
                     <p className="text-[11px] text-gray-400 dark:text-gray-500 leading-relaxed">
                       {section.descricao}
@@ -209,6 +211,24 @@ export default function Notificacoes() {
                   placeholder="Escreva a mensagem e use as variáveis abaixo..."
                   className="w-full resize-none rounded-xl border border-black/[0.08] dark:border-white/10 bg-white dark:bg-[#111113] p-4 text-xs leading-relaxed text-gray-800 dark:text-gray-200 outline-none focus:border-[#d48997] focus:ring-2 focus:ring-[#d48997]/10 transition-all placeholder:text-gray-400/70"
                 />
+
+                {section.key === 'templateLembrete' && (
+                  <div className="flex items-center gap-2 pt-1 border-t border-black/[0.02] dark:border-white/5">
+                    <span className="text-[11px] font-semibold text-gray-600 dark:text-gray-400">Antecedência de envio:</span>
+                    <select
+                      value={form.lembreteAntecedencia}
+                      onChange={(e) => setForm(prev => ({ ...prev, lembreteAntecedencia: Number(e.target.value) }))}
+                      className="rounded-lg border border-black/[0.08] dark:border-white/10 bg-gray-50 dark:bg-zinc-800 px-2 py-1.5 text-xs font-medium text-gray-800 dark:text-gray-200 outline-none focus:border-[#d48997]"
+                    >
+                      <option value={2}>2 horas</option>
+                      <option value={4}>4 horas</option>
+                      <option value={6}>6 horas</option>
+                      <option value={12}>12 horas</option>
+                      <option value={24}>24 horas (1 dia)</option>
+                      <option value={48}>48 horas (2 dias)</option>
+                    </select>
+                  </div>
+                )}
               </div>
             );
           })}

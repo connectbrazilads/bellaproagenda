@@ -71,8 +71,9 @@ model Salao {
   fidelidadePremio  String?  // Descrição do prêmio para pontos
 
   templateConfirmacao String? @default("✅ *Agendamento confirmado!*\n\nOlá, {{cliente}}! Seu agendamento foi confirmado.\n\n✂️ *Serviço:* {{servico}}\n👤 *Profissional:* {{profissional}}\n📅 *Data:* {{data}} às {{hora}}\n\n{{salao}}")
-  templateLembrete    String? @default("⏰ *Lembrete de agendamento*\n\nOlá, {{cliente}}! Lembrando que seu agendamento é *amanhã*.\n\n✂️ *Serviço:* {{servico}}\n👤 *Profissional:* {{profissional}}\n🕐 *Horário:* {{hora}}\n\nAté amanhã! 😊")
+  templateLembrete    String? @default("⏰ *Lembrete de agendamento*\n\nOlá, {{cliente}}! Lembrando que seu agendamento é *hoje/amanhã*.\n\n✂️ *Serviço:* {{servico}}\n👤 *Profissional:* {{profissional}}\n🕐 *Horário:* {{hora}}\n\nAté logo! 😊")
   templateCancelamento String? @default("❌ *Agendamento cancelado*\n\nOlá, {{cliente}}! Seu agendamento para {{data}} às {{hora}} foi cancelado.")
+  lembreteAntecedencia Int? @default(6)
 
   usuarios      Usuario[]
   profissionais Profissional[]
@@ -414,6 +415,7 @@ model Agendamento {
   estoqueConsumido Boolean          @default(false)
   taxaOperadora   Float                 @default(0)
   origem          String            @default("admin")
+  lembreteEnviado Boolean           @default(false)
   observacao      String?
   avaliacao       Int?
   comentario      String?
