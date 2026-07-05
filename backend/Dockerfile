@@ -40,6 +40,7 @@ COPY --from=builder --chown=expressjs:nodejs /app/package*.json ./
 COPY --from=builder --chown=expressjs:nodejs /app/prisma ./prisma
 COPY --from=builder --chown=expressjs:nodejs /app/src ./src
 COPY --from=builder --chown=expressjs:nodejs /app/clean-financials.js ./clean-financials.js
+COPY --from=builder --chown=expressjs:nodejs /app/fix-payment-methods.js ./fix-payment-methods.js
 
 # Create uploads directory and set permissions
 RUN mkdir -p /app/uploads && chown -R expressjs:nodejs /app/uploads
@@ -55,4 +56,4 @@ HEALTHCHECK --interval=30s --timeout=5s --start-period=15s --retries=3 \
   CMD wget --no-verbose --tries=1 --spider http://localhost:3001/health || exit 1
 
 # Start script: run prisma db push to ensure DB is in sync and then start application
-CMD ["sh", "-c", "npx prisma db push && npm start"]
+CMD ["sh", "-c", "npx prisma db push && node fix-payment-methods.js && npm start"]
