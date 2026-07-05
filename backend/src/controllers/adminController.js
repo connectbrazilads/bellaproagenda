@@ -2822,11 +2822,53 @@ async function updatePagamentoAgendamento(req, res) {
 
   await prisma.agendamentoPagamento.deleteMany({ where: { agendamentoId: { in: idsSolicitados } } });
 
-  await Promise.all(todosPagamentos.map((pagamento) =>
-    prisma.agendamentoPagamento.create({
-      data: { agendamentoId: id, forma: pagamento.forma, valor: pagamento.valor }
-    })
-  ));
+  const paymentPromises = [];
+  if (totalDevido > 0) {
+    todosPagamentos.forEach((pagamento) => {
+      const valorTotalPagamento = Number(pagamento.valor || 0);
+      let valorAcumulado = 0;
+
+      agendamentosGrupo.forEach((agendamentoAtual, index) => {
+        const valorAg = agendamentoAtual.id === id
+          ? calcularTotalAgendamento({ ...agendamentoAtual, valorBaseAjustado: valorBaseAjustadoNormalizado })
+          : calcularTotalAgendamento(agendamentoAtual);
+        
+        let valorProporcional;
+        if (index === agendamentosGrupo.length - 1) {
+          valorProporcional = Number((valorTotalPagamento - valorAcumulado).toFixed(2));
+        } else {
+          const proporcao = valorAg / totalDevido;
+          valorProporcional = Number((valorTotalPagamento * proporcao).toFixed(2));
+          valorAcumulado += valorProporcional;
+        }
+
+        if (valorProporcional > 0) {
+          paymentPromises.push(
+            prisma.agendamentoPagamento.create({
+              data: {
+                agendamentoId: agendamentoAtual.id,
+                forma: pagamento.forma,
+                valor: valorProporcional
+              }
+            })
+          );
+        }
+      });
+    });
+  } else {
+    todosPagamentos.forEach((pagamento) => {
+      paymentPromises.push(
+        prisma.agendamentoPagamento.create({
+          data: {
+            agendamentoId: id,
+            forma: pagamento.forma,
+            valor: pagamento.valor
+          }
+        })
+      );
+    });
+  }
+  await Promise.all(paymentPromises);
 
   const totalPago = todosPagamentos.reduce((sum, pagamento) => sum + Number(pagamento.valor || 0), 0);
   const taxa = parseFloat(taxaOperadora) || 0;
@@ -2840,8 +2882,16 @@ async function updatePagamentoAgendamento(req, res) {
     .map(a => a.comandaId)
     .filter(cid => cid && cid !== agExiste.comandaId);
 
-  await Promise.all(agendamentosGrupo.map((agendamentoAtual) =>
-    prisma.agendamento.update({
+  await Promise.all(agendamentosGrupo.map((agendamentoAtual) => {
+    const formasDesteAg = [];
+    todosPagamentos.forEach((pagamento) => {
+      if (Number(pagamento.valor || 0) > 0) {
+        formasDesteAg.push(pagamento.forma);
+      }
+    });
+    const formaPagamentoString = [...new Set(formasDesteAg)].join(', ') || null;
+
+    return prisma.agendamento.update({
       where: { id: agendamentoAtual.id },
       data: {
         statusPagamento: agendamentoAtual.id === id || pagamentoIntegral ? novoStatusPagamento : 'pendente',
@@ -2849,9 +2899,10 @@ async function updatePagamentoAgendamento(req, res) {
         valorBaseAjustado: agendamentoAtual.id === id ? valorBaseAjustadoNormalizado : agendamentoAtual.valorBaseAjustado,
         ajusteObservacao: agendamentoAtual.id === id ? ajusteObservacaoNormalizada : agendamentoAtual.ajusteObservacao,
         comandaId: agExiste.comandaId,
+        formaPagamento: formaPagamentoString,
       },
-    })
-  ));
+    });
+  }));
 
   let resultado = {};
   if (pagamentoIntegral) {
@@ -2978,6 +3029,7 @@ async function reabrirComandaAgendamento(req, res) {
         taxaOperadora: 0,
         comissaoValor: null,
         comissaoPaga: false,
+        formaPagamento: null,
       },
     });
   }
