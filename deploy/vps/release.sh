@@ -9,6 +9,7 @@ echo "==> Atualizando dependencias do backend"
 cd "$BACKEND_DIR"
 npm ci
 npx prisma db push
+node fix-payment-methods.js
 
 echo "==> Atualizando dependencias e build do frontend"
 cd "$FRONTEND_DIR"
