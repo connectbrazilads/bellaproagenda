@@ -1502,14 +1502,14 @@ async function getClientes(req, res) {
   const clientes = await prisma.cliente.findMany({
     where: {
       salaoId: req.user.salaoId,
-      ...(isScopedProfessional(req)
+      ...(isScopedProfessional(req) && !hasPermission(req.user, 'clientes')
         ? { agendamentos: { some: { profissionalId: req.user.profissionalId } } }
         : {}),
     },
     orderBy: { nome: 'asc' },
     include: {
       agendamentos: {
-        where: isScopedProfessional(req) ? { profissionalId: req.user.profissionalId } : undefined,
+        where: isScopedProfessional(req) && !hasPermission(req.user, 'clientes') ? { profissionalId: req.user.profissionalId } : undefined,
         include: {
           servico: { select: { nome: true, preco: true, duracaoMin: true } },
           pacote: { select: { nome: true, preco: true, duracaoMin: true } },
@@ -1535,7 +1535,7 @@ async function buscarClientes(req, res) {
   const clientes = await prisma.cliente.findMany({
     where: {
       salaoId: req.user.salaoId,
-      ...(isScopedProfessional(req)
+      ...(isScopedProfessional(req) && !hasPermission(req.user, 'clientes')
         ? { agendamentos: { some: { profissionalId: req.user.profissionalId } } }
         : {}),
       OR: [
@@ -1586,7 +1586,7 @@ async function updateCliente(req, res) {
     where: {
       id,
       salaoId: req.user.salaoId,
-      ...(isScopedProfessional(req)
+      ...(isScopedProfessional(req) && !hasPermission(req.user, 'clientes')
         ? { agendamentos: { some: { profissionalId: req.user.profissionalId } } }
         : {}),
     },
@@ -3574,7 +3574,7 @@ async function getHistoricoCliente(req, res) {
   const clientes = await prisma.cliente.findMany({
     where: {
       salaoId: req.user.salaoId,
-      ...(isScopedProfessional(req)
+      ...(isScopedProfessional(req) && !hasPermission(req.user, 'clientes')
         ? { agendamentos: { some: { profissionalId: req.user.profissionalId } } }
         : {}),
       OR: [
@@ -3586,7 +3586,7 @@ async function getHistoricoCliente(req, res) {
     orderBy: { nome: 'asc' },
     include: {
       agendamentos: {
-        where: isScopedProfessional(req) ? { profissionalId: req.user.profissionalId } : undefined,
+        where: isScopedProfessional(req) && !hasPermission(req.user, 'clientes') ? { profissionalId: req.user.profissionalId } : undefined,
         include: {
           servico: { select: { nome: true, preco: true, duracaoMin: true } },
           pacote: { select: { nome: true, preco: true, duracaoMin: true } },
