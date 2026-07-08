@@ -827,14 +827,16 @@ async function updateSalao(req, res) {
   const {
     nome, telefone, endereco, corPrimaria, corSecundaria,
     bannerUrl, bannerTexto, tema, whatsapp, whatsappAgendamentos, logoUrl,
-    infoFaq, infoPoliticas, infoPromocoes, infoRegras
+    infoFaq, infoPoliticas, infoPromocoes, infoRegras,
+    templateConfirmacao, templateLembrete, templateCancelamento, lembreteAntecedencia
   } = req.body;
   const salao = await prisma.salao.update({
     where: { id: req.user.salaoId },
     data: {
       nome, telefone, endereco, corPrimaria, corSecundaria,
       bannerUrl, bannerTexto, tema, whatsapp, whatsappAgendamentos, logoUrl,
-      infoFaq, infoPoliticas, infoPromocoes, infoRegras
+      infoFaq, infoPoliticas, infoPromocoes, infoRegras,
+      templateConfirmacao, templateLembrete, templateCancelamento, lembreteAntecedencia
     }
   });
   res.json(salao);
