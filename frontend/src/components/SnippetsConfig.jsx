@@ -126,7 +126,7 @@ export default function SnippetsConfig() {
                   </div>
                   <button
                     onClick={() => handleDelete(snippet.id)}
-                    className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-100/50 dark:hover:bg-red-500/10 rounded-xl transition-all opacity-0 group-hover:opacity-100"
+                    className="p-2.5 text-gray-400 hover:text-red-600 hover:bg-red-100/50 dark:hover:bg-red-500/10 rounded-xl transition-all opacity-0 group-hover:opacity-100"
                   >
                     <Trash2 size={16} />
                   </button>

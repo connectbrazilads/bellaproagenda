@@ -132,7 +132,7 @@ function StatCard({ label, value, icon, tone = 'rose', plain = false }) {
         </div>
       </div>
       <p className="text-[10px] font-semibold uppercase tracking-wider text-gray-400 dark:text-gray-500">{label}</p>
-      <p className="mt-2 text-2xl font-semibold text-gray-900 dark:text-white">
+      <p className="mt-2 text-2xl font-semibold text-gray-900 dark:text-white tabular-nums">
         {plain ? formatPlain(value) : formatMoney(value)}
       </p>
     </div>
@@ -150,7 +150,7 @@ function MiniResumo({ label, value, plain = false, highlight = false }) {
       )}
     >
       <p className="text-[9px] font-semibold uppercase tracking-wider text-gray-400 dark:text-gray-500">{label}</p>
-      <p className="mt-1.5 text-sm font-semibold text-gray-800 dark:text-gray-200">{plain ? formatPlain(value) : formatMoney(value)}</p>
+      <p className="mt-1.5 text-sm font-semibold text-gray-800 dark:text-gray-200 tabular-nums">{plain ? formatPlain(value) : formatMoney(value)}</p>
     </div>
   );
 }
@@ -1038,9 +1038,9 @@ export default function Financeiro() {
                   {profissionaisExibidos.map((profissional) => (
                     <tr key={profissional.id} className="text-gray-700 dark:text-gray-300 hover:bg-black/[0.01] dark:hover:bg-white/[0.01] transition-colors">
                       <td className="px-5 py-3.5 font-medium text-gray-900 dark:text-white">{profissional.nome}</td>
-                      <td className="px-5 py-3.5 text-center">{formatPlain(profissional.atendimentos || 0)}</td>
-                      <td className="px-5 py-3.5 text-right font-semibold text-gray-905 dark:text-zinc-200">{formatMoney(profissional.bruto)}</td>
-                      <td className="px-5 py-3.5 text-right font-semibold text-[#d48997]">{formatMoney(profissional.comissao)}</td>
+                      <td className="px-5 py-3.5 text-center tabular-nums">{formatPlain(profissional.atendimentos || 0)}</td>
+                      <td className="px-5 py-3.5 text-right font-semibold text-gray-900 dark:text-zinc-200 tabular-nums">{formatMoney(profissional.bruto)}</td>
+                      <td className="px-5 py-3.5 text-right font-semibold text-[#d48997] tabular-nums">{formatMoney(profissional.comissao)}</td>
                     </tr>
                   ))}
                 </tbody>
@@ -1488,9 +1488,9 @@ export default function Financeiro() {
                   {profissionaisExibidos.map((p) => (
                     <tr key={p.id} className="text-gray-700 dark:text-gray-300 hover:bg-black/[0.01] dark:hover:bg-white/[0.01] transition-colors">
                       <td className="px-6 py-4 font-medium text-gray-900 dark:text-white">{p.nome}</td>
-                      <td className="px-6 py-4 text-center">{formatPlain(p.atendimentos || 0)}</td>
-                      <td className="px-6 py-4 text-right font-semibold text-gray-900 dark:text-zinc-200">{formatMoney(p.bruto)}</td>
-                      <td className="px-6 py-4 text-right font-semibold text-[#d48997]">{formatMoney(p.comissao)}</td>
+                      <td className="px-6 py-4 text-center tabular-nums">{formatPlain(p.atendimentos || 0)}</td>
+                      <td className="px-6 py-4 text-right font-semibold text-gray-900 dark:text-zinc-200 tabular-nums">{formatMoney(p.bruto)}</td>
+                      <td className="px-6 py-4 text-right font-semibold text-[#d48997] tabular-nums">{formatMoney(p.comissao)}</td>
                     </tr>
                   ))}
                 </tbody>

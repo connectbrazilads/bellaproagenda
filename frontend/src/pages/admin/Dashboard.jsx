@@ -219,7 +219,7 @@ export default function Dashboard() {
               <Clock size={18} />
            </div>
            <div>
-              <p className="text-xl font-bold text-amber-600 leading-none">{stats.aguardando}</p>
+              <p className="text-xl font-bold text-amber-600 leading-none tabular-nums">{stats.aguardando}</p>
               <p className="text-[10px] font-medium text-amber-700/60 dark:text-amber-400/60 tracking-wide mt-1">Aguardando Início</p>
            </div>
         </div>
@@ -228,7 +228,7 @@ export default function Dashboard() {
               <TrendingUp size={18} />
            </div>
            <div>
-              <p className="text-xl font-bold text-[#d48997] leading-none">{stats.emAtendimento}</p>
+              <p className="text-xl font-bold text-[#d48997] leading-none tabular-nums">{stats.emAtendimento}</p>
               <p className="text-[10px] font-medium text-[#b96a79]/60 dark:text-[#efbac2]/60 tracking-wide mt-1">Em Atendimento</p>
            </div>
         </div>
@@ -237,13 +237,12 @@ export default function Dashboard() {
               <CheckCircle size={18} />
            </div>
            <div>
-              <p className="text-xl font-bold text-emerald-600 leading-none">{stats.concluidos}</p>
+              <p className="text-xl font-bold text-emerald-600 leading-none tabular-nums">{stats.concluidos}</p>
               <p className="text-[10px] font-medium text-emerald-700/60 dark:text-emerald-400/60 tracking-wide mt-1">Concluídos Hoje</p>
            </div>
         </div>
       </div>
 
-      {/* Stats Cards */}
       <div className={cn('grid gap-4', showWideStatusGrid ? 'grid-cols-1 md:grid-cols-2 lg:grid-cols-4' : 'grid-cols-1 md:grid-cols-2')}>
         <StatCard label="Agendamentos Hoje" value={stats.hoje.length} icon={<Calendar />} color="purple" sparkline={stats.sparkline} />
         <StatCard label="Concluídos" value={stats.concluidos} icon={<CheckCircle />} color="emerald" />
@@ -251,7 +250,6 @@ export default function Dashboard() {
         <StatCard label="Clientes na Base" value={stats.totalClientes} icon={<Users />} color="orange" sparkline={stats.sparkline} />
       </div>
 
-      {/* Mini Exec Cards */}
       <div className={cn('grid gap-4', showWideStatusGrid ? 'grid-cols-2 xl:grid-cols-5' : 'grid-cols-2 lg:grid-cols-3')}>
         <MiniExecCard label="Ticket Médio" value={`R$ ${Number(executivo.cards?.ticketMedio || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`} />
         <MiniExecCard label="Cancelados" value={executivo.cards?.cancelados || 0} tone="rose" />
@@ -261,7 +259,6 @@ export default function Dashboard() {
       </div>
 
       <div className={cn('grid grid-cols-1 gap-6', showThreePanelLayout ? 'lg:grid-cols-3' : 'xl:grid-cols-[minmax(0,1fr)_360px]')}>
-        {/* Next Bookings */}
         <div className={cn('space-y-4', showThreePanelLayout && 'lg:col-span-2')}>
           <div className="flex items-center justify-between">
             <h2 className="text-xs font-semibold text-gray-400 dark:text-gray-505 uppercase tracking-wider">Próximos do Dia</h2>
@@ -291,7 +288,7 @@ export default function Dashboard() {
                 >
                   <div className="flex items-center gap-4 w-full min-w-0">
                     <div className="w-16 h-16 bg-gradient-to-tr from-gray-50 to-gray-100 dark:from-white/5 dark:to-white/10 rounded-xl flex flex-col items-center justify-center border border-black/[0.04] dark:border-white/5 group-hover:bg-white dark:group-hover:bg-white/5 transition-all shadow-sm shrink-0">
-                      <span className="text-lg font-bold text-gray-900 dark:text-white tracking-tight">{a.inicioHora}</span>
+                      <span className="text-lg font-bold text-gray-900 dark:text-white tracking-tight tabular-nums">{a.inicioHora}</span>
                       <span className="text-[8px] font-semibold text-gray-405 dark:text-gray-550 uppercase tracking-widest mt-0.5">Horário</span>
                     </div>
                     <div className="space-y-1.5 min-w-0">
@@ -365,7 +362,6 @@ export default function Dashboard() {
           </div>
         </div>
 
-        {/* AI Insight Sidecard */}
         <div className="space-y-4">
           <h2 className="text-xs font-semibold text-gray-400 dark:text-gray-505 uppercase tracking-wider">Insights de IA</h2>
           <motion.div 
@@ -407,7 +403,6 @@ export default function Dashboard() {
         </div>
       </div>
 
-      {/* Productive list */}
       <div className={cn('grid gap-6', showDualInsights && 'xl:grid-cols-2')}>
         <div className="bg-white/60 dark:bg-white/[0.02] backdrop-blur-md rounded-2xl p-5 md:p-6 border border-black/[0.04] dark:border-white/[0.04] shadow-sm">
           <div className="flex items-center justify-between mb-5">
@@ -441,7 +436,7 @@ export default function Dashboard() {
                 <div key={item.nome} className="rounded-xl border border-black/[0.03] dark:border-white/[0.03] bg-white dark:bg-white/[0.01] px-4 py-3">
                   <div className="flex items-center justify-between gap-4">
                     <p className="text-sm font-semibold text-gray-900 dark:text-white normal-case">{item.nome}</p>
-                    <p className="text-sm font-semibold text-[#d48997]">R$ {Number(item.valor || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</p>
+                    <p className="text-sm font-semibold text-[#d48997] tabular-nums">R$ {Number(item.valor || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</p>
                   </div>
                 </div>
               ))}
@@ -545,7 +540,7 @@ function StatCard({ label, value, icon, color, trend, sparkline }) {
        </div>
 
        <div className="space-y-1 mb-6">
-          <p className="text-2xl font-semibold text-gray-905 dark:text-white tracking-tight leading-none break-words">{value}</p>
+          <p className="text-2xl font-semibold text-gray-905 dark:text-white tracking-tight leading-none break-words tabular-nums">{value}</p>
           <p className="text-[10px] font-medium text-gray-400 dark:text-gray-500 tracking-wide mt-2 normal-case">{label}</p>
        </div>
 
@@ -578,7 +573,7 @@ function MiniExecCard({ label, value, tone = 'default' }) {
   return (
     <div className={`rounded-xl border bg-white/60 dark:bg-white/[0.02] backdrop-blur-md px-5 py-4 shadow-sm transition-all duration-300 hover:border-[#e29ba8]/20 ${tones[tone]}`}>
       <p className="text-[10px] font-medium text-gray-400 dark:text-gray-505 normal-case">{label}</p>
-      <p className="mt-1 text-lg font-bold tracking-tight">{value}</p>
+      <p className="mt-1 text-lg font-bold tracking-tight tabular-nums">{value}</p>
     </div>
   );
 }
