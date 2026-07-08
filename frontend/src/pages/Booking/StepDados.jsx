@@ -3,7 +3,14 @@ import React from 'react';
 export default function StepDados({ booking, set, next, back, cor }) {
   function handleSubmit(e) {
     e.preventDefault();
-    if (!booking.clienteNome.trim() || !booking.clienteTelefone.trim()) return;
+    if (!booking.clienteNome.trim()) return;
+    
+    const telClean = booking.clienteTelefone.replace(/\D/g, '');
+    if (telClean.length < 10) {
+      alert('Por favor, insira um número de WhatsApp completo com DDD.');
+      return;
+    }
+    
     next();
   }
 

@@ -169,7 +169,11 @@ export default function StepData({ booking, set, next, cor }) {
           <div className="relative z-10 flex items-center justify-between">
             <button
               onClick={mesAnterior}
-              className="flex h-12 w-12 items-center justify-center rounded-2xl border border-[#d4af37]/20 bg-[#d4af37]/5 transition-all hover:bg-[#d4af37]/10 active:scale-95 text-[#f4ecd8]"
+              disabled={ano < hoje.getFullYear() || (ano === hoje.getFullYear() && mais <= hoje.getMonth())}
+              className={cn(
+                "flex h-12 w-12 items-center justify-center rounded-2xl border border-[#d4af37]/20 bg-[#d4af37]/5 transition-all text-[#f4ecd8] disabled:opacity-30 disabled:cursor-not-allowed",
+                !(ano < hoje.getFullYear() || (ano === hoje.getFullYear() && mais <= hoje.getMonth())) && "hover:bg-[#d4af37]/10 active:scale-95"
+              )}
             >
               <ChevronLeft size={20} strokeWidth={2.5} />
             </button>

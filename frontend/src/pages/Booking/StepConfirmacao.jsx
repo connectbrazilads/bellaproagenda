@@ -118,7 +118,8 @@ export default function StepConfirmacao({ booking, back, cor, salao, onSuccess }
         <button
           onClick={back}
           type="button"
-          className="premium-btn-secondary w-full sm:w-1/3 text-sm py-5"
+          disabled={loading}
+          className="premium-btn-secondary w-full sm:w-1/3 text-sm py-5 disabled:opacity-50 disabled:cursor-not-allowed"
         >
           Voltar
         </button>

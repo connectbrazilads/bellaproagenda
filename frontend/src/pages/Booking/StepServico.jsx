@@ -125,7 +125,7 @@ export default function StepServico({ booking, set, next, cor }) {
 
                   <div className="flex-1">
                     <h3 className="mb-0.5 text-lg font-brand-display font-black tracking-tight text-[#f4ecd8] group-hover:text-[#d4af37] transition-colors">{item.nome}</h3>
-                    <p className="max-w-[200px] text-[11px] font-light leading-relaxed text-[#b299a0]">
+                    <p className="max-w-[280px] text-[11px] font-light leading-relaxed text-[#b299a0] line-clamp-2">
                       {item.descricao || 'Experiência premium de beleza e bem-estar.'}
                     </p>
                   </div>
