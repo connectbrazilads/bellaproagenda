@@ -536,6 +536,7 @@ export default function Inbox() {
                   layout
                   initial={{ opacity: 0, y: 5 }}
                   animate={{ opacity: 1, y: 0 }}
+                  style={{ contentVisibility: 'auto', containIntrinsicSize: '64px' }}
                   key={c.id}
                   onClick={() => { setSelecionada(c); setMobileChat(true); setMensagens([]); setErro(''); }}
                   className={cn(
@@ -966,6 +967,7 @@ function MensagemBolha({ m }) {
       <motion.div 
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
+        style={{ contentVisibility: 'auto', containIntrinsicSize: '120px' }}
         className="flex justify-center"
       >
         <div className="max-w-[85%] bg-[#d48997]/5 dark:bg-[#d48997]/5 border border-[#d48997]/15 rounded-2xl p-5 relative overflow-hidden group hover:border-[#d48997]/30 transition-all">
@@ -985,6 +987,7 @@ function MensagemBolha({ m }) {
     <motion.div 
       initial={{ opacity: 0, y: 10, scale: 0.98 }}
       animate={{ opacity: 1, y: 0, scale: 1 }}
+      style={{ contentVisibility: 'auto', containIntrinsicSize: '80px' }}
       className={cn(
         "flex flex-col group",
         isClient ? "items-start" : "items-end"

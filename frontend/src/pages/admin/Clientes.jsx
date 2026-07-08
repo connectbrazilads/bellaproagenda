@@ -384,6 +384,10 @@ export default function Clientes() {
             return (
               <article
                 key={cliente.id || cliente.telefone}
+                style={{
+                  contentVisibility: 'auto',
+                  containIntrinsicSize: isExpanded ? '350px' : '100px'
+                }}
                 className={cn(
                   'rounded-2xl border bg-white/60 dark:bg-white/[0.02] backdrop-blur-md p-5 hover:shadow-md transition-all duration-300',
                   isExpanded
