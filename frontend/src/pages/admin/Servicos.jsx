@@ -292,7 +292,7 @@ export default function Servicos() {
                   <button onClick={() => openEdit(servico)} className="rounded-xl border border-black/[0.04] dark:border-white/10 bg-gray-50 dark:bg-white/5 p-2.5 text-gray-400 transition hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-white/10">
                     <Edit3 size={14} />
                   </button>
-                  <button onClick={() => handleDelete(servico.id)} className="rounded-xl border border-black/[0.04] dark:border-white/10 bg-gray-50 dark:bg-white/5 p-2.5 text-gray-400 transition hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10">
+                  <button onClick={() => handleDelete(servico.id)} className="rounded-xl border border-black/[0.04] dark:border-white/10 bg-gray-50 dark:bg-white/5 p-2.5 text-gray-400 transition hover:text-red-600 hover:bg-red-100/50 dark:hover:bg-red-500/10">
                     <Trash2 size={14} />
                   </button>
                 </div>

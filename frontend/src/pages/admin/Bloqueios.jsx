@@ -329,7 +329,7 @@ export default function Bloqueios() {
                       whileHover={{ scale: 1.05 }}
                       whileTap={{ scale: 0.95 }}
                       onClick={() => excluir(b.id)}
-                      className="rounded-xl border border-black/[0.04] dark:border-white/10 bg-gray-50 dark:bg-white/5 p-2.5 text-gray-400 transition-all hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10 shrink-0"
+                      className="rounded-xl border border-black/[0.04] dark:border-white/10 bg-gray-50 dark:bg-white/5 p-2.5 text-gray-400 transition-all hover:text-red-600 hover:bg-red-100/50 dark:hover:bg-red-500/10 shrink-0"
                     >
                       <Trash2 size={16} />
                     </motion.button>

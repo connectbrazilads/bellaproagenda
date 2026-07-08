@@ -439,8 +439,8 @@ export default function AdminLayout() {
             className={cn(
               "w-8 h-8 rounded-full border flex items-center justify-center transition-all duration-300",
               dark 
-                ? "bg-slate-900 border-gray-200 dark:border-white/10 text-gray-900 dark:text-white hover:bg-violet-600 hover:border-violet-500" 
-                : "bg-white border-slate-300 text-slate-500 hover:text-violet-700 hover:border-violet-300 shadow-xl shadow-slate-200/70",
+                ? "bg-slate-900 border-white/10 text-white hover:bg-[#d48997]/20 hover:text-[#d48997] hover:border-[#d48997]/30" 
+                : "bg-white border-slate-200 text-[#8c6b75] hover:text-[#b56f7c] hover:border-[#d48997] shadow-xl shadow-slate-200/70",
               "scale-100 active:scale-90"
             )}
             title={effectiveCollapsed ? "Expandir Menu" : "Recolher Menu"}
@@ -516,14 +516,14 @@ export default function AdminLayout() {
                     title={effectiveCollapsed ? item.label : ""}
                     className={({ isActive }) =>
                       cn(
-                        "flex items-center rounded-[1.25rem] transition-all duration-300 group relative overflow-hidden border-l-2",
+                        "flex items-center rounded-[1.25rem] transition-all duration-300 group relative overflow-hidden",
                         effectiveCollapsed ? "justify-center p-4" : "gap-4 px-5 py-3.5",
                         isActive
                           ? dark
-                            ? "bg-gradient-to-r from-[#d48997]/15 to-[#d48997]/5 text-white border-[#d48997] shadow-[inset_0_1px_0_0_rgba(255,255,255,0.05)] translate-x-1"
-                            : "bg-gradient-to-r from-[#fff0f1] to-white text-[#b56f7c] border-[#d48997] shadow-sm translate-x-1"
+                            ? "bg-gradient-to-r from-[#d48997]/15 to-[#d48997]/5 text-white shadow-[inset_0_1px_0_0_rgba(255,255,255,0.05)] translate-x-1"
+                            : "bg-gradient-to-r from-[#fff0f1] to-white text-[#b56f7c] shadow-sm translate-x-1"
                           : cn(
-                              "border-transparent hover:translate-x-1",
+                              "hover:translate-x-1",
                               dark ? "text-[#a98690] hover:text-[#faf7f6] hover:bg-white/[0.02]" : "text-[#8c6b75] hover:text-[#1a1a1f] hover:bg-[#fff2f1]"
                             )
                       )
@@ -644,13 +644,12 @@ export default function AdminLayout() {
                           type="button"
                           onClick={() => handleMobileNavigate(item.to)}
                           className={cn(
-                            "w-full flex items-center gap-4 px-5 py-4 rounded-[1.25rem] text-[11px] font-black uppercase tracking-widest transition-all text-left border-l-2",
+                            "w-full flex items-center gap-4 px-5 py-4 rounded-[1.25rem] text-[11px] font-black uppercase tracking-widest transition-all text-left",
                             isItemActive(item)
                               ? dark
-                                ? "bg-gradient-to-r from-[#d48997]/15 to-[#d48997]/5 text-white border-[#d48997]"
-                                : "bg-[#fff0f1] text-[#b56f7c] border-[#d48997]"
+                                ? "bg-gradient-to-r from-[#d48997]/15 to-[#d48997]/5 text-white"
+                                : "bg-[#fff0f1] text-[#b56f7c]"
                               : cn(
-                                  "border-transparent",
                                   dark ? "text-[#d6b6bc] hover:text-[#faf7f6]" : "text-[#8c6b75] hover:text-[#1a1a1f]"
                                 )
                           )}

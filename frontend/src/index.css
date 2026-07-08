@@ -568,7 +568,7 @@ h6,
 .dark .admin-panel .even\:bg-gray-50:nth-child(even) { background-color: #17151b !important; }
 .dark .admin-panel ::-webkit-scrollbar { width: 6px; height: 6px; }
 .dark .admin-panel ::-webkit-scrollbar-track { background: #16151b; }
-.dark .admin-panel ::-webkit-scrollbar-thumb { background: #47343f; border-radius: 3px; }
+.dark .admin-panel ::-webkit-scrollbar-thumb { background: #47343f; border-radius: 999px; }
 .dark .admin-panel ::-webkit-scrollbar-thumb:hover { background: #5a434f; }
 
 .custom-scrollbar,

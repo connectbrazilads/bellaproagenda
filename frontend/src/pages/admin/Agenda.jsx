@@ -2782,7 +2782,7 @@ function ModalDetalhesAgendamento({ agendamento: initialAgendamento, allAgendame
                     onUpdate();
                     onClose();
                   }}
-                  className="px-4 py-2.5 rounded-xl bg-red-500 text-gray-900 dark:text-white text-[9px] font-black uppercase tracking-widest hover:bg-red-600 transition-all shadow-lg shadow-red-500/20"
+                  className="px-4 py-2.5 rounded-xl bg-red-500 text-white text-[9px] font-black uppercase tracking-widest hover:bg-red-600 transition-all shadow-lg shadow-red-500/20"
                 >
                   Cancelar
                 </button>
@@ -2798,7 +2798,7 @@ function ModalDetalhesAgendamento({ agendamento: initialAgendamento, allAgendame
               {agendamento.statusPagamento === 'pago' && (
                 <button
                   onClick={handleReabrirComanda}
-                  className="px-4 py-2.5 rounded-xl bg-amber-500 text-gray-950 text-[9px] font-black uppercase tracking-widest hover:bg-amber-400 transition-all shadow-lg shadow-amber-500/20"
+                  className="px-4 py-2.5 rounded-xl bg-amber-500 text-[#3b2a35] text-[9px] font-black uppercase tracking-widest hover:bg-amber-400 transition-all shadow-lg shadow-amber-500/20"
                 >
                   Reabrir Comanda
                 </button>
@@ -4604,7 +4604,7 @@ export default function Agenda() {
       <style>{`
         .custom-scrollbar::-webkit-scrollbar { width: 3px; height: 3px; }
         .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
-        .custom-scrollbar::-webkit-scrollbar-thumb { background: rgba(124,58,237,0.1); border-radius: 10px; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: rgba(226,155,168,0.2); border-radius: 999px; }
         .dark .custom-scrollbar::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.05); }
         .modal-scrollbar { scrollbar-width: thin; scrollbar-color: rgba(139,92,246,0.32) transparent; }
         .modal-scrollbar::-webkit-scrollbar { width: 8px; }

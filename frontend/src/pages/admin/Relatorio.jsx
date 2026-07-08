@@ -89,11 +89,11 @@ export default function Relatorio() {
       <header className="flex flex-col md:flex-row justify-between items-end md:items-center gap-4 md:p-8 border-b border-gray-100 dark:border-white/5 pb-10">
         <div>
           <div className="flex items-center gap-3 mb-4">
-            <TrendingUp className="w-4 h-4 text-emerald-500 animate-bounce" />
-            <h2 className="text-[10px] font-black text-emerald-500 uppercase tracking-[0.4em]">Intelig?ncia Financeira</h2>
+            <TrendingUp className="w-4 h-4 text-emerald-500 transition-transform group-hover:scale-110 duration-300" />
+            <h2 className="text-[10px] font-black text-emerald-500 uppercase tracking-[0.4em]">Inteligência Financeira</h2>
           </div>
           <h1 className="text-2xl sm:text-4xl sm:text-6xl font-black text-gray-900 dark:text-white tracking-tighter leading-none mb-4">Seu <span className="text-[#d48997]">Lucro</span></h1>
-          <p className="text-gray-400 font-medium text-xl max-w-xl leading-relaxed">Vis?o estratégica completa de receitas, despesas e performance.</p>
+          <p className="text-gray-400 font-medium text-xl max-w-xl leading-relaxed">Visão estratégica completa de receitas, despesas e performance.</p>
         </div>
         
         <div className="flex flex-wrap items-center gap-4">
@@ -101,7 +101,7 @@ export default function Relatorio() {
             whileHover={{ scale: 1.05, y: -2 }}
             whileTap={{ scale: 0.95 }}
             onClick={() => setModalDespesa(true)}
-            className="bg-red-500 text-gray-900 dark:text-white px-8 py-5 rounded-[2rem] font-black text-xs shadow-2xl shadow-red-500/20 flex items-center gap-3 uppercase tracking-widest"
+            className="bg-red-500 text-white px-8 py-5 rounded-[2rem] font-black text-xs shadow-2xl shadow-red-500/20 flex items-center gap-3 uppercase tracking-widest"
           >
             <Plus className="w-4 h-4" /> LANÇAR DESPESA
           </motion.button>
@@ -344,7 +344,7 @@ export default function Relatorio() {
                 </div>
                 <div className="flex gap-4 pt-4">
                    <button type="button" onClick={() => setModalDespesa(false)} className="flex-1 py-5 rounded-2xl border-2 border-gray-100 dark:border-white/5 text-[10px] font-black uppercase tracking-widest text-gray-400 hover:bg-gray-50 transition-all">Cancelar</button>
-                   <button type="submit" className="flex-1 py-5 bg-red-600 text-gray-900 dark:text-white rounded-2xl font-black text-[10px] uppercase tracking-widest shadow-xl shadow-red-500/20 hover:bg-red-700 transition-all">Lançar Agora</button>
+                   <button type="submit" className="flex-1 py-5 bg-red-600 text-white rounded-2xl font-black text-[10px] uppercase tracking-widest shadow-xl shadow-red-500/20 hover:bg-red-700 transition-all">Lançar Agora</button>
                 </div>
               </div>
             </motion.form>

@@ -197,8 +197,11 @@ function printHtml(title, body) {
     <html>
       <head>
         <title>${title}</title>
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+        <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
         <style>
-          body { font-family: Arial, sans-serif; padding: 24px; color: #111827; }
+          body { font-family: 'Plus Jakarta Sans', Arial, sans-serif; padding: 24px; color: #111827; }
           h1, h2, h3 { margin: 0 0 12px; }
           table { width: 100%; border-collapse: collapse; margin-top: 12px; }
           th, td { border: 1px solid #e5e7eb; padding: 10px; text-align: left; font-size: 12px; }
