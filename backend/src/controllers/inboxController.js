@@ -287,6 +287,39 @@ async function deleteRespostaRapida(req, res) {
   res.json({ ok: true });
 }
 
+async function iniciarConversa(req, res) {
+  const { telefone, nomeCliente } = req.body || {};
+  if (!telefone) return res.status(400).json({ error: 'Telefone obrigatório' });
+
+  const cleanPhone = String(telefone).replace(/\D/g, '');
+  if (!cleanPhone) return res.status(400).json({ error: 'Telefone inválido' });
+
+  let conversa = await prisma.conversa.findFirst({
+    where: { salaoId: req.user.salaoId, telefone: cleanPhone },
+  });
+
+  if (!conversa) {
+    conversa = await prisma.conversa.create({
+      data: {
+        salaoId: req.user.salaoId,
+        telefone: cleanPhone,
+        nomeCliente: nomeCliente || null,
+        status: 'aberta',
+        atendimento: 'humano',
+      },
+    });
+  } else if (nomeCliente && !conversa.nomeCliente) {
+    conversa = await prisma.conversa.update({
+      where: { id: conversa.id },
+      data: { nomeCliente, status: 'aberta' },
+    });
+  }
+
+  inboxEvents.emit('conversa_atualizada', { salaoId: req.user.salaoId, conversaId: conversa.id });
+
+  res.json(conversa);
+}
+
 module.exports = {
   getConversas,
   getMensagens,
@@ -297,4 +330,5 @@ module.exports = {
   getRespostasRapidas,
   createRespostaRapida,
   deleteRespostaRapida,
+  iniciarConversa,
 };

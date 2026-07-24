@@ -173,6 +173,7 @@ export const exportBackup = () => api.get('/admin/backup/export');
 
 // ADMIN INBOX
 export const getConversas = (params) => api.get('/admin/inbox', { params });
+export const iniciarConversa = (data) => api.post('/admin/inbox/iniciar', data);
 export const getMensagens = (id) => api.get(`/admin/inbox/${id}/mensagens`);
 export const atualizarConversa = (id, data) => api.put(`/admin/inbox/${id}`, data);
 export const responderConversa = (id, texto) => api.post(`/admin/inbox/${id}/responder`, { texto });

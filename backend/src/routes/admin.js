@@ -150,6 +150,7 @@ router.put('/senha', requirePermission('configuracoes'), ctrl.updateSenha);
 
 
 router.get('/inbox', requirePermission('inbox'), inbox.getConversas);
+router.post('/inbox/iniciar', requirePermission('inbox'), inbox.iniciarConversa);
 router.get('/inbox/stream', requirePermission('inbox'), inbox.streamEvents);
 router.get('/inbox/snippets', requirePermission('inbox'), inbox.getRespostasRapidas);
 router.post('/inbox/snippets', requirePermission('inbox'), inbox.createRespostaRapida);

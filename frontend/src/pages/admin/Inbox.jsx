@@ -31,6 +31,8 @@ import {
   responderConversaMidia,
   getRespostasRapidas,
   uploadImage,
+  iniciarConversa,
+  getClientes,
 } from '../../services/api';
 import { cn } from '../../lib/utils';
 import useElementWidth from '../../hooks/useElementWidth';
@@ -148,6 +150,138 @@ function ContatoAvatar({ conversa, className = '', fallbackClassName = '', showB
   );
 }
 
+function ModalNovaConversa({ onClose, onStart }) {
+  const [clientes, setClientes] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [busca, setBusca] = useState('');
+  const [telefone, setTelefone] = useState('');
+  const [nome, setNome] = useState('');
+  const [submitting, setSubmitting] = useState(false);
+  const [errorMsg, setErrorMsg] = useState('');
+
+  useEffect(() => {
+    getClientes()
+      .then((r) => setClientes(Array.isArray(r.data) ? r.data : []))
+      .catch(() => {})
+      .finally(() => setLoading(false));
+  }, []);
+
+  const clientesFiltrados = (Array.isArray(clientes) ? clientes : []).filter((c) =>
+    (c.nome || '').toLowerCase().includes(busca.toLowerCase()) ||
+    (c.telefone || '').includes(busca)
+  );
+
+  async function handleStart(tel, nomeCli) {
+    if (!tel) return;
+    setSubmitting(true);
+    setErrorMsg('');
+    try {
+      await onStart(tel, nomeCli);
+      onClose();
+    } catch (err) {
+      setErrorMsg(err?.response?.data?.error || err?.message || 'Erro ao iniciar conversa');
+    } finally {
+      setSubmitting(false);
+    }
+  }
+
+  return (
+    <div className="fixed inset-0 z-[200] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+      <motion.div
+        initial={{ opacity: 0, scale: 0.95 }}
+        animate={{ opacity: 1, scale: 1 }}
+        exit={{ opacity: 0, scale: 0.95 }}
+        className="w-full max-w-md rounded-3xl bg-white dark:bg-[#18181b] p-6 shadow-2xl border border-black/[0.04] dark:border-white/10"
+      >
+        <div className="flex items-center justify-between border-b border-black/[0.04] dark:border-white/10 pb-4 mb-4">
+          <h3 className="text-lg font-serif font-normal text-gray-900 dark:text-white flex items-center gap-2">
+            <MessageSquare size={18} className="text-[#d48997]" /> Nova Conversa
+          </h3>
+          <button onClick={onClose} className="p-1 rounded-lg text-gray-400 hover:text-gray-600 dark:hover:text-white">
+            <X size={18} />
+          </button>
+        </div>
+
+        {errorMsg && (
+          <div className="mb-4 rounded-xl border border-red-200 dark:border-red-500/20 bg-red-50 dark:bg-red-950/20 p-3 text-xs text-red-600 dark:text-red-300 font-medium">
+            {errorMsg}
+          </div>
+        )}
+
+        <div className="space-y-4">
+          <div>
+            <label className="block text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1">
+              Selecionar Cliente Cadastrado
+            </label>
+            <div className="relative mb-2">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+              <input
+                type="text"
+                placeholder="Buscar por nome ou telefone..."
+                value={busca}
+                onChange={(e) => setBusca(e.target.value)}
+                className="w-full h-10 rounded-xl border border-black/[0.08] dark:border-white/10 bg-gray-50 dark:bg-[#111113] pl-9 pr-4 text-xs text-gray-900 dark:text-white outline-none focus:border-[#d48997]"
+              />
+            </div>
+
+            <div className="max-h-40 overflow-y-auto space-y-1 custom-scrollbar pr-1">
+              {loading ? (
+                <p className="text-xs text-gray-400 py-2 text-center">Carregando clientes...</p>
+              ) : clientesFiltrados.length === 0 ? (
+                <p className="text-xs text-gray-400 py-2 text-center">Nenhum cliente encontrado</p>
+              ) : (
+                clientesFiltrados.map((c) => (
+                  <button
+                    key={c.id}
+                    onClick={() => handleStart(c.telefone, c.nome)}
+                    disabled={submitting}
+                    className="w-full flex items-center justify-between p-2.5 rounded-xl border border-transparent hover:border-[#d48997]/20 hover:bg-[#d48997]/5 transition text-left text-xs"
+                  >
+                    <div>
+                      <span className="font-semibold text-gray-900 dark:text-white block">{c.nome}</span>
+                      <span className="text-[10px] text-gray-400">{c.telefone}</span>
+                    </div>
+                    <span className="text-[10px] font-bold text-[#d48997] uppercase tracking-wider">Chamar</span>
+                  </button>
+                ))
+              )}
+            </div>
+          </div>
+
+          <div className="border-t border-black/[0.04] dark:border-white/10 pt-4">
+            <label className="block text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-2">
+              Ou Digite um Novo Número
+            </label>
+            <div className="space-y-2">
+              <input
+                type="text"
+                placeholder="Nome do cliente (opcional)"
+                value={nome}
+                onChange={(e) => setNome(e.target.value)}
+                className="w-full h-10 rounded-xl border border-black/[0.08] dark:border-white/10 bg-gray-50 dark:bg-[#111113] px-3 text-xs text-gray-900 dark:text-white outline-none focus:border-[#d48997]"
+              />
+              <input
+                type="text"
+                placeholder="Telefone (ex: 11999999999)"
+                value={telefone}
+                onChange={(e) => setTelefone(e.target.value)}
+                className="w-full h-10 rounded-xl border border-black/[0.08] dark:border-white/10 bg-gray-50 dark:bg-[#111113] px-3 text-xs text-gray-900 dark:text-white outline-none focus:border-[#d48997]"
+              />
+              <button
+                onClick={() => handleStart(telefone, nome)}
+                disabled={submitting || !telefone.trim()}
+                className="w-full h-10 rounded-xl bg-[#d48997] hover:bg-[#c97b8a] text-white text-xs font-semibold shadow-sm transition disabled:opacity-50"
+              >
+                {submitting ? 'Iniciando...' : 'Iniciar Conversa'}
+              </button>
+            </div>
+          </div>
+        </div>
+      </motion.div>
+    </div>
+  );
+}
+
 export default function Inbox() {
   const [filtro, setFiltro] = useState(0);
   const [conversas, setConversas] = useState([]);
@@ -165,6 +299,7 @@ export default function Inbox() {
   const [enviandoMidia, setEnviandoMidia] = useState(false);
   const [gravandoAudio, setGravandoAudio] = useState(false);
   const [duracaoGravacao, setDuracaoGravacao] = useState(0);
+  const [modalNovaConversa, setModalNovaConversa] = useState(false);
   
   const navigate = useNavigate();
   
@@ -182,9 +317,11 @@ export default function Inbox() {
     setErro('');
     try {
       const r = await getConversas(FILTROS[filtro].params);
-      setConversas(r.data || []);
-    } catch {
-      setErro('Não foi possível carregar as conversas agora.');
+      setConversas(Array.isArray(r.data) ? r.data : []);
+    } catch (e) {
+      const msg = e?.response?.data?.error || e?.message || 'Não foi possível carregar as conversas agora.';
+      setErro(msg);
+      setConversas([]);
     } finally {
       if (!silent) setLoadingConversas(false);
     }
@@ -307,9 +444,10 @@ export default function Inbox() {
     carregarConversas();
   }
 
-  const totalAbertas = conversas.filter((c) => c.status !== 'fechada').length;
-  const totalIa = conversas.filter((c) => c.atendimento === 'ia').length;
-  const totalHumano = conversas.filter((c) => c.atendimento === 'humano').length;
+  const safeConversas = Array.isArray(conversas) ? conversas : [];
+  const totalAbertas = safeConversas.filter((c) => c && c.status !== 'fechada').length;
+  const totalIa = safeConversas.filter((c) => c && c.atendimento === 'ia').length;
+  const totalHumano = safeConversas.filter((c) => c && c.atendimento === 'humano').length;
   const enviandoAlgo = enviando || enviandoMidia;
 
   function encerrarCapturaAudio() {
@@ -438,9 +576,9 @@ export default function Inbox() {
     }
   }
 
-  const filteredConversas = conversas.filter(c => 
-    (c.nomeCliente || '').toLowerCase().includes(search.toLowerCase()) || 
-    (c.telefone || '').includes(search)
+  const filteredConversas = safeConversas.filter(c => 
+    c && ((c.nomeCliente || '').toLowerCase().includes(search.toLowerCase()) || 
+    (c.telefone || '').includes(search))
   );
   
   const inicioConversa = mensagens[0]?.createdAt || selecionada?.updatedAt || null;
@@ -452,7 +590,27 @@ export default function Inbox() {
     ? (isTightPanel ? 'Assumir' : 'Assumir Atendimento')
     : (isTightPanel ? 'Voltar IA' : 'Devolver para IA');
 
+  async function handleIniciarNovaConversa(tel, nomeCli) {
+    const res = await iniciarConversa({ telefone: tel, nomeCliente: nomeCli });
+    const novaConversa = res.data;
+    await carregarConversas({ silent: true });
+    if (novaConversa?.id) {
+      setSelecionada(novaConversa);
+      setMobileChat(true);
+    }
+  }
+
   return (
+    <>
+      <AnimatePresence>
+        {modalNovaConversa && (
+          <ModalNovaConversa
+            onClose={() => setModalNovaConversa(false)}
+            onStart={handleIniciarNovaConversa}
+          />
+        )}
+      </AnimatePresence>
+
     <motion.div 
       ref={panelRef}
       initial={{ opacity: 0, y: 15 }}
@@ -471,9 +629,13 @@ export default function Inbox() {
             <h1 className="text-xl font-serif font-normal text-gray-900 dark:text-white leading-tight">
               Central de <span className="text-[#d48997]">Atendimento</span>
             </h1>
-            <div className="flex h-6 px-2.5 items-center justify-center rounded-lg bg-[#d48997]/10 text-[#d48997] font-semibold text-[10px]">
-              {conversas.length}
-            </div>
+            <button
+              onClick={() => setModalNovaConversa(true)}
+              className="flex items-center gap-1 px-3 py-1.5 rounded-xl bg-[#d48997] hover:bg-[#c97b8a] text-white text-xs font-semibold shadow-sm transition"
+              title="Iniciar conversa com cliente"
+            >
+              <Plus size={14} /> Novo Chat
+            </button>
           </div>
 
           <div className="flex items-center gap-1.5 overflow-x-auto hide-scrollbar pb-1 text-[10px] font-medium text-gray-500">
@@ -856,6 +1018,7 @@ export default function Inbox() {
         )}
       </AnimatePresence>
     </motion.div>
+    </>
   );
 }
 
