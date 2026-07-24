@@ -3738,6 +3738,29 @@ export default function Agenda() {
 
   const hours = Array.from({ length: END_HOUR - START_HOUR + 1 }, (_, i) => START_HOUR + i);
   const profsDisplay = (profissionais || []).filter(p => profVisiveis[p.id]);
+
+  const agendamentosByProf = useMemo(() => {
+    const map = {};
+    (agendamentos || []).forEach((item) => {
+      if (!item || item.status === 'cancelado') return;
+      const pid = item.profissionalId;
+      if (!map[pid]) map[pid] = [];
+      map[pid].push(item);
+    });
+    return map;
+  }, [agendamentos]);
+
+  const bloqueiosByProf = useMemo(() => {
+    const map = {};
+    (bloqueios || []).forEach((item) => {
+      if (!item) return;
+      const pid = item.profissionalId;
+      if (!map[pid]) map[pid] = [];
+      map[pid].push(item);
+    });
+    return map;
+  }, [bloqueios]);
+
   const mobileColWidth = 164;
   const mobileHourHeight = 92;
 
@@ -4171,7 +4194,7 @@ export default function Agenda() {
           </div>
         </div>
 
-        <div className="hidden md:flex px-4 md:px-6 py-3.5 items-center justify-between gap-3 border-b border-black/[0.03] dark:border-white/[0.03] bg-white/70 dark:bg-[#0c0c0e]/70 backdrop-blur-3xl sticky top-[var(--admin-mobile-header-height,73px)] md:top-0 z-50 shadow-[0_1px_3px_0_rgba(0,0,0,0.02)]">
+        <div className="hidden md:flex px-4 md:px-6 py-3.5 items-center justify-between gap-3 border-b border-black/[0.03] dark:border-white/[0.03] bg-white/95 dark:bg-[#0c0c0e]/95 sticky top-[var(--admin-mobile-header-height,73px)] md:top-0 z-50 shadow-[0_1px_3px_0_rgba(0,0,0,0.02)]">
           <div className="flex items-center gap-4">
             <button 
               onClick={() => setSidebarOpen(!sidebarOpen)} 
@@ -4255,7 +4278,7 @@ export default function Agenda() {
                             <div className="absolute inset-0 bg-[linear-gradient(135deg,rgba(148,163,184,0.06)_0,rgba(148,163,184,0.06)_48%,transparent_48%,transparent_100%)] opacity-70" />
                           </div>
                         ))}
-                        {bloqueios.filter(b => b.profissionalId === p.id).map((b) => {
+                        {(bloqueiosByProf[p.id] || []).map((b) => {
                           const { inicioHora: inicioBloqueio, fimHora: fimBloqueio } = getBloqueioRenderWindow(b);
                           const [bh, bm] = inicioBloqueio.split(':').map(Number);
                           const [fh, fm] = fimBloqueio.split(':').map(Number);
@@ -4274,20 +4297,18 @@ export default function Agenda() {
                             </button>
                           );
                         })}
-                        {agendamentos.filter(a => a.profissionalId === p.id && a.status !== 'cancelado').map((a) => {
+                        {(agendamentosByProf[p.id] || []).map((a) => {
                           const duracaoTotal = calculateAgendamentoDuration(a);
                           const mobileLayout = getMobileAppointmentLayout(a.inicioHora, duracaoTotal, mobileHourHeight);
                           const isOnline = isAgendamentoOnline(a);
                           const config = STATUS_CONFIG[a.status] || STATUS_CONFIG.confirmado;
                           return (
-                            <motion.div
+                            <div
                               key={`grid-${a.id}`}
-                              initial={{ opacity: 0, scale: 0.98 }}
-                              animate={{ opacity: 1, scale: 1 }}
                               onClick={(e) => { e.stopPropagation(); setAgendamentoSelecionado(a); setModalDetalhes(true); }}
                               style={{ top: mobileLayout.top, height: mobileLayout.height, width: `calc(${mobileColWidth}px - 8px)` }}
                               className={cn(
-                                "absolute left-1 rounded-[14px] border pl-3.5 pr-2 py-2 overflow-hidden z-20 cursor-pointer shadow-sm",
+                                "absolute left-1 rounded-[14px] border pl-3.5 pr-2 py-2 overflow-hidden z-20 cursor-pointer shadow-sm transition-all duration-150 active:scale-[0.98]",
                                 config.bg,
                                 config.border,
                                 isOnline && 'border-teal-500/20 dark:border-teal-400/20 shadow-[0_6px_12px_rgba(20,184,166,0.1)]'
@@ -4314,8 +4335,8 @@ export default function Agenda() {
                                   )}
                                 </div>
                               </div>
-                            </motion.div>
-                          );
+                            </div>
+                        );
                         })}
                       </div>
                     ))}
@@ -4452,7 +4473,7 @@ export default function Agenda() {
                     </div>
                   ))}
 
-                  {bloqueios.filter(b => b.profissionalId === p.id).map(b => {
+                  {(bloqueiosByProf[p.id] || []).map(b => {
                     const { inicioHora: inicioBloqueio, fimHora: fimBloqueio } = getBloqueioRenderWindow(b);
                     const [bh, bm] = inicioBloqueio.split(':').map(Number);
                     const [fh, fm] = fimBloqueio.split(':').map(Number);
@@ -4473,61 +4494,54 @@ export default function Agenda() {
                     );
                   })}
 
-                  <AnimatePresence>
-                    {agendamentos.filter(a => a.profissionalId === p.id && a.status !== 'cancelado').map(a => {
-                      const duracaoTotal = calculateAgendamentoDuration(a);
-                      const pos = getPosition(a.inicioHora, duracaoTotal);
-                      const config = STATUS_CONFIG[a.status] || STATUS_CONFIG.confirmado;
-                      const StatusIcon = config.icon;
-                      const isOnline = isAgendamentoOnline(a);
-                      
-                      return (
-                        <motion.div 
-                          key={a.id} 
-                          layoutId={a.id}
-                          initial={{ opacity: 0, scale: 0.95 }}
-                          animate={{ opacity: 1, scale: 1 }}
-                          onClick={(e) => { e.stopPropagation(); setAgendamentoSelecionado(a); setModalDetalhes(true); }}
-                          style={{ 
-                            top: pos.top + 1, 
-                            height: pos.height - 2,
-                            // Se??o visual BellaPro
-                            zIndex: 20,
-                            width: `calc(${colWidth}px - 12px)`,
-                          }} 
-                          className={cn(
-                            `absolute left-1.5 rounded-[1.25rem] border shadow-sm ${config.bg} ${config.border} pl-4 pr-3 py-3 cursor-pointer overflow-hidden group hover:z-50 hover:-translate-y-0.5 hover:shadow-xl transition-all duration-300`,
-                            isOnline ? 'border-teal-500/20 dark:border-teal-400/20 shadow-[0_10px_20px_-10px_rgba(20,184,166,0.15)]' : 'shadow-black/[0.02]'
-                          )}
-                        >
-                          <div className={cn("absolute left-0 top-0 bottom-0 w-[4.5px]", config.accent)} />
-                          <div className="flex justify-between items-center mb-1.5">
-                            <div className="flex items-center gap-1.5">
-                              <span className={cn("text-[10px] font-semibold tracking-wider", config.text)}>{a.inicioHora}</span>
-                            </div>
-                            <div className="flex items-center gap-1.5">
-                              {isOnline && (
-                                <span className="rounded-full bg-[#14b8a6]/10 text-[#14b8a6] border border-[#14b8a6]/20 px-1.5 py-0.5 text-[7px] font-bold uppercase tracking-widest">
-                                  Online
-                                </span>
-                              )}
-                            </div>
+                  {(agendamentosByProf[p.id] || []).map(a => {
+                    const duracaoTotal = calculateAgendamentoDuration(a);
+                    const pos = getPosition(a.inicioHora, duracaoTotal);
+                    const config = STATUS_CONFIG[a.status] || STATUS_CONFIG.confirmado;
+                    const isOnline = isAgendamentoOnline(a);
+                    
+                    return (
+                      <div 
+                        key={a.id} 
+                        onClick={(e) => { e.stopPropagation(); setAgendamentoSelecionado(a); setModalDetalhes(true); }}
+                        style={{ 
+                          top: pos.top + 1, 
+                          height: pos.height - 2,
+                          zIndex: 20,
+                          width: `calc(${colWidth}px - 12px)`,
+                        }} 
+                        className={cn(
+                          `absolute left-1.5 rounded-[1.25rem] border shadow-sm ${config.bg} ${config.border} pl-4 pr-3 py-3 cursor-pointer overflow-hidden group hover:z-50 hover:-translate-y-0.5 hover:shadow-xl transition-all duration-150 active:scale-[0.98]`,
+                          isOnline ? 'border-teal-500/20 dark:border-teal-400/20 shadow-[0_10px_20px_-10px_rgba(20,184,166,0.15)]' : 'shadow-black/[0.02]'
+                        )}
+                      >
+                        <div className={cn("absolute left-0 top-0 bottom-0 w-[4.5px]", config.accent)} />
+                        <div className="flex justify-between items-center mb-1.5">
+                          <div className="flex items-center gap-1.5">
+                            <span className={cn("text-[10px] font-semibold tracking-wider", config.text)}>{a.inicioHora}</span>
                           </div>
-                          
-                          <p className="text-xs font-semibold text-gray-800 dark:text-gray-100 truncate normal-case tracking-wide leading-tight mb-0.5">{a.clienteNome}</p>
-                          <p className="text-[10px] font-normal text-gray-500 dark:text-gray-400 truncate normal-case tracking-wide leading-none">{getAgendamentoTitulo(a)}</p>
+                          <div className="flex items-center gap-1.5">
+                            {isOnline && (
+                              <span className="rounded-full bg-[#14b8a6]/10 text-[#14b8a6] border border-[#14b8a6]/20 px-1.5 py-0.5 text-[7px] font-bold uppercase tracking-widest">
+                                Online
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                        
+                        <p className="text-xs font-semibold text-gray-800 dark:text-gray-100 truncate normal-case tracking-wide leading-tight mb-0.5">{a.clienteNome}</p>
+                        <p className="text-[10px] font-normal text-gray-500 dark:text-gray-400 truncate normal-case tracking-wide leading-none">{getAgendamentoTitulo(a)}</p>
 
-                          {pos.height > 60 && (
-                            <div className="absolute bottom-2.5 left-4 right-3 pt-1.5 border-t border-black/[0.03] dark:border-white/[0.03] flex items-center justify-between opacity-70">
-                               <p className="text-[9px] font-medium text-gray-400 dark:text-gray-500 flex items-center gap-1">
-                                 <Clock size={8} /> {formatDurationLabel(duracaoTotal)}
-                               </p>
-                            </div>
-                          )}
-                        </motion.div>
-                      );
-                    })}
-                  </AnimatePresence>
+                        {pos.height > 60 && (
+                          <div className="absolute bottom-2.5 left-4 right-3 pt-1.5 border-t border-black/[0.03] dark:border-white/[0.03] flex items-center justify-between opacity-70">
+                             <p className="text-[9px] font-medium text-gray-400 dark:text-gray-500 flex items-center gap-1">
+                               <Clock size={8} /> {formatDurationLabel(duracaoTotal)}
+                             </p>
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
                 </div>
               ))}
             </div>
