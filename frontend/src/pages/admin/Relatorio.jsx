@@ -296,44 +296,44 @@ export default function Relatorio() {
               <h2 className="text-3xl font-black text-gray-900 dark:text-white tracking-tighter mb-8">Lançar Despesa</h2>
               <div className="space-y-6">
                 <div className="space-y-1">
-                  <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-4">Descrição</label>
+                  <label className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider ml-4">Descrição</label>
                   <input 
                     value={formDespesa.descricao} 
                     onChange={e => setFormDespesa({...formDespesa, descricao: e.target.value})} 
-                    className="w-full bg-gray-50 dark:bg-white/5 border-2 border-transparent focus:border-red-500 rounded-2xl px-6 py-4 font-black text-gray-900 dark:text-white outline-none transition-all" 
-                    placeholder="Ex: Aluguel do Sal?o" 
+                    className="w-full bg-gray-50 dark:bg-white/5 border-2 border-transparent focus:border-red-500 rounded-2xl px-6 py-4 font-semibold text-gray-900 dark:text-white outline-none transition-all" 
+                    placeholder="Ex: Aluguel do Salão" 
                     required 
                   />
                 </div>
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-1">
-                    <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-4">Valor (R$)</label>
+                    <label className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider ml-4">Valor (R$)</label>
                     <input 
                       type="number" 
                       step="0.01" 
                       value={formDespesa.valor} 
                       onChange={e => setFormDespesa({...formDespesa, valor: parseFloat(e.target.value)})} 
-                      className="w-full bg-gray-50 dark:bg-white/5 border-2 border-transparent focus:border-red-500 rounded-2xl px-6 py-4 font-black text-gray-900 dark:text-white outline-none transition-all" 
+                      className="w-full bg-gray-50 dark:bg-white/5 border-2 border-transparent focus:border-red-500 rounded-2xl px-6 py-4 font-semibold text-gray-900 dark:text-white outline-none transition-all" 
                       required 
                     />
                   </div>
                   <div className="space-y-1">
-                    <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-4">Data</label>
+                    <label className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider ml-4">Data</label>
                     <input 
                       type="date" 
                       value={formDespesa.data} 
                       onChange={e => setFormDespesa({...formDespesa, data: e.target.value})} 
-                      className="w-full bg-gray-50 dark:bg-white/5 border-2 border-transparent focus:border-red-500 rounded-2xl px-6 py-4 font-black text-gray-900 dark:text-white outline-none transition-all" 
+                      className="w-full bg-gray-50 dark:bg-white/5 border-2 border-transparent focus:border-red-500 rounded-2xl px-6 py-4 font-semibold text-gray-900 dark:text-white outline-none transition-all" 
                       required 
                     />
                   </div>
                 </div>
                 <div className="space-y-1">
-                  <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-4">Categoria</label>
+                  <label className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider ml-4">Categoria</label>
                   <select 
                     value={formDespesa.categoria} 
                     onChange={e => setFormDespesa({...formDespesa, categoria: e.target.value})} 
-                    className="w-full bg-gray-50 dark:bg-white/5 border-2 border-transparent focus:border-red-500 rounded-2xl px-6 py-4 font-black text-gray-900 dark:text-white outline-none appearance-none uppercase text-[10px] tracking-widest"
+                    className="w-full bg-gray-50 dark:bg-white/5 border-2 border-transparent focus:border-red-500 rounded-2xl px-6 py-4 font-semibold text-gray-900 dark:text-white outline-none appearance-none uppercase text-xs tracking-wider"
                   >
                      <option value="aluguel">Aluguel / Fixos</option>
                      <option value="produtos">Produtos / Materiais</option>
@@ -343,8 +343,8 @@ export default function Relatorio() {
                   </select>
                 </div>
                 <div className="flex gap-4 pt-4">
-                   <button type="button" onClick={() => setModalDespesa(false)} className="flex-1 py-5 rounded-2xl border-2 border-gray-100 dark:border-white/5 text-[10px] font-black uppercase tracking-widest text-gray-400 hover:bg-gray-50 transition-all">Cancelar</button>
-                   <button type="submit" className="flex-1 py-5 bg-red-600 text-white rounded-2xl font-black text-[10px] uppercase tracking-widest shadow-xl shadow-red-500/20 hover:bg-red-700 transition-all">Lançar Agora</button>
+                   <button type="button" onClick={() => setModalDespesa(false)} className="flex-1 py-5 rounded-2xl border-2 border-gray-100 dark:border-white/5 text-xs font-semibold uppercase tracking-wider text-gray-400 hover:bg-gray-50 transition-all">Cancelar</button>
+                   <button type="submit" className="flex-1 py-5 bg-red-600 text-white rounded-2xl font-bold text-xs uppercase tracking-wider shadow-xl shadow-red-500/20 hover:bg-red-700 transition-all">Lançar Agora</button>
                 </div>
               </div>
             </motion.form>

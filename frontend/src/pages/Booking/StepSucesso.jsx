@@ -54,7 +54,7 @@ export default function StepSucesso({ agendamento, salao, cor }) {
                 <Calendar className="w-5 h-5" />
               </div>
               <div>
-                <p className="text-[9px] font-black text-[#8a6c74] uppercase tracking-widest mb-1">Data e horário</p>
+                <p className="text-xs font-semibold text-[#a88b94] uppercase tracking-wider mb-1">Data e horário</p>
                 <p className="text-lg font-brand-display font-black text-[#f4ecd8] tracking-tight">{dataFormatada} - <span className="text-[#d4af37]">{horarioResumo}</span></p>
               </div>
             </div>
@@ -64,7 +64,7 @@ export default function StepSucesso({ agendamento, salao, cor }) {
                 <Heart className="w-5 h-5" />
               </div>
               <div>
-                <p className="text-[9px] font-black text-[#8a6c74] uppercase tracking-widest mb-1">Serviços</p>
+                <p className="text-xs font-semibold text-[#a88b94] uppercase tracking-wider mb-1">Serviços</p>
                 <p className="text-lg font-brand-display font-black text-[#f4ecd8] tracking-tight uppercase">{nomeServico}</p>
               </div>
             </div>
@@ -74,19 +74,19 @@ export default function StepSucesso({ agendamento, salao, cor }) {
                 <User className="w-5 h-5" />
               </div>
               <div>
-                <p className="text-[9px] font-black text-[#8a6c74] uppercase tracking-widest mb-1">Especialista</p>
+                <p className="text-xs font-semibold text-[#a88b94] uppercase tracking-wider mb-1">Especialista</p>
                 <p className="text-lg font-brand-display font-black text-[#f4ecd8] tracking-tight uppercase">{nomeProfissional}</p>
               </div>
             </div>
 
             {itensResumo.length > 1 && (
               <div className="rounded-[2rem] border border-[#d4af37]/20 bg-black/40 px-5 py-5 mt-8">
-                <p className="text-[9px] font-black uppercase tracking-widest text-[#8a6c74]">Itens da comanda</p>
+                <p className="text-xs font-semibold uppercase tracking-wider text-[#a88b94]">Itens da comanda</p>
                 <div className="mt-4 space-y-3">
                   {itensResumo.map((item) => (
                     <div key={item.id} className="rounded-2xl border border-white/5 bg-black/60 px-4 py-4 flex justify-between items-center">
                       <p className="text-xs font-brand-display font-black uppercase tracking-tight text-[#f4ecd8]">{item.titulo}</p>
-                      <p className="text-[9px] font-bold uppercase tracking-[0.2em] text-[#b299a0]">
+                      <p className="text-xs font-semibold uppercase tracking-wider text-[#b299a0]">
                         {item.profissional} - <span className="text-[#d4af37]">{item.hora}</span>
                       </p>
                     </div>
@@ -99,31 +99,31 @@ export default function StepSucesso({ agendamento, salao, cor }) {
           <div className="space-y-4">
             <button
               onClick={() => {
-                const text = encodeURIComponent(`Olá! Acabei de marcar um horário em ${salao?.nome} para ${nomeServico} dia ${dataFormatada} às ${horarioResumo}.`);
-                window.open(`https://wa.me/?text=${text}`, '_blank');
+                const text = encodeURIComponent(`Olá! Acabei de marcar um horário em ${salao?.nome || 'seu salão'} para ${nomeServico} dia ${dataFormatada} às ${horarioResumo}.`);
+                window.open(`https://wa.me/${salao?.whatsapp || salao?.telefone || ''}?text=${text}`, '_blank');
               }}
-              className="w-full py-5 rounded-[2rem] bg-gradient-to-r from-[#25D366] to-[#1DA851] text-white font-black uppercase tracking-[0.2em] text-xs flex items-center justify-center gap-3 shadow-[0_10px_20px_-10px_rgba(37,211,102,0.5)] hover:scale-[1.02] transition-all border border-white/20"
+              className="w-full py-5 rounded-[2rem] bg-gradient-to-r from-[#25D366] to-[#1DA851] text-white font-bold uppercase tracking-wider text-xs flex items-center justify-center gap-3 shadow-[0_10px_20px_-10px_rgba(37,211,102,0.5)] hover:scale-[1.02] transition-all border border-white/20"
             >
-              <Share2 size={18} /> Compartilhar no WhatsApp
+              <Share2 size={18} /> Confirmar no WhatsApp do Salão
             </button>
 
             <button
               onClick={() => window.location.reload()}
-              className="premium-btn-secondary w-full py-5 text-xs tracking-[0.2em]"
+              className="premium-btn-secondary w-full py-5 text-xs tracking-wider font-semibold"
             >
               Fazer novo agendamento
             </button>
           </div>
 
           <div className="mt-12 pt-8 border-t border-white/10 flex flex-col items-center gap-4">
-            <p className="text-[9px] font-black text-[#8a6c74] uppercase tracking-[0.3em]">Dúvidas ou cancelamentos?</p>
+            <p className="text-xs font-semibold text-[#a88b94] uppercase tracking-wider">Dúvidas ou cancelamentos?</p>
             {salao?.telefone && (
               <a
                 href={`tel:${salao.telefone}`}
                 className="flex items-center gap-3 px-8 py-4 rounded-full bg-black/60 border border-[#d4af37]/20 shadow-[0_0_15px_rgba(212,175,55,0.05)] text-[#d4af37] hover:bg-[#d4af37]/10 transition-colors"
               >
                 <Phone size={16} />
-                <span className="text-sm font-brand-display font-black tracking-widest">{salao.telefone}</span>
+                <span className="text-sm font-brand-display font-semibold tracking-wider">{salao.telefone}</span>
               </a>
             )}
           </div>

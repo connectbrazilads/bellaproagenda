@@ -2757,7 +2757,7 @@ function ModalDetalhesAgendamento({ agendamento: initialAgendamento, allAgendame
                     onUpdate();
                     onClose();
                   }}
-                  className="px-4 py-2.5 rounded-xl bg-bellapro-blush text-white text-[9px] font-black uppercase tracking-widest hover:bg-bellapro-blush transition-all shadow-lg shadow-bellapro-blush/20"
+                  className="px-5 py-3 rounded-xl bg-bellapro-blush text-white text-xs font-bold uppercase tracking-wider hover:brightness-105 transition-all shadow-md"
                 >
                   Iniciar
                 </button>
@@ -2769,7 +2769,7 @@ function ModalDetalhesAgendamento({ agendamento: initialAgendamento, allAgendame
                     onUpdate();
                     onClose();
                   }}
-                  className="px-4 py-2.5 rounded-xl bg-[#E29BA8] text-white text-[9px] font-black uppercase tracking-widest hover:bg-[#d48997] transition-all shadow-lg shadow-[#E29BA8]/20"
+                  className="px-5 py-3 rounded-xl bg-[#E29BA8] text-white text-xs font-bold uppercase tracking-wider hover:bg-[#d48997] transition-all shadow-md"
                 >
                   Concluir
                 </button>
@@ -2782,7 +2782,7 @@ function ModalDetalhesAgendamento({ agendamento: initialAgendamento, allAgendame
                     onUpdate();
                     onClose();
                   }}
-                  className="px-4 py-2.5 rounded-xl bg-red-500 text-white text-[9px] font-black uppercase tracking-widest hover:bg-red-600 transition-all shadow-lg shadow-red-500/20"
+                  className="px-5 py-3 rounded-xl bg-red-500 text-white text-xs font-bold uppercase tracking-wider hover:bg-red-600 transition-all shadow-md shadow-red-500/20"
                 >
                   Cancelar
                 </button>
@@ -2790,22 +2790,22 @@ function ModalDetalhesAgendamento({ agendamento: initialAgendamento, allAgendame
               {agendamento.status !== 'cancelado' && (
                 <button
                   onClick={() => onAjustar?.(agendamento)}
-                  className="px-4 py-2.5 rounded-xl bg-white text-[#3b2a35] text-[9px] font-black uppercase tracking-widest hover:bg-gray-100 transition-all shadow-lg dark:bg-white/10 dark:text-white"
+                  className="px-5 py-3 rounded-xl bg-white text-[#3b2a35] text-xs font-bold uppercase tracking-wider hover:bg-gray-100 transition-all shadow-md dark:bg-white/10 dark:text-white"
                 >
-                  Alterar horario
+                  Alterar horário
                 </button>
               )}
               {agendamento.statusPagamento === 'pago' && (
                 <button
                   onClick={handleReabrirComanda}
-                  className="px-4 py-2.5 rounded-xl bg-amber-500 text-[#3b2a35] text-[9px] font-black uppercase tracking-widest hover:bg-amber-400 transition-all shadow-lg shadow-amber-500/20"
+                  className="px-5 py-3 rounded-xl bg-amber-500 text-[#3b2a35] text-xs font-bold uppercase tracking-wider hover:bg-amber-400 transition-all shadow-md shadow-amber-500/20"
                 >
                   Reabrir Comanda
                 </button>
               )}
               <button 
                 onClick={() => setTab('pagamento')}
-                className="px-4 py-2.5 rounded-xl bg-[#d48997] text-white text-[9px] font-black uppercase tracking-widest hover:bg-[#b96a79] transition-all shadow-lg shadow-[#E29BA8]/20"
+                className="px-5 py-3 rounded-xl bg-[#d48997] text-white text-xs font-bold uppercase tracking-wider hover:bg-[#b96a79] transition-all shadow-md shadow-[#E29BA8]/20"
               >
                 Faturar
               </button>
