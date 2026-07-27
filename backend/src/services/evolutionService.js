@@ -157,6 +157,22 @@ async function ensureInstanceWebhook(config, req) {
   }).catch(() => null);
 }
 
+async function getGoInstanceConfig(config) {
+  try {
+    const instances = await fetchInstances(config);
+    const match = instances.find((item) => {
+      const name = item?.instance?.instanceName || item?.name || item?.instanceName;
+      return String(name || '').toLowerCase() === String(config.instanceName).toLowerCase();
+    });
+    if (match && match.token) {
+      return { ...config, apiKey: match.token, instanceToken: match.token };
+    }
+  } catch {
+    // Mantém a config original se falhar
+  }
+  return config;
+}
+
 async function createEvolutionInstance(salao, req, { qrcode = true } = {}) {
   const config = resolveEvolutionConfig(salao);
   if (!config.configured) {
@@ -166,11 +182,19 @@ async function createEvolutionInstance(salao, req, { qrcode = true } = {}) {
   }
 
   const webhookUrl = buildWebhookUrl(req);
+  const instanceToken = String(
+    salao?.evolutionKey ||
+    salao?.id ||
+    (config.apiKey && config.apiKey !== getGlobalEvolutionApiKey() ? config.apiKey : '') ||
+    config.instanceName ||
+    `token-${Date.now()}`
+  ).trim();
+
   const payload = {
     instanceName: config.instanceName,
     name: config.instanceName,
     integration: 'WHATSAPP-BAILEYS',
-    token: '',
+    token: instanceToken,
     qrcode,
     rejectCall: true,
     groupsIgnore: true,
@@ -196,12 +220,13 @@ async function createEvolutionInstance(salao, req, { qrcode = true } = {}) {
   } catch {
     response = await evolutionRequest(config, 'post', '/instance/create', {
       name: config.instanceName,
+      token: instanceToken,
       qrcode,
     });
   }
 
   return {
-    config,
+    config: { ...config, apiKey: instanceToken },
     data: response.data,
     qr: extractQrPayload(response.data),
   };
@@ -219,7 +244,7 @@ async function ensureEvolutionInstance(salao, req, { qrcode = true } = {}) {
     const instances = await fetchInstances(config);
     const exists = instances.some((item) => {
       const name = item?.instance?.instanceName || item?.name || item?.instanceName;
-      return String(name || '') === config.instanceName;
+      return String(name || '').toLowerCase() === String(config.instanceName).toLowerCase();
     });
 
     if (!exists) {
@@ -254,7 +279,8 @@ async function getEvolutionStatus(salao, req) {
         raw: response.data,
       };
     } catch {
-      const goResponse = await evolutionRequest(config, 'get', '/instance/status');
+      const goConfig = await getGoInstanceConfig(config);
+      const goResponse = await evolutionRequest(goConfig, 'get', '/instance/status');
       const isConnected = Boolean(
         goResponse.data?.data?.Connected ||
         goResponse.data?.data?.LoggedIn ||
@@ -262,7 +288,7 @@ async function getEvolutionStatus(salao, req) {
       );
       return {
         status: isConnected ? 'open' : 'close',
-        config,
+        config: goConfig,
         raw: goResponse.data,
       };
     }
@@ -297,10 +323,12 @@ async function connectEvolutionInstance(salao, req) {
       base64: extractQrPayload(response.data),
     };
   } catch {
-    const goResponse = await evolutionRequest(ensured.config, 'get', '/instance/qr');
+    const goConfig = await getGoInstanceConfig(ensured.config);
+    const goResponse = await evolutionRequest(goConfig, 'get', '/instance/qr');
+    const qrCode = extractQrPayload(goResponse.data) || extractQrPayload(goResponse.data?.data);
     return {
       ...goResponse.data,
-      base64: extractQrPayload(goResponse.data),
+      base64: qrCode,
     };
   }
 }
