@@ -91,18 +91,25 @@ function extractQrPayload(data) {
     || data?.qrcode
     || data?.qr
     || data?.connection?.qrcode
+    || (typeof data?.code === 'string' && data.code.startsWith('data:image') ? data.code : '')
     || ''
   );
 }
 
 function extractConnectionState(data) {
-  return (
+  const rawState = String(
     data?.instance?.state
+    || data?.instance?.connectionStatus
     || data?.instance?.status
+    || data?.connectionStatus
     || data?.state
     || data?.status
     || 'close'
-  );
+  ).toLowerCase();
+
+  if (rawState === 'open' || rawState === 'connected') return 'open';
+  if (rawState === 'connecting' || rawState === 'connecting_state') return 'connecting';
+  return 'close';
 }
 
 function isInstanceMissingError(error) {
@@ -114,12 +121,15 @@ function isInstanceMissingError(error) {
     || ''
   ).toLowerCase();
 
-  return status === 404 || text.includes('not found') || text.includes('instance') && text.includes('exist');
+  return status === 404 || text.includes('not found') || (text.includes('instance') && text.includes('exist'));
 }
 
 async function fetchInstances(config) {
   const response = await evolutionRequest(config, 'get', '/instance/fetchInstances');
-  return Array.isArray(response.data) ? response.data : [];
+  const data = response.data;
+  if (Array.isArray(data)) return data;
+  if (Array.isArray(data?.instances)) return data.instances;
+  return [];
 }
 
 async function ensureInstanceWebhook(config, req) {
