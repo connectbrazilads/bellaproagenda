@@ -125,10 +125,22 @@ function isInstanceMissingError(error) {
 }
 
 async function fetchInstances(config) {
-  const response = await evolutionRequest(config, 'get', '/instance/fetchInstances');
-  const data = response.data;
-  if (Array.isArray(data)) return data;
-  if (Array.isArray(data?.instances)) return data.instances;
+  try {
+    const response = await evolutionRequest(config, 'get', '/instance/fetchInstances');
+    const data = response.data;
+    if (Array.isArray(data)) return data;
+    if (Array.isArray(data?.instances)) return data.instances;
+    if (Array.isArray(data?.data)) return data.data;
+  } catch {
+    try {
+      const response = await evolutionRequest(config, 'get', '/instance/all');
+      const data = response.data;
+      if (Array.isArray(data?.data)) return data.data;
+      if (Array.isArray(data)) return data;
+    } catch {
+      // Ignora erro se não encontrar
+    }
+  }
   return [];
 }
 
@@ -142,7 +154,7 @@ async function ensureInstanceWebhook(config, req) {
     webhookByEvents: false,
     webhookBase64: true,
     events: DEFAULT_WEBHOOK_EVENTS,
-  });
+  }).catch(() => null);
 }
 
 async function createEvolutionInstance(salao, req, { qrcode = true } = {}) {
@@ -156,6 +168,7 @@ async function createEvolutionInstance(salao, req, { qrcode = true } = {}) {
   const webhookUrl = buildWebhookUrl(req);
   const payload = {
     instanceName: config.instanceName,
+    name: config.instanceName,
     integration: 'WHATSAPP-BAILEYS',
     token: '',
     qrcode,
@@ -177,7 +190,16 @@ async function createEvolutionInstance(salao, req, { qrcode = true } = {}) {
     };
   }
 
-  const response = await evolutionRequest(config, 'post', '/instance/create', payload);
+  let response;
+  try {
+    response = await evolutionRequest(config, 'post', '/instance/create', payload);
+  } catch {
+    response = await evolutionRequest(config, 'post', '/instance/create', {
+      name: config.instanceName,
+      qrcode,
+    });
+  }
+
   return {
     config,
     data: response.data,
@@ -224,12 +246,26 @@ async function getEvolutionStatus(salao, req) {
 
   try {
     await ensureInstanceWebhook(config, req).catch(() => null);
-    const response = await evolutionRequest(config, 'get', `/instance/connectionState/${config.instanceName}`);
-    return {
-      status: extractConnectionState(response.data),
-      config,
-      raw: response.data,
-    };
+    try {
+      const response = await evolutionRequest(config, 'get', `/instance/connectionState/${config.instanceName}`);
+      return {
+        status: extractConnectionState(response.data),
+        config,
+        raw: response.data,
+      };
+    } catch {
+      const goResponse = await evolutionRequest(config, 'get', '/instance/status');
+      const isConnected = Boolean(
+        goResponse.data?.data?.Connected ||
+        goResponse.data?.data?.LoggedIn ||
+        goResponse.data?.connected
+      );
+      return {
+        status: isConnected ? 'open' : 'close',
+        config,
+        raw: goResponse.data,
+      };
+    }
   } catch (error) {
     if (isInstanceMissingError(error)) {
       return { status: 'not_created', config };
@@ -253,13 +289,20 @@ async function connectEvolutionInstance(salao, req) {
     };
   }
 
-  const response = await evolutionRequest(ensured.config, 'get', `/instance/connect/${ensured.config.instanceName}`);
-  await ensureInstanceWebhook(ensured.config, req).catch(() => null);
-
-  return {
-    ...response.data,
-    base64: extractQrPayload(response.data),
-  };
+  try {
+    const response = await evolutionRequest(ensured.config, 'get', `/instance/connect/${ensured.config.instanceName}`);
+    await ensureInstanceWebhook(ensured.config, req).catch(() => null);
+    return {
+      ...response.data,
+      base64: extractQrPayload(response.data),
+    };
+  } catch {
+    const goResponse = await evolutionRequest(ensured.config, 'get', '/instance/qr');
+    return {
+      ...goResponse.data,
+      base64: extractQrPayload(goResponse.data),
+    };
+  }
 }
 
 async function disconnectEvolutionInstance(salao) {
@@ -270,7 +313,11 @@ async function disconnectEvolutionInstance(salao) {
     throw error;
   }
 
-  await evolutionRequest(config, 'delete', `/instance/logout/${config.instanceName}`);
+  try {
+    await evolutionRequest(config, 'delete', `/instance/logout/${config.instanceName}`);
+  } catch {
+    await evolutionRequest(config, 'delete', '/instance/logout');
+  }
   return { ok: true };
 }
 
@@ -288,10 +335,19 @@ async function sendEvolutionText(salao, number, text) {
     throw error;
   }
 
-  await evolutionRequest(config, 'post', `/message/sendText/${config.instanceName}`, {
-    number: normalizeWhatsappNumber(number),
-    text,
-  });
+  const normalizedNumber = normalizeWhatsappNumber(number);
+
+  try {
+    await evolutionRequest(config, 'post', `/message/sendText/${config.instanceName}`, {
+      number: normalizedNumber,
+      text,
+    });
+  } catch {
+    await evolutionRequest(config, 'post', '/send/text', {
+      number: normalizedNumber,
+      text,
+    });
+  }
 
   return { ok: true };
 }
@@ -305,6 +361,8 @@ async function fetchEvolutionProfilePictureUrl(salao, number) {
     response?.data?.profilePictureUrl
     || response?.data?.picture
     || response?.data?.url
+    || response?.data?.avatarUrl
+    || response?.data?.data?.avatarUrl
     || ''
   ).trim();
 
@@ -312,15 +370,12 @@ async function fetchEvolutionProfilePictureUrl(salao, number) {
     const response = await evolutionRequest(config, 'post', `/chat/fetchProfilePictureUrl/${config.instanceName}`, {
       number: normalizedNumber,
     });
-
     return parseResponse(response);
   } catch {
     try {
-      const response = await evolutionRequest(
-        config,
-        'get',
-        `/chat/fetchProfilePictureUrl/${config.instanceName}?number=${encodeURIComponent(normalizedNumber)}`
-      );
+      const response = await evolutionRequest(config, 'post', '/user/avatar', {
+        number: normalizedNumber,
+      });
       return parseResponse(response);
     } catch {
       return '';
@@ -346,14 +401,27 @@ async function sendEvolutionMedia(
     throw error;
   }
 
-  await evolutionRequest(config, 'post', `/message/sendMedia/${config.instanceName}`, {
-    number: normalizeWhatsappNumber(number),
-    mediatype,
-    mimetype,
-    caption: caption || fileName || 'Arquivo enviado',
-    media,
-    fileName,
-  });
+  const normalizedNumber = normalizeWhatsappNumber(number);
+
+  try {
+    await evolutionRequest(config, 'post', `/message/sendMedia/${config.instanceName}`, {
+      number: normalizedNumber,
+      mediatype,
+      mimetype,
+      caption: caption || fileName || 'Arquivo enviado',
+      media,
+      fileName,
+    });
+  } catch {
+    await evolutionRequest(config, 'post', '/send/media', {
+      number: normalizedNumber,
+      mediatype,
+      mimetype,
+      caption: caption || fileName || 'Arquivo enviado',
+      media,
+      fileName,
+    });
+  }
 
   return { ok: true };
 }
