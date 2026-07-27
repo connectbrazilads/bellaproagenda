@@ -487,7 +487,16 @@ function SecaoWhatsapp() {
     setQr('');
     try {
       const response = await connectWhatsapp();
-      const base64 = response.data?.base64 || response.data?.qrcode?.base64 || response.data?.qr?.base64 || '';
+      const base64 = (
+        response.data?.base64 ||
+        response.data?.Qrcode ||
+        response.data?.data?.Qrcode ||
+        response.data?.data?.base64 ||
+        response.data?.qrcode?.base64 ||
+        response.data?.qr?.base64 ||
+        response.data?.code ||
+        ''
+      );
       if (base64) {
         setQr(base64.startsWith('data:') ? base64 : `data:image/png;base64,${base64}`);
         setStatus('connecting');

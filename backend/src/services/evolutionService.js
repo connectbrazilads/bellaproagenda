@@ -86,12 +86,17 @@ function extractQrPayload(data) {
 
   return (
     data?.base64
+    || data?.data?.base64
+    || data?.data?.Qrcode
+    || data?.Qrcode
     || data?.qrcode?.base64
     || data?.qr?.base64
     || data?.qrcode
     || data?.qr
     || data?.connection?.qrcode
     || (typeof data?.code === 'string' && data.code.startsWith('data:image') ? data.code : '')
+    || (typeof data?.Qrcode === 'string' && data.Qrcode.startsWith('data:image') ? data.Qrcode : '')
+    || (typeof data?.data?.Qrcode === 'string' && data.data.Qrcode.startsWith('data:image') ? data.data.Qrcode : '')
     || ''
   );
 }
