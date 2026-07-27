@@ -459,7 +459,14 @@ function SecaoWhatsapp() {
   async function loadStatus() {
     try {
       const response = await getWhatsappStatus();
-      setStatus(response.data.status);
+      const nextStatus = response.data.status;
+      if (nextStatus === 'open') {
+        setStatus('open');
+        setQr('');
+        setMessage('WhatsApp conectado com sucesso!');
+      } else if (status !== 'connecting') {
+        setStatus(nextStatus);
+      }
     } catch {}
   }
 
