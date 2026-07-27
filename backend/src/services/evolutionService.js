@@ -286,10 +286,11 @@ async function getEvolutionStatus(salao, req) {
     } catch {
       const goConfig = await getGoInstanceConfig(config);
       const goResponse = await evolutionRequest(goConfig, 'get', '/instance/status');
+      const goData = goResponse.data?.data || goResponse.data || {};
       const isConnected = Boolean(
-        goResponse.data?.data?.Connected ||
-        goResponse.data?.data?.LoggedIn ||
-        goResponse.data?.connected
+        goData.LoggedIn === true ||
+        (goData.Connected === true && goData.LoggedIn !== false && Boolean(goData.Name)) ||
+        goResponse.data?.connected === true
       );
       return {
         status: isConnected ? 'open' : 'close',
