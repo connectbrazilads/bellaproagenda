@@ -432,17 +432,21 @@ export default function Remuneracao() {
     }
   }
 
-  async function handleMarcarPago(ids, profId) {
+  async function handleMarcarPago(ids, profId, paga = true) {
     if (!ids?.length) return;
 
     setProcessingId(profId);
     try {
-      const res = await updateComissaoPaga({ ids, paga: true, profissionalId: profId });
-      const valorLiquido = Number(res.data?.valorLiquidoRepasse || 0);
-      const valorCompensado = Number(res.data?.totalCompensado || 0);
-      toast.success(
-        `Fechamento concluído. Líquido ${formatMoney(valorLiquido)}${valorCompensado > 0 ? ` e compensado ${formatMoney(valorCompensado)}` : ''}.`
-      );
+      const res = await updateComissaoPaga({ ids, paga, profissionalId: profId });
+      if (paga) {
+        const valorLiquido = Number(res.data?.valorLiquidoRepasse || 0);
+        const valorCompensado = Number(res.data?.totalCompensado || 0);
+        toast.success(
+          `Fechamento concluído. Líquido ${formatMoney(valorLiquido)}${valorCompensado > 0 ? ` e compensado ${formatMoney(valorCompensado)}` : ''}.`
+        );
+      } else {
+        toast.success('Pagamentos revertidos com sucesso.');
+      }
       fetchDados();
     } catch (err) {
       toast.error(err.response?.data?.error || 'Erro ao atualizar status de pagamento.');
@@ -941,23 +945,49 @@ export default function Remuneracao() {
                               Ao confirmar, as comissões pendentes serão quitadas e o sistema liquidará automaticamente os vales e descontos em aberto.
                             </p>
                           </div>
-                          <button
-                            type="button"
-                            disabled={prof.totalPendente === 0 || processingId === prof.id}
-                            onClick={(event) => {
-                              event.stopPropagation();
-                              handleMarcarPago(idsPendentes, prof.id);
-                            }}
-                            className={cn(
-                              'inline-flex h-10 items-center justify-center gap-1.5 rounded-xl px-5 text-xs font-semibold transition',
-                              prof.totalPendente === 0
-                                ? 'bg-gray-100 text-gray-400 dark:bg-zinc-800 dark:text-zinc-600 cursor-not-allowed'
-                                : 'bg-[#d48997] hover:bg-[#c97b8a] text-white shadow-sm'
+                          <div className="flex flex-col items-end gap-2.5">
+                            <button
+                              type="button"
+                              disabled={prof.totalPendente === 0 || processingId === prof.id}
+                              onClick={(event) => {
+                                event.stopPropagation();
+                                handleMarcarPago(idsPendentes, prof.id, true);
+                              }}
+                              className={cn(
+                                'inline-flex h-10 items-center justify-center gap-1.5 rounded-xl px-5 text-xs font-semibold transition',
+                                prof.totalPendente === 0
+                                  ? 'bg-gray-100 text-gray-400 dark:bg-zinc-800 dark:text-zinc-600 cursor-not-allowed'
+                                  : 'bg-[#d48997] hover:bg-[#c97b8a] text-white shadow-sm'
+                              )}
+                            >
+                              {processingId === prof.id ? <RefreshCw className="animate-spin h-3.5 w-3.5" /> : <CheckCircle2 size={14} />}
+                              {prof.totalPendente === 0 ? 'Sem repasses pendentes' : 'Confirmar Fechamento'}
+                            </button>
+                            
+                            {prof.totalPaga > 0 && (
+                              <button
+                                type="button"
+                                disabled={processingId === prof.id}
+                                onClick={(event) => {
+                                  event.stopPropagation();
+                                  if (window.confirm('Tem certeza que deseja estornar (voltar como pendente) os pagamentos exibidos neste período?')) {
+                                    const idsPagos = [];
+                                    if (prof.dias) {
+                                      Object.values(prof.dias).forEach(dia => {
+                                        dia.agendamentos.forEach(ag => {
+                                          if (ag.comissaoPaga) idsPagos.push(ag.id);
+                                        });
+                                      });
+                                    }
+                                    handleMarcarPago(idsPagos, prof.id, false);
+                                  }
+                                }}
+                                className="text-[10px] font-semibold text-rose-500 hover:text-rose-600 dark:text-rose-400 hover:underline transition mr-2"
+                              >
+                                Desfazer pagamentos deste período
+                              </button>
                             )}
-                          >
-                            {processingId === prof.id ? <RefreshCw className="animate-spin h-3.5 w-3.5" /> : <CheckCircle2 size={14} />}
-                            {prof.totalPendente === 0 ? 'Sem repasses pendentes' : 'Confirmar Fechamento'}
-                          </button>
+                          </div>
                         </div>
                       </div>
                     </motion.div>
