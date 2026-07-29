@@ -56,6 +56,14 @@ function agendaScopeFilter(req) {
     : {};
 }
 
+function getEvolutionRequestError(error) {
+  return error?.response?.data?.response?.message?.[0]
+    || error?.response?.data?.message
+    || error?.response?.data?.error
+    || error?.message
+    || 'Erro na integração com o Evolution';
+}
+
 function getAgendaProfessionalId(req, requestedProfessionalId, { defaultToSelf = false } = {}) {
   if (!isScopedProfessional(req)) {
     return requestedProfessionalId || null;
@@ -3877,7 +3885,7 @@ async function connectWhatsapp(req, res) {
     const response = await connectEvolutionInstance(salao, req);
     res.json(response);
   } catch (err) {
-    res.status(err.statusCode || 500).json({ error: err.response?.data?.message || err.response?.data?.error || err.message });
+    res.status(err.statusCode || err.response?.status || 500).json({ error: getEvolutionRequestError(err) });
   }
 }
 
@@ -3890,7 +3898,7 @@ async function disconnectWhatsapp(req, res) {
     await disconnectEvolutionInstance(salao);
     res.json({ ok: true });
   } catch (err) {
-    res.status(err.statusCode || 500).json({ error: err.response?.data?.message || err.response?.data?.error || err.message });
+    res.status(err.statusCode || err.response?.status || 500).json({ error: getEvolutionRequestError(err) });
   }
 }
 

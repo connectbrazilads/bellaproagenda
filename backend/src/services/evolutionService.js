@@ -195,24 +195,24 @@ function getInstanceName(item) {
 }
 
 async function getInstanceQr(config) {
+  const paths = [
+    `/instance/connect/${config.instanceName}`,
+    `/instance/${config.instanceName}/qrcode`,
+    '/instance/qr',
+  ];
   let firstError = null;
 
-  try {
-    const response = await evolutionRequest(config, 'get', `/instance/connect/${config.instanceName}`);
-    return { response, qr: extractQrPayload(response.data) };
-  } catch (error) {
-    firstError = error;
-    if (!isInstanceMissingError(error)) throw error;
+  for (const path of paths) {
+    try {
+      const response = await evolutionRequest(config, 'get', path);
+      return { response, qr: extractQrPayload(response.data) };
+    } catch (error) {
+      firstError = firstError || error;
+      if (!isInstanceMissingError(error)) throw error;
+    }
   }
 
-  // Evolution GO exposes the QR code through this route.
-  try {
-    const response = await evolutionRequest(config, 'get', `/instance/${config.instanceName}/qrcode`);
-    return { response, qr: extractQrPayload(response.data) };
-  } catch (error) {
-    if (!isInstanceMissingError(error)) throw error;
-    throw firstError || error;
-  }
+  throw firstError;
 }
 
 async function ensureInstanceWebhook(config, req) {
@@ -404,10 +404,21 @@ async function connectEvolutionInstance(salao, req) {
   }
 
   const created = await createEvolutionInstance(salao, req, { qrcode: true });
+  let qr = created.qr;
+
+  if (!qr) {
+    try {
+      const qrResponse = await getInstanceQr(config);
+      qr = qrResponse.qr;
+    } catch (error) {
+      if (!isInstanceMissingError(error)) throw error;
+    }
+  }
+
   await ensureInstanceWebhook(config, req).catch(() => null);
   return {
     ...created.data,
-    base64: created.qr,
+    base64: qr,
     status: 'connecting',
   };
 }
