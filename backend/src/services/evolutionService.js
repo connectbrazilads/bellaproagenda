@@ -400,6 +400,31 @@ async function getEvolutionStatus(salao, req) {
 
   try {
     await ensureInstanceWebhook(config, req).catch(() => null);
+
+    // Evolution GO authenticates instance routes with the token returned by
+    // /instance/all and exposes status at /instance/status.
+    const goConfig = await getGoInstanceConfig(config);
+    try {
+      const response = await evolutionRequest(goConfig, 'get', '/instance/status');
+      return {
+        status: extractConnectionState(response.data),
+        config: goConfig,
+        raw: response.data,
+      };
+    } catch (error) {
+      // A 400 from GO means the client is not ready yet. Do not fall through
+      // to the legacy API routes and report the wrong instance as missing.
+      if (Number(error?.response?.status || 0) === 400) {
+        return {
+          status: 'close',
+          config: goConfig,
+          error: getEvolutionErrorMessage(error) || 'Instância Evolution GO desconectada',
+        };
+      }
+
+      if (!isInstanceMissingError(error)) throw error;
+    }
+
     try {
       const response = await evolutionRequest(config, 'get', `/instance/connectionState/${config.instanceName}`);
       return {
@@ -478,6 +503,12 @@ async function disconnectEvolutionInstance(salao) {
     const error = new Error('Configure a Evolution API primeiro');
     error.statusCode = 400;
     throw error;
+  }
+
+  const goConfig = await getGoInstanceConfig(config);
+  if (goConfig.apiKey !== config.apiKey) {
+    await evolutionRequest(goConfig, 'post', '/instance/disconnect');
+    return { ok: true };
   }
 
   try {
