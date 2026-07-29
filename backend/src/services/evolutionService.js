@@ -105,10 +105,15 @@ function extractQrPayload(data) {
 
 function extractConnectionState(data) {
   const connectionData = data?.data || data;
-  const isConnected = connectionData?.connected === true
-    || connectionData?.Connected === true
+  const hasLoginState = typeof connectionData?.loggedIn === 'boolean'
+    || typeof connectionData?.LoggedIn === 'boolean';
+  const isLoggedIn = connectionData?.loggedIn === true
     || connectionData?.LoggedIn === true;
+  const isConnected = connectionData?.connected === true
+    || connectionData?.Connected === true;
 
+  if (isLoggedIn) return 'open';
+  if (hasLoginState && isConnected) return 'connecting';
   if (isConnected) return 'open';
 
   const rawState = String(
