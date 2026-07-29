@@ -471,6 +471,7 @@ export default function Remuneracao() {
           totalBruto: 0,
           totalComissao: 0,
           totalPendente: 0,
+          totalPaga: 0,
           totalVales: 0,
           totalDescontos: 0,
           totalBonificacoes: 0,
@@ -504,6 +505,8 @@ export default function Remuneracao() {
       prof.totalComissao += Number(agendamento.comissaoValor || 0);
       if (!agendamento.comissaoPaga) {
         prof.totalPendente += Number(agendamento.comissaoValor || 0);
+      } else {
+        prof.totalPaga += Number(agendamento.comissaoValor || 0);
       }
       prof.atendimentos += 1;
 
@@ -774,8 +777,10 @@ export default function Remuneracao() {
                     >
                       <div className="p-5 space-y-6">
                         {/* Summary Cards */}
-                        <div className="grid gap-4 grid-cols-2 md:grid-cols-3 lg:grid-cols-5 text-xs">
-                          <SummaryCard label="Comissão" value={prof.totalPendente} tone="rose" icon={<DollarSign />} />
+                        <div className="grid gap-4 grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-7 text-xs">
+                          <SummaryCard label="Comissão Total" value={prof.totalComissao} tone="ink" icon={<DollarSign />} />
+                          <SummaryCard label="Comissão Pendente" value={prof.totalPendente} tone="rose" icon={<DollarSign />} />
+                          <SummaryCard label="Já Pago" value={prof.totalPaga} tone="default" icon={<CheckCircle2 className="text-emerald-500" />} />
                           <SummaryCard label="Vales" value={prof.totalVales} tone="amber" icon={<Wallet />} />
                           <SummaryCard label="Descontos" value={prof.totalDescontos} tone="amber" icon={<MinusCircle />} />
                           <SummaryCard label="Bônus Extra" value={prof.totalBonificacoes} tone="default" icon={<PlusCircle className="text-emerald-500" />} />
