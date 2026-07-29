@@ -194,38 +194,70 @@ function getInstanceName(item) {
   return item?.instance?.instanceName || item?.name || item?.instanceName;
 }
 
-async function getInstanceQr(config) {
+async function getInstanceQr(config, req) {
   const paths = [
     `/instance/connect/${config.instanceName}`,
     `/instance/${config.instanceName}/qrcode`,
-    '/instance/qr',
   ];
   let firstError = null;
-  let goConfig = null;
 
   for (const path of paths) {
-    const requestConfigs = [config];
-
-    // In Evolution GO, /instance/qr may be protected by the instance token.
-    // Fetch that token when the global key reaches the GO-specific route.
-    if (path === '/instance/qr') {
-      goConfig = goConfig || await getGoInstanceConfig(config);
-      if (goConfig.apiKey && goConfig.apiKey !== config.apiKey) {
-        requestConfigs.push(goConfig);
-      }
+    try {
+      const response = await evolutionRequest(config, 'get', path);
+      const qr = extractQrPayload(response.data);
+      if (qr) return { response, qr };
+    } catch (error) {
+      firstError = firstError || error;
+      if (!isInstanceMissingError(error)) throw error;
     }
+  }
 
+  const goConfig = await getGoInstanceConfig(config);
+  const requestConfigs = [goConfig];
+  if (goConfig.apiKey !== config.apiKey) requestConfigs.push(config);
+  const connectPayload = { immediate: true };
+  const webhookUrl = buildWebhookUrl(req);
+  if (webhookUrl) connectPayload.webhookUrl = webhookUrl;
+  let connectStarted = false;
+
+  // Evolution GO starts the pairing process with POST /instance/connect;
+  // the QR is then read from GET /instance/qr.
+  for (const requestConfig of requestConfigs) {
+    try {
+      await evolutionRequest(requestConfig, 'post', '/instance/connect', connectPayload);
+      connectStarted = true;
+      break;
+    } catch (error) {
+      firstError = firstError || error;
+      if (isInstanceMissingError(error)) continue;
+      if (requestConfig !== requestConfigs[requestConfigs.length - 1]) continue;
+      break;
+    }
+  }
+
+  let lastResponse = null;
+  const maxAttempts = connectStarted ? 8 : 1;
+  for (let attempt = 0; attempt < maxAttempts; attempt += 1) {
     for (const requestConfig of requestConfigs) {
       try {
-        const response = await evolutionRequest(requestConfig, 'get', path);
-        return { response, qr: extractQrPayload(response.data) };
+        const response = await evolutionRequest(requestConfig, 'get', '/instance/qr');
+        lastResponse = response;
+        const qr = extractQrPayload(response.data);
+        if (qr) return { response, qr };
       } catch (error) {
         firstError = firstError || error;
         if (isInstanceMissingError(error)) continue;
         if (requestConfig !== requestConfigs[requestConfigs.length - 1]) continue;
-        throw error;
       }
     }
+
+    if (attempt < maxAttempts - 1) {
+      await new Promise((resolve) => setTimeout(resolve, 750));
+    }
+  }
+
+  if (connectStarted) {
+    return { response: lastResponse || { data: {} }, qr: '' };
   }
 
   throw firstError;
@@ -312,7 +344,7 @@ async function createEvolutionInstance(salao, req, { qrcode = true } = {}) {
     // A duplicate create is normal when the instance was created in the
     // Evolution panel or when two connect requests race. Reuse it instead
     // of deleting a valid instance.
-    const existing = await getInstanceQr(config);
+    const existing = await getInstanceQr(config, req);
     await ensureInstanceWebhook(config, req).catch(() => null);
     return {
       config,
@@ -407,7 +439,7 @@ async function connectEvolutionInstance(salao, req) {
 
   // 1. Tenta obter o QR code diretamente da instância caso já esteja pronta para conexão
   try {
-    const { response, qr } = await getInstanceQr(config);
+    const { response, qr } = await getInstanceQr(config, req);
     await ensureInstanceWebhook(config, req).catch(() => null);
     return {
       ...response.data,
@@ -424,7 +456,7 @@ async function connectEvolutionInstance(salao, req) {
 
   if (!qr) {
     try {
-      const qrResponse = await getInstanceQr(config);
+      const qrResponse = await getInstanceQr(config, req);
       qr = qrResponse.qr;
     } catch (error) {
       if (!isInstanceMissingError(error)) throw error;

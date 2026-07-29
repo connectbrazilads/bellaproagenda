@@ -493,21 +493,34 @@ function SecaoWhatsapp() {
     setMessage('');
     setQr('');
     try {
-      const response = await connectWhatsapp();
-      const base64 = (
-        response.data?.base64 ||
-        response.data?.Qrcode ||
-        response.data?.data?.Qrcode ||
-        response.data?.data?.base64 ||
-        response.data?.qrcode?.base64 ||
-        response.data?.qr?.base64 ||
-        response.data?.code ||
-        ''
-      );
+      let base64 = '';
+
+      // Evolution GO can finish generating the QR asynchronously. Retry the
+      // same idempotent connection request while the backend polls the QR.
+      for (let attempt = 0; attempt < 3 && !base64; attempt += 1) {
+        const response = await connectWhatsapp();
+        base64 = (
+          response.data?.base64 ||
+          response.data?.Qrcode ||
+          response.data?.data?.Qrcode ||
+          response.data?.data?.base64 ||
+          response.data?.qrcode?.base64 ||
+          response.data?.qr?.base64 ||
+          response.data?.code ||
+          ''
+        );
+
+        if (!base64 && attempt < 2) {
+          setStatus('connecting');
+          setMessage('Gerando QR Code. Aguarde alguns segundos...');
+          await new Promise((resolve) => setTimeout(resolve, 1500));
+        }
+      }
       if (base64) {
         setQr(base64.startsWith('data:') ? base64 : `data:image/png;base64,${base64}`);
         setStatus('connecting');
       } else {
+        setStatus('connecting');
         setMessage('Instância localizada, mas sem QR Code disponível no momento.');
       }
     } catch (error) {
