@@ -45,9 +45,10 @@ function getBackendBaseUrl(req) {
 
   const appUrl = trimSlash(process.env.APP_URL || '');
   if (appUrl) {
+    const backendPort = String(process.env.PORT || '3001').trim();
     return appUrl
-      .replace(':5173', ':3001')
-      .replace(':5174', ':3001');
+      .replace(':5173', `:${backendPort}`)
+      .replace(':5174', `:${backendPort}`);
   }
 
   if (req) {
@@ -102,10 +103,20 @@ function extractQrPayload(data) {
 }
 
 function extractConnectionState(data) {
+  const connectionData = data?.data || data;
+  const isConnected = connectionData?.connected === true
+    || connectionData?.Connected === true
+    || connectionData?.LoggedIn === true;
+
+  if (isConnected) return 'open';
+
   const rawState = String(
     data?.instance?.state
     || data?.instance?.connectionStatus
     || data?.instance?.status
+    || connectionData?.state
+    || connectionData?.connectionStatus
+    || connectionData?.status
     || data?.connectionStatus
     || data?.state
     || data?.status
@@ -117,36 +128,91 @@ function extractConnectionState(data) {
   return 'close';
 }
 
-function isInstanceMissingError(error) {
-  const status = Number(error?.response?.status || 0);
-  const text = String(
-    error?.response?.data?.message
+function getEvolutionErrorMessage(error) {
+  return String(
+    error?.response?.data?.response?.message?.[0]
+    || error?.response?.data?.message
     || error?.response?.data?.error
     || error?.message
     || ''
-  ).toLowerCase();
+  ).trim();
+}
 
-  return status === 404 || text.includes('not found') || (text.includes('instance') && text.includes('exist'));
+function isInstanceAlreadyExistsError(error) {
+  const status = Number(error?.response?.status || 0);
+  const text = getEvolutionErrorMessage(error).toLowerCase();
+
+  return status === 409
+    || text.includes('already exists')
+    || text.includes('already in use')
+    || text.includes('já existe')
+    || text.includes('em uso');
+}
+
+function isInstanceMissingError(error) {
+  const status = Number(error?.response?.status || 0);
+  const text = getEvolutionErrorMessage(error).toLowerCase();
+
+  if (isInstanceAlreadyExistsError(error)) return false;
+
+  return status === 404
+    || text.includes('not found')
+    || text.includes('does not exist')
+    || text.includes('not created')
+    || text.includes('não existe')
+    || text.includes('nao existe');
 }
 
 async function fetchInstances(config) {
+  const errors = [];
+
   try {
     const response = await evolutionRequest(config, 'get', '/instance/fetchInstances');
     const data = response.data;
     if (Array.isArray(data)) return data;
     if (Array.isArray(data?.instances)) return data.instances;
     if (Array.isArray(data?.data)) return data.data;
-  } catch {
+  } catch (error) {
+    errors.push(error);
     try {
       const response = await evolutionRequest(config, 'get', '/instance/all');
       const data = response.data;
       if (Array.isArray(data?.data)) return data.data;
       if (Array.isArray(data)) return data;
-    } catch {
+    } catch (error) {
+      errors.push(error);
       // Ignora erro se não encontrar
     }
   }
+  const unexpectedError = errors.find((error) => !isInstanceMissingError(error));
+  if (unexpectedError) throw unexpectedError;
+
   return [];
+}
+
+function getInstanceName(item) {
+  return item?.instance?.instanceName || item?.name || item?.instanceName;
+}
+
+async function getInstanceQr(config) {
+  let firstError = null;
+
+  try {
+    const response = await evolutionRequest(config, 'get', `/instance/connect/${config.instanceName}`);
+    return { response, qr: extractQrPayload(response.data) };
+  } catch (error) {
+    firstError = error;
+    if (!isInstanceMissingError(error)) throw error;
+  }
+
+  // Evolution GO exposes the QR code through this route.
+  try {
+    const response = await evolutionRequest(config, 'get', `/instance/${config.instanceName}/qrcode`);
+    return { response, qr: extractQrPayload(response.data) };
+  } catch (error) {
+    if (!isInstanceMissingError(error)) throw error;
+    throw firstError || error;
+  }
 }
 
 async function ensureInstanceWebhook(config, req) {
@@ -166,7 +232,7 @@ async function getGoInstanceConfig(config) {
   try {
     const instances = await fetchInstances(config);
     const match = instances.find((item) => {
-      const name = item?.instance?.instanceName || item?.name || item?.instanceName;
+      const name = getInstanceName(item);
       return String(name || '').toLowerCase() === String(config.instanceName).toLowerCase();
     });
     if (match && match.token) {
@@ -223,14 +289,20 @@ async function createEvolutionInstance(salao, req, { qrcode = true } = {}) {
   try {
     response = await evolutionRequest(config, 'post', '/instance/create', payload);
   } catch (err) {
-    const errorMsg = String(err?.response?.data?.message || err?.response?.data?.error || err?.message || '');
-    if (errorMsg.includes('already exists') || err?.response?.status === 403 || err?.response?.status === 500) {
-      await evolutionRequest(config, 'delete', `/instance/logout/${config.instanceName}`).catch(() => null);
-      await evolutionRequest(config, 'delete', `/instance/delete/${config.instanceName}`).catch(() => null);
-      response = await evolutionRequest(config, 'post', '/instance/create', payload);
-    } else {
+    if (!isInstanceAlreadyExistsError(err)) {
       throw err;
     }
+
+    // A duplicate create is normal when the instance was created in the
+    // Evolution panel or when two connect requests race. Reuse it instead
+    // of deleting a valid instance.
+    const existing = await getInstanceQr(config);
+    await ensureInstanceWebhook(config, req).catch(() => null);
+    return {
+      config,
+      data: existing.response.data,
+      qr: existing.qr,
+    };
   }
 
   return {
@@ -251,7 +323,7 @@ async function ensureEvolutionInstance(salao, req, { qrcode = true } = {}) {
   try {
     const instances = await fetchInstances(config);
     const exists = instances.some((item) => {
-      const name = item?.instance?.instanceName || item?.name || item?.instanceName;
+      const name = getInstanceName(item);
       return String(name || '').toLowerCase() === String(config.instanceName).toLowerCase();
     });
 
@@ -279,12 +351,23 @@ async function getEvolutionStatus(salao, req) {
 
   try {
     await ensureInstanceWebhook(config, req).catch(() => null);
-    const response = await evolutionRequest(config, 'get', `/instance/connectionState/${config.instanceName}`);
-    return {
-      status: extractConnectionState(response.data),
-      config,
-      raw: response.data,
-    };
+    try {
+      const response = await evolutionRequest(config, 'get', `/instance/connectionState/${config.instanceName}`);
+      return {
+        status: extractConnectionState(response.data),
+        config,
+        raw: response.data,
+      };
+    } catch (error) {
+      if (!isInstanceMissingError(error)) throw error;
+
+      const response = await evolutionRequest(config, 'get', `/instance/${config.instanceName}/status`);
+      return {
+        status: extractConnectionState(response.data),
+        config,
+        raw: response.data,
+      };
+    }
   } catch (error) {
     if (isInstanceMissingError(error)) {
       return { status: 'not_created', config };
@@ -308,29 +391,18 @@ async function connectEvolutionInstance(salao, req) {
 
   // 1. Tenta obter o QR code diretamente da instância caso já esteja pronta para conexão
   try {
-    const response = await evolutionRequest(config, 'get', `/instance/connect/${config.instanceName}`);
+    const { response, qr } = await getInstanceQr(config);
     await ensureInstanceWebhook(config, req).catch(() => null);
-    const qr = extractQrPayload(response.data);
-    if (qr) {
-      return {
-        ...response.data,
-        base64: qr,
-        status: 'connecting',
-      };
-    }
-  } catch {
+    return {
+      ...response.data,
+      base64: qr,
+      status: 'connecting',
+    };
+  } catch (error) {
+    if (!isInstanceMissingError(error)) throw error;
     // Se a instância estiver em estado inválido, recria para gerar um novo QR Code
   }
 
-  // 2. Reseta a instância desconectada no Evolution GO para permitir nova leitura de QR Code
-  try {
-    await evolutionRequest(config, 'delete', `/instance/logout/${config.instanceName}`).catch(() => null);
-    await evolutionRequest(config, 'delete', `/instance/delete/${config.instanceName}`).catch(() => null);
-  } catch {
-    // Ignora erros ao tentar limpar a instância antiga
-  }
-
-  // 3. Recria a instância no Evolution GO e obtém o QR Code limpo
   const created = await createEvolutionInstance(salao, req, { qrcode: true });
   await ensureInstanceWebhook(config, req).catch(() => null);
   return {

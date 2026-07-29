@@ -46,6 +46,7 @@ if ($dbName -eq "") { $dbName = "salao_db" }
 
 $jwtSecret = "salao_$([System.Guid]::NewGuid().ToString('N').Substring(0,16))"
 $webhookSecret = "wh_$([System.Guid]::NewGuid().ToString('N'))"
+$superAdminSecret = "sa_$([System.Guid]::NewGuid().ToString('N'))"
 
 Write-Host ""
 Write-Host "============================================================"
@@ -88,6 +89,7 @@ $backendEnv = @"
 DATABASE_URL="postgresql://${dbUser}:${dbPass}@${dbHost}:${dbPort}/${dbName}"
 JWT_SECRET="${jwtSecret}"
 WEBHOOK_SECRET="${webhookSecret}"
+SUPERADMIN_SECRET="${superAdminSecret}"
 SUPERADMIN_EMAIL="${superAdminEmail}"
 SUPERADMIN_SENHA="${superAdminSenha}"
 APP_URL="${appUrl}"

@@ -49,6 +49,7 @@ if "%DB_NAME%"=="" set DB_NAME=salao_db
 
 set JWT=%RANDOM%%RANDOM%%RANDOM%
 set WEBHOOK=%RANDOM%%RANDOM%%RANDOM%%RANDOM%
+set SUPERADMIN_SECRET=sa_%RANDOM%%RANDOM%%RANDOM%%RANDOM%
 
 echo.
 echo ============================================================
@@ -88,7 +89,7 @@ if "%EMAIL_FROM%"=="" if not "%EMAIL_USER%"=="" set EMAIL_FROM=Athena SaaS ^<%EM
 
 echo.
 echo Criando backend\.env ...
-set "BACKEND_ENV=DATABASE_URL=""postgresql://%DB_USER%:%DB_PASS%@%DB_HOST%:%DB_PORT%/%DB_NAME%""\nJWT_SECRET=""salao_%JWT%""\nWEBHOOK_SECRET=""wh_%WEBHOOK%""\nSUPERADMIN_EMAIL=""%SUPERADMIN_EMAIL%""\nSUPERADMIN_SENHA=""%SUPERADMIN_SENHA%""\nAPP_URL=""%APP_URL%""\nCORS_ORIGINS=""%CORS_ORIGINS%""\nPORT=3001\nEMAIL_HOST=""%EMAIL_HOST%""\nEMAIL_PORT=""%EMAIL_PORT%""\nEMAIL_USER=""%EMAIL_USER%""\nEMAIL_PASS=""%EMAIL_PASS%""\nEMAIL_FROM=""%EMAIL_FROM%""\n"
+set "BACKEND_ENV=DATABASE_URL=""postgresql://%DB_USER%:%DB_PASS%@%DB_HOST%:%DB_PORT%/%DB_NAME%""\nJWT_SECRET=""salao_%JWT%""\nWEBHOOK_SECRET=""wh_%WEBHOOK%""\nSUPERADMIN_SECRET=""%SUPERADMIN_SECRET%""\nSUPERADMIN_EMAIL=""%SUPERADMIN_EMAIL%""\nSUPERADMIN_SENHA=""%SUPERADMIN_SENHA%""\nAPP_URL=""%APP_URL%""\nCORS_ORIGINS=""%CORS_ORIGINS%""\nPORT=3001\nEMAIL_HOST=""%EMAIL_HOST%""\nEMAIL_PORT=""%EMAIL_PORT%""\nEMAIL_USER=""%EMAIL_USER%""\nEMAIL_PASS=""%EMAIL_PASS%""\nEMAIL_FROM=""%EMAIL_FROM%""\n"
 powershell -NoProfile -Command "$content = $env:BACKEND_ENV -replace '\\n', [Environment]::NewLine; [IO.File]::WriteAllText('backend\.env', $content, [Text.UTF8Encoding]::new($false))"
 echo [OK] backend\.env criado
 
