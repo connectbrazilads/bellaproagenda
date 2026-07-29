@@ -368,11 +368,19 @@ async function sendEvolutionText(salao, number, text) {
   }
 
   const normalizedNumber = normalizeWhatsappNumber(number);
+  const goConfig = await getGoInstanceConfig(config);
 
-  await evolutionRequest(config, 'post', `/message/sendText/${config.instanceName}`, {
-    number: normalizedNumber,
-    text,
-  });
+  try {
+    await evolutionRequest(goConfig, 'post', '/send/text', {
+      number: normalizedNumber,
+      text,
+    });
+  } catch {
+    await evolutionRequest(config, 'post', `/message/sendText/${config.instanceName}`, {
+      number: normalizedNumber,
+      text,
+    });
+  }
 
   return { ok: true };
 }
@@ -420,15 +428,27 @@ async function sendEvolutionMedia(
   }
 
   const normalizedNumber = normalizeWhatsappNumber(number);
+  const goConfig = await getGoInstanceConfig(config);
 
-  await evolutionRequest(config, 'post', `/message/sendMedia/${config.instanceName}`, {
-    number: normalizedNumber,
-    mediatype,
-    mimetype,
-    caption: caption || fileName || 'Arquivo enviado',
-    media,
-    fileName,
-  });
+  try {
+    await evolutionRequest(goConfig, 'post', '/send/media', {
+      number: normalizedNumber,
+      mediatype,
+      mimetype,
+      caption: caption || fileName || 'Arquivo enviado',
+      media,
+      fileName,
+    });
+  } catch {
+    await evolutionRequest(config, 'post', `/message/sendMedia/${config.instanceName}`, {
+      number: normalizedNumber,
+      mediatype,
+      mimetype,
+      caption: caption || fileName || 'Arquivo enviado',
+      media,
+      fileName,
+    });
+  }
 
   return { ok: true };
 }
