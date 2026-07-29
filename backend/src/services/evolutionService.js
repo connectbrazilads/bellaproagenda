@@ -88,6 +88,7 @@ function extractQrPayload(data) {
   return (
     data?.base64
     || data?.data?.base64
+    || data?.data?.qrcode
     || data?.data?.Qrcode
     || data?.Qrcode
     || data?.qrcode?.base64

@@ -501,6 +501,7 @@ function SecaoWhatsapp() {
         const response = await connectWhatsapp();
         base64 = (
           response.data?.base64 ||
+          response.data?.data?.qrcode ||
           response.data?.Qrcode ||
           response.data?.data?.Qrcode ||
           response.data?.data?.base64 ||
