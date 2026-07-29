@@ -201,14 +201,30 @@ async function getInstanceQr(config) {
     '/instance/qr',
   ];
   let firstError = null;
+  let goConfig = null;
 
   for (const path of paths) {
-    try {
-      const response = await evolutionRequest(config, 'get', path);
-      return { response, qr: extractQrPayload(response.data) };
-    } catch (error) {
-      firstError = firstError || error;
-      if (!isInstanceMissingError(error)) throw error;
+    const requestConfigs = [config];
+
+    // In Evolution GO, /instance/qr may be protected by the instance token.
+    // Fetch that token when the global key reaches the GO-specific route.
+    if (path === '/instance/qr') {
+      goConfig = goConfig || await getGoInstanceConfig(config);
+      if (goConfig.apiKey && goConfig.apiKey !== config.apiKey) {
+        requestConfigs.push(goConfig);
+      }
+    }
+
+    for (const requestConfig of requestConfigs) {
+      try {
+        const response = await evolutionRequest(requestConfig, 'get', path);
+        return { response, qr: extractQrPayload(response.data) };
+      } catch (error) {
+        firstError = firstError || error;
+        if (isInstanceMissingError(error)) continue;
+        if (requestConfig !== requestConfigs[requestConfigs.length - 1]) continue;
+        throw error;
+      }
     }
   }
 
