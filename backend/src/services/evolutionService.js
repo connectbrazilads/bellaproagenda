@@ -222,12 +222,15 @@ async function createEvolutionInstance(salao, req, { qrcode = true } = {}) {
   let response;
   try {
     response = await evolutionRequest(config, 'post', '/instance/create', payload);
-  } catch {
-    response = await evolutionRequest(config, 'post', '/instance/create', {
-      name: config.instanceName,
-      token: instanceToken,
-      qrcode,
-    });
+  } catch (err) {
+    const errorMsg = String(err?.response?.data?.message || err?.response?.data?.error || err?.message || '');
+    if (errorMsg.includes('already exists') || err?.response?.status === 403 || err?.response?.status === 500) {
+      await evolutionRequest(config, 'delete', `/instance/logout/${config.instanceName}`).catch(() => null);
+      await evolutionRequest(config, 'delete', `/instance/delete/${config.instanceName}`).catch(() => null);
+      response = await evolutionRequest(config, 'post', '/instance/create', payload);
+    } else {
+      throw err;
+    }
   }
 
   return {
