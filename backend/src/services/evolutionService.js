@@ -9,6 +9,16 @@ const DEFAULT_WEBHOOK_EVENTS = [
   'CONNECTION_UPDATE',
 ];
 
+// Evolution GO stores the instance token in its database. Status is polled by
+// the panel every few seconds, so querying /instance/all on every poll can
+// needlessly exhaust the connection pool of a small Evolution deployment.
+const INSTANCE_CONFIG_CACHE_TTL_MS = 5 * 60 * 1000;
+const INSTANCE_CONFIG_FAILURE_TTL_MS = 15 * 1000;
+const WEBHOOK_CACHE_TTL_MS = 10 * 60 * 1000;
+const instanceConfigCache = new Map();
+const instanceConfigRequests = new Map();
+const webhookCache = new Map();
+
 function trimSlash(value = '') {
   return String(value || '').trim().replace(/\/+$/, '');
 }
@@ -68,9 +78,20 @@ function buildWebhookUrl(req) {
 }
 
 function getEvolutionHeaders(config) {
-  return {
+  const headers = {
     apikey: config.apiKey,
   };
+
+  // Evolution GO routes are scoped by the instance UUID. The token alone can
+  // authenticate the request but may leave the server operating on no
+  // selected instance, which results in an accepted connect call without QR.
+  if (config.instanceId) headers.instanceId = config.instanceId;
+
+  return headers;
+}
+
+function getEvolutionConfigCacheKey(config) {
+  return [config.baseUrl, config.apiKey, config.instanceName].join('|');
 }
 
 async function evolutionRequest(config, method, path, data) {
@@ -180,6 +201,16 @@ async function fetchInstances(config) {
     if (Array.isArray(data?.data)) return data.data;
   } catch (error) {
     errors.push(error);
+
+    // Do not make a second database-backed request when the first endpoint
+    // already failed for a real server error (for example SQLSTATE 53300).
+    // The fallback is useful for endpoint differences between Evolution API
+    // versions, but not for an exhausted database connection pool.
+    const firstStatus = Number(error?.response?.status || 0);
+    if (firstStatus && firstStatus !== 404 && firstStatus !== 405) {
+      throw error;
+    }
+
     try {
       const response = await evolutionRequest(config, 'get', '/instance/all');
       const data = response.data;
@@ -211,7 +242,7 @@ async function getInstanceQr(config, req) {
     try {
       const response = await evolutionRequest(config, 'get', path);
       const qr = extractQrPayload(response.data);
-      if (qr) return { response, qr };
+      if (qr) return { response, qr, config };
     } catch (error) {
       firstError = firstError || error;
       if (!isInstanceMissingError(error)) throw error;
@@ -249,7 +280,7 @@ async function getInstanceQr(config, req) {
         const response = await evolutionRequest(requestConfig, 'get', '/instance/qr');
         lastResponse = response;
         const qr = extractQrPayload(response.data);
-        if (qr) return { response, qr };
+        if (qr) return { response, qr, config: requestConfig };
       } catch (error) {
         firstError = firstError || error;
         if (isInstanceMissingError(error)) continue;
@@ -263,7 +294,11 @@ async function getInstanceQr(config, req) {
   }
 
   if (connectStarted) {
-    return { response: lastResponse || { data: {} }, qr: '' };
+    return {
+      response: lastResponse || { data: {} },
+      qr: '',
+      config: requestConfigs[0],
+    };
   }
 
   throw firstError;
@@ -273,29 +308,69 @@ async function ensureInstanceWebhook(config, req) {
   const webhookUrl = buildWebhookUrl(req);
   if (!webhookUrl) return null;
 
+  const cacheKey = `${getEvolutionConfigCacheKey(config)}|${webhookUrl}`;
+  const cached = webhookCache.get(cacheKey);
+  if (cached && cached > Date.now()) return null;
+
   return evolutionRequest(config, 'post', `/webhook/set/${config.instanceName}`, {
     enabled: true,
     url: webhookUrl,
     webhookByEvents: false,
     webhookBase64: true,
     events: DEFAULT_WEBHOOK_EVENTS,
-  }).catch(() => null);
+  })
+    .then((response) => {
+      webhookCache.set(cacheKey, Date.now() + WEBHOOK_CACHE_TTL_MS);
+      return response;
+    })
+    .catch(() => null);
 }
 
 async function getGoInstanceConfig(config) {
-  try {
-    const instances = await fetchInstances(config);
-    const match = instances.find((item) => {
-      const name = getInstanceName(item);
-      return String(name || '').toLowerCase() === String(config.instanceName).toLowerCase();
-    });
-    if (match && match.token) {
-      return { ...config, apiKey: match.token, instanceToken: match.token };
+  const cacheKey = getEvolutionConfigCacheKey(config);
+  const cached = instanceConfigCache.get(cacheKey);
+  if (cached && cached.expiresAt > Date.now()) return cached.config;
+
+  const inFlight = instanceConfigRequests.get(cacheKey);
+  if (inFlight) return inFlight;
+
+  const request = (async () => {
+    let resolvedConfig = config;
+    let hasInstanceToken = false;
+
+    try {
+      const instances = await fetchInstances(config);
+      const match = instances.find((item) => {
+        const name = getInstanceName(item);
+        return String(name || '').toLowerCase() === String(config.instanceName).toLowerCase();
+      });
+      if (match && match.token) {
+        resolvedConfig = {
+          ...config,
+          apiKey: match.token,
+          instanceToken: match.token,
+          instanceId: match.id || match.instanceId || match.instance?.id || '',
+        };
+        hasInstanceToken = true;
+      }
+    } catch {
+      // Mantém a config original se falhar. A próxima tentativa será feita
+      // após o TTL, sem transformar cada polling em uma consulta ao banco.
     }
-  } catch {
-    // Mantém a config original se falhar
-  }
-  return config;
+
+    instanceConfigCache.set(cacheKey, {
+      config: resolvedConfig,
+      expiresAt: Date.now() + (
+        hasInstanceToken ? INSTANCE_CONFIG_CACHE_TTL_MS : INSTANCE_CONFIG_FAILURE_TTL_MS
+      ),
+    });
+    return resolvedConfig;
+  })().finally(() => {
+    instanceConfigRequests.delete(cacheKey);
+  });
+
+  instanceConfigRequests.set(cacheKey, request);
+  return request;
 }
 
 async function createEvolutionInstance(salao, req, { qrcode = true } = {}) {
@@ -351,16 +426,20 @@ async function createEvolutionInstance(salao, req, { qrcode = true } = {}) {
     // Evolution panel or when two connect requests race. Reuse it instead
     // of deleting a valid instance.
     const existing = await getInstanceQr(config, req);
-    await ensureInstanceWebhook(config, req).catch(() => null);
+    await ensureInstanceWebhook(existing.config || config, req).catch(() => null);
     return {
-      config,
+      config: existing.config || config,
       data: existing.response.data,
       qr: existing.qr,
     };
   }
 
   return {
-    config: { ...config, apiKey: instanceToken },
+    config: {
+      ...config,
+      apiKey: instanceToken,
+      instanceId: response.data?.data?.id || response.data?.id || '',
+    },
     data: response.data,
     qr: extractQrPayload(response.data),
   };
@@ -404,8 +483,6 @@ async function getEvolutionStatus(salao, req) {
   }
 
   try {
-    await ensureInstanceWebhook(config, req).catch(() => null);
-
     // Evolution GO authenticates instance routes with the token returned by
     // /instance/all and exposes status at /instance/status.
     const goConfig = await getGoInstanceConfig(config);
@@ -470,8 +547,8 @@ async function connectEvolutionInstance(salao, req) {
 
   // 1. Tenta obter o QR code diretamente da instância caso já esteja pronta para conexão
   try {
-    const { response, qr } = await getInstanceQr(config, req);
-    await ensureInstanceWebhook(config, req).catch(() => null);
+    const { response, qr, config: requestConfig } = await getInstanceQr(config, req);
+    await ensureInstanceWebhook(requestConfig || config, req).catch(() => null);
     return {
       ...response.data,
       base64: qr,
@@ -494,7 +571,7 @@ async function connectEvolutionInstance(salao, req) {
     }
   }
 
-  await ensureInstanceWebhook(config, req).catch(() => null);
+  await ensureInstanceWebhook(created.config || config, req).catch(() => null);
   return {
     ...created.data,
     base64: qr,

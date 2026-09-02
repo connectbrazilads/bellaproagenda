@@ -28,6 +28,7 @@ router.delete('/profissionais-categorias/:id', requirePermission('profissionais'
 router.post('/profissionais', requirePermission('profissionais'), requireActionPermission('profissionais.criar'), ctrl.createProfissional);
 router.put('/profissionais/ordem', requireAnyPermission(['profissionais', 'agenda']), ctrl.reorderProfissionais);
 router.put('/profissionais/:id', requirePermission('profissionais'), requireActionPermission('profissionais.editar'), ctrl.updateProfissional);
+router.patch('/profissionais/:id/status', requirePermission('profissionais'), requireActionPermission('profissionais.editar'), ctrl.toggleProfissionalStatus);
 router.delete('/profissionais/:id', requirePermission('profissionais'), requireActionPermission('profissionais.excluir'), ctrl.deleteProfissional);
 router.put('/profissionais/:id/horarios', requirePermission('profissionais'), ctrl.setHorarios);
 

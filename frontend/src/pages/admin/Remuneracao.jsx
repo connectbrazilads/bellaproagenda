@@ -126,7 +126,7 @@ function LancamentoModal({
                   <option value="">Selecione o profissional...</option>
                   {profissionais.map((p) => (
                     <option key={p.id} value={p.id}>
-                      {p.nome}
+                      {p.nome}{p.ativo === false ? ' (Inativo)' : ''}
                     </option>
                   ))}
                 </select>
@@ -333,11 +333,11 @@ export default function Remuneracao() {
   async function fetchProfissionais() {
     try {
       const res = await getProfissionais();
-      const ativos = (res.data || []).filter((item) => item.ativo !== false);
+      const todos = res.data || [];
       if (isScopedProfessional) {
-        setProfissionais(ativos.filter(p => p.id === myPid));
+        setProfissionais(todos.filter(p => p.id === myPid));
       } else {
-        setProfissionais(ativos);
+        setProfissionais(todos);
       }
     } catch (err) {
       console.error(err);
@@ -686,7 +686,7 @@ export default function Remuneracao() {
               <option value="">Todos os profissionais</option>
               {profissionais.map((p) => (
                 <option key={p.id} value={p.id}>
-                  {p.nome}
+                  {p.nome}{p.ativo === false ? ' (Inativo)' : ''}
                 </option>
               ))}
             </select>

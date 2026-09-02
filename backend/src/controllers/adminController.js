@@ -57,11 +57,17 @@ function agendaScopeFilter(req) {
 }
 
 function getEvolutionRequestError(error) {
-  return error?.response?.data?.response?.message?.[0]
+  const message = error?.response?.data?.response?.message?.[0]
     || error?.response?.data?.message
     || error?.response?.data?.error
     || error?.message
     || 'Erro na integração com o Evolution';
+
+  if (/too many clients|sqlstate\s*53300|clientes demais/i.test(String(message))) {
+    return 'A Evolution GO está sem conexões disponíveis no banco. Reinicie o serviço da Evolution GO e tente novamente.';
+  }
+
+  return message;
 }
 
 function getAgendaProfessionalId(req, requestedProfessionalId, { defaultToSelf = false } = {}) {
@@ -1085,22 +1091,99 @@ async function reorderProfissionais(req, res) {
   res.json({ ok: true, ids: finalOrder });
 }
 
-async function deleteProfissional(req, res) {
+async function toggleProfissionalStatus(req, res) {
   if (isScopedProfessional(req)) {
-    return res.status(403).json({ error: 'VocÃª nÃ£o pode excluir o seu prÃ³prio cadastro profissional' });
+    return res.status(403).json({ error: 'Você não pode alterar o status do seu próprio cadastro profissional' });
   }
 
   const { id } = req.params;
-  await prisma.profissional.deleteMany({ where: { id, salaoId: req.user.salaoId } });
+  const { ativo } = req.body;
+
+  const prof = await prisma.profissional.findFirst({
+    where: { id, salaoId: req.user.salaoId },
+  });
+
+  if (!prof) {
+    return res.status(404).json({ error: 'Profissional não encontrado' });
+  }
+
+  const novoStatus = typeof ativo === 'boolean' ? ativo : !prof.ativo;
+  const updated = await prisma.profissional.update({
+    where: { id },
+    data: {
+      ativo: novoStatus,
+      deletedAt: novoStatus ? null : new Date(),
+    },
+    include: {
+      ...PROFISSIONAL_INCLUDE,
+      horarios: { orderBy: { diaSemana: 'asc' } },
+    },
+  });
+
   await createAuditLog({
     salaoId: req.user.salaoId,
+    usuarioId: req.user.id,
+    acao: novoStatus ? 'profissionais.ativar' : 'profissionais.inativar',
+    entidade: 'profissional',
+    entidadeId: id,
+    mensagem: novoStatus ? 'Profissional reativado' : 'Profissional inativado',
+    contexto: { nome: prof.nome, ativo: novoStatus },
+    req,
+  });
+
+  const requesterPid = isScopedProfessional(req) ? req.user.profissionalId : null;
+  res.json(serializeProfissional(updated, requesterPid));
+}
+
+async function deleteProfissional(req, res) {
+  if (isScopedProfessional(req)) {
+    return res.status(403).json({ error: 'Você não pode excluir o seu próprio cadastro profissional' });
+  }
+
+  const { id } = req.params;
+  const salaoId = req.user.salaoId;
+
+  const prof = await prisma.profissional.findFirst({
+    where: { id, salaoId },
+  });
+
+  if (!prof) {
+    return res.status(404).json({ error: 'Profissional não encontrado' });
+  }
+
+  // Verifica se há histórico de agendamentos ou lançamentos financeiros
+  const [totalAgendamentos, totalLancamentos] = await Promise.all([
+    prisma.agendamento.count({ where: { profissionalId: id, salaoId } }),
+    prisma.profissionalLancamento.count({ where: { profissionalId: id, salaoId } }),
+  ]);
+
+  if (totalAgendamentos > 0 || totalLancamentos > 0) {
+    return res.status(400).json({
+      error: `Não é possível excluir ${prof.nome} pois existem ${totalAgendamentos} agendamento(s) e ${totalLancamentos} lançamento(s) financeiro(s) registrados. Para manter os relatórios e comissões preservados, utilize a opção de Inativar o profissional.`,
+      hasHistory: true,
+      totalAgendamentos,
+      totalLancamentos,
+    });
+  }
+
+  await prisma.horario.deleteMany({ where: { profissionalId: id } });
+  await prisma.bloqueio.deleteMany({ where: { profissionalId: id } });
+  await prisma.profissionalServico.deleteMany({ where: { profissionalId: id } });
+  await prisma.profissionalCategoria.deleteMany({ where: { profissionalId: id } });
+  await prisma.profissionalCategoriaServico.deleteMany({ where: { profissionalId: id } });
+  await prisma.profissional.deleteMany({ where: { id, salaoId } });
+
+  await createAuditLog({
+    salaoId,
     usuarioId: req.user.id,
     acao: 'profissionais.excluir',
     entidade: 'profissional',
     entidadeId: id,
     mensagem: 'Profissional removido',
+    contexto: { nome: prof.nome },
     req,
   });
+
   res.json({ ok: true });
 }
 
@@ -5188,7 +5271,7 @@ module.exports = {
   getSalao, updateSalao,
   getWhatsappConfig, updateWhatsappConfig, getWhatsappStatus, connectWhatsapp, disconnectWhatsapp,
   getClientes, buscarClientes, createCliente, updateCliente,
-  getProfissionais, createProfissional, updateProfissional, reorderProfissionais, deleteProfissional,
+  getProfissionais, createProfissional, updateProfissional, reorderProfissionais, toggleProfissionalStatus, deleteProfissional,
   getCategoriasProfissionais, createCategoriaProfissional, deleteCategoriaProfissional,
   getCategoriasServicos, createCategoriaServico, deleteCategoriaServico,
   setHorarios,

@@ -13,12 +13,15 @@ import {
   Percent,
   Phone,
   Plus,
+  Power,
   Scissors,
   Star,
   Tag,
   Trash2,
   TrendingUp,
   User,
+  UserCheck,
+  UserX,
   X,
 } from 'lucide-react';
 import {
@@ -32,6 +35,7 @@ import {
   getServicos,
   setHorariosProfissional,
   updateProfissional,
+  toggleProfissionalStatus,
   getAdminSalao,
 } from '../../services/api';
 import { cn } from '../../lib/utils';
@@ -91,6 +95,7 @@ export default function Profissionais() {
   const [salaoInfo, setSalaoInfo] = useState(null);
   const [novaCategoria, setNovaCategoria] = useState('');
   const [form, setForm] = useState(EMPTY_FORM);
+  const [statusFilter, setStatusFilter] = useState('ativos');
   const [modalOpen, setModalOpen] = useState(false);
   const [actionMenuModal, setActionMenuModal] = useState(null);
   const [activeTab, setActiveTab] = useState('geral');
@@ -180,15 +185,49 @@ export default function Profissionais() {
       }
       setModalOpen(false);
       await loadData();
+    } catch (err) {
+      console.error(err);
+      alert(err.response?.data?.error || 'Erro ao salvar profissional.');
     } finally {
       setSaving(false);
     }
   }
 
-  async function handleDelete(id) {
-    if (!window.confirm('Deseja excluir este profissional?')) return;
-    await deleteProfissional(id);
-    await loadData();
+  async function handleToggleStatus(profissional) {
+    const novoStatus = !profissional.ativo;
+    const msg = novoStatus
+      ? `Deseja reativar o profissional "${profissional.nome}"? Ele voltará a ficar disponível para agendamentos.`
+      : `Deseja inativar o profissional "${profissional.nome}"?\n\nEle não receberá novos agendamentos na agenda pública, mas todo o histórico de atendimentos, comissões pendentes e relatórios financeiros continuará 100% preservado.`;
+
+    if (!window.confirm(msg)) return;
+
+    try {
+      await toggleProfissionalStatus(profissional.id, novoStatus);
+      await loadData();
+    } catch (err) {
+      console.error(err);
+      alert(err.response?.data?.error || 'Não foi possível alterar o status do profissional.');
+    }
+  }
+
+  async function handleDelete(profissional) {
+    if (!window.confirm(`Deseja excluir definitivamente o cadastro de "${profissional.nome}"?`)) return;
+    try {
+      await deleteProfissional(profissional.id);
+      await loadData();
+    } catch (err) {
+      console.error(err);
+      const apiError = err.response?.data?.error;
+      if (err.response?.data?.hasHistory) {
+        const inativarAgora = window.confirm(`${apiError}\n\nDeseja INATIVAR o profissional agora para preservar o histórico?`);
+        if (inativarAgora) {
+          await toggleProfissionalStatus(profissional.id, false);
+          await loadData();
+        }
+      } else {
+        alert(apiError || 'Não foi possível excluir o profissional.');
+      }
+    }
   }
 
   function openSchedules(profissional) {
@@ -289,9 +328,19 @@ export default function Profissionais() {
   }
 
   const visibleProfessionals = useMemo(() => {
-    if (!isScopedProfessional) return profissionais;
-    return profissionais.filter((profissional) => profissional.id === myProfissionalId);
-  }, [isScopedProfessional, myProfissionalId, profissionais]);
+    let list = profissionais;
+    if (isScopedProfessional) {
+      list = list.filter((profissional) => profissional.id === myProfissionalId);
+    } else if (statusFilter === 'ativos') {
+      list = list.filter((p) => p.ativo !== false);
+    } else if (statusFilter === 'inativos') {
+      list = list.filter((p) => p.ativo === false);
+    }
+    return list;
+  }, [isScopedProfessional, myProfissionalId, profissionais, statusFilter]);
+
+  const totalAtivos = useMemo(() => profissionais.filter((p) => p.ativo !== false).length, [profissionais]);
+  const totalInativos = useMemo(() => profissionais.filter((p) => p.ativo === false).length, [profissionais]);
 
   const servicoIdsPorCategoriaSelecionada = useMemo(() => {
     const ids = new Set();
@@ -353,7 +402,8 @@ export default function Profissionais() {
 
           <div className="flex flex-wrap items-center gap-4">
             <div className={cn('rounded-xl border border-black/[0.04] dark:border-white/5 bg-white/40 dark:bg-white/[0.01] px-5 py-3 items-center gap-6 shadow-sm', showSummaryCard ? 'flex' : 'hidden')}>
-              <MiniMetric label="Profissionais ativos" value={visibleProfessionals.filter((item) => item.ativo).length} />
+              <MiniMetric label="Profissionais ativos" value={totalAtivos} />
+              <MiniMetric label="Inativos (histórico)" value={totalInativos} />
               <MiniMetric label="Serviços cadastrados" value={servicosDisponiveis.length} highlight />
             </div>
 
@@ -361,15 +411,15 @@ export default function Profissionais() {
               <div className="flex flex-col items-end gap-1 shrink-0">
                 <button
                   onClick={openCreate}
-                  disabled={salaoInfo && profissionais.length >= salaoInfo.maxProfissionais}
+                  disabled={salaoInfo && totalAtivos >= salaoInfo.maxProfissionais}
                   className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-[#d48997] to-[#e29ba8] px-5 py-2.5 text-xs font-semibold text-white shadow-sm transition disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   <Plus size={16} />
                   <span>Novo Profissional</span>
                 </button>
-                {salaoInfo && profissionais.length >= salaoInfo.maxProfissionais && (
+                {salaoInfo && totalAtivos >= salaoInfo.maxProfissionais && (
                   <p className="text-[10px] text-[#efbac2] mt-1">
-                    Limite máximo de {salaoInfo.maxProfissionais} profissionais atingido.
+                    Limite máximo de {salaoInfo.maxProfissionais} profissionais ativos atingido.
                   </p>
                 )}
               </div>
@@ -377,6 +427,57 @@ export default function Profissionais() {
           </div>
         </div>
       </header>
+
+      {!isScopedProfessional && (
+        <div className="flex flex-wrap items-center justify-between gap-4 border-b border-black/[0.04] dark:border-white/5 pb-4">
+          <div className="flex items-center gap-1.5 p-1 rounded-2xl bg-gray-100/80 dark:bg-white/5 border border-black/[0.04] dark:border-white/5 text-xs font-semibold">
+            <button
+              type="button"
+              onClick={() => setStatusFilter('ativos')}
+              className={cn(
+                'px-4 py-2 rounded-xl transition-all',
+                statusFilter === 'ativos'
+                  ? 'bg-white dark:bg-[#111113] text-gray-900 dark:text-white shadow-sm font-bold'
+                  : 'text-gray-500 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white'
+              )}
+            >
+              Ativos ({totalAtivos})
+            </button>
+            <button
+              type="button"
+              onClick={() => setStatusFilter('inativos')}
+              className={cn(
+                'px-4 py-2 rounded-xl transition-all',
+                statusFilter === 'inativos'
+                  ? 'bg-white dark:bg-[#111113] text-gray-900 dark:text-white shadow-sm font-bold'
+                  : 'text-gray-500 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white'
+              )}
+            >
+              Inativos ({totalInativos})
+            </button>
+            <button
+              type="button"
+              onClick={() => setStatusFilter('todos')}
+              className={cn(
+                'px-4 py-2 rounded-xl transition-all',
+                statusFilter === 'todos'
+                  ? 'bg-white dark:bg-[#111113] text-gray-900 dark:text-white shadow-sm font-bold'
+                  : 'text-gray-500 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white'
+              )}
+            >
+              Todos ({profissionais.length})
+            </button>
+          </div>
+
+          <p className="text-xs text-gray-400 dark:text-gray-500">
+            {statusFilter === 'inativos'
+              ? 'Exibindo profissionais desligados com histórico e comissões preservados'
+              : statusFilter === 'ativos'
+              ? 'Exibindo profissionais ativos na agenda e agendamento público'
+              : 'Exibindo todos os profissionais cadastrados'}
+          </p>
+        </div>
+      )}
 
       <div className={cn('grid gap-4 md:grid-cols-2', showThreeCards && 'xl:grid-cols-3')}>
         <AnimatePresence mode="popLayout">
@@ -401,20 +502,29 @@ export default function Profissionais() {
                         </div>
                       )}
                     </div>
-                    <span className={`absolute -right-1 -top-1 flex h-5 w-5 items-center justify-center rounded-full border-2 border-white dark:border-[#0c0c0e] ${profissional.ativo ? 'bg-emerald-500' : 'bg-gray-300'}`}>
+                    <span className={`absolute -right-1 -top-1 flex h-5 w-5 items-center justify-center rounded-full border-2 border-white dark:border-[#0c0c0e] ${profissional.ativo ? 'bg-emerald-500' : 'bg-gray-400'}`}>
                       <Activity size={9} className="text-white" />
                     </span>
                   </div>
 
                   <div className="flex-1 min-w-0">
-                    <h2 className="font-serif font-normal text-lg sm:text-xl text-gray-905 dark:text-white truncate leading-snug">{profissional.nome}</h2>
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <h2 className="font-serif font-normal text-lg sm:text-xl text-gray-905 dark:text-white truncate leading-snug">{profissional.nome}</h2>
+                      {!profissional.ativo && (
+                        <span className="shrink-0 px-2 py-0.5 rounded-full text-[9px] font-bold bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20">
+                          Inativo
+                        </span>
+                      )}
+                    </div>
                     <div className="mt-1 flex items-center gap-1.5">
                       <div className="flex">
                         {[1, 2, 3, 4, 5].map((star) => (
                           <Star key={star} size={9} className="fill-amber-400 text-amber-400" />
                         ))}
                       </div>
-                      <span className="text-[10px] font-medium text-gray-400 dark:text-gray-500 normal-case">Especialista BellaPro</span>
+                      <span className="text-[10px] font-medium text-gray-400 dark:text-gray-500 normal-case">
+                        {profissional.ativo ? 'Especialista Ativo' : 'Cadastro Inativo (Histórico Preservado)'}
+                      </span>
                     </div>
                   </div>
                 </div>
@@ -449,7 +559,7 @@ export default function Profissionais() {
               <div className="grid grid-cols-2 gap-2 mt-2">
                 <button onClick={() => setActionMenuModal(profissional)} className="rounded-xl border border-black/[0.08] dark:border-white/10 bg-white dark:bg-white/5 px-3 py-2 text-xs font-semibold text-gray-600 dark:text-white/80 flex items-center justify-center gap-1.5 transition hover:bg-gray-50 dark:hover:bg-white/10">
                   <Edit3 size={13} />
-                  <span>Editar</span>
+                  <span>Opções</span>
                 </button>
                 <button onClick={() => openSchedules(profissional)} className="rounded-xl bg-[#d48997]/10 hover:bg-[#d48997]/15 text-[#d48997] px-3 py-2 text-xs font-semibold flex items-center justify-center gap-1.5 transition">
                   <Calendar size={13} />
@@ -567,6 +677,29 @@ export default function Profissionais() {
                       <NumberField label="Comissão Padrão (%)" value={form.comissaoPercent} onChange={(value) => setForm((prev) => ({ ...prev, comissaoPercent: Number(value || 0) }))} icon={<Percent size={13} />} />
                       <NumberField label="Meta Mensal (R$)" value={form.metaMensal} onChange={(value) => setForm((prev) => ({ ...prev, metaMensal: Number(value || 0) }))} icon={<TrendingUp size={13} />} />
                       <NumberField label="Bônus Meta Fixo (R$)" value={form.bonusMetaValor} onChange={(value) => setForm((prev) => ({ ...prev, bonusMetaValor: Number(value || 0) }))} icon={<DollarSign size={13} />} />
+                    </div>
+
+                    <div className="rounded-2xl border border-black/[0.04] dark:border-white/[0.04] bg-white/40 dark:bg-white/[0.01] p-5 shadow-sm flex items-center justify-between gap-4">
+                      <div>
+                        <p className="text-xs font-semibold text-gray-900 dark:text-white">Disponibilidade / Status</p>
+                        <p className="mt-1 text-xs text-gray-400 dark:text-gray-500 font-normal">
+                          {form.ativo
+                            ? 'Profissional ATIVO: disponível para novos agendamentos na plataforma.'
+                            : 'Profissional INATIVO: não recebe novos agendamentos, mas todo o histórico de serviços e comissões continua seguro.'}
+                        </p>
+                      </div>
+                      <label className="relative inline-flex items-center cursor-pointer shrink-0">
+                        <input
+                          type="checkbox"
+                          checked={form.ativo}
+                          onChange={(e) => setForm((prev) => ({ ...prev, ativo: e.target.checked }))}
+                          className="sr-only peer"
+                        />
+                        <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer dark:bg-zinc-800 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-emerald-500"></div>
+                        <span className="ml-2.5 text-xs font-semibold text-gray-700 dark:text-gray-300">
+                          {form.ativo ? 'Ativo' : 'Inativo'}
+                        </span>
+                      </label>
                     </div>
                   </div>
                 )}
@@ -759,10 +892,45 @@ export default function Profissionais() {
               </button>
 
               {!isScopedProfessional && (
-                <button onClick={() => { handleDelete(actionMenuModal.id); setActionMenuModal(null); }} className="mt-2.5 flex items-center justify-center gap-2 rounded-xl border border-red-500/20 bg-red-500/5 p-3 text-center transition hover:bg-red-500/10">
-                  <Trash2 size={15} className="text-red-500" />
-                  <span className="text-xs font-semibold text-red-500">Excluir Profissional</span>
-                </button>
+                <>
+                  <button
+                    onClick={() => {
+                      const prof = actionMenuModal;
+                      setActionMenuModal(null);
+                      handleToggleStatus(prof);
+                    }}
+                    className={cn(
+                      'flex items-center gap-3 rounded-xl border p-3 text-left transition',
+                      actionMenuModal.ativo
+                        ? 'border-amber-500/20 bg-amber-500/5 hover:bg-amber-500/10 text-amber-700 dark:text-amber-400'
+                        : 'border-emerald-500/20 bg-emerald-500/5 hover:bg-emerald-500/10 text-emerald-700 dark:text-emerald-400'
+                    )}
+                  >
+                    {actionMenuModal.ativo ? <UserX size={16} /> : <UserCheck size={16} />}
+                    <div>
+                      <p className="text-sm font-semibold">
+                        {actionMenuModal.ativo ? 'Inativar Profissional' : 'Reativar Profissional'}
+                      </p>
+                      <p className="text-[10px] opacity-80">
+                        {actionMenuModal.ativo
+                          ? 'Oculta da agenda pública mas preserva 100% do histórico e comissões'
+                          : 'Reativa e volta a exibir na agenda pública para novos clientes'}
+                      </p>
+                    </div>
+                  </button>
+
+                  <button
+                    onClick={() => {
+                      const prof = actionMenuModal;
+                      setActionMenuModal(null);
+                      handleDelete(prof);
+                    }}
+                    className="mt-2.5 flex items-center justify-center gap-2 rounded-xl border border-red-500/20 bg-red-500/5 p-3 text-center transition hover:bg-red-500/10"
+                  >
+                    <Trash2 size={15} className="text-red-500" />
+                    <span className="text-xs font-semibold text-red-500">Excluir Cadastro</span>
+                  </button>
+                </>
               )}
             </div>
           </div>

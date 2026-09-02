@@ -58,6 +58,15 @@ const TABS = [
   { id: 'seguranca', label: 'Segurança', icon: Lock },
 ];
 
+function withTimeout(promise, timeoutMs, message) {
+  let timer;
+  const timeout = new Promise((_, reject) => {
+    timer = setTimeout(() => reject(new Error(message)), timeoutMs);
+  });
+
+  return Promise.race([promise, timeout]).finally(() => clearTimeout(timer));
+}
+
 const AVAILABLE_PERMISSIONS = [
   'dashboard',
   'agenda',
@@ -498,7 +507,11 @@ function SecaoWhatsapp() {
       // Evolution GO can finish generating the QR asynchronously. Retry the
       // same idempotent connection request while the backend polls the QR.
       for (let attempt = 0; attempt < 3 && !base64; attempt += 1) {
-        const response = await connectWhatsapp();
+        const response = await withTimeout(
+          connectWhatsapp(),
+          20000,
+          'A Evolution GO demorou para responder. Tente novamente em alguns segundos.'
+        );
         base64 = (
           response.data?.base64 ||
           response.data?.data?.qrcode ||
@@ -525,6 +538,8 @@ function SecaoWhatsapp() {
         setMessage('Instância localizada, mas sem QR Code disponível no momento.');
       }
     } catch (error) {
+      setStatus('close');
+      setQr('');
       setMessage(error.response?.data?.error || 'Erro ao conectar WhatsApp.');
     } finally {
       setConnecting(false);
@@ -602,6 +617,7 @@ function SecaoWhatsapp() {
                   type="button"
                   onClick={handleConnect}
                   loading={connecting}
+                  loadingLabel="Conectando..."
                   label="Conectar Celular"
                 />
               )}
@@ -1211,7 +1227,7 @@ function InlineMessage({ text }) {
   );
 }
 
-function PrimaryButton({ loading, label, type = 'button', onClick }) {
+function PrimaryButton({ loading, label, loadingLabel = 'Salvando...', type = 'button', onClick }) {
   return (
     <button
       type={type}
@@ -1220,7 +1236,7 @@ function PrimaryButton({ loading, label, type = 'button', onClick }) {
       className="inline-flex h-10 items-center justify-center gap-1.5 rounded-xl bg-[#d48997] hover:bg-[#c97b8a] text-white px-5 text-xs font-semibold shadow-sm transition disabled:opacity-55"
     >
       {loading ? <RefreshCw size={13} className="animate-spin" /> : <Save size={13} />}
-      {loading ? 'Salvando...' : label}
+      {loading ? loadingLabel : label}
     </button>
   );
 }

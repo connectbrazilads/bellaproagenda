@@ -74,6 +74,7 @@ export const deleteCategoriaProfissional = (id) => api.delete(`/admin/profission
 export const createProfissional = (data) => api.post('/admin/profissionais', data);
 export const reorderProfissionais = (ids) => api.put('/admin/profissionais/ordem', { ids });
 export const updateProfissional = (id, data) => api.put(`/admin/profissionais/${id}`, data);
+export const toggleProfissionalStatus = (id, ativo) => api.patch(`/admin/profissionais/${id}/status`, { ativo });
 export const deleteProfissional = (id) => api.delete(`/admin/profissionais/${id}`);
 export const setHorariosProfissional = (id, horarios) => api.put(`/admin/profissionais/${id}/horarios`, { horarios });
 
