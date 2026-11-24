@@ -156,8 +156,10 @@ function extractConnectionState(data) {
 }
 
 function getEvolutionErrorMessage(error) {
+  const respMessage = error?.response?.data?.response?.message;
+  const firstRespMessage = Array.isArray(respMessage) ? respMessage[0] : respMessage;
   return String(
-    error?.response?.data?.response?.message?.[0]
+    firstRespMessage
     || error?.response?.data?.message
     || error?.response?.data?.error
     || error?.message
@@ -232,23 +234,51 @@ function getInstanceName(item) {
 }
 
 async function getInstanceQr(config, req) {
-  const paths = [
-    `/instance/connect/${config.instanceName}`,
-    `/instance/${config.instanceName}/qrcode`,
-  ];
   let firstError = null;
+  let v2EndpointResponded = false;
 
-  for (const path of paths) {
+  // 1. Evolution API v2 / v1: GET /instance/connect/:instanceName
+  try {
+    const response = await evolutionRequest(config, 'get', `/instance/connect/${config.instanceName}`);
+    v2EndpointResponded = true;
+    const state = extractConnectionState(response.data);
+    if (state === 'open') {
+      return { response, qr: '', connected: true, config };
+    }
+    const qr = extractQrPayload(response.data);
+    if (qr) return { response, qr, connected: false, config };
+
+    // A instancia pode ja estar conectada e responder sem QR (ex.: { count: 0 })
     try {
-      const response = await evolutionRequest(config, 'get', path);
+      const stateRes = await evolutionRequest(config, 'get', `/instance/connectionState/${config.instanceName}`);
+      if (extractConnectionState(stateRes.data) === 'open') {
+        return { response: stateRes, qr: '', connected: true, config };
+      }
+    } catch {
+      // ignora erro secundario
+    }
+
+    return { response, qr: '', connected: false, config };
+  } catch (error) {
+    firstError = error;
+    const status = Number(error?.response?.status || 0);
+    if (status && status !== 404 && status !== 405 && !isInstanceMissingError(error)) {
+      throw error;
+    }
+  }
+
+  if (!v2EndpointResponded) {
+    try {
+      const response = await evolutionRequest(config, 'get', `/instance/${config.instanceName}/qrcode`);
       const qr = extractQrPayload(response.data);
-      if (qr) return { response, qr, config };
+      if (qr) return { response, qr, connected: false, config };
     } catch (error) {
       firstError = firstError || error;
       if (!isInstanceMissingError(error)) throw error;
     }
   }
 
+  // 2. Fallback para Evolution GO: POST /instance/connect + GET /instance/qr
   const goConfig = await getGoInstanceConfig(config);
   const requestConfigs = [goConfig];
   if (goConfig.apiKey !== config.apiKey) requestConfigs.push(config);
@@ -257,8 +287,6 @@ async function getInstanceQr(config, req) {
   if (webhookUrl) connectPayload.webhookUrl = webhookUrl;
   let connectStarted = false;
 
-  // Evolution GO starts the pairing process with POST /instance/connect;
-  // the QR is then read from GET /instance/qr.
   for (const requestConfig of requestConfigs) {
     try {
       await evolutionRequest(requestConfig, 'post', '/instance/connect', connectPayload);
@@ -280,7 +308,7 @@ async function getInstanceQr(config, req) {
         const response = await evolutionRequest(requestConfig, 'get', '/instance/qr');
         lastResponse = response;
         const qr = extractQrPayload(response.data);
-        if (qr) return { response, qr, config: requestConfig };
+        if (qr) return { response, qr, connected: false, config: requestConfig };
       } catch (error) {
         firstError = firstError || error;
         if (isInstanceMissingError(error)) continue;
@@ -297,6 +325,7 @@ async function getInstanceQr(config, req) {
     return {
       response: lastResponse || { data: {} },
       qr: '',
+      connected: false,
       config: requestConfigs[0],
     };
   }
@@ -312,13 +341,26 @@ async function ensureInstanceWebhook(config, req) {
   const cached = webhookCache.get(cacheKey);
   if (cached && cached > Date.now()) return null;
 
-  return evolutionRequest(config, 'post', `/webhook/set/${config.instanceName}`, {
+  const v2Payload = {
+    webhook: {
+      enabled: true,
+      url: webhookUrl,
+      byEvents: false,
+      base64: true,
+      events: DEFAULT_WEBHOOK_EVENTS,
+    },
+  };
+
+  const v1Payload = {
     enabled: true,
     url: webhookUrl,
     webhookByEvents: false,
     webhookBase64: true,
     events: DEFAULT_WEBHOOK_EVENTS,
-  })
+  };
+
+  return evolutionRequest(config, 'post', `/webhook/set/${config.instanceName}`, v2Payload)
+    .catch(() => evolutionRequest(config, 'post', `/webhook/set/${config.instanceName}`, v1Payload))
     .then((response) => {
       webhookCache.set(cacheKey, Date.now() + WEBHOOK_CACHE_TTL_MS);
       return response;
@@ -483,8 +525,26 @@ async function getEvolutionStatus(salao, req) {
   }
 
   try {
-    // Evolution GO authenticates instance routes with the token returned by
-    // /instance/all and exposes status at /instance/status.
+    // 1. Evolution API v2 / v1: GET /instance/connectionState/:instanceName
+    try {
+      const response = await evolutionRequest(config, 'get', `/instance/connectionState/${config.instanceName}`);
+      const state = extractConnectionState(response.data);
+      if (state === 'open') {
+        ensureInstanceWebhook(config, req).catch(() => null);
+      }
+      return {
+        status: state,
+        config,
+        raw: response.data,
+      };
+    } catch (error) {
+      const httpStatus = Number(error?.response?.status || 0);
+      if (httpStatus && httpStatus !== 404 && httpStatus !== 405 && !isInstanceMissingError(error)) {
+        throw error;
+      }
+    }
+
+    // 2. Fallback para Evolution GO: autentica com token da instancia e consulta /instance/status
     const goConfig = await getGoInstanceConfig(config);
     try {
       const response = await evolutionRequest(goConfig, 'get', '/instance/status');
@@ -494,8 +554,6 @@ async function getEvolutionStatus(salao, req) {
         raw: response.data,
       };
     } catch (error) {
-      // A 400 from GO means the client is not ready yet. Do not fall through
-      // to the legacy API routes and report the wrong instance as missing.
       if (Number(error?.response?.status || 0) === 400) {
         return {
           status: 'close',
@@ -507,32 +565,25 @@ async function getEvolutionStatus(salao, req) {
       if (!isInstanceMissingError(error)) throw error;
     }
 
-    try {
-      const response = await evolutionRequest(config, 'get', `/instance/connectionState/${config.instanceName}`);
-      return {
-        status: extractConnectionState(response.data),
-        config,
-        raw: response.data,
-      };
-    } catch (error) {
-      if (!isInstanceMissingError(error)) throw error;
-
-      const response = await evolutionRequest(config, 'get', `/instance/${config.instanceName}/status`);
-      return {
-        status: extractConnectionState(response.data),
-        config,
-        raw: response.data,
-      };
-    }
+    // 3. Fallback legado: GET /instance/:instanceName/status
+    const response = await evolutionRequest(config, 'get', `/instance/${config.instanceName}/status`);
+    return {
+      status: extractConnectionState(response.data),
+      config,
+      raw: response.data,
+    };
   } catch (error) {
     if (isInstanceMissingError(error)) {
       return { status: 'not_created', config };
     }
 
+    const message = getEvolutionErrorMessage(error);
     return {
       status: 'close',
       config,
-      error: error.response?.data?.message || error.response?.data?.error || error.message,
+      error: Number(error?.response?.status || 0) === 401
+        ? 'Não autorizado na Evolution API (401). Verifique a chave global (EVOLUTION_GLOBAL_KEY) ou a chave do salão.'
+        : (message || 'Erro ao consultar status na Evolution API'),
     };
   }
 }
@@ -545,14 +596,15 @@ async function connectEvolutionInstance(salao, req) {
     throw error;
   }
 
-  // 1. Tenta obter o QR code diretamente da instância caso já esteja pronta para conexão
+  // 1. Tenta obter o QR code (ou confirmar se ja esta conectada)
   try {
-    const { response, qr, config: requestConfig } = await getInstanceQr(config, req);
+    const { response, qr, connected, config: requestConfig } = await getInstanceQr(config, req);
     await ensureInstanceWebhook(requestConfig || config, req).catch(() => null);
     return {
       ...response.data,
       base64: qr,
-      status: 'connecting',
+      connected: Boolean(connected),
+      status: connected ? 'open' : 'connecting',
     };
   } catch (error) {
     if (!isInstanceMissingError(error)) throw error;
@@ -561,11 +613,13 @@ async function connectEvolutionInstance(salao, req) {
 
   const created = await createEvolutionInstance(salao, req, { qrcode: true });
   let qr = created.qr;
+  let connected = false;
 
   if (!qr) {
     try {
       const qrResponse = await getInstanceQr(config, req);
       qr = qrResponse.qr;
+      connected = Boolean(qrResponse.connected);
     } catch (error) {
       if (!isInstanceMissingError(error)) throw error;
     }
@@ -575,7 +629,8 @@ async function connectEvolutionInstance(salao, req) {
   return {
     ...created.data,
     base64: qr,
-    status: 'connecting',
+    connected,
+    status: connected ? 'open' : 'connecting',
   };
 }
 
@@ -587,17 +642,23 @@ async function disconnectEvolutionInstance(salao) {
     throw error;
   }
 
+  try {
+    await evolutionRequest(config, 'delete', `/instance/logout/${config.instanceName}`);
+    return { ok: true };
+  } catch (error) {
+    const status = Number(error?.response?.status || 0);
+    if (status && status !== 404 && status !== 405 && !isInstanceMissingError(error)) {
+      throw error;
+    }
+  }
+
   const goConfig = await getGoInstanceConfig(config);
   if (goConfig.apiKey !== config.apiKey) {
     await evolutionRequest(goConfig, 'post', '/instance/disconnect');
     return { ok: true };
   }
 
-  try {
-    await evolutionRequest(config, 'delete', `/instance/logout/${config.instanceName}`);
-  } catch {
-    await evolutionRequest(config, 'delete', '/instance/logout');
-  }
+  await evolutionRequest(config, 'delete', '/instance/logout');
   return { ok: true };
 }
 
@@ -616,15 +677,15 @@ async function sendEvolutionText(salao, number, text) {
   }
 
   const normalizedNumber = normalizeWhatsappNumber(number);
-  const goConfig = await getGoInstanceConfig(config);
 
   try {
-    await evolutionRequest(goConfig, 'post', '/send/text', {
+    await evolutionRequest(config, 'post', `/message/sendText/${config.instanceName}`, {
       number: normalizedNumber,
       text,
     });
   } catch {
-    await evolutionRequest(config, 'post', `/message/sendText/${config.instanceName}`, {
+    const goConfig = await getGoInstanceConfig(config);
+    await evolutionRequest(goConfig, 'post', '/send/text', {
       number: normalizedNumber,
       text,
     });
@@ -676,10 +737,9 @@ async function sendEvolutionMedia(
   }
 
   const normalizedNumber = normalizeWhatsappNumber(number);
-  const goConfig = await getGoInstanceConfig(config);
 
   try {
-    await evolutionRequest(goConfig, 'post', '/send/media', {
+    await evolutionRequest(config, 'post', `/message/sendMedia/${config.instanceName}`, {
       number: normalizedNumber,
       mediatype,
       mimetype,
@@ -688,7 +748,8 @@ async function sendEvolutionMedia(
       fileName,
     });
   } catch {
-    await evolutionRequest(config, 'post', `/message/sendMedia/${config.instanceName}`, {
+    const goConfig = await getGoInstanceConfig(config);
+    await evolutionRequest(goConfig, 'post', '/send/media', {
       number: normalizedNumber,
       mediatype,
       mimetype,

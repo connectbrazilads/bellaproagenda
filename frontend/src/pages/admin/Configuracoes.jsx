@@ -480,8 +480,11 @@ function SecaoWhatsapp() {
         setStatus('open');
         setQr('');
         setMessage('WhatsApp conectado com sucesso!');
-      } else if (status !== 'connecting') {
-        setStatus(nextStatus);
+      } else {
+        setStatus((current) => (current === 'connecting' ? current : nextStatus));
+        if (response.data?.error) {
+          setMessage(response.data.error);
+        }
       }
     } catch {}
   }
@@ -510,15 +513,22 @@ function SecaoWhatsapp() {
     setQr('');
     try {
       let base64 = '';
+      let alreadyConnected = false;
 
       // Evolution GO can finish generating the QR asynchronously. Retry the
       // same idempotent connection request while the backend polls the QR.
-      for (let attempt = 0; attempt < 3 && !base64; attempt += 1) {
+      for (let attempt = 0; attempt < 3 && !base64 && !alreadyConnected; attempt += 1) {
         const response = await withTimeout(
           connectWhatsapp(),
           20000,
-          'A Evolution GO demorou para responder. Tente novamente em alguns segundos.'
+          'A Evolution API demorou para responder. Tente novamente em alguns segundos.'
         );
+
+        if (response.data?.status === 'open' || response.data?.connected) {
+          alreadyConnected = true;
+          break;
+        }
+
         base64 = (
           response.data?.base64 ||
           response.data?.data?.qrcode ||
@@ -537,7 +547,11 @@ function SecaoWhatsapp() {
           await new Promise((resolve) => setTimeout(resolve, 1500));
         }
       }
-      if (base64) {
+      if (alreadyConnected) {
+        setStatus('open');
+        setQr('');
+        setMessage('WhatsApp conectado com sucesso!');
+      } else if (base64) {
         setQr(base64.startsWith('data:') ? base64 : `data:image/png;base64,${base64}`);
         setStatus('connecting');
       } else {

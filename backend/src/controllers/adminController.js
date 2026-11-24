@@ -57,7 +57,9 @@ function agendaScopeFilter(req) {
 }
 
 function getEvolutionRequestError(error) {
-  const message = error?.response?.data?.response?.message?.[0]
+  const respMessage = error?.response?.data?.response?.message;
+  const firstRespMessage = Array.isArray(respMessage) ? respMessage[0] : respMessage;
+  const message = firstRespMessage
     || error?.response?.data?.message
     || error?.response?.data?.error
     || error?.message
@@ -67,7 +69,11 @@ function getEvolutionRequestError(error) {
     return 'A Evolution GO está sem conexões disponíveis no banco. Reinicie o serviço da Evolution GO e tente novamente.';
   }
 
-  return message;
+  if (Number(error?.response?.status || 0) === 401 || /^unauthorized$/i.test(String(message).trim())) {
+    return 'Não autorizado na Evolution API (401). Verifique a chave global (EVOLUTION_GLOBAL_KEY) ou a chave salva no salão.';
+  }
+
+  return String(message);
 }
 
 function getAgendaProfessionalId(req, requestedProfessionalId, { defaultToSelf = false } = {}) {
