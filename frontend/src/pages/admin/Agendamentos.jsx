@@ -37,10 +37,26 @@ import {
 } from '../../lib/utils';
 
 const STATUS_CONFIG = {
-  confirmado: { label: 'Confirmado', tone: 'bg-blue-500/10 text-blue-200 border-blue-500/20', icon: Clock },
-  em_atendimento: { label: 'Em atendimento', tone: 'bg-[#e29ba8]/10 text-[#f3c7cd] border-[#e29ba8]/24', icon: Scissors },
-  concluido: { label: 'Concluído', tone: 'bg-emerald-500/10 text-emerald-200 border-emerald-500/20', icon: CheckCircle2 },
-  cancelado: { label: 'Cancelado', tone: 'bg-red-500/10 text-red-200 border-red-500/20', icon: XCircle },
+  confirmado: {
+    label: 'Confirmado',
+    tone: 'bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-500/15 dark:text-blue-300 dark:border-blue-500/25',
+    icon: Clock,
+  },
+  em_atendimento: {
+    label: 'Em atendimento',
+    tone: 'bg-[#fdf2f5] text-[#b84c6b] border-[#eccbd4] dark:bg-[#c65d7b]/20 dark:text-[#f0aab8] dark:border-[#c65d7b]/30',
+    icon: Scissors,
+  },
+  concluido: {
+    label: 'Concluído',
+    tone: 'bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-500/15 dark:text-emerald-300 dark:border-emerald-500/25',
+    icon: CheckCircle2,
+  },
+  cancelado: {
+    label: 'Cancelado',
+    tone: 'bg-rose-50 text-rose-700 border-rose-200 dark:bg-rose-500/15 dark:text-rose-300 dark:border-rose-500/25',
+    icon: XCircle,
+  },
 };
 
 const FORMAS = [
@@ -91,7 +107,7 @@ export default function Agendamentos() {
         aberto: !!response.data?.aberto,
         mensagem: response.data?.mensagem || '',
       });
-    } catch (error) {
+    } catch {
       setCaixaPagamentoStatus({
         aberto: true,
         mensagem: '',
@@ -129,7 +145,9 @@ export default function Agendamentos() {
   }
 
   function openPagamento(agendamento) {
-    const grupo = getAgendamentosMesmoClienteNoDia(agendamentos, agendamento).filter((item) => item.statusPagamento !== 'pago');
+    const grupo = getAgendamentosMesmoClienteNoDia(agendamentos, agendamento).filter(
+      (item) => item.statusPagamento !== 'pago'
+    );
     const total = grupo.length ? calculateGroupedAgendamentosTotal(grupo) : calcTotal(agendamento);
     loadCaixaPagamentoStatus();
     setPagamentoModal(agendamento);
@@ -141,7 +159,10 @@ export default function Agendamentos() {
 
   async function handleReabrir(agendamento) {
     const grupo = getAgendamentosMesmoClienteNoDia(agendamentos, agendamento).filter(
-      (item) => item.statusPagamento === 'pago' || (item.pagamentos || []).length > 0 || item.status === 'concluido'
+      (item) =>
+        item.statusPagamento === 'pago' ||
+        (item.pagamentos || []).length > 0 ||
+        item.status === 'concluido'
     );
 
     if (!window.confirm('Deseja reabrir esta comanda para ajustes?')) return;
@@ -152,12 +173,14 @@ export default function Agendamentos() {
       });
       await loadAgendamentos();
     } catch (error) {
-      window.alert(error?.response?.data?.error || 'Nao foi possivel reabrir a comanda.');
+      window.alert(error?.response?.data?.error || 'Não foi possível reabrir a comanda.');
     }
   }
 
   function updatePagamento(index, field, value) {
-    setPagamentos((prev) => prev.map((item, current) => (current === index ? { ...item, [field]: value } : item)));
+    setPagamentos((prev) =>
+      prev.map((item, current) => (current === index ? { ...item, [field]: value } : item))
+    );
   }
 
   function addPagamento() {
@@ -171,7 +194,7 @@ export default function Agendamentos() {
   async function confirmPagamento() {
     if (!pagamentoModal) return;
     if (!valorBaseAjustadoValido) {
-      window.alert('Informe um valor valido para o servico antes de confirmar o pagamento.');
+      window.alert('Informe um valor válido para o serviço antes de confirmar o pagamento.');
       return;
     }
     if (!caixaPagamentoStatus.aberto) {
@@ -188,33 +211,41 @@ export default function Agendamentos() {
         taxaOperadora: Number(taxaOperadora || 0),
         valorBaseAjustado: valorBaseAjustadoAtivo ? valorBaseAjustadoNumero : null,
         valorRecebido: Number(valorRecebido || 0),
-        agendamentoIds: (pagamentoModalGrupo.length ? pagamentoModalGrupo : [pagamentoModal]).map((item) => item.id),
+        agendamentoIds: (pagamentoModalGrupo.length ? pagamentoModalGrupo : [pagamentoModal]).map(
+          (item) => item.id
+        ),
       });
 
       setPagamentoModal(null);
       await loadAgendamentos();
     } catch (error) {
-      window.alert(error.response?.data?.error || 'Nao foi possivel registrar o pagamento.');
+      window.alert(error.response?.data?.error || 'Não foi possível registrar o pagamento.');
     }
   }
 
   const valorBaseAjustadoNumero = Number(valorBaseAjustado);
-  const valorBaseAjustadoValido = valorBaseAjustado !== '' && Number.isFinite(valorBaseAjustadoNumero) && valorBaseAjustadoNumero >= 0;
+  const valorBaseAjustadoValido =
+    valorBaseAjustado !== '' &&
+    Number.isFinite(valorBaseAjustadoNumero) &&
+    valorBaseAjustadoNumero >= 0;
   const precoBaseOriginal = pagamentoModal ? getAgendamentoOriginalBasePrice(pagamentoModal) : 0;
-  const valorBaseAjustadoAtivo = valorBaseAjustadoValido && Math.abs(valorBaseAjustadoNumero - precoBaseOriginal) >= 0.001;
+  const valorBaseAjustadoAtivo =
+    valorBaseAjustadoValido && Math.abs(valorBaseAjustadoNumero - precoBaseOriginal) >= 0.001;
   const pagamentoModalPreview = pagamentoModal
     ? { ...pagamentoModal, valorBaseAjustado: valorBaseAjustadoAtivo ? valorBaseAjustadoNumero : null }
     : null;
   const pagamentoModalGrupo = pagamentoModal
-    ? getAgendamentosMesmoClienteNoDia(agendamentos, pagamentoModal).filter((item) => item.statusPagamento !== 'pago')
+    ? getAgendamentosMesmoClienteNoDia(agendamentos, pagamentoModal).filter(
+        (item) => item.statusPagamento !== 'pago'
+      )
     : [];
   const totalDevido = pagamentoModalPreview
-    ? (pagamentoModalGrupo.length
+    ? pagamentoModalGrupo.length
       ? pagamentoModalGrupo.reduce((sum, item) => {
           if (item.id === pagamentoModalPreview.id) return sum + calcTotal(pagamentoModalPreview);
           return sum + calcTotal(item);
         }, 0)
-      : calcTotal(pagamentoModalPreview))
+      : calcTotal(pagamentoModalPreview)
     : 0;
   const totalPago = pagamentos.reduce((sum, item) => sum + Number(item.valor || 0), 0);
   const troco = pagamentos.some((item) => item.forma === 'Dinheiro')
@@ -222,45 +253,48 @@ export default function Agendamentos() {
     : 0;
 
   return (
-    <motion.div initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }} className="max-w-6xl mx-auto space-y-10 pb-20">
-      <header className="space-y-4 border-b border-gray-200 dark:border-white/5 pb-8">
-        <div className="flex items-center gap-3">
-          <span className="h-2 w-2 rounded-full bg-[#e29ba8]" />
-          <p className="brand-kicker">Histórico de agenda</p>
+    <div className="mx-auto max-w-6xl space-y-6 pb-16">
+      <header className="space-y-2 border-b border-[#eae1e4] pb-5 dark:border-[#28212f]">
+        <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-[0.18em] text-[#b84c6b]">
+          <Calendar className="h-3.5 w-3.5" />
+          <span>Histórico de agenda</span>
         </div>
-        <h1 className="text-3xl sm:text-5xl font-brand-display text-gray-900 dark:text-white">Agendamentos</h1>
-        <p className="max-w-2xl text-base text-gray-200 dark:text-white/58">
+        <h1 className="font-brand-display text-3xl font-bold tracking-[-0.02em] text-[#23141c] dark:text-white sm:text-4xl">
+          Agendamentos
+        </h1>
+        <p className="max-w-2xl text-sm text-[#6b5761] dark:text-white/60">
           Acompanhe atendimentos finalizados, pagamentos recebidos e a linha do tempo operacional de cada reserva.
         </p>
       </header>
 
-      <div className="grid gap-4 md:grid-cols-4">
+      {/* Filters */}
+      <div className="grid gap-3 rounded-2xl border border-[#eae1e4] bg-white p-4 shadow-sm dark:border-[#28212f] dark:bg-[#1c1721] md:grid-cols-4">
         <div className="relative md:col-span-2">
-          <Search className="absolute left-5 top-1/2 h-4 w-4 -translate-y-1/2 text-white/28" />
+          <Search className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-[#8c727e]" />
           <input
             value={busca}
             onChange={(event) => setBusca(event.target.value)}
-            placeholder="Buscar cliente ou telefone"
-            className="w-full rounded-[1.5rem] border border-gray-200 dark:border-white/5 bg-white dark:bg-[#1a171f] px-5 py-4 pl-12 text-sm text-white outline-none placeholder:text-white/28 focus:border-[#e29ba8]/28"
+            placeholder="Buscar cliente ou telefone..."
+            className="h-11 w-full rounded-xl border border-[#e2d5da] bg-[#faf7f5] pl-10 pr-4 text-sm text-[#23141c] outline-none placeholder:text-[#8c727e] focus:border-[#b84c6b] focus:bg-white dark:border-[#352b3e] dark:bg-[#151119] dark:text-white"
           />
         </div>
 
         <div className="relative">
-          <Calendar className="absolute left-5 top-1/2 h-4 w-4 -translate-y-1/2 text-white/28" />
+          <Calendar className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-[#b84c6b]" />
           <input
             type="date"
             value={filtroData}
             onChange={(event) => setFiltroData(event.target.value)}
-            className="w-full rounded-[1.5rem] border border-gray-200 dark:border-white/5 bg-white dark:bg-[#1a171f] px-5 py-4 pl-12 text-sm text-white outline-none focus:border-[#e29ba8]/28"
+            className="h-11 w-full rounded-xl border border-[#e2d5da] bg-[#faf7f5] pl-10 pr-3 text-sm text-[#23141c] outline-none focus:border-[#b84c6b] focus:bg-white dark:border-[#352b3e] dark:bg-[#151119] dark:text-white"
           />
         </div>
 
         <div className="relative">
-          <Filter className="absolute left-5 top-1/2 h-4 w-4 -translate-y-1/2 text-white/28" />
+          <Filter className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-[#8c727e]" />
           <select
             value={filtroStatus}
             onChange={(event) => setFiltroStatus(event.target.value)}
-            className="w-full appearance-none rounded-[1.5rem] border border-gray-200 dark:border-white/5 bg-white dark:bg-[#1a171f] px-5 py-4 pl-12 text-sm text-white outline-none focus:border-[#e29ba8]/28"
+            className="h-11 w-full appearance-none rounded-xl border border-[#e2d5da] bg-[#faf7f5] pl-10 pr-4 text-sm text-[#23141c] outline-none focus:border-[#b84c6b] focus:bg-white dark:border-[#352b3e] dark:bg-[#151119] dark:text-white"
           >
             <option value="">Todos os status</option>
             <option value="confirmado">Confirmado</option>
@@ -271,17 +305,24 @@ export default function Agendamentos() {
         </div>
       </div>
 
-      <div className="space-y-4">
+      <div className="space-y-3.5">
         {!caixaPagamentoStatus.aberto && (
-          <div className="rounded-[1.5rem] border border-amber-300/20 bg-amber-400/10 px-5 py-4 text-sm text-amber-100">
+          <div className="rounded-2xl border border-amber-300 bg-amber-50 px-5 py-3.5 text-sm font-medium text-amber-900 dark:border-amber-500/30 dark:bg-amber-500/15 dark:text-amber-200">
             {caixaPagamentoStatus.mensagem || 'Abra o caixa antes de registrar pagamentos.'}
           </div>
         )}
 
-        {loading && <div className="rounded-[2rem] border border-gray-200 dark:border-white/5 bg-[#231b22] px-6 py-10 text-center text-white/46">Carregando agendamentos...</div>}
+        {loading && (
+          <div className="flex flex-col items-center justify-center gap-3 rounded-2xl border border-[#eae1e4] bg-white py-14 dark:border-[#28212f] dark:bg-[#1c1721]">
+            <div className="h-8 w-8 animate-spin rounded-full border-[3px] border-[#eadde1] border-t-[#b84c6b]" />
+            <p className="text-xs font-semibold text-[#745e69] dark:text-white/60">
+              Carregando agendamentos...
+            </p>
+          </div>
+        )}
 
         {!loading && filtrados.length === 0 && (
-          <div className="rounded-[2rem] border border-gray-200 dark:border-white/5 bg-[#231b22] px-6 py-16 text-center text-white/46">
+          <div className="rounded-2xl border border-dashed border-[#e2d5da] bg-white px-6 py-16 text-center text-sm text-[#745e69] dark:border-[#352b3e] dark:bg-[#1c1721] dark:text-white/55">
             Nenhum agendamento encontrado com os filtros atuais.
           </div>
         )}
@@ -294,56 +335,78 @@ export default function Agendamentos() {
             const StatusIcon = status.icon;
 
             return (
-              <article key={agendamento.id} className="rounded-[2rem] border border-gray-200 dark:border-white/5 bg-[#231b22] p-5 shadow-[0_34px_70px_-42px_rgba(0,0,0,0.9)]">
+              <article
+                key={agendamento.id}
+                className="rounded-2xl border border-[#eae1e4] bg-white p-5 shadow-sm transition hover:border-[#c65d7b]/35 dark:border-[#28212f] dark:bg-[#1c1721]"
+              >
                 <div className="flex flex-col gap-5 lg:flex-row lg:items-start lg:justify-between">
-                  <div className="space-y-3">
-                    <div className="flex flex-wrap items-center gap-3">
-                      <h2 className="text-xl font-semibold text-gray-900 dark:text-white">{agendamento.clienteNome}</h2>
-                      <span className={cn('inline-flex items-center gap-2 rounded-full border px-3 py-2 text-[10px] font-black uppercase tracking-[0.18em]', status.tone)}>
-                        <StatusIcon size={13} />
+                  <div className="space-y-2.5">
+                    <div className="flex flex-wrap items-center gap-2.5">
+                      <h2 className="text-lg font-bold text-[#23141c] dark:text-white">
+                        {agendamento.clienteNome}
+                      </h2>
+                      <span
+                        className={cn(
+                          'inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-[11px] font-bold',
+                          status.tone
+                        )}
+                      >
+                        <StatusIcon size={12} />
                         {status.label}
                       </span>
                     </div>
 
-                    <div className="flex flex-wrap gap-4 text-sm text-gray-200 dark:text-white/56">
-                      <span>{formatDateBR(agendamento.data)} · {agendamento.inicioHora}</span>
+                    <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs font-medium text-[#6b5761] dark:text-white/60">
+                      <span className="font-semibold text-[#23141c] dark:text-white/85">
+                        {formatDateBR(agendamento.data)} · {agendamento.inicioHora}
+                      </span>
                       <span>{agendamento.profissional?.nome || 'Sem profissional'}</span>
-                      <span className="inline-flex items-center gap-2">
-                        <Phone size={13} />
+                      <span className="inline-flex items-center gap-1.5">
+                        <Phone size={12} className="text-[#b84c6b]" />
                         {agendamento.clienteTelefone}
                       </span>
                     </div>
 
-                    <div className="flex flex-wrap gap-3 text-sm">
-                      <span className="rounded-full bg-[#e29ba8]/10 px-3 py-2 text-[10px] font-black uppercase tracking-[0.16em] text-[#f3c7cd]">
+                    <div className="flex flex-wrap gap-2 pt-0.5">
+                      <span className="rounded-lg bg-[#fdf2f5] px-2.5 py-1 text-xs font-semibold text-[#b84c6b] dark:bg-[#c65d7b]/20 dark:text-[#f0aab8]">
                         {agendamento.servico?.nome || agendamento.pacote?.nome || 'Sem serviço principal'}
                       </span>
                       {hasAgendamentoAdjustedBasePrice(agendamento) && (
-                        <span className="rounded-full bg-amber-400/10 px-3 py-2 text-[10px] font-black uppercase tracking-[0.16em] text-amber-200">
+                        <span className="rounded-lg bg-amber-50 px-2.5 py-1 text-xs font-semibold text-amber-700 dark:bg-amber-500/15 dark:text-amber-300">
                           Valor ajustado
                         </span>
                       )}
-                      <span className="rounded-full bg-white/6 px-3 py-2 text-[10px] font-black uppercase tracking-[0.16em] text-gray-600 dark:text-white/64">
+                      <span className="rounded-lg bg-[#f6f1f3] px-2.5 py-1 text-xs font-semibold text-[#5b4852] dark:bg-white/10 dark:text-white/70">
                         {formatDurationLabel(calculateAgendamentoDuration(agendamento))}
                       </span>
                     </div>
                   </div>
 
-                  <div className="grid gap-3 sm:grid-cols-2 lg:min-w-[320px]">
+                  <div className="grid gap-2.5 sm:grid-cols-2 lg:min-w-[300px]">
                     <ResumoItem label="Total" value={total} highlight />
                     <ResumoItem label="Pago" value={pago} />
                   </div>
                 </div>
 
-                <div className="mt-5 flex flex-wrap gap-3 border-t border-gray-200 dark:border-white/5 pt-5">
+                <div className="mt-4 flex flex-wrap gap-2 border-t border-[#f0e8eb] pt-4 dark:border-[#28212f]">
                   {agendamento.status === 'confirmado' && (
-                    <ActionButton onClick={() => handleStatus(agendamento.id, 'em_atendimento')} label="Iniciar" />
+                    <ActionButton
+                      onClick={() => handleStatus(agendamento.id, 'em_atendimento')}
+                      label="Iniciar"
+                    />
                   )}
                   {agendamento.status === 'em_atendimento' && (
-                    <ActionButton onClick={() => handleStatus(agendamento.id, 'concluido')} label="Concluir" />
+                    <ActionButton
+                      onClick={() => handleStatus(agendamento.id, 'concluido')}
+                      label="Concluir"
+                    />
                   )}
                   {agendamento.status !== 'cancelado' && (
-                    <ActionButton variant="secondary" onClick={() => handleStatus(agendamento.id, 'cancelado')} label="Cancelar" />
+                    <ActionButton
+                      variant="secondary"
+                      onClick={() => handleStatus(agendamento.id, 'cancelado')}
+                      label="Cancelar"
+                    />
                   )}
                   {agendamento.status !== 'cancelado' && (
                     <ActionButton
@@ -354,48 +417,90 @@ export default function Agendamentos() {
                     />
                   )}
                   {agendamento.statusPagamento === 'pago' && (
-                    <ActionButton variant="secondary" onClick={() => handleReabrir(agendamento)} label="Reabrir comanda" />
+                    <ActionButton
+                      variant="secondary"
+                      onClick={() => handleReabrir(agendamento)}
+                      label="Reabrir comanda"
+                    />
                   )}
-                  <ActionButton variant="danger" onClick={() => handleDelete(agendamento.id)} label="Excluir" icon={<Trash2 size={13} />} />
+                  <ActionButton
+                    variant="danger"
+                    onClick={() => handleDelete(agendamento.id)}
+                    label="Excluir"
+                    icon={<Trash2 size={13} />}
+                  />
                 </div>
               </article>
             );
           })}
       </div>
 
+      {/* Payment Modal */}
       <AnimatePresence>
         {pagamentoModal && (
-          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-[130] flex items-center justify-center overflow-y-auto overscroll-contain bg-black/80 p-3 backdrop-blur-md sm:p-4">
-            <motion.div initial={{ opacity: 0, scale: 0.96 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.96 }} className="max-h-[calc(100dvh-1.5rem)] w-full max-w-2xl overflow-y-auto rounded-[2.4rem] border border-gray-200 bg-[#231b22] p-4 shadow-[0_40px_90px_-40px_rgba(0,0,0,0.92)] custom-scrollbar dark:border-white/5 sm:p-6 md:p-8">
-              <div className="mb-6 flex items-start justify-between gap-4">
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[130] flex items-center justify-center overflow-y-auto overscroll-contain bg-black/50 p-3 sm:p-4"
+          >
+            <motion.div
+              initial={{ opacity: 0, scale: 0.96 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.96 }}
+              className="max-h-[calc(100dvh-1.5rem)] w-full max-w-2xl overflow-y-auto rounded-3xl border border-[#eae1e4] bg-white p-5 shadow-2xl custom-scrollbar dark:border-[#352b3e] dark:bg-[#1c1721] sm:p-7"
+            >
+              <div className="mb-5 flex items-start justify-between gap-4 border-b border-[#f0e8eb] pb-4 dark:border-[#28212f]">
                 <div>
-                  <p className="brand-kicker">Fechamento</p>
-                  <h2 className="mt-2 text-3xl font-brand-display text-gray-900 dark:text-white">Registrar pagamento</h2>
-                  <p className="mt-2 text-sm text-gray-200 dark:text-white/52">{pagamentoModal.clienteNome} · {formatDateBR(pagamentoModal.data)}</p>
+                  <p className="text-[11px] font-bold uppercase tracking-[0.16em] text-[#b84c6b]">
+                    Fechamento de comanda
+                  </p>
+                  <h2 className="mt-1 font-brand-display text-2xl font-bold text-[#23141c] dark:text-white">
+                    Registrar pagamento
+                  </h2>
+                  <p className="mt-1 text-xs font-medium text-[#6b5761] dark:text-white/60">
+                    {pagamentoModal.clienteNome} · {formatDateBR(pagamentoModal.data)}
+                  </p>
                 </div>
-                <button onClick={() => setPagamentoModal(null)} className="rounded-2xl border border-gray-200 dark:border-white/5 bg-white/[0.04] p-3 text-gray-500 dark:text-white/66 transition hover:text-gray-900 dark:text-white">
+                <button
+                  type="button"
+                  onClick={() => setPagamentoModal(null)}
+                  className="rounded-xl border border-[#e2d5da] bg-[#faf7f5] p-2 text-[#6b5761] transition hover:text-[#23141c] dark:border-[#352b3e] dark:bg-white/5 dark:text-white/70"
+                >
                   <X size={18} />
                 </button>
               </div>
 
-              <div className="grid gap-4 md:grid-cols-3">
+              <div className="grid gap-3 md:grid-cols-3">
                 <ResumoItem label="Total" value={totalDevido} highlight />
                 <ResumoItem label="Lançado" value={totalPago} />
                 <ResumoItem label="Troco" value={troco} />
               </div>
 
               {pagamentoModalGrupo.length > 1 && (
-                <div className="mt-6 rounded-[1.5rem] border border-gray-200 dark:border-white/5 bg-white/[0.03] p-4">
-                  <p className="text-[10px] font-black uppercase tracking-[0.18em] text-gray-500 dark:text-white/40">Procedimentos agrupados no dia</p>
-                  <div className="mt-4 space-y-3">
+                <div className="mt-5 rounded-2xl border border-[#eae1e4] bg-[#faf7f5] p-4 dark:border-[#28212f] dark:bg-white/[0.03]">
+                  <p className="text-[11px] font-bold uppercase tracking-[0.14em] text-[#745e69] dark:text-white/55">
+                    Procedimentos agrupados no dia
+                  </p>
+                  <div className="mt-3 space-y-2">
                     {pagamentoModalGrupo.map((item) => (
-                      <div key={item.id} className="flex items-center justify-between gap-3 rounded-[1rem] bg-white/[0.03] px-4 py-3">
+                      <div
+                        key={item.id}
+                        className="flex items-center justify-between gap-3 rounded-xl border border-[#eae1e4] bg-white px-3.5 py-2.5 dark:border-[#28212f] dark:bg-[#1c1721]"
+                      >
                         <div>
-                          <p className="text-sm font-semibold text-gray-900 dark:text-white">{item.inicioHora} · {item.servico?.nome || item.pacote?.nome || 'Servico'}</p>
-                          <p className="mt-1 text-[10px] uppercase tracking-[0.18em] text-gray-500 dark:text-white/40">{item.profissional?.nome || 'Equipe'}</p>
+                          <p className="text-xs font-bold text-[#23141c] dark:text-white">
+                            {item.inicioHora} · {item.servico?.nome || item.pacote?.nome || 'Serviço'}
+                          </p>
+                          <p className="text-[11px] text-[#745e69] dark:text-white/55">
+                            {item.profissional?.nome || 'Equipe'}
+                          </p>
                         </div>
-                        <p className="text-sm font-semibold text-gray-900 dark:text-white">
-                          {calcTotal(item).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
+                        <p className="text-xs font-bold text-[#23141c] tabular-nums dark:text-white">
+                          {calcTotal(item).toLocaleString('pt-BR', {
+                            style: 'currency',
+                            currency: 'BRL',
+                          })}
                         </p>
                       </div>
                     ))}
@@ -403,36 +508,49 @@ export default function Agendamentos() {
                 </div>
               )}
 
-              <div className="mt-6 grid gap-4 md:grid-cols-2">
-                <InputMoney label="Valor do servico" value={valorBaseAjustado} onChange={setValorBaseAjustado} />
-                <div className="rounded-[1.5rem] border border-gray-200 dark:border-white/5 bg-white/[0.03] px-4 py-4">
-                  <p className="text-[10px] font-black uppercase tracking-[0.18em] text-gray-500 dark:text-white/40">Referencia</p>
-                  <p className="mt-2 text-xl font-semibold text-gray-900 dark:text-white">
-                    {precoBaseOriginal.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
+              <div className="mt-5 grid gap-4 md:grid-cols-2">
+                <InputMoney
+                  label="Valor do serviço"
+                  value={valorBaseAjustado}
+                  onChange={setValorBaseAjustado}
+                />
+                <div className="rounded-2xl border border-[#eae1e4] bg-[#faf7f5] px-4 py-3.5 dark:border-[#28212f] dark:bg-white/[0.03]">
+                  <p className="text-[11px] font-bold uppercase tracking-[0.14em] text-[#745e69] dark:text-white/55">
+                    Referência original
                   </p>
-                  <div className="mt-3 flex items-center justify-between gap-3">
+                  <p className="mt-1 text-lg font-extrabold text-[#23141c] tabular-nums dark:text-white">
+                    {precoBaseOriginal.toLocaleString('pt-BR', {
+                      style: 'currency',
+                      currency: 'BRL',
+                    })}
+                  </p>
+                  <div className="mt-2 flex items-center justify-between gap-2">
                     <button
+                      type="button"
                       onClick={() => setValorBaseAjustado(precoBaseOriginal.toFixed(2))}
-                      className="text-[10px] font-black uppercase tracking-[0.18em] text-[#f3c7cd]"
+                      className="text-xs font-bold text-[#b84c6b] hover:underline"
                     >
                       Restaurar original
                     </button>
                     {valorBaseAjustadoAtivo && (
-                      <span className="text-[10px] font-black uppercase tracking-[0.18em] text-amber-200">
-                        Valor ajustado
+                      <span className="rounded-md bg-amber-100 px-2 py-0.5 text-[10px] font-bold text-amber-800 dark:bg-amber-500/20 dark:text-amber-300">
+                        Ajustado
                       </span>
                     )}
                   </div>
                 </div>
               </div>
 
-              <div className="mt-6 space-y-3">
+              <div className="mt-5 space-y-2.5">
                 {pagamentos.map((item, index) => (
-                  <div key={index} className="grid gap-3 rounded-[1.5rem] border border-gray-200 dark:border-white/5 bg-white/[0.03] p-4 md:grid-cols-[170px_minmax(0,1fr)_auto]">
+                  <div
+                    key={index}
+                    className="grid gap-2.5 rounded-2xl border border-[#eae1e4] bg-[#faf7f5] p-3.5 dark:border-[#28212f] dark:bg-white/[0.03] md:grid-cols-[175px_minmax(0,1fr)_auto]"
+                  >
                     <select
                       value={item.forma}
                       onChange={(event) => updatePagamento(index, 'forma', event.target.value)}
-                      className="rounded-[1rem] border border-gray-200 dark:border-white/5 bg-white dark:bg-[#1a171f] px-4 py-3 text-sm text-white outline-none focus:border-[#e29ba8]/28"
+                      className="h-10 rounded-xl border border-[#e2d5da] bg-white px-3 text-sm text-[#23141c] outline-none focus:border-[#b84c6b] dark:border-[#352b3e] dark:bg-[#151119] dark:text-white"
                     >
                       {FORMAS.map((forma) => (
                         <option key={forma.id} value={forma.id}>
@@ -447,13 +565,14 @@ export default function Agendamentos() {
                       value={item.valor}
                       onChange={(event) => updatePagamento(index, 'valor', event.target.value)}
                       placeholder="Valor"
-                      className="rounded-[1rem] border border-gray-200 dark:border-white/5 bg-white dark:bg-[#1a171f] px-4 py-3 text-sm text-white outline-none placeholder:text-white/28 focus:border-[#e29ba8]/28"
+                      className="h-10 rounded-xl border border-[#e2d5da] bg-white px-3.5 text-sm text-[#23141c] outline-none placeholder:text-[#8c727e] focus:border-[#b84c6b] dark:border-[#352b3e] dark:bg-[#151119] dark:text-white"
                     />
 
                     <button
+                      type="button"
                       onClick={() => removePagamento(index)}
                       disabled={pagamentos.length === 1}
-                      className="rounded-[1rem] border border-gray-200 dark:border-white/5 bg-white/[0.04] px-4 py-3 text-[10px] font-black uppercase tracking-[0.18em] text-gray-500 dark:text-white/66 disabled:opacity-35"
+                      className="h-10 rounded-xl border border-[#e2d5da] bg-white px-3.5 text-xs font-semibold text-[#6b5761] transition hover:border-rose-300 hover:text-rose-600 disabled:opacity-35 dark:border-[#352b3e] dark:bg-white/5 dark:text-white/70"
                     >
                       Remover
                     </button>
@@ -461,34 +580,68 @@ export default function Agendamentos() {
                 ))}
               </div>
 
-              <div className="mt-4 flex flex-wrap gap-3">
-                <button onClick={addPagamento} className="rounded-[1rem] border border-gray-200 dark:border-white/5 bg-white/[0.04] px-4 py-3 text-[10px] font-black uppercase tracking-[0.18em] text-white/76">
-                  Adicionar forma
+              <div className="mt-3">
+                <button
+                  type="button"
+                  onClick={addPagamento}
+                  className="rounded-xl border border-[#e2d5da] bg-white px-4 py-2 text-xs font-bold text-[#23141c] transition hover:border-[#b84c6b] hover:text-[#b84c6b] dark:border-[#352b3e] dark:bg-white/5 dark:text-white"
+                >
+                  + Adicionar forma de pagamento
                 </button>
               </div>
 
-              <div className="mt-6 grid gap-4 md:grid-cols-2">
-                <InputMoney label="Taxa da operadora" value={taxaOperadora} onChange={setTaxaOperadora} />
-                <InputMoney label="Valor recebido em dinheiro" value={valorRecebido} onChange={setValorRecebido} />
+              <div className="mt-5 grid gap-4 md:grid-cols-2">
+                <InputMoney
+                  label="Taxa da operadora (R$)"
+                  value={taxaOperadora}
+                  onChange={setTaxaOperadora}
+                />
+                <InputMoney
+                  label="Valor recebido em dinheiro (R$)"
+                  value={valorRecebido}
+                  onChange={setValorRecebido}
+                />
               </div>
 
-              <div className="mt-6 flex flex-col gap-3 md:flex-row">
-                <ActionButton variant="secondary" onClick={() => setPagamentoModal(null)} label="Cancelar" />
-                <ActionButton onClick={confirmPagamento} label="Confirmar pagamento" disabled={!caixaPagamentoStatus.aberto || !valorBaseAjustadoValido} />
+              <div className="mt-6 flex flex-col justify-end gap-2.5 border-t border-[#f0e8eb] pt-4 dark:border-[#28212f] sm:flex-row">
+                <ActionButton
+                  variant="secondary"
+                  onClick={() => setPagamentoModal(null)}
+                  label="Cancelar"
+                />
+                <ActionButton
+                  onClick={confirmPagamento}
+                  label="Confirmar pagamento"
+                  disabled={!caixaPagamentoStatus.aberto || !valorBaseAjustadoValido}
+                />
               </div>
             </motion.div>
           </motion.div>
         )}
       </AnimatePresence>
-    </motion.div>
+    </div>
   );
 }
 
 function ResumoItem({ label, value, highlight = false }) {
   return (
-    <div className={cn('rounded-[1.5rem] border px-4 py-4', highlight ? 'border-[#e29ba8]/22 bg-[#e29ba8]/08' : 'border-gray-200 dark:border-white/5 bg-white/[0.03]')}>
-      <p className="text-[10px] font-black uppercase tracking-[0.18em] text-gray-500 dark:text-white/40">{label}</p>
-      <p className={cn('mt-2 text-xl font-semibold', highlight ? 'text-[#f3c7cd]' : 'text-gray-900 dark:text-white')}>
+    <div
+      className={cn(
+        'rounded-xl border px-4 py-3',
+        highlight
+          ? 'border-[#eccbd4] bg-[#fdf2f5] dark:border-[#c65d7b]/35 dark:bg-[#c65d7b]/15'
+          : 'border-[#eae1e4] bg-[#faf7f5] dark:border-[#28212f] dark:bg-white/[0.03]'
+      )}
+    >
+      <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-[#745e69] dark:text-white/55">
+        {label}
+      </p>
+      <p
+        className={cn(
+          'mt-1 text-lg font-extrabold tabular-nums',
+          highlight ? 'text-[#b84c6b] dark:text-[#f0aab8]' : 'text-[#23141c] dark:text-white'
+        )}
+      >
         {Number(value || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
       </p>
     </div>
@@ -497,17 +650,20 @@ function ResumoItem({ label, value, highlight = false }) {
 
 function ActionButton({ onClick, label, variant = 'primary', icon, disabled = false }) {
   const variants = {
-    primary: 'bg-gradient-to-r from-[#E29BA8] to-[#d48997] text-[#111116] text-white',
-    secondary: 'border border-gray-200 dark:border-white/5 bg-white/[0.04] text-gray-600 dark:text-white/74',
-    danger: 'border border-red-300/16 bg-red-400/10 text-red-200',
+    primary: 'bg-[#b84c6b] hover:bg-[#9c3b57] text-white shadow-sm',
+    secondary:
+      'border border-[#e2d5da] bg-white text-[#23141c] hover:bg-[#faf7f5] dark:border-[#352b3e] dark:bg-white/5 dark:text-white dark:hover:bg-white/10',
+    danger:
+      'border border-rose-200 bg-rose-50 text-rose-700 hover:bg-rose-100 dark:border-rose-500/25 dark:bg-rose-500/15 dark:text-rose-300',
   };
 
   return (
     <button
+      type="button"
       onClick={onClick}
       disabled={disabled}
       className={cn(
-        'inline-flex items-center justify-center gap-2 rounded-[1.1rem] px-4 py-3 text-[10px] font-black uppercase tracking-[0.18em]',
+        'inline-flex items-center justify-center gap-1.5 rounded-xl px-4 py-2 text-xs font-bold transition',
         variants[variant],
         disabled && 'cursor-not-allowed opacity-45'
       )}
@@ -521,13 +677,15 @@ function ActionButton({ onClick, label, variant = 'primary', icon, disabled = fa
 function InputMoney({ label, value, onChange }) {
   return (
     <div>
-      <label className="mb-2 block text-[10px] font-black uppercase tracking-[0.18em] text-white/42">{label}</label>
+      <label className="mb-1.5 block text-xs font-semibold text-[#5b4852] dark:text-white/65">
+        {label}
+      </label>
       <input
         type="number"
         step="0.01"
         value={value}
         onChange={(event) => onChange(event.target.value)}
-        className="w-full rounded-[1rem] border border-gray-200 dark:border-white/5 bg-white dark:bg-[#1a171f] px-4 py-3 text-sm text-white outline-none focus:border-[#e29ba8]/28"
+        className="h-11 w-full rounded-xl border border-[#e2d5da] bg-white px-4 text-sm text-[#23141c] outline-none focus:border-[#b84c6b] dark:border-[#352b3e] dark:bg-[#151119] dark:text-white"
       />
     </div>
   );

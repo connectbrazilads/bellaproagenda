@@ -252,7 +252,7 @@ function LancamentoModal({
               type="button"
               disabled={bloquearSalvar}
               onClick={() => onSave(isScopedProfessional ? { ...form, profissionalId: myPid } : form)}
-              className="h-10 rounded-xl bg-[#d48997] hover:bg-[#c97b8a] px-5 text-xs font-semibold text-white transition disabled:opacity-50"
+              className="h-10 rounded-xl bg-[#b84c6b] hover:bg-[#9c3b57] px-5 text-xs font-semibold text-white transition disabled:opacity-50"
             >
               {saving ? 'Registrando...' : form.tipo === 'bonificacao' ? 'Confirmar Bônus' : 'Registrar Lançamento'}
             </button>
@@ -276,19 +276,19 @@ function Field({ label, children }) {
 
 function SummaryCard({ label, value, tone = 'default', icon }) {
   const toneClasses = {
-    default: 'border-black/[0.04] dark:border-white/[0.04] bg-white/60 dark:bg-white/[0.02] text-gray-900 dark:text-white',
-    rose: 'border-[#d48997]/25 bg-[#d48997]/5 text-[#d48997]',
-    amber: 'border-amber-500/20 bg-amber-500/5 text-amber-600 dark:text-amber-400',
-    ink: 'border-transparent bg-zinc-900 dark:bg-zinc-800 text-white',
+    default: 'border-[#eae1e4] bg-white text-[#23141c] dark:border-[#28212f] dark:bg-[#1c1721] dark:text-white',
+    rose: 'border-[#eccbd4] bg-[#fdf2f5] text-[#b84c6b] dark:border-[#c65d7b]/30 dark:bg-[#c65d7b]/15 dark:text-[#f0aab8]',
+    amber: 'border-amber-200 bg-[#fffbeb] text-amber-800 dark:border-amber-500/25 dark:bg-amber-500/15 dark:text-amber-300',
+    ink: 'border-[#23141c] bg-[#23141c] text-white dark:border-[#352b3e] dark:bg-[#2a1d28]',
   };
 
   return (
-    <div className={cn('rounded-2xl border p-5 shadow-sm backdrop-blur-md', toneClasses[tone])}>
-      <div className="flex items-center justify-between gap-3">
-        <p className="text-[10px] font-semibold uppercase tracking-wider opacity-70">{label}</p>
-        {icon && React.cloneElement(icon, { size: 16, className: 'opacity-70' })}
+    <div className={cn('rounded-2xl border p-4 shadow-sm', toneClasses[tone])}>
+      <div className="flex items-center justify-between gap-2">
+        <p className="text-[10px] font-bold uppercase tracking-[0.14em] opacity-75">{label}</p>
+        {icon && React.cloneElement(icon, { size: 15, className: 'opacity-75 shrink-0' })}
       </div>
-      <p className="mt-2.5 text-xl font-semibold">{formatMoney(value)}</p>
+      <p className="mt-2 text-lg font-extrabold tracking-tight tabular-nums">{formatMoney(value)}</p>
     </div>
   );
 }
@@ -580,17 +580,17 @@ export default function Remuneracao() {
       className="mx-auto max-w-6xl space-y-8 pb-20 px-4"
     >
       {/* Header */}
-      <header className="flex flex-col gap-4 border-b border-black/[0.03] dark:border-white/[0.03] pb-6 lg:flex-row lg:items-end lg:justify-between">
+      <header className="flex flex-col gap-4 border-b border-[#eae1e4] pb-5 dark:border-[#28212f] lg:flex-row lg:items-end lg:justify-between">
         <div>
-          <div className="flex items-center gap-2.5 mb-2.5">
-            <Users className="h-4 w-4 text-[#d48997]" />
-            <span className="text-[10px] font-semibold text-[#d48997] tracking-wide">Repasses & Comissões</span>
+          <div className="mb-2 flex items-center gap-2 text-xs font-bold uppercase tracking-[0.16em] text-[#b84c6b]">
+            <Users className="h-4 w-4" />
+            <span>Repasses & Comissões</span>
           </div>
-          <h1 className="text-2xl sm:text-3xl font-serif font-normal text-gray-900 dark:text-white tracking-wide leading-tight mb-2">
-            Gestão de <span className="text-[#d48997]">Remuneração</span>
+          <h1 className="font-brand-display text-3xl font-bold leading-tight text-[#23141c] dark:text-white sm:text-4xl">
+            Gestão de <span className="italic text-[#b84c6b]">Remuneração</span>
           </h1>
-          <p className="text-sm text-gray-400 dark:text-gray-500 leading-relaxed max-w-xl">
-            Acompanhe o faturamento, vales, comissões pendentes e realize o fechamento do repasse financeiro de sua equipe.
+          <p className="mt-1.5 max-w-xl text-sm leading-relaxed text-[#6b5761] dark:text-white/60">
+            Acompanhe o faturamento, vales, comissões pendentes e realize o fechamento do repasse financeiro da sua equipe.
           </p>
         </div>
 
@@ -608,7 +608,7 @@ export default function Remuneracao() {
                   }));
                   setShowModal(true);
                 }}
-                className="inline-flex h-10 items-center justify-center gap-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white px-4 text-xs font-semibold shadow-sm transition"
+                className="inline-flex h-10 items-center justify-center gap-1.5 rounded-xl bg-emerald-600 px-4 text-xs font-bold text-white shadow-sm transition hover:bg-emerald-700"
               >
                 <PlusCircle size={15} />
                 Bonificar
@@ -626,7 +626,7 @@ export default function Remuneracao() {
                 }));
                 setShowModal(true);
               }}
-              className="inline-flex h-10 items-center justify-center gap-1.5 rounded-xl bg-[#d48997] hover:bg-[#c97b8a] text-white px-4 text-xs font-semibold shadow-sm transition"
+              className="editorial-btn-primary inline-flex h-10 items-center justify-center gap-1.5 rounded-xl px-4 text-xs font-bold"
             >
               <PlusCircle size={15} />
               Novo Vale / Desconto
@@ -716,7 +716,7 @@ export default function Remuneracao() {
               <motion.div
                 key={prof.id}
                 layout
-                className="overflow-hidden rounded-2xl border border-black/[0.04] dark:border-white/[0.04] bg-white/60 dark:bg-white/[0.02] backdrop-blur-md shadow-sm"
+                className="overflow-hidden rounded-2xl border border-[#eae1e4] dark:border-[#28212f] bg-white dark:bg-[#1c1721] shadow-sm"
               >
                 {/* Accordion Trigger */}
                 <div
@@ -819,7 +819,7 @@ export default function Remuneracao() {
                                   <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between border-b border-black/[0.03] dark:border-white/5 pb-2">
                                     <div className="flex items-center gap-2">
                                       <CalendarDays className="text-[#d48997] h-4 w-4" />
-                                      <span className="text-xs font-semibold text-gray-800 dark:text-gray-250">
+                                      <span className="text-xs font-semibold text-gray-800 dark:text-gray-200">
                                         {format(parseISO(dia.data), "EEEE, dd 'de' MMMM", { locale: ptBR })}
                                       </span>
                                     </div>
@@ -851,7 +851,7 @@ export default function Remuneracao() {
                                             <td className="py-2.5 text-gray-600 dark:text-zinc-400">
                                               {agendamento.servico?.nome || agendamento.pacote?.nome || 'Serviço'}
                                             </td>
-                                            <td className="py-2.5 text-right font-semibold text-gray-800 dark:text-gray-250">
+                                            <td className="py-2.5 text-right font-semibold text-gray-800 dark:text-gray-200">
                                               {formatMoney(buildAgendamentoTotal(agendamento))}
                                             </td>
                                             <td className="py-2.5 text-right">
@@ -957,7 +957,7 @@ export default function Remuneracao() {
                                 'inline-flex h-10 items-center justify-center gap-1.5 rounded-xl px-5 text-xs font-semibold transition',
                                 prof.totalPendente === 0
                                   ? 'bg-gray-100 text-gray-400 dark:bg-zinc-800 dark:text-zinc-600 cursor-not-allowed'
-                                  : 'bg-[#d48997] hover:bg-[#c97b8a] text-white shadow-sm'
+                                  : 'bg-[#b84c6b] hover:bg-[#9c3b57] text-white shadow-sm'
                               )}
                             >
                               {processingId === prof.id ? <RefreshCw className="animate-spin h-3.5 w-3.5" /> : <CheckCircle2 size={14} />}
@@ -1020,7 +1020,7 @@ function InfoLine({ label, value }) {
   return (
     <div className="rounded-xl border border-black/[0.04] dark:border-white/5 bg-white dark:bg-[#18181b] p-4 shadow-sm text-xs">
       <span className="text-[9px] font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wider block">{label}</span>
-      <span className="mt-1 font-semibold text-gray-800 dark:text-gray-250 block">{value}</span>
+      <span className="mt-1 font-semibold text-gray-800 dark:text-gray-200 block">{value}</span>
     </div>
   );
 }

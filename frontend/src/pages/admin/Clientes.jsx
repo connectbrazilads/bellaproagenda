@@ -42,7 +42,7 @@ const STATUS_MAP = {
   },
   perdido: {
     label: 'Perdido',
-    chip: 'border-rose-500/25 bg-rose-500/10 text-rose-600 dark:text-rose-455',
+    chip: 'border-rose-500/25 bg-rose-500/10 text-rose-600 dark:text-rose-400',
     dot: 'bg-rose-500',
   },
   sem_visita: {
@@ -292,39 +292,37 @@ export default function Clientes() {
   );
 
   return (
-    <div ref={pageRef} className="mx-auto flex max-w-7xl flex-col gap-5 pb-16 px-4">
+    <div ref={pageRef} className="mx-auto flex max-w-7xl flex-col gap-5 pb-16">
       <section className={cn(
-        'flex flex-col gap-4 rounded-2xl border border-black/[0.04] bg-white/60 dark:border-white/5 dark:bg-[#0c0c0e]/95 p-5 md:p-8 backdrop-blur-md shadow-sm',
+        'flex flex-col gap-4 rounded-2xl border border-[#eae1e4] bg-white p-5 shadow-sm dark:border-[#28212f] dark:bg-[#1c1721] sm:p-7',
         !isCompactPage && 'lg:flex-row lg:items-center lg:justify-between'
       )}>
-        <div className="max-w-2xl space-y-2">
-          <div className="flex items-center gap-2 text-xs font-semibold text-[#d48997]">
+        <div className="max-w-2xl space-y-1.5">
+          <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-[0.16em] text-[#b84c6b]">
             <Users className="h-4 w-4" />
             <span>Gestão de Relacionamento (CRM)</span>
           </div>
-          <div className="space-y-1.5">
-            <h1 className="font-serif font-normal text-2xl md:text-3xl text-gray-905 dark:text-white leading-tight">
-              Base de <span className="text-[#d48997]">Clientes</span>
-            </h1>
-            <p className="text-sm text-gray-400 dark:text-gray-500 leading-relaxed font-normal">
-              Acompanhe o engajamento, histórico de consumo e envie campanhas personalizadas para a sua base.
-            </p>
-          </div>
+          <h1 className="font-brand-display text-3xl font-bold leading-tight text-[#23141c] dark:text-white sm:text-4xl">
+            Base de <span className="italic text-[#b84c6b]">Clientes</span>
+          </h1>
+          <p className="text-sm leading-relaxed text-[#6b5761] dark:text-white/60">
+            Acompanhe o engajamento, histórico de consumo, pacotes ativos e envie campanhas personalizadas.
+          </p>
         </div>
 
         <div className="flex flex-wrap gap-2.5">
           <button
             type="button"
             onClick={() => setModalNovo(true)}
-            className="inline-flex items-center justify-center gap-1.5 rounded-xl border border-black/[0.06] bg-white px-5 py-2.5 text-xs font-semibold text-gray-750 dark:border-white/10 dark:bg-white/5 dark:text-white shadow-sm hover:bg-gray-50 dark:hover:bg-white/10 transition-all"
+            className="inline-flex items-center justify-center gap-1.5 rounded-xl border border-[#e2d5da] bg-white px-4 py-2.5 text-xs font-bold text-[#23141c] shadow-sm transition hover:bg-[#faf7f5] dark:border-[#352b3e] dark:bg-white/5 dark:text-white dark:hover:bg-white/10"
           >
-            <Plus className="h-4 w-4 text-[#d48997]" />
-            <span>Novo Registro</span>
+            <Plus className="h-4 w-4 text-[#b84c6b]" />
+            <span>Novo Cliente</span>
           </button>
           <button
             type="button"
             onClick={() => setModalCampanha(true)}
-            className="inline-flex items-center justify-center gap-1.5 rounded-xl bg-[#d48997] hover:bg-[#c97b8a] text-white px-5 py-2.5 text-xs font-semibold shadow-sm transition-all"
+            className="editorial-btn-primary inline-flex items-center justify-center gap-1.5 rounded-xl px-5 py-2.5 text-xs font-bold"
           >
             <MessageSquare className="h-4 w-4" />
             <span>Campanha MKT</span>
@@ -336,48 +334,48 @@ export default function Clientes() {
       <form
         onSubmit={pesquisar}
         className={cn(
-          'flex flex-col gap-3 rounded-2xl border border-black/[0.04] dark:border-white/5 bg-white/40 dark:bg-[#0c0c0e]/30 backdrop-blur-md p-3.5 shadow-sm',
+          'flex flex-col gap-3 rounded-2xl border border-[#eae1e4] bg-white p-3.5 shadow-sm dark:border-[#28212f] dark:bg-[#1c1721]',
           !isTightPage && 'sm:flex-row'
         )}
       >
         <div className="relative flex-1">
-          <Search className="absolute left-4 top-1/2 h-4.5 w-4.5 -translate-y-1/2 text-gray-400" />
+          <Search className="absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-[#8c727e]" />
           <input
             value={busca}
             onChange={(event) => setBusca(event.target.value)}
             placeholder="Buscar por nome, apelido ou telefone..."
-            className="h-11 w-full rounded-xl bg-transparent pl-11 pr-4 text-sm text-gray-900 outline-none placeholder:text-gray-400 dark:text-white focus:ring-0"
+            className="h-11 w-full rounded-xl bg-[#faf7f5] pl-10 pr-4 text-sm text-[#23141c] outline-none placeholder:text-[#8c727e] focus:bg-white focus:ring-2 focus:ring-[#b84c6b]/20 dark:bg-[#151119] dark:text-white"
           />
         </div>
         <button
           type="submit"
           disabled={loading}
-          className="inline-flex items-center justify-center rounded-xl bg-[#d48997]/10 hover:bg-[#d48997]/15 px-5 py-2.5 text-xs font-semibold text-[#d48997] transition disabled:opacity-60 shrink-0"
+          className="inline-flex shrink-0 items-center justify-center rounded-xl bg-[#23141c] px-5 py-2.5 text-xs font-bold text-white transition hover:bg-[#38212d] disabled:opacity-60 dark:bg-[#c65d7b] dark:hover:bg-[#b24b69]"
         >
-          {loading ? 'Sincronizando...' : 'Localizar'}
+          {loading ? 'Buscando...' : 'Localizar'}
         </button>
       </form>
 
       {erro && (
-        <div className="rounded-xl border border-rose-500/20 bg-rose-500/5 px-4 py-3 text-xs text-rose-500">
+        <div className="rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-xs font-medium text-rose-700 dark:border-rose-500/25 dark:bg-rose-500/15 dark:text-rose-300">
           {erro}
         </div>
       )}
 
       {loading ? (
         <div className="flex min-h-[35vh] items-center justify-center">
-          <div className="h-10 w-10 animate-spin rounded-full border-4 border-gray-100 border-t-[#d48997]" />
+          <div className="h-9 w-9 animate-spin rounded-full border-[3px] border-[#eadde1] border-t-[#b84c6b]" />
         </div>
       ) : clientes.length === 0 ? (
-        <div className="rounded-2xl border border-dashed border-black/[0.06] dark:border-white/10 bg-white/40 dark:bg-white/[0.01] px-8 py-16 text-center shadow-sm">
-          <Users className="mx-auto h-12 w-12 text-gray-300" />
-          <h2 className="mt-4 font-serif font-normal text-xl text-gray-905 dark:text-white">Nenhum cliente registrado</h2>
-          <p className="mx-auto mt-2 max-w-sm text-xs leading-relaxed text-gray-400 dark:text-gray-500">
-            Cadastre seu primeiro cliente ou refine sua busca atual para iniciar a gestão do ecossistema.
+        <div className="rounded-2xl border border-dashed border-[#e2d5da] bg-white px-8 py-16 text-center shadow-sm dark:border-[#352b3e] dark:bg-[#1c1721]">
+          <Users className="mx-auto h-10 w-10 text-[#b84c6b]/50" />
+          <h2 className="mt-3 font-brand-display text-xl font-bold text-[#23141c] dark:text-white">Nenhum cliente encontrado</h2>
+          <p className="mx-auto mt-1.5 max-w-sm text-xs leading-relaxed text-[#6b5761] dark:text-white/55">
+            Cadastre seu primeiro cliente ou refine sua busca atual.
           </p>
         </div>
       ) : (
-        <div className="grid gap-4">
+        <div className="grid gap-3">
           {clientes.map((cliente) => {
             const status = STATUS_MAP[cliente.status] || STATUS_MAP.sem_visita;
             const isExpanded = expandido === cliente.id || expandido === cliente.telefone;
@@ -386,13 +384,13 @@ export default function Clientes() {
                 key={cliente.id || cliente.telefone}
                 style={{
                   contentVisibility: 'auto',
-                  containIntrinsicSize: isExpanded ? '350px' : '100px'
+                  containIntrinsicSize: isExpanded ? '350px' : '96px'
                 }}
                 className={cn(
-                  'rounded-2xl border bg-white/60 dark:bg-white/[0.02] backdrop-blur-md p-5 hover:shadow-md transition-all duration-300',
+                  'rounded-2xl border bg-white p-4 shadow-sm transition-colors hover:border-[#c65d7b]/35 dark:bg-[#1c1721]',
                   isExpanded
-                    ? 'border-[#d48997]/30 shadow-sm'
-                    : 'border-black/[0.04] dark:border-white/[0.04]'
+                    ? 'border-[#b84c6b]/45'
+                    : 'border-[#eae1e4] dark:border-[#28212f]'
                 )}
               >
                 <button
@@ -403,28 +401,28 @@ export default function Clientes() {
                     !isCompactPage && 'lg:flex-row lg:items-center lg:justify-between'
                   )}
                 >
-                  <div className="flex items-center gap-4 min-w-0">
+                  <div className="flex min-w-0 items-center gap-3.5">
                     <div className="relative shrink-0">
-                      <div className="flex h-16 w-16 items-center justify-center rounded-xl bg-gray-50 dark:bg-white/5 text-2xl font-semibold text-gray-750 dark:text-[#faf7f6] border border-black/[0.04]">
+                      <div className="flex h-12 w-12 items-center justify-center rounded-xl border border-[#eae1e4] bg-[#faf7f5] text-lg font-extrabold text-[#23141c] dark:border-[#352b3e] dark:bg-[#261f2d] dark:text-white">
                         {initials(cliente.apelido || cliente.nome)}
                       </div>
-                      <span className={cn('absolute -right-0.5 -top-0.5 h-3.5 w-3.5 rounded-full border-2 border-white dark:border-[#131118]', status.dot)} />
+                      <span className={cn('absolute -right-0.5 -top-0.5 h-3 w-3 rounded-full border-2 border-white dark:border-[#1c1721]', status.dot)} />
                     </div>
                     <div className="min-w-0">
                       <div className="flex flex-wrap items-center gap-2">
-                        <h3 className="font-serif font-normal text-lg sm:text-xl text-gray-900 dark:text-white leading-tight truncate">{cliente.apelido || cliente.nome}</h3>
-                        <span className={cn('rounded-full border px-2.5 py-0.5 text-[9px] font-semibold tracking-wide normal-case shrink-0', status.chip)}>
+                        <h3 className="truncate text-base font-bold leading-tight text-[#23141c] dark:text-white">{cliente.apelido || cliente.nome}</h3>
+                        <span className={cn('shrink-0 rounded-full border px-2.5 py-0.5 text-[10px] font-bold', status.chip)}>
                           {status.label}
                         </span>
                       </div>
-                      <div className="mt-1.5 flex flex-wrap gap-x-4 gap-y-1 text-xs text-gray-400 dark:text-gray-500">
+                      <div className="mt-1 flex flex-wrap gap-x-4 gap-y-1 text-xs text-[#6b5761] dark:text-white/55">
                         <span className="inline-flex items-center gap-1.5">
-                          <Phone className="h-3.5 w-3.5 text-[#d48997]" />
+                          <Phone className="h-3.5 w-3.5 text-[#b84c6b]" />
                           {cliente.telefone || 'Sem telefone'}
                         </span>
                         {cliente.instagram && (
                           <span className="inline-flex items-center gap-1.5">
-                            <Smartphone className="h-3.5 w-3.5 text-[#d48997]" />
+                            <Smartphone className="h-3.5 w-3.5 text-[#b84c6b]" />
                             {cliente.instagram}
                           </span>
                         )}
@@ -433,20 +431,20 @@ export default function Clientes() {
                   </div>
 
                   <div className={cn(
-                    'grid gap-4 border-t border-black/[0.03] pt-4 dark:border-white/5 w-full lg:w-auto shrink-0',
+                    'grid w-full shrink-0 gap-4 border-t border-[#f0e8eb] pt-3.5 dark:border-[#28212f] lg:w-auto',
                     isTightPage ? 'grid-cols-2' : 'grid-cols-3',
-                    !isCompactPage && 'lg:border-l lg:border-t-0 lg:pl-6 lg:pt-0 lg:grid-cols-[80px_120px_100px]'
+                    !isCompactPage && 'lg:grid-cols-[80px_130px_96px] lg:border-l lg:border-t-0 lg:pl-6 lg:pt-0'
                   )}>
                     <div className={cn(isTightPage ? 'text-left' : 'text-center sm:text-left lg:text-center')}>
-                      <p className="text-[10px] font-medium normal-case text-gray-400 dark:text-gray-500">Visitas</p>
-                      <p className="mt-0.5 text-base font-semibold text-gray-900 dark:text-white">{cliente.totalVisitas || 0}</p>
+                      <p className="text-[11px] font-medium text-[#745e69] dark:text-white/50">Visitas</p>
+                      <p className="mt-0.5 text-base font-extrabold text-[#23141c] tabular-nums dark:text-white">{cliente.totalVisitas || 0}</p>
                     </div>
                     <div className={cn(isTightPage ? 'text-left' : 'text-center sm:text-left lg:text-center')}>
-                      <p className="text-[10px] font-medium normal-case text-gray-400 dark:text-gray-500">Faturamento LTV</p>
-                      <p className="mt-0.5 text-base font-semibold text-[#d48997]">{moeda(cliente.totalGasto)}</p>
+                      <p className="text-[11px] font-medium text-[#745e69] dark:text-white/50">Total gasto</p>
+                      <p className="mt-0.5 text-base font-extrabold text-[#b84c6b] tabular-nums dark:text-[#f0aab8]">{moeda(cliente.totalGasto)}</p>
                     </div>
-                    <div className={cn(isTightPage ? 'col-span-2 text-left' : 'text-right sm:text-left lg:text-right flex items-center justify-end')}>
-                      <p className="text-xs font-semibold text-[#d48997] hover:underline normal-case">Ver perfil →</p>
+                    <div className={cn(isTightPage ? 'col-span-2 text-left' : 'flex items-center justify-end text-right sm:text-left lg:text-right')}>
+                      <p className="text-xs font-bold text-[#b84c6b] hover:underline dark:text-[#f0aab8]">Ver perfil →</p>
                     </div>
                   </div>
                 </button>
@@ -486,7 +484,7 @@ export default function Clientes() {
 
               <div className="mb-6 border-b border-black/[0.03] dark:border-white/5 pb-4">
                 <p className="text-[10px] font-semibold text-[#d48997]">Ficha do Cliente</p>
-                <h2 className="mt-1 font-serif font-normal text-xl sm:text-2xl text-gray-905 dark:text-white">Novo registro</h2>
+                <h2 className="mt-1 font-serif font-normal text-xl sm:text-2xl text-[#23141c] dark:text-white">Novo registro</h2>
               </div>
 
               <div className="grid gap-4 sm:grid-cols-2">
@@ -531,7 +529,7 @@ export default function Clientes() {
                 <button
                   type="submit"
                   disabled={criando}
-                  className="inline-flex items-center justify-center rounded-xl bg-[#d48997] hover:bg-[#c97b8a] text-white px-5 py-2.5 text-xs font-semibold shadow-sm transition disabled:opacity-70"
+                  className="inline-flex items-center justify-center rounded-xl bg-[#b84c6b] hover:bg-[#9c3b57] text-white px-5 py-2.5 text-xs font-semibold shadow-sm transition disabled:opacity-70"
                 >
                   {criando ? 'Criando...' : 'Criar Registro'}
                 </button>
@@ -570,7 +568,7 @@ export default function Clientes() {
 
               <div className="mb-6 border-b border-black/[0.03] dark:border-white/5 pb-4">
                 <p className="text-[10px] font-semibold text-[#d48997]">Campanhas e Promoções</p>
-                <h2 className="mt-1 font-serif font-normal text-xl sm:text-2xl text-gray-905 dark:text-white">Campanha de marketing</h2>
+                <h2 className="mt-1 font-serif font-normal text-xl sm:text-2xl text-[#23141c] dark:text-white">Campanha de marketing</h2>
               </div>
 
               <div className="space-y-5">
@@ -621,7 +619,7 @@ export default function Clientes() {
                     type="button"
                     disabled={enviando}
                     onClick={disparar}
-                    className="inline-flex items-center justify-center rounded-xl bg-[#d48997] hover:bg-[#c97b8a] text-white px-5 py-2.5 text-xs font-semibold shadow-sm transition disabled:opacity-70"
+                    className="inline-flex items-center justify-center rounded-xl bg-[#b84c6b] hover:bg-[#9c3b57] text-white px-5 py-2.5 text-xs font-semibold shadow-sm transition disabled:opacity-70"
                   >
                     {enviando ? 'Processando...' : 'Disparar Campanha'}
                   </button>
@@ -662,7 +660,7 @@ export default function Clientes() {
 
               <div className="mb-6 border-b border-black/[0.03] dark:border-white/5 pb-4">
                 <p className="text-[10px] font-semibold text-[#d48997]">Atualização cadastral</p>
-                <h2 className="mt-1 font-serif font-normal text-xl sm:text-2xl text-gray-905 dark:text-white">Editar cadastro</h2>
+                <h2 className="mt-1 font-serif font-normal text-xl sm:text-2xl text-[#23141c] dark:text-white">Editar cadastro</h2>
               </div>
 
               <div className="grid gap-4 sm:grid-cols-2">
@@ -707,7 +705,7 @@ export default function Clientes() {
                 <button
                   type="submit"
                   disabled={salvandoEdicao}
-                  className="inline-flex items-center justify-center rounded-xl bg-[#d48997] hover:bg-[#c97b8a] text-white px-5 py-2.5 text-xs font-semibold shadow-sm transition disabled:opacity-70"
+                  className="inline-flex items-center justify-center rounded-xl bg-[#b84c6b] hover:bg-[#9c3b57] text-white px-5 py-2.5 text-xs font-semibold shadow-sm transition disabled:opacity-70"
                 >
                   {salvandoEdicao ? 'Salvando...' : 'Salvar Alterações'}
                 </button>
@@ -746,11 +744,11 @@ export default function Clientes() {
               </button>
 
               <div className="border-b border-black/[0.03] dark:border-white/5 p-6 md:p-8">
-                <div className="mx-auto flex h-24 w-24 items-center justify-center rounded-2xl bg-gray-50 dark:bg-white/5 text-4xl font-semibold text-gray-750 dark:text-[#faf7f6] border border-black/[0.04]">
+                <div className="mx-auto flex h-24 w-24 items-center justify-center rounded-2xl bg-gray-50 dark:bg-white/5 text-4xl font-semibold text-[#23141c] dark:text-[#faf7f6] border border-black/[0.04]">
                   {initials(clienteExpandido.apelido || clienteExpandido.nome)}
                 </div>
                 <div className="mt-5 text-center">
-                  <h2 className="font-serif font-normal text-2xl sm:text-3xl text-gray-905 dark:text-white leading-tight">{clienteExpandido.apelido || clienteExpandido.nome}</h2>
+                  <h2 className="font-serif font-normal text-2xl sm:text-3xl text-[#23141c] dark:text-white leading-tight">{clienteExpandido.apelido || clienteExpandido.nome}</h2>
                   {clienteExpandido.apelido && (
                     <p className="mt-1 text-[10px] font-medium text-gray-400 dark:text-gray-500 uppercase tracking-wider">Nome de registro: {clienteExpandido.nome}</p>
                   )}
@@ -785,7 +783,7 @@ export default function Clientes() {
                       dataNascimento: clienteExpandido.dataNascimento ? String(clienteExpandido.dataNascimento).slice(0, 10) : '',
                       endereco: clienteExpandido.endereco || '',
                     })}
-                    className="mt-5 inline-flex items-center justify-center gap-1.5 rounded-xl border border-black/[0.04] px-4.5 py-2 text-xs font-semibold text-gray-650 dark:border-white/10 dark:text-white shadow-sm hover:bg-gray-50 transition-all"
+                    className="mt-5 inline-flex items-center justify-center gap-1.5 rounded-xl border border-black/[0.04] px-4 py-2 text-xs font-semibold text-[#5b4852] dark:border-white/10 dark:text-white shadow-sm hover:bg-gray-50 transition-all"
                   >
                     <Edit3 className="h-3.5 w-3.5 text-[#d48997]" />
                     <span>Editar cadastro</span>
@@ -794,16 +792,16 @@ export default function Clientes() {
               </div>
 
               <div className="grid border-b border-black/[0.03] bg-black/[0.01] dark:bg-white/[0.01] dark:border-white/5 grid-cols-3">
-                <div className="p-4.5 text-center">
-                  <p className="text-[10px] font-medium text-gray-400 dark:text-gray-550">Faturamento LTV</p>
+                <div className="p-4 text-center">
+                  <p className="text-[10px] font-medium text-gray-400 dark:text-white/55">Faturamento LTV</p>
                   <p className="mt-1 text-lg font-semibold text-[#d48997]">{moeda(clienteExpandido.totalGasto)}</p>
                 </div>
-                <div className="p-4.5 text-center border-l border-r border-black/[0.03] dark:border-white/5">
-                  <p className="text-[10px] font-medium text-gray-400 dark:text-gray-555">Total Visitas</p>
-                  <p className="mt-1 text-lg font-semibold text-gray-905 dark:text-white">{clienteExpandido.totalVisitas || 0}</p>
+                <div className="p-4 text-center border-l border-r border-black/[0.03] dark:border-white/5">
+                  <p className="text-[10px] font-medium text-gray-400 dark:text-white/55">Total Visitas</p>
+                  <p className="mt-1 text-lg font-semibold text-[#23141c] dark:text-white">{clienteExpandido.totalVisitas || 0}</p>
                 </div>
-                <div className="p-4.5 text-center">
-                  <p className="text-[10px] font-medium text-gray-400 dark:text-gray-550">Fidelidade</p>
+                <div className="p-4 text-center">
+                  <p className="text-[10px] font-medium text-gray-400 dark:text-white/55">Fidelidade</p>
                   <div className="mt-2.5 flex items-center justify-center gap-1 text-emerald-500">
                     <Star className="h-4 w-4 fill-emerald-500" />
                   </div>
@@ -812,13 +810,13 @@ export default function Clientes() {
 
               <div className="space-y-6 p-6 md:p-8">
                 <section className="space-y-3.5">
-                  <h3 className="flex items-center gap-2 text-xs font-semibold text-gray-905 dark:text-white normal-case">
+                  <h3 className="flex items-center gap-2 text-xs font-semibold text-[#23141c] dark:text-white normal-case">
                     <MapPin className="h-4 w-4 text-[#d48997]" />
                     <span>Dados de Cadastro</span>
                   </h3>
                   <div className="grid gap-3 sm:grid-cols-2">
                     <div className="rounded-xl border border-black/[0.04] bg-black/[0.01] dark:bg-white/[0.01] dark:border-white/5 p-4">
-                      <p className="text-[10px] font-medium text-gray-405">Última Visita</p>
+                      <p className="text-[10px] font-medium text-[#745e69]">Última Visita</p>
                       <p className="mt-1 text-sm font-semibold text-gray-900 dark:text-white">
                         {clienteExpandido.lastVisit
                           ? new Date(clienteExpandido.lastVisit).toLocaleDateString()
@@ -826,7 +824,7 @@ export default function Clientes() {
                       </p>
                     </div>
                     <div className="rounded-xl border border-black/[0.04] bg-black/[0.01] dark:bg-white/[0.01] dark:border-white/5 p-4">
-                      <p className="text-[10px] font-medium text-gray-405">Aniversário</p>
+                      <p className="text-[10px] font-medium text-[#745e69]">Aniversário</p>
                       <p className="mt-1 text-sm font-semibold text-gray-900 dark:text-white">
                         {clienteExpandido.dataNascimento
                           ? new Date(clienteExpandido.dataNascimento).toLocaleDateString()
@@ -834,13 +832,13 @@ export default function Clientes() {
                       </p>
                     </div>
                     <div className="rounded-xl border border-black/[0.04] bg-black/[0.01] dark:bg-white/[0.01] dark:border-white/5 p-4">
-                      <p className="text-[10px] font-medium text-gray-455">Documento CPF</p>
+                      <p className="text-[10px] font-medium text-[#745e69]">Documento CPF</p>
                       <p className="mt-1 text-sm font-semibold text-gray-900 dark:text-white">
                         {clienteExpandido.cpf || 'Não informado'}
                       </p>
                     </div>
                     <div className="rounded-xl border border-black/[0.04] bg-black/[0.01] dark:bg-white/[0.01] dark:border-white/5 p-4 sm:col-span-2">
-                      <p className="text-[10px] font-medium text-gray-455">Endereço Residencial</p>
+                      <p className="text-[10px] font-medium text-[#745e69]">Endereço Residencial</p>
                       <p className="mt-1 text-sm font-semibold text-gray-900 dark:text-white leading-relaxed">
                         {clienteExpandido.endereco || 'Nenhum endereço cadastrado'}
                       </p>
@@ -850,7 +848,7 @@ export default function Clientes() {
 
                 <section className="space-y-3.5">
                   <div className="flex items-center justify-between">
-                    <h3 className="flex items-center gap-2 text-xs font-semibold text-gray-905 dark:text-white normal-case">
+                    <h3 className="flex items-center gap-2 text-xs font-semibold text-[#23141c] dark:text-white normal-case">
                       <Package className="h-4 w-4 text-[#d48997]" />
                       <span>Pacotes Adquiridos</span>
                     </h3>
@@ -876,7 +874,7 @@ export default function Clientes() {
                           className="flex gap-4 rounded-2xl border border-black/[0.04] bg-white dark:bg-white/[0.01] dark:border-white/5 p-4 items-center justify-between"
                         >
                           <div className="min-w-0">
-                            <p className="truncate text-sm font-semibold text-gray-905 dark:text-white">
+                            <p className="truncate text-sm font-semibold text-[#23141c] dark:text-white">
                               {cp.pacote?.nome}
                             </p>
                             <p className="text-[10px] font-medium text-gray-400 dark:text-gray-500 mt-0.5">
@@ -899,7 +897,7 @@ export default function Clientes() {
                 </section>
 
                 <section className="space-y-3.5">
-                  <h3 className="flex items-center gap-2 text-xs font-semibold text-gray-905 dark:text-white normal-case">
+                  <h3 className="flex items-center gap-2 text-xs font-semibold text-[#23141c] dark:text-white normal-case">
                     <History className="h-4 w-4 text-[#d48997]" />
                     <span>Histórico de Agendamentos</span>
                   </h3>
@@ -924,7 +922,7 @@ export default function Clientes() {
                                 </span>
                               </div>
                               <div className="min-w-0">
-                                <p className="truncate text-sm font-semibold text-gray-905 dark:text-white">
+                                <p className="truncate text-sm font-semibold text-[#23141c] dark:text-white">
                                   {agendamento.servico?.nome || agendamento.pacote?.nome || 'Serviço'}
                                 </p>
                                 <p className="text-[10px] font-medium text-gray-400 dark:text-gray-500 mt-0.5">
@@ -993,7 +991,7 @@ export default function Clientes() {
                 {/* Modal Body */}
                 <div className="px-6 py-5 space-y-4 text-gray-800 dark:text-gray-100">
                   <div>
-                    <span className="mb-2 block text-[10px] font-medium text-gray-405">
+                    <span className="mb-2 block text-[10px] font-medium text-[#745e69]">
                       Selecione o Pacote <span className="text-rose-500">*</span>
                     </span>
                     <select
@@ -1013,7 +1011,7 @@ export default function Clientes() {
 
                   <div className="grid grid-cols-2 gap-4">
                     <div>
-                      <span className="mb-2 block text-[10px] font-medium text-gray-405">
+                      <span className="mb-2 block text-[10px] font-medium text-[#745e69]">
                         Sessões Incluídas <span className="text-rose-500">*</span>
                       </span>
                       <input
@@ -1027,7 +1025,7 @@ export default function Clientes() {
                     </div>
 
                     <div>
-                      <span className="mb-2 block text-[10px] font-medium text-gray-405">
+                      <span className="mb-2 block text-[10px] font-medium text-[#745e69]">
                         Preço Pago (R$) <span className="text-rose-500">*</span>
                       </span>
                       <input
@@ -1045,7 +1043,7 @@ export default function Clientes() {
 
                   <div className="grid grid-cols-2 gap-4">
                     <div>
-                      <span className="mb-2 block text-[10px] font-medium text-gray-405">
+                      <span className="mb-2 block text-[10px] font-medium text-[#745e69]">
                         Forma de Pagamento <span className="text-rose-500">*</span>
                       </span>
                       <select
@@ -1062,7 +1060,7 @@ export default function Clientes() {
                     </div>
 
                     <div>
-                      <span className="mb-2 block text-[10px] font-medium text-gray-405">
+                      <span className="mb-2 block text-[10px] font-medium text-[#745e69]">
                         Profissional Vendedor
                       </span>
                       <select
@@ -1093,7 +1091,7 @@ export default function Clientes() {
                   <button
                     type="submit"
                     disabled={salvandoVenda}
-                    className="h-10 rounded-xl bg-[#d48997] hover:bg-[#c97b8a] px-5 text-xs font-semibold text-white transition disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="h-10 rounded-xl bg-[#b84c6b] hover:bg-[#9c3b57] px-5 text-xs font-semibold text-white transition disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     {salvandoVenda ? 'Processando...' : 'Confirmar Venda'}
                   </button>

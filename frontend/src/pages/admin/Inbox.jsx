@@ -270,7 +270,7 @@ function ModalNovaConversa({ onClose, onStart }) {
               <button
                 onClick={() => handleStart(telefone, nome)}
                 disabled={submitting || !telefone.trim()}
-                className="w-full h-10 rounded-xl bg-[#d48997] hover:bg-[#c97b8a] text-white text-xs font-semibold shadow-sm transition disabled:opacity-50"
+                className="w-full h-10 rounded-xl bg-[#b84c6b] hover:bg-[#9c3b57] text-white text-xs font-semibold shadow-sm transition disabled:opacity-50"
               >
                 {submitting ? 'Iniciando...' : 'Iniciar Conversa'}
               </button>
@@ -611,67 +611,68 @@ export default function Inbox() {
         )}
       </AnimatePresence>
 
-    <motion.div 
+    <motion.div
       ref={panelRef}
-      initial={{ opacity: 0, y: 15 }}
+      initial={{ opacity: 0, y: 8 }}
       animate={{ opacity: 1, y: 0 }}
-      className="flex min-h-[70dvh] overflow-hidden rounded-2xl border border-black/[0.04] dark:border-white/[0.04] bg-white/60 dark:bg-white/[0.01] backdrop-blur-md shadow-sm lg:h-[calc(100dvh-12rem)] lg:max-h-[calc(100dvh-10rem)]"
+      className="flex min-h-[70dvh] overflow-hidden rounded-2xl border border-[#eae1e4] bg-white shadow-sm dark:border-[#28212f] dark:bg-[#18131d] lg:h-[calc(100dvh-7rem)] lg:max-h-[calc(100dvh-6rem)]"
     >
-      
       {/* ── Sidebar: Conversas List ── */}
       <aside className={cn(
-        "w-full min-h-0 flex flex-col border-r border-black/[0.04] dark:border-white/[0.04] bg-white/40 dark:bg-white/[0.01] backdrop-blur-sm",
+        "flex min-h-0 w-full flex-col border-r border-[#eae1e4] bg-[#fcfafb] dark:border-[#28212f] dark:bg-[#18131d]",
         isCompactPanel ? "lg:w-[19rem] xl:w-[20rem]" : "lg:w-80 xl:w-96",
         mobileChat ? "hidden lg:flex" : "flex"
       )}>
-        <div className="flex-shrink-0 space-y-4 p-4 border-b border-black/[0.03] dark:border-white/[0.03]">
-          <div className="flex items-center justify-between gap-4">
-            <h1 className="text-xl font-serif font-normal text-gray-900 dark:text-white leading-tight">
-              Central de <span className="text-[#d48997]">Atendimento</span>
+        <div className="flex-shrink-0 space-y-3.5 border-b border-[#f0e8eb] bg-white p-4 dark:border-[#28212f] dark:bg-[#18131d]">
+          <div className="flex items-center justify-between gap-3">
+            <h1 className="font-brand-display text-2xl font-bold leading-tight text-[#23141c] dark:text-white">
+              Inbox <span className="italic text-[#b84c6b]">WhatsApp</span>
             </h1>
             <button
+              type="button"
               onClick={() => setModalNovaConversa(true)}
-              className="flex items-center gap-1 px-3 py-1.5 rounded-xl bg-[#d48997] hover:bg-[#c97b8a] text-white text-xs font-semibold shadow-sm transition"
+              className="editorial-btn-primary flex items-center gap-1.5 rounded-xl px-3.5 py-2 text-xs font-bold"
               title="Iniciar conversa com cliente"
             >
               <Plus size={14} /> Novo Chat
             </button>
           </div>
 
-          <div className="flex items-center gap-1.5 overflow-x-auto hide-scrollbar pb-1 text-[10px] font-medium text-gray-500">
-            <span className="inline-flex items-center gap-1 rounded-lg bg-gray-50 dark:bg-white/[0.02] border border-black/[0.03] dark:border-white/5 px-2.5 py-1">
-              Abertas: <strong className="text-gray-900 dark:text-white">{totalAbertas}</strong>
+          <div className="flex items-center gap-1.5 overflow-x-auto pb-0.5 text-[11px] font-semibold text-[#6b5761] hide-scrollbar">
+            <span className="inline-flex items-center gap-1 rounded-lg border border-[#eae1e4] bg-[#faf7f5] px-2.5 py-1 dark:border-[#28212f] dark:bg-white/5">
+              Abertas: <strong className="text-[#23141c] dark:text-white">{totalAbertas}</strong>
             </span>
-            <span className="inline-flex items-center gap-1 rounded-lg bg-[#d48997]/5 border border-[#d48997]/10 px-2.5 py-1 text-[#d48997]">
+            <span className="inline-flex items-center gap-1 rounded-lg border border-[#eccbd4] bg-[#fdf2f5] px-2.5 py-1 text-[#b84c6b] dark:border-[#c65d7b]/30 dark:bg-[#c65d7b]/15 dark:text-[#f0aab8]">
               IA: <strong>{totalIa}</strong>
             </span>
-            <span className="inline-flex items-center gap-1 rounded-lg bg-emerald-50 dark:bg-emerald-950/20 border border-emerald-500/10 px-2.5 py-1 text-emerald-600 dark:text-emerald-400">
+            <span className="inline-flex items-center gap-1 rounded-lg border border-emerald-200 bg-emerald-50 px-2.5 py-1 text-emerald-700 dark:border-emerald-500/25 dark:bg-emerald-500/15 dark:text-emerald-300">
               Humano: <strong>{totalHumano}</strong>
             </span>
           </div>
-          
+
           <div className="relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-            <input 
-              type="text" 
-              placeholder="Buscar cliente..."
+            <Search className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-[#8c727e]" />
+            <input
+              type="text"
+              placeholder="Buscar cliente ou número..."
               value={search}
-              onChange={e => setSearch(e.target.value)}
-              className="w-full h-10 rounded-xl border border-black/[0.08] dark:border-white/10 bg-white dark:bg-[#111113] pl-9 pr-4 text-xs text-gray-900 dark:text-white outline-none focus:border-[#d48997] focus:ring-2 focus:ring-[#d48997]/10 transition-all placeholder:text-gray-400"
+              onChange={(e) => setSearch(e.target.value)}
+              className="h-10 w-full rounded-xl border border-[#e2d5da] bg-[#faf7f5] pl-10 pr-4 text-xs text-[#23141c] outline-none placeholder:text-[#8c727e] focus:border-[#b84c6b] focus:bg-white dark:border-[#352b3e] dark:bg-[#151119] dark:text-white"
             />
           </div>
 
           {/* Filters tabs */}
-          <div className="flex items-center gap-1 overflow-x-auto hide-scrollbar">
+          <div className="flex items-center gap-1.5 overflow-x-auto hide-scrollbar">
             {FILTROS.map((f, i) => (
               <button
                 key={i}
+                type="button"
                 onClick={() => { setFiltro(i); setSelecionada(null); setErro(''); }}
                 className={cn(
-                  "flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[10px] font-semibold transition-all whitespace-nowrap border",
-                  filtro === i 
-                  ? "bg-[#d48997] border-[#d48997] text-white shadow-sm" 
-                  : "bg-white dark:bg-[#111113] border-black/[0.04] dark:border-white/5 text-gray-500 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white"
+                  "flex items-center gap-1.5 whitespace-nowrap rounded-lg border px-3 py-1.5 text-[11px] font-bold transition-colors",
+                  filtro === i
+                    ? "border-[#23141c] bg-[#23141c] text-white dark:border-[#c65d7b] dark:bg-[#c65d7b]"
+                    : "border-[#eae1e4] bg-white text-[#5b4852] hover:border-[#c65d7b]/40 hover:text-[#23141c] dark:border-[#28212f] dark:bg-white/5 dark:text-white/65"
                 )}
               >
                 {f.icon}
@@ -681,55 +682,47 @@ export default function Inbox() {
           </div>
         </div>
 
-        <div className="flex-1 overflow-y-auto p-2 space-y-1 custom-scrollbar">
-          <AnimatePresence mode="popLayout">
-            {filteredConversas.length === 0 ? (
-              <motion.div 
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                className="py-12 text-center space-y-3"
+        <div className="flex-1 space-y-1 overflow-y-auto p-2.5 custom-scrollbar">
+          {filteredConversas.length === 0 ? (
+            <div className="space-y-2.5 py-12 text-center">
+              <Archive size={28} className="mx-auto text-[#c9b4be] dark:text-white/25" />
+              <p className="text-xs font-medium text-[#745e69] dark:text-white/50">Nenhuma conversa encontrada</p>
+            </div>
+          ) : (
+            filteredConversas.map((c) => (
+              <button
+                type="button"
+                style={{ contentVisibility: 'auto', containIntrinsicSize: '68px' }}
+                key={c.id}
+                onClick={() => { setSelecionada(c); setMobileChat(true); setMensagens([]); setErro(''); }}
+                className={cn(
+                  "flex w-full gap-3 rounded-xl border p-3 text-left transition-colors",
+                  selecionada?.id === c.id
+                    ? "border-[#eccbd4] bg-[#fdf2f5] dark:border-[#c65d7b]/35 dark:bg-[#c65d7b]/15"
+                    : "border-transparent bg-transparent hover:bg-white dark:hover:bg-white/5"
+                )}
               >
-                <Archive size={32} className="mx-auto text-gray-300 dark:text-gray-700" />
-                <p className="text-xs text-gray-400 dark:text-gray-500">Nenhuma conversa encontrada</p>
-              </motion.div>
-            ) : (
-              filteredConversas.map(c => (
-                <motion.button
-                  layout
-                  initial={{ opacity: 0, y: 5 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  style={{ contentVisibility: 'auto', containIntrinsicSize: '64px' }}
-                  key={c.id}
-                  onClick={() => { setSelecionada(c); setMobileChat(true); setMensagens([]); setErro(''); }}
-                  className={cn(
-                    "flex w-full gap-3 rounded-xl border p-3 text-left transition-all",
-                    selecionada?.id === c.id 
-                    ? "bg-[#d48997]/5 border-[#d48997]/20 shadow-sm" 
-                    : "bg-transparent border-transparent hover:bg-black/[0.02] dark:hover:bg-white/[0.01]"
-                  )}
-                >
-                  <ContatoAvatar conversa={c} className="h-10 w-10" showBadge />
-                  <div className="flex-1 min-w-0 py-0.5">
-                    <div className="flex justify-between items-start mb-0.5">
-                      <h4 className="font-medium text-gray-900 dark:text-white truncate text-xs">
-                        {getConversaTitulo(c)}
-                      </h4>
-                      <span className="text-[9px] text-gray-400 font-medium">{formatarHora(c.updatedAt)}</span>
-                    </div>
-                    <p className="text-[11px] text-gray-400 dark:text-gray-500 truncate leading-relaxed">
-                      {getMensagemResumo(c.ultimaMensagem)}
-                    </p>
-                    <div className="flex items-center gap-1.5 mt-1.5">
-                       <div className={cn("w-1.5 h-1.5 rounded-full", c.atendimento === 'humano' ? "bg-emerald-500" : "bg-[#d48997]")} />
-                       <span className="text-[8px] font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wider">
-                         {c.atendimento === 'humano' ? 'Suporte Humano' : 'Respostas IA'}
-                       </span>
-                    </div>
+                <ContatoAvatar conversa={c} className="h-10 w-10" showBadge />
+                <div className="min-w-0 flex-1 py-0.5">
+                  <div className="mb-0.5 flex items-start justify-between gap-2">
+                    <h4 className="truncate text-xs font-bold text-[#23141c] dark:text-white">
+                      {getConversaTitulo(c)}
+                    </h4>
+                    <span className="shrink-0 text-[10px] font-semibold text-[#8c727e]">{formatarHora(c.updatedAt)}</span>
                   </div>
-                </motion.button>
-              ))
-            )}
-          </AnimatePresence>
+                  <p className="truncate text-[11px] leading-relaxed text-[#6b5761] dark:text-white/55">
+                    {getMensagemResumo(c.ultimaMensagem)}
+                  </p>
+                  <div className="mt-1 flex items-center gap-1.5">
+                    <div className={cn("h-1.5 w-1.5 rounded-full", c.atendimento === 'humano' ? "bg-emerald-500" : "bg-[#b84c6b]")} />
+                    <span className="text-[10px] font-semibold text-[#745e69] dark:text-white/50">
+                      {c.atendimento === 'humano' ? 'Suporte Humano' : 'Respostas IA'}
+                    </span>
+                  </div>
+                </div>
+              </button>
+            ))
+          )}
         </div>
       </aside>
 
@@ -753,7 +746,7 @@ export default function Inbox() {
         ) : (
           <>
             {/* Chat Header */}
-            <header className="z-10 flex min-h-16 flex-shrink-0 flex-col gap-3 border-b border-black/[0.04] dark:border-white/5 bg-white/95 dark:bg-[#18181b]/95 px-4 py-3 shadow-sm backdrop-blur-md md:flex-row md:items-center md:justify-between md:px-6">
+            <header className="z-10 flex min-h-16 flex-shrink-0 flex-col gap-3 border-b border-[#eae1e4] bg-white px-4 py-3 dark:border-[#28212f] dark:bg-[#18131d] md:flex-row md:items-center md:justify-between md:px-6">
               <div className="flex items-center gap-3 min-w-0">
                 <button onClick={() => setMobileChat(false)} className="lg:hidden p-2 text-gray-400 hover:text-gray-600 rounded-lg border border-black/[0.04] dark:border-white/10 bg-white/50 dark:bg-zinc-800">
                   <ChevronLeft size={16} />
@@ -790,7 +783,7 @@ export default function Inbox() {
                   className={cn(
                     "h-9 px-4 rounded-xl text-xs font-semibold text-white transition shadow-sm flex items-center justify-center gap-1.5 whitespace-nowrap shrink-0",
                     selecionada.atendimento === 'ia' 
-                    ? "bg-[#d48997] hover:bg-[#c97b8a]" 
+                    ? "bg-[#b84c6b] hover:bg-[#9c3b57]" 
                     : "bg-emerald-600 hover:bg-emerald-700"
                   )}
                 >
@@ -1002,7 +995,7 @@ export default function Inbox() {
                </button>
                <button
                  onClick={selecionada.atendimento === 'ia' ? assumir : soltarIA}
-                 className="w-full flex items-center justify-center gap-2 h-10 rounded-xl bg-[#d48997] hover:bg-[#c97b8a] text-xs font-semibold text-white transition shadow-sm"
+                 className="w-full flex items-center justify-center gap-2 h-10 rounded-xl bg-[#b84c6b] hover:bg-[#9c3b57] text-xs font-semibold text-white transition shadow-sm"
                >
                  {selecionada.atendimento === 'ia' ? <Zap size={14} /> : <Bot size={14} />}
                  {selecionada.atendimento === 'ia' ? 'Assumir Chat' : 'Devolver para IA'}
@@ -1168,10 +1161,10 @@ function MensagemBolha({ m }) {
       </div>
       
       <div className={cn(
-        "px-4 py-3 rounded-2xl shadow-sm border max-w-[85%] relative",
-        isClient 
-        ? "bg-white dark:bg-[#18181b] border-black/[0.04] dark:border-white/5 rounded-tl-none text-gray-800 dark:text-gray-200" 
-        : "bg-[#d48997]/10 dark:bg-[#d48997]/15 border-[#d48997]/20 dark:border-[#d48997]/20 rounded-tr-none text-gray-950 dark:text-white"
+        "relative max-w-[85%] rounded-2xl border px-4 py-3 shadow-sm",
+        isClient
+          ? "rounded-tl-sm border-[#eae1e4] bg-white text-[#23141c] dark:border-[#28212f] dark:bg-[#1c1721] dark:text-white"
+          : "rounded-tr-sm border-[#eccbd4] bg-[#fdf2f5] text-[#23141c] dark:border-[#c65d7b]/30 dark:bg-[#c65d7b]/20 dark:text-white"
       )}>
         {mensagem.tipo && mensagem.tipo !== 'texto' ? <MensagemMidia m={mensagem} isClient={isClient} /> : null}
         {exibirTexto ? (

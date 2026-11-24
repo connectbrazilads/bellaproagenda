@@ -118,21 +118,21 @@ function normalizeFinanceiroMobileLayout(raw) {
 
 function StatCard({ label, value, icon, tone = 'rose', plain = false }) {
   const tones = {
-    rose: 'bg-[#d48997]/10 text-[#d48997]',
-    gold: 'bg-amber-500/10 text-amber-600 dark:text-amber-400',
-    green: 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400',
-    ink: 'bg-gray-500/10 text-gray-600 dark:text-gray-400',
+    rose: 'bg-[#fdf2f5] text-[#b84c6b] dark:bg-[#c65d7b]/20 dark:text-[#f0aab8]',
+    gold: 'bg-amber-50 text-amber-700 dark:bg-amber-500/15 dark:text-amber-300',
+    green: 'bg-emerald-50 text-emerald-700 dark:bg-emerald-500/15 dark:text-emerald-300',
+    ink: 'bg-[#f4eef1] text-[#23141c] dark:bg-white/10 dark:text-white',
   };
 
   return (
-    <div className="rounded-2xl border border-black/[0.04] dark:border-white/[0.04] bg-white/60 dark:bg-white/[0.02] backdrop-blur-md p-5 shadow-sm">
-      <div className="mb-4 flex items-center justify-between">
+    <div className="rounded-2xl border border-[#eae1e4] bg-white p-5 shadow-sm transition hover:border-[#c65d7b]/35 dark:border-[#28212f] dark:bg-[#1c1721]">
+      <div className="mb-3.5 flex items-center justify-between">
         <div className={cn('flex h-10 w-10 items-center justify-center rounded-xl', tones[tone])}>
           {React.cloneElement(icon, { className: 'h-5 w-5' })}
         </div>
       </div>
-      <p className="text-[10px] font-semibold uppercase tracking-wider text-gray-400 dark:text-gray-500">{label}</p>
-      <p className="mt-2 text-2xl font-semibold text-gray-900 dark:text-white tabular-nums">
+      <p className="text-[11px] font-bold uppercase tracking-[0.14em] text-[#745e69] dark:text-white/55">{label}</p>
+      <p className="mt-1.5 text-2xl font-extrabold text-[#23141c] tabular-nums dark:text-white">
         {plain ? formatPlain(value) : formatMoney(value)}
       </p>
     </div>
@@ -143,14 +143,21 @@ function MiniResumo({ label, value, plain = false, highlight = false }) {
   return (
     <div
       className={cn(
-        'rounded-xl border p-4 shadow-sm',
+        'rounded-xl border p-3.5',
         highlight
-          ? 'border-[#d48997]/20 bg-[#d48997]/5 text-gray-900 dark:text-white'
-          : 'border-black/[0.04] dark:border-white/[0.04] bg-white/60 dark:bg-white/[0.01]'
+          ? 'border-[#eccbd4] bg-[#fdf2f5] text-[#23141c] dark:border-[#c65d7b]/35 dark:bg-[#c65d7b]/15 dark:text-white'
+          : 'border-[#eae1e4] bg-[#faf7f5] dark:border-[#28212f] dark:bg-white/[0.03]'
       )}
     >
-      <p className="text-[9px] font-semibold uppercase tracking-wider text-gray-400 dark:text-gray-500">{label}</p>
-      <p className="mt-1.5 text-sm font-semibold text-gray-800 dark:text-gray-200 tabular-nums">{plain ? formatPlain(value) : formatMoney(value)}</p>
+      <p className="text-[10px] font-bold uppercase tracking-[0.12em] text-[#745e69] dark:text-white/55">{label}</p>
+      <p
+        className={cn(
+          'mt-1 text-sm font-extrabold tabular-nums',
+          highlight ? 'text-[#b84c6b] dark:text-[#f0aab8]' : 'text-[#23141c] dark:text-white'
+        )}
+      >
+        {plain ? formatPlain(value) : formatMoney(value)}
+      </p>
     </div>
   );
 }
@@ -655,7 +662,7 @@ export default function Financeiro() {
         return <StatCard label="Lucro Líquido" value={data?.lucroLiquido} icon={<Wallet />} tone="green" />;
       case 'chart-faturamento':
         return (
-          <div className="rounded-2xl border border-black/[0.04] dark:border-white/[0.04] bg-white/60 dark:bg-white/[0.02] backdrop-blur-md p-6 shadow-sm">
+          <div className="rounded-2xl border border-[#eae1e4] dark:border-[#28212f] bg-white dark:bg-[#1c1721] p-6 shadow-sm">
             <div className="mb-6 flex items-center justify-between">
               <div>
                 <h3 className="font-serif text-lg font-normal text-gray-900 dark:text-white">Evolução do Faturamento</h3>
@@ -700,7 +707,7 @@ export default function Financeiro() {
         );
       case 'mix-receita':
         return (
-          <div className="rounded-2xl border border-black/[0.04] dark:border-white/[0.04] bg-white/60 dark:bg-white/[0.02] backdrop-blur-md p-6 shadow-sm">
+          <div className="rounded-2xl border border-[#eae1e4] dark:border-[#28212f] bg-white dark:bg-[#1c1721] p-6 shadow-sm">
             <div className="mb-6 flex items-center gap-2.5">
               <BarChart3 className="h-5 w-5 text-[#d48997]" />
               <div>
@@ -739,7 +746,7 @@ export default function Financeiro() {
         );
       case 'formas-pagamento':
         return (
-          <div className="rounded-2xl border border-black/[0.04] dark:border-white/[0.04] bg-white/60 dark:bg-white/[0.02] backdrop-blur-md p-6 shadow-sm">
+          <div className="rounded-2xl border border-[#eae1e4] dark:border-[#28212f] bg-white dark:bg-[#1c1721] p-6 shadow-sm">
             <div className="mb-6 flex items-center gap-2.5">
               <Wallet className="h-5 w-5 text-[#d48997]" />
               <div>
@@ -767,7 +774,7 @@ export default function Financeiro() {
         );
       case 'relatorio-caixa':
         return (
-          <div className="rounded-2xl border border-black/[0.04] dark:border-white/[0.04] bg-white/60 dark:bg-white/[0.02] backdrop-blur-md p-6 shadow-sm">
+          <div className="rounded-2xl border border-[#eae1e4] dark:border-[#28212f] bg-white dark:bg-[#1c1721] p-6 shadow-sm">
             <div className="mb-5 flex flex-col gap-3">
               <div className="flex items-center gap-2.5">
                 <FileText className="h-5 w-5 text-[#d48997]" />
@@ -808,7 +815,7 @@ export default function Financeiro() {
         );
       case 'caixa-operacional':
         return (
-          <div className="rounded-2xl border border-black/[0.04] dark:border-white/[0.04] bg-white/60 dark:bg-white/[0.02] backdrop-blur-md p-6 shadow-sm">
+          <div className="rounded-2xl border border-[#eae1e4] dark:border-[#28212f] bg-white dark:bg-[#1c1721] p-6 shadow-sm">
             <div className="mb-5 flex items-center gap-2.5">
               <ShieldCheck className="h-5 w-5 text-[#d48997]" />
               <div>
@@ -878,7 +885,7 @@ export default function Financeiro() {
                     type="button"
                     onClick={handleFecharCaixa}
                     disabled={savingCaixa || !canFecharCaixa}
-                    className="flex-1 inline-flex h-10 items-center justify-center gap-1.5 rounded-xl bg-[#d48997] hover:bg-[#c97b8a] text-white text-xs font-semibold transition disabled:opacity-50"
+                    className="flex-1 inline-flex h-10 items-center justify-center gap-1.5 rounded-xl bg-[#b84c6b] hover:bg-[#9c3b57] text-white text-xs font-semibold transition disabled:opacity-50"
                   >
                     <CheckCircle2 className="h-4 w-4" />
                     Fechar Turno
@@ -912,7 +919,7 @@ export default function Financeiro() {
                   type="button"
                   onClick={handleAbrirCaixa}
                   disabled={savingCaixa || !canAbrirCaixa}
-                  className="w-full inline-flex h-10 items-center justify-center gap-1.5 rounded-xl bg-[#d48997] hover:bg-[#c97b8a] text-white text-xs font-semibold transition disabled:opacity-50"
+                  className="w-full inline-flex h-10 items-center justify-center gap-1.5 rounded-xl bg-[#b84c6b] hover:bg-[#9c3b57] text-white text-xs font-semibold transition disabled:opacity-50"
                 >
                   <Clock3 className="h-4 w-4" />
                   Abrir Caixa / Iniciar Turno
@@ -923,7 +930,7 @@ export default function Financeiro() {
         );
       case 'historico-turnos':
         return (
-          <div className="rounded-2xl border border-black/[0.04] dark:border-white/[0.04] bg-white/60 dark:bg-white/[0.02] backdrop-blur-md p-6 shadow-sm">
+          <div className="rounded-2xl border border-[#eae1e4] dark:border-[#28212f] bg-white dark:bg-[#1c1721] p-6 shadow-sm">
             <div className="mb-5 flex items-center gap-2.5">
               <Receipt className="h-5 w-5 text-[#d48997]" />
               <div>
@@ -984,7 +991,7 @@ export default function Financeiro() {
         );
       case 'fechamento-diario':
         return (
-          <div className="rounded-2xl border border-black/[0.04] dark:border-white/[0.04] bg-white/60 dark:bg-white/[0.02] backdrop-blur-md p-6 shadow-sm">
+          <div className="rounded-2xl border border-[#eae1e4] dark:border-[#28212f] bg-white dark:bg-[#1c1721] p-6 shadow-sm">
             <div className="mb-5 flex items-center gap-2.5">
               <Activity className="h-5 w-5 text-[#d48997]" />
               <div>
@@ -1006,7 +1013,7 @@ export default function Financeiro() {
         );
       case 'desempenho-equipe':
         return (
-          <section ref={equipeMobileRef} className="overflow-hidden rounded-2xl border border-black/[0.04] dark:border-white/[0.04] bg-white/60 dark:bg-white/[0.02] backdrop-blur-md shadow-sm">
+          <section ref={equipeMobileRef} className="overflow-hidden rounded-2xl border border-[#eae1e4] dark:border-[#28212f] bg-white dark:bg-[#1c1721] shadow-sm">
             <div className="flex flex-col gap-3 border-b border-black/[0.03] dark:border-white/5 p-5">
               <div className="flex items-center gap-2.5">
                 <Users className="h-5 w-5 text-[#d48997]" />
@@ -1064,7 +1071,7 @@ export default function Financeiro() {
   if (!hasFinanceiroAccess && hasCaixaAccess) {
     return (
       <div ref={pageRef} className="mx-auto flex max-w-5xl flex-col gap-6 pb-20 px-4">
-        <section className="flex flex-col gap-4 rounded-2xl border border-black/[0.04] dark:border-white/[0.04] bg-white/60 dark:bg-white/[0.02] backdrop-blur-md p-6 shadow-sm">
+        <section className="flex flex-col gap-4 rounded-2xl border border-[#eae1e4] dark:border-[#28212f] bg-white dark:bg-[#1c1721] p-6 shadow-sm">
           <div className="flex items-center gap-2 text-[#d48997]">
             <DollarSign className="h-4 w-4" />
             <span className="text-[10px] font-semibold uppercase tracking-wide">Terminal Financeiro</span>
@@ -1098,16 +1105,16 @@ export default function Financeiro() {
       className="mx-auto max-w-6xl space-y-8 pb-20 px-4"
     >
       {/* Header */}
-      <header className="flex flex-col gap-4 border-b border-black/[0.03] dark:border-white/[0.03] pb-6 lg:flex-row lg:items-end lg:justify-between">
+      <header className="flex flex-col gap-4 border-b border-[#eae1e4] pb-5 dark:border-[#28212f] lg:flex-row lg:items-end lg:justify-between">
         <div>
-          <div className="flex items-center gap-2.5 mb-2.5">
-            <DollarSign className="h-4 w-4 text-[#d48997]" />
-            <span className="text-[10px] font-semibold text-[#d48997] tracking-wide">Inteligência Financeira</span>
+          <div className="mb-2 flex items-center gap-2 text-xs font-bold uppercase tracking-[0.16em] text-[#b84c6b]">
+            <DollarSign className="h-4 w-4" />
+            <span>Inteligência Financeira</span>
           </div>
-          <h1 className="text-2xl sm:text-3xl font-serif font-normal text-gray-900 dark:text-white tracking-wide leading-tight mb-2">
-            Saúde <span className="text-[#d48997]">Financeira</span>
+          <h1 className="font-brand-display text-3xl font-bold leading-tight text-[#23141c] dark:text-white sm:text-4xl">
+            Saúde <span className="italic text-[#b84c6b]">Financeira</span>
           </h1>
-          <p className="text-sm text-gray-400 dark:text-gray-500 leading-relaxed max-w-xl">
+          <p className="mt-1.5 max-w-xl text-sm leading-relaxed text-[#6b5761] dark:text-white/60">
             Acompanhe a receita bruta, custos de repasse, fluxo do caixa operacional e produtividade financeira de toda a equipe.
           </p>
         </div>
@@ -1249,14 +1256,14 @@ export default function Financeiro() {
                 <button
                   type="button"
                   onClick={resetMobileLayout}
-                  className="h-9 rounded-xl border border-black/[0.08] dark:border-white/10 px-4 text-xs font-semibold text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-250 transition"
+                  className="h-9 rounded-xl border border-black/[0.08] dark:border-white/10 px-4 text-xs font-semibold text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 transition"
                 >
                   Restaurar Padrão
                 </button>
                 <button
                   type="button"
                   onClick={() => setShowMobileLayoutEditor(false)}
-                  className="h-9 rounded-xl bg-[#d48997] hover:bg-[#c97b8a] px-5 text-xs font-semibold text-white transition shadow-sm"
+                  className="h-9 rounded-xl bg-[#b84c6b] hover:bg-[#9c3b57] px-5 text-xs font-semibold text-white transition shadow-sm"
                 >
                   Aplicar Layout
                 </button>
@@ -1297,7 +1304,7 @@ export default function Financeiro() {
 
           {/* Faturamento Chart & Mix Grid */}
           <div className={cn('grid gap-6', showWideDesktopLayout && 'xl:grid-cols-[1fr,360px]')}>
-            <div className="rounded-2xl border border-black/[0.04] dark:border-white/[0.04] bg-white/60 dark:bg-white/[0.02] backdrop-blur-md p-6 shadow-sm">
+            <div className="rounded-2xl border border-[#eae1e4] dark:border-[#28212f] bg-white dark:bg-[#1c1721] p-6 shadow-sm">
               <div className="mb-6 flex items-center justify-between">
                 <div>
                   <h3 className="font-serif text-lg font-normal text-gray-900 dark:text-white">Evolução do Faturamento</h3>
@@ -1341,7 +1348,7 @@ export default function Financeiro() {
             </div>
 
             <div className="flex flex-col gap-6">
-              <div className="rounded-2xl border border-black/[0.04] dark:border-white/[0.04] bg-white/60 dark:bg-white/[0.02] backdrop-blur-md p-6 shadow-sm">
+              <div className="rounded-2xl border border-[#eae1e4] dark:border-[#28212f] bg-white dark:bg-[#1c1721] p-6 shadow-sm">
                 <div className="mb-6 flex items-center gap-2.5">
                   <BarChart3 className="h-5 w-5 text-[#d48997]" />
                   <div>
@@ -1370,13 +1377,13 @@ export default function Financeiro() {
                 <button
                   type="button"
                   onClick={scrollToEquipe}
-                  className="mt-6 inline-flex h-9 w-full items-center justify-center rounded-xl border border-black/[0.08] dark:border-white/10 px-4 text-xs font-semibold text-gray-500 hover:text-gray-800 dark:text-gray-400 dark:hover:text-zinc-250 transition"
+                  className="mt-6 inline-flex h-9 w-full items-center justify-center rounded-xl border border-black/[0.08] dark:border-white/10 px-4 text-xs font-semibold text-gray-500 hover:text-gray-800 dark:text-gray-400 dark:hover:text-zinc-200 transition"
                 >
                   Ver Desempenho Equipe
                 </button>
               </div>
 
-              <div className="rounded-2xl border border-black/[0.04] dark:border-white/[0.04] bg-white/60 dark:bg-white/[0.02] backdrop-blur-md p-6 shadow-sm">
+              <div className="rounded-2xl border border-[#eae1e4] dark:border-[#28212f] bg-white dark:bg-[#1c1721] p-6 shadow-sm">
                 <div className="mb-6 flex items-center gap-2.5">
                   <Wallet className="h-5 w-5 text-[#d48997]" />
                   <div>
@@ -1406,7 +1413,7 @@ export default function Financeiro() {
           </div>
 
           {/* Consolidado Diario Card */}
-          <div className="rounded-2xl border border-black/[0.04] dark:border-white/[0.04] bg-white/60 dark:bg-white/[0.02] backdrop-blur-md p-6 shadow-sm">
+          <div className="rounded-2xl border border-[#eae1e4] dark:border-[#28212f] bg-white dark:bg-[#1c1721] p-6 shadow-sm">
             <div className="mb-5 flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
               <div className="flex items-center gap-2.5">
                 <FileText className="h-5 w-5 text-[#d48997]" />
@@ -1456,7 +1463,7 @@ export default function Financeiro() {
           </div>
 
           {/* Equipe Table card */}
-          <section ref={equipeDesktopRef} className="rounded-2xl border border-black/[0.04] dark:border-white/[0.04] bg-white/60 dark:bg-white/[0.02] backdrop-blur-md shadow-sm overflow-hidden">
+          <section ref={equipeDesktopRef} className="rounded-2xl border border-[#eae1e4] dark:border-[#28212f] bg-white dark:bg-[#1c1721] shadow-sm overflow-hidden">
             <div className="flex flex-col gap-3 border-b border-black/[0.03] dark:border-white/5 p-6 lg:flex-row lg:items-center lg:justify-between">
               <div className="flex items-center gap-2.5">
                 <Users className="h-5 w-5 text-[#d48997]" />
