@@ -11,7 +11,6 @@ import {
   saResetSenhaUsuario,
   saUpdateSalao,
 } from '../../services/api';
-import { formatDateInput } from '../../lib/utils';
 import { setAdminSession } from '../../lib/session';
 import { appendAuditTrail } from './superAdminData';
 
@@ -19,10 +18,10 @@ const PLANOS = ['basic', 'pro', 'enterprise'];
 const STATUS_PLANO = ['trial', 'ativo', 'inadimplente', 'suspenso'];
 
 const ALERTA_MAP = {
-  trial_expirado: { label: 'Trial expirado', className: 'bg-amber-400/12 text-amber-100' },
-  inadimplente: { label: 'Inadimplente', className: 'bg-red-400/12 text-red-200' },
-  inativo: { label: 'Inativo', className: 'bg-white/8 text-white/60' },
-  novo: { label: 'Novo', className: 'bg-emerald-400/12 text-emerald-200' },
+  trial_expirado: { label: 'Trial expirado', className: 'border border-amber-200 bg-amber-50 text-amber-700' },
+  inadimplente: { label: 'Inadimplente', className: 'border border-rose-200 bg-rose-50 text-rose-700' },
+  inativo: { label: 'Inativo', className: 'border border-[#EAE1E4] bg-[#FAF7F5] text-[#6B5761]' },
+  novo: { label: 'Novo', className: 'border border-emerald-200 bg-emerald-50 text-emerald-700' },
 };
 
 const INITIAL_FORM = {
@@ -239,7 +238,7 @@ export default function SuperAdminSaloes() {
   function copyCredentials() {
     if (!credentialsModal) return;
     copy(
-      `Salao: ${credentialsModal.nomeSalao}\nEmail: ${credentialsModal.email}\nSenha: ${credentialsModal.senha}\nLogin: ${credentialsModal.loginUrl || `${window.location.origin}/admin/login`}`
+      `Salão: ${credentialsModal.nomeSalao}\nEmail: ${credentialsModal.email}\nSenha: ${credentialsModal.senha}\nLogin: ${credentialsModal.loginUrl || `${window.location.origin}/admin/login`}`
     );
   }
 
@@ -248,40 +247,42 @@ export default function SuperAdminSaloes() {
   return (
     <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_380px]">
       <section className="space-y-5">
-        <div className="flex flex-col gap-4 rounded-[2.5rem] border border-white/6 bg-[#231b22] p-6">
+        <div className="flex flex-col gap-4 rounded-3xl border border-[#EAE1E4] bg-white p-6 shadow-sm">
           <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
             <div>
-              <p className="brand-kicker">Controle de expansão</p>
-              <h1 className="mt-3 text-5xl font-brand-display text-white leading-none">Salões ativos</h1>
-              <p className="mt-3 text-sm text-white/58">
+              <p className="text-[11px] font-bold uppercase tracking-[0.22em] text-[#B84C6B]">Controle de expansão</p>
+              <h1 className="mt-2 font-brand-display text-3xl font-semibold tracking-tight text-[#23141C] sm:text-4xl">
+                Salões ativos
+              </h1>
+              <p className="mt-1.5 text-sm text-[#6B5761]">
                 {saloes.length} unidades cadastradas {totalAlerts > 0 ? `· ${totalAlerts} alertas em monitoramento` : ''}
               </p>
             </div>
 
-            <div className="flex flex-wrap gap-3">
-              <button onClick={exportCsv} className="rounded-[1.2rem] border border-white/8 bg-white/[0.04] px-4 py-3 text-[10px] font-black uppercase tracking-[0.2em] text-white/76">
+            <div className="flex flex-wrap gap-2.5">
+              <button onClick={exportCsv} className="rounded-xl border border-[#E2D5DA] bg-white px-4 py-2.5 text-xs font-bold text-[#23141C] transition hover:border-[#B84C6B] hover:text-[#B84C6B]">
                 Exportar CSV
               </button>
-              <button onClick={() => setBroadcastOpen(true)} className="rounded-[1.2rem] border border-white/8 bg-white/[0.04] px-4 py-3 text-[10px] font-black uppercase tracking-[0.2em] text-white/76">
+              <button onClick={() => setBroadcastOpen(true)} className="rounded-xl border border-[#E2D5DA] bg-white px-4 py-2.5 text-xs font-bold text-[#23141C] transition hover:border-[#B84C6B] hover:text-[#B84C6B]">
                 Comunicado
               </button>
-              <button onClick={() => setCreateOpen(true)} className="rounded-[1.2rem] bg-gradient-to-r from-[#f0b5bf] via-[#de97a5] to-[#c77787] px-5 py-3 text-[10px] font-black uppercase tracking-[0.22em] text-white">
+              <button onClick={() => setCreateOpen(true)} className="rounded-xl bg-[#B84C6B] px-5 py-2.5 text-xs font-bold text-white transition hover:bg-[#9E3E5A]">
                 Novo salão
               </button>
             </div>
           </div>
 
-          <div className="grid gap-3 lg:grid-cols-[minmax(0,1fr)_160px_160px]">
+          <div className="grid gap-3 lg:grid-cols-[minmax(0,1fr)_165px_165px]">
             <input
               value={search}
               onChange={(event) => setSearch(event.target.value)}
               placeholder="Buscar nome, slug ou e-mail"
-              className="rounded-[1.25rem] border border-white/8 bg-[#332832] px-4 py-3 text-sm text-white outline-none placeholder:text-white/28 focus:border-[#e29ba8]/28"
+              className="rounded-xl border border-[#E2D5DA] bg-[#FAF7F5] px-4 py-2.5 text-sm text-[#23141C] outline-none transition placeholder:text-[#9E8792] focus:border-[#B84C6B] focus:bg-white"
             />
             <select
               value={statusFilter}
               onChange={(event) => setStatusFilter(event.target.value)}
-              className="rounded-[1.25rem] border border-white/8 bg-[#332832] px-4 py-3 text-sm text-white outline-none focus:border-[#e29ba8]/28"
+              className="rounded-xl border border-[#E2D5DA] bg-[#FAF7F5] px-4 py-2.5 text-sm text-[#23141C] outline-none transition focus:border-[#B84C6B] focus:bg-white"
             >
               <option value="">Todos os status</option>
               {STATUS_PLANO.map((status) => (
@@ -293,7 +294,7 @@ export default function SuperAdminSaloes() {
             <select
               value={alertFilter}
               onChange={(event) => setAlertFilter(event.target.value)}
-              className="rounded-[1.25rem] border border-white/8 bg-[#332832] px-4 py-3 text-sm text-white outline-none focus:border-[#e29ba8]/28"
+              className="rounded-xl border border-[#E2D5DA] bg-[#FAF7F5] px-4 py-2.5 text-sm text-[#23141C] outline-none transition focus:border-[#B84C6B] focus:bg-white"
             >
               <option value="">Todos os alertas</option>
               <option value="trial_expirado">Trial expirado</option>
@@ -306,7 +307,7 @@ export default function SuperAdminSaloes() {
 
         <div className="space-y-3">
           {filtered.length === 0 && (
-            <div className="rounded-[2rem] border border-white/6 bg-[#231b22] px-6 py-12 text-center text-white/46">
+            <div className="rounded-3xl border border-[#EAE1E4] bg-white px-6 py-12 text-center text-sm text-[#6B5761]">
               Nenhum salão encontrado com os filtros atuais.
             </div>
           )}
@@ -315,37 +316,37 @@ export default function SuperAdminSaloes() {
             <button
               key={salao.id}
               onClick={() => openDetail(salao.id)}
-              className={`w-full rounded-[2rem] border p-5 text-left transition ${
+              className={`w-full rounded-3xl border p-5 text-left transition ${
                 detail?.id === salao.id
-                  ? 'border-[#e29ba8]/34 bg-[#2c222a]'
-                  : 'border-white/6 bg-[#231b22] hover:border-[#e29ba8]/18'
+                  ? 'border-[#B84C6B] bg-[#FDF7F9] ring-1 ring-[#B84C6B]/15'
+                  : 'border-[#EAE1E4] bg-white hover:border-[#D9C6CE]'
               }`}
             >
-              <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
+              <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
                 <div className="min-w-0">
-                  <div className="flex items-center gap-3">
-                    <span className={`h-2.5 w-2.5 rounded-full ${salao.ativo ? 'bg-emerald-400' : 'bg-white/28'}`} />
-                    <p className="truncate text-lg font-semibold text-white">{salao.nome}</p>
+                  <div className="flex items-center gap-2.5">
+                    <span className={`h-2.5 w-2.5 shrink-0 rounded-full ${salao.ativo ? 'bg-emerald-500' : 'bg-[#C9BAC1]'}`} />
+                    <p className="truncate text-base font-bold text-[#23141C]">{salao.nome}</p>
                   </div>
-                  <p className="mt-2 truncate text-sm text-white/48">/{salao.slug} · {salao.adminEmail || 'sem administrador'}</p>
-                  <p className="mt-3 text-xs text-white/40">
+                  <p className="mt-1 truncate text-xs text-[#6B5761]">/{salao.slug} · {salao.adminEmail || 'sem administrador'}</p>
+                  <p className="mt-2 text-xs text-[#8E7682]">
                     {salao.stats?.profissionais || 0} profissionais · {salao.stats?.clientes || 0} clientes · {salao.stats?.agendamentos || 0} agendamentos
                   </p>
                 </div>
 
-                <div className="flex flex-wrap items-center gap-2">
+                <div className="flex flex-wrap items-center gap-1.5">
                   {(salao.alertas || []).map((alerta) => (
-                    <span key={alerta} className={`rounded-full px-3 py-2 text-[10px] font-black uppercase tracking-[0.18em] ${ALERTA_MAP[alerta]?.className || 'bg-white/8 text-white/60'}`}>
+                    <span key={alerta} className={`rounded-full px-2.5 py-1 text-[10px] font-bold uppercase tracking-[0.12em] ${ALERTA_MAP[alerta]?.className || 'border border-[#EAE1E4] bg-[#FAF7F5] text-[#6B5761]'}`}>
                       {ALERTA_MAP[alerta]?.label || alerta}
                     </span>
                   ))}
-                  <span className="rounded-full bg-white/8 px-3 py-2 text-[10px] font-black uppercase tracking-[0.18em] text-[#efbac2]">{salao.plano}</span>
-                  <span className="rounded-full bg-black/20 px-3 py-2 text-[10px] font-black uppercase tracking-[0.18em] text-white/64">{salao.planoStatus}</span>
+                  <span className="rounded-full border border-[#F0D5DE] bg-[#FDF7F9] px-2.5 py-1 text-[10px] font-bold uppercase tracking-[0.12em] text-[#B84C6B]">{salao.plano}</span>
+                  <span className="rounded-full border border-[#EAE1E4] bg-[#FAF7F5] px-2.5 py-1 text-[10px] font-bold uppercase tracking-[0.12em] text-[#6B5761]">{salao.planoStatus}</span>
                 </div>
               </div>
 
               <div className="mt-4">
-                <div className="flex gap-1">
+                <div className="flex gap-1.5">
                   {[
                     salao.onboarding?.conta,
                     salao.onboarding?.whatsapp,
@@ -353,118 +354,86 @@ export default function SuperAdminSaloes() {
                     salao.onboarding?.servico,
                     salao.onboarding?.agendamento,
                   ].map((step, index) => (
-                    <span key={index} className={`h-1.5 flex-1 rounded-full ${step ? 'bg-[#de97a5]' : 'bg-white/10'}`} />
+                    <span key={index} className={`h-1.5 flex-1 rounded-full ${step ? 'bg-[#B84C6B]' : 'bg-[#EFE7EA]'}`} />
                   ))}
                 </div>
-                <p className="mt-2 text-[11px] text-white/38">{salao.onboardingScore || 0}/5 etapas configuradas</p>
+                <p className="mt-1.5 text-[11px] text-[#8E7682]">{salao.onboardingScore || 0}/5 etapas configuradas</p>
               </div>
             </button>
           ))}
         </div>
       </section>
 
-      <aside className="rounded-[2.5rem] border border-white/6 bg-[#231b22] p-6">
-        {loadingDetail && <p className="py-10 text-center text-white/50">Carregando detalhes...</p>}
-        {!loadingDetail && !detail && <p className="py-10 text-center text-white/42">Selecione um salão para abrir o painel lateral.</p>}
+      <aside className="rounded-3xl border border-[#EAE1E4] bg-white p-6 shadow-sm">
+        {loadingDetail && <p className="py-10 text-center text-sm text-[#6B5761]">Carregando detalhes...</p>}
+        {!loadingDetail && !detail && <p className="py-10 text-center text-sm text-[#8E7682]">Selecione um salão para abrir o painel lateral.</p>}
         {!loadingDetail && detail && (
-          <div className="space-y-6">
-            <div className="flex items-start justify-between gap-4">
-              <div className="w-full">
-                <p className="brand-kicker">Painel da unidade</p>
+          <div className="space-y-5">
+            <div className="flex items-start justify-between gap-3 border-b border-[#EFE7EA] pb-4">
+              <div className="w-full min-w-0">
+                <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-[#B84C6B]">Painel da unidade</p>
                 <input
                   type="text"
                   value={detail.nome}
                   onChange={(e) => setDetail((prev) => ({ ...prev, nome: e.target.value }))}
                   onBlur={() => updateField('nome', detail.nome)}
-                  className="mt-2 w-full bg-transparent text-3xl font-brand-display text-white outline-none focus:border-b focus:border-white/20"
+                  className="mt-1 w-full bg-transparent font-brand-display text-2xl font-semibold text-[#23141C] outline-none focus:border-b focus:border-[#B84C6B]"
                 />
-                <div className="flex items-center gap-1 mt-1">
-                  <span className="text-sm text-white/48">/</span>
+                <div className="mt-1 flex items-center gap-1">
+                  <span className="text-xs text-[#8E7682]">/</span>
                   <input
                     type="text"
                     value={detail.slug}
                     onChange={(e) => setDetail((prev) => ({ ...prev, slug: slugify(e.target.value) }))}
                     onBlur={() => updateField('slug', detail.slug)}
-                    className="w-full bg-transparent text-sm text-white/48 outline-none focus:border-b focus:border-white/20"
+                    className="w-full bg-transparent text-xs text-[#6B5761] outline-none focus:border-b focus:border-[#B84C6B]"
                   />
                 </div>
               </div>
-              <button onClick={() => setDetail(null)} className="text-white/38 transition hover:text-white">Fechar</button>
+              <button onClick={() => setDetail(null)} className="text-xs font-bold text-[#8E7682] transition hover:text-[#23141C]">Fechar</button>
             </div>
 
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-2 gap-2.5">
               <StatCard label="Profissionais" value={detail._count?.profissionais ?? 0} />
               <StatCard label="Clientes" value={detail._count?.clientes ?? 0} />
               <StatCard label="Agendamentos" value={detail._count?.agendamentos ?? 0} />
               <StatCard label="Serviços" value={detail._count?.servicos ?? 0} />
             </div>
 
-            <div className="rounded-[1.5rem] border border-white/6 bg-black/16 p-4">
-              <p className="text-[10px] font-black uppercase tracking-[0.22em] text-white/40">Faturamento acumulado</p>
-              <p className="mt-3 text-2xl font-semibold text-white">
+            <div className="rounded-2xl bg-[#23141C] p-4 text-white">
+              <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-white/60">Faturamento acumulado</p>
+              <p className="mt-1.5 text-2xl font-bold">
                 {Number(detail.faturamentoTotal || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
               </p>
             </div>
 
             <div className="space-y-2">
-              <div className="rounded-[1.5rem] border border-white/6 bg-black/16 p-4">
-                <div className="flex items-center justify-between">
-                  <span className="text-sm font-semibold text-white">Conta ativa</span>
-                  <button
-                    onClick={() => updateField('ativo', !detail.ativo)}
-                    className={`relative h-7 w-12 rounded-full transition ${detail.ativo ? 'bg-emerald-400' : 'bg-white/18'}`}
-                  >
-                    <span className={`absolute top-1 h-5 w-5 rounded-full bg-white transition ${detail.ativo ? 'left-6' : 'left-1'}`} />
-                  </button>
-                </div>
-              </div>
-
-              <div className="rounded-[1.5rem] border border-white/6 bg-black/16 p-4">
-                <div className="flex items-center justify-between">
-                  <span className="text-sm font-semibold text-white">Módulo WhatsApp</span>
-                  <button
-                    onClick={() => updateField('moduloWhatsapp', !detail.moduloWhatsapp)}
-                    className={`relative h-7 w-12 rounded-full transition ${detail.moduloWhatsapp ? 'bg-[#de97a5]' : 'bg-white/18'}`}
-                  >
-                    <span className={`absolute top-1 h-5 w-5 rounded-full bg-white transition ${detail.moduloWhatsapp ? 'left-6' : 'left-1'}`} />
-                  </button>
-                </div>
-              </div>
-
-              <div className="rounded-[1.5rem] border border-white/6 bg-black/16 p-4">
-                <div className="flex items-center justify-between">
-                  <span className="text-sm font-semibold text-white">Módulo IA</span>
-                  <button
-                    onClick={() => updateField('moduloIA', !detail.moduloIA)}
-                    className={`relative h-7 w-12 rounded-full transition ${detail.moduloIA ? 'bg-[#de97a5]' : 'bg-white/18'}`}
-                  >
-                    <span className={`absolute top-1 h-5 w-5 rounded-full bg-white transition ${detail.moduloIA ? 'left-6' : 'left-1'}`} />
-                  </button>
-                </div>
-              </div>
+              <SwitchRow label="Conta ativa" checked={!!detail.ativo} onToggle={() => updateField('ativo', !detail.ativo)} tone="emerald" />
+              <SwitchRow label="Módulo WhatsApp" checked={!!detail.moduloWhatsapp} onToggle={() => updateField('moduloWhatsapp', !detail.moduloWhatsapp)} />
+              <SwitchRow label="Módulo IA" checked={!!detail.moduloIA} onToggle={() => updateField('moduloIA', !detail.moduloIA)} />
             </div>
 
-            <div className="space-y-3">
-              <p className="text-[10px] font-black uppercase tracking-[0.22em] text-white/40">Limite de Profissionais</p>
+            <div className="space-y-1.5">
+              <p className="text-[11px] font-bold uppercase tracking-[0.14em] text-[#6B5761]">Limite de Profissionais</p>
               <input
                 type="number"
                 min="1"
                 value={detail.maxProfissionais || 5}
-                onChange={(e) => setDetail((prev) => ({ ...prev, maxProfissionais: parseInt(e.target.value) || 1 }))}
+                onChange={(e) => setDetail((prev) => ({ ...prev, maxProfissionais: parseInt(e.target.value, 10) || 1 }))}
                 onBlur={() => updateField('maxProfissionais', detail.maxProfissionais)}
-                className="w-full rounded-[1.25rem] border border-white/8 bg-[#332832] px-4 py-3 text-sm text-white outline-none focus:border-[#e29ba8]/28"
+                className="w-full rounded-xl border border-[#E2D5DA] bg-[#FAF7F5] px-4 py-2.5 text-sm text-[#23141C] outline-none focus:border-[#B84C6B] focus:bg-white"
               />
             </div>
 
-            <div className="space-y-3">
-              <p className="text-[10px] font-black uppercase tracking-[0.22em] text-white/40">Plano</p>
+            <div className="space-y-2">
+              <p className="text-[11px] font-bold uppercase tracking-[0.14em] text-[#6B5761]">Plano</p>
               <div className="grid grid-cols-3 gap-2">
                 {PLANOS.map((plano) => (
                   <button
                     key={plano}
                     onClick={() => updateField('plano', plano)}
-                    className={`rounded-[1rem] px-3 py-3 text-[10px] font-black uppercase tracking-[0.18em] transition ${
-                      detail.plano === plano ? 'bg-[#de97a5] text-white' : 'bg-white/[0.05] text-white/60'
+                    className={`rounded-xl px-3 py-2 text-xs font-bold uppercase tracking-[0.1em] transition ${
+                      detail.plano === plano ? 'bg-[#23141C] text-white' : 'border border-[#EAE1E4] bg-[#FAF7F5] text-[#6B5761] hover:text-[#23141C]'
                     }`}
                   >
                     {plano}
@@ -473,15 +442,15 @@ export default function SuperAdminSaloes() {
               </div>
             </div>
 
-            <div className="space-y-3">
-              <p className="text-[10px] font-black uppercase tracking-[0.22em] text-white/40">Status do plano</p>
+            <div className="space-y-2">
+              <p className="text-[11px] font-bold uppercase tracking-[0.14em] text-[#6B5761]">Status do plano</p>
               <div className="grid grid-cols-2 gap-2">
                 {STATUS_PLANO.map((status) => (
                   <button
                     key={status}
                     onClick={() => updateField('planoStatus', status)}
-                    className={`rounded-[1rem] px-3 py-3 text-[10px] font-black uppercase tracking-[0.18em] transition ${
-                      detail.planoStatus === status ? 'bg-[#de97a5] text-white' : 'bg-white/[0.05] text-white/60'
+                    className={`rounded-xl px-3 py-2 text-xs font-bold uppercase tracking-[0.1em] transition ${
+                      detail.planoStatus === status ? 'bg-[#B84C6B] text-white' : 'border border-[#EAE1E4] bg-[#FAF7F5] text-[#6B5761] hover:text-[#23141C]'
                     }`}
                   >
                     {status}
@@ -490,16 +459,16 @@ export default function SuperAdminSaloes() {
               </div>
             </div>
 
-            <div className="space-y-3">
-              <p className="text-[10px] font-black uppercase tracking-[0.22em] text-white/40">Usuários administradores</p>
+            <div className="space-y-2">
+              <p className="text-[11px] font-bold uppercase tracking-[0.14em] text-[#6B5761]">Usuários administradores</p>
               <div className="space-y-2">
                 {(detail.usuarios || []).map((usuario) => (
-                  <div key={usuario.id} className="rounded-[1.2rem] border border-white/6 bg-black/16 p-4">
-                    <p className="text-sm font-semibold text-white">{usuario.nome || usuario.email}</p>
-                    <p className="mt-1 text-xs text-white/48">{usuario.email}</p>
+                  <div key={usuario.id} className="rounded-2xl border border-[#EFE7EA] bg-[#FAF7F5] p-3.5">
+                    <p className="text-sm font-bold text-[#23141C]">{usuario.nome || usuario.email}</p>
+                    <p className="mt-0.5 text-xs text-[#6B5761]">{usuario.email}</p>
                     <button
                       onClick={() => setResetModal({ usuarioId: usuario.id, email: usuario.email, novaSenha: '' })}
-                      className="mt-3 text-[10px] font-black uppercase tracking-[0.18em] text-[#efbac2]"
+                      className="mt-2 text-xs font-bold text-[#B84C6B] hover:underline"
                     >
                       Redefinir senha
                     </button>
@@ -508,31 +477,31 @@ export default function SuperAdminSaloes() {
               </div>
             </div>
 
-            <div className="space-y-3">
-              <p className="text-[10px] font-black uppercase tracking-[0.22em] text-white/40">Nota interna</p>
+            <div className="space-y-2">
+              <p className="text-[11px] font-bold uppercase tracking-[0.14em] text-[#6B5761]">Nota interna</p>
               <textarea
                 value={note}
                 onChange={(event) => setNote(event.target.value)}
-                rows={4}
+                rows={3}
                 placeholder="Observações sobre operação, suporte ou risco."
-                className="w-full rounded-[1.4rem] border border-white/8 bg-[#332832] px-4 py-3 text-sm text-white outline-none placeholder:text-white/28 focus:border-[#e29ba8]/28"
+                className="w-full rounded-xl border border-[#E2D5DA] bg-[#FAF7F5] px-4 py-2.5 text-sm text-[#23141C] outline-none placeholder:text-[#9E8792] focus:border-[#B84C6B] focus:bg-white"
               />
-              <button onClick={saveNote} disabled={savingNote} className="w-full rounded-[1.2rem] bg-white/[0.06] px-4 py-3 text-[10px] font-black uppercase tracking-[0.22em] text-white/80">
+              <button onClick={saveNote} disabled={savingNote} className="w-full rounded-xl border border-[#E2D5DA] bg-white px-4 py-2.5 text-xs font-bold text-[#23141C] transition hover:border-[#B84C6B] hover:text-[#B84C6B]">
                 {savingNote ? 'Salvando...' : 'Salvar nota'}
               </button>
             </div>
 
-            <div className="space-y-2 text-sm text-white/52">
+            <div className="space-y-1 text-xs text-[#6B5761]">
               {detail.telefone && <p>Telefone: {detail.telefone}</p>}
               {detail.endereco && <p>Endereço: {detail.endereco}</p>}
               <p>Criado em {new Date(detail.createdAt).toLocaleDateString('pt-BR')}</p>
             </div>
 
-            <div className="grid gap-3">
-              <button onClick={handleImpersonate} className="rounded-[1.2rem] bg-gradient-to-r from-[#f0b5bf] via-[#de97a5] to-[#c77787] px-4 py-3 text-[10px] font-black uppercase tracking-[0.22em] text-white">
+            <div className="grid gap-2.5 pt-2">
+              <button onClick={handleImpersonate} className="rounded-xl bg-[#23141C] px-4 py-3 text-xs font-bold text-white transition hover:bg-[#3A222E]">
                 Entrar como admin
               </button>
-              <button onClick={handleDelete} className="rounded-[1.2rem] border border-red-300/16 bg-red-400/10 px-4 py-3 text-[10px] font-black uppercase tracking-[0.22em] text-red-200">
+              <button onClick={handleDelete} className="rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-xs font-bold text-rose-700 transition hover:bg-rose-100">
                 Excluir salão
               </button>
             </div>
@@ -542,22 +511,22 @@ export default function SuperAdminSaloes() {
 
       {createOpen && (
         <ModalShell onClose={() => { setCreateOpen(false); setFormError(''); }}>
-          <form onSubmit={handleCreate} className="space-y-5">
+          <form onSubmit={handleCreate} className="space-y-4">
             <div>
-              <p className="brand-kicker">Nova unidade</p>
-              <h3 className="mt-2 text-3xl font-brand-display text-white">Criar salão</h3>
+              <p className="text-[11px] font-bold uppercase tracking-[0.2em] text-[#B84C6B]">Nova unidade</p>
+              <h3 className="mt-1 font-brand-display text-2xl font-semibold text-[#23141C]">Criar salão</h3>
             </div>
 
-            <div className="grid gap-4 md:grid-cols-2">
+            <div className="grid gap-3 md:grid-cols-2">
               <Input label="Nome do salão" value={form.salaoNome} onChange={(value) => setForm((prev) => ({ ...prev, salaoNome: value, slug: slugify(value) }))} required />
               <Input label="Slug" value={form.slug} onChange={(value) => setForm((prev) => ({ ...prev, slug: slugify(value) }))} required />
               <Input label="Nome do admin" value={form.nomeAdmin} onChange={(value) => setForm((prev) => ({ ...prev, nomeAdmin: value }))} required />
               <Input label="Telefone" value={form.telefone} onChange={(value) => setForm((prev) => ({ ...prev, telefone: value }))} />
               <Input label="E-mail do admin" type="email" value={form.email} onChange={(value) => setForm((prev) => ({ ...prev, email: value }))} required className="md:col-span-2" />
               <div className="md:col-span-2">
-                <div className="flex items-end gap-3">
+                <div className="flex items-end gap-2.5">
                   <Input label="Senha inicial" value={form.senha} onChange={(value) => setForm((prev) => ({ ...prev, senha: value }))} required className="flex-1" />
-                  <button type="button" onClick={() => setForm((prev) => ({ ...prev, senha: generatePassword() }))} className="rounded-[1rem] border border-white/8 bg-white/[0.04] px-4 py-3 text-[10px] font-black uppercase tracking-[0.18em] text-white/76">
+                  <button type="button" onClick={() => setForm((prev) => ({ ...prev, senha: generatePassword() }))} className="rounded-xl border border-[#E2D5DA] bg-[#FAF7F5] px-4 py-2.5 text-xs font-bold text-[#23141C] transition hover:border-[#B84C6B]">
                     Gerar
                   </button>
                 </div>
@@ -565,14 +534,14 @@ export default function SuperAdminSaloes() {
             </div>
 
             <div>
-              <p className="mb-2 text-[10px] font-black uppercase tracking-[0.22em] text-white/40">Plano inicial</p>
+              <p className="mb-1.5 text-[11px] font-bold uppercase tracking-[0.14em] text-[#6B5761]">Plano inicial</p>
               <div className="grid grid-cols-3 gap-2">
                 {PLANOS.map((plano) => (
                   <button
                     key={plano}
                     type="button"
                     onClick={() => setForm((prev) => ({ ...prev, plano }))}
-                    className={`rounded-[1rem] px-4 py-3 text-[10px] font-black uppercase tracking-[0.18em] ${form.plano === plano ? 'bg-[#de97a5] text-white' : 'bg-white/[0.05] text-white/60'}`}
+                    className={`rounded-xl px-4 py-2.5 text-xs font-bold uppercase ${form.plano === plano ? 'bg-[#23141C] text-white' : 'border border-[#EAE1E4] bg-[#FAF7F5] text-[#6B5761]'}`}
                   >
                     {plano}
                   </button>
@@ -580,13 +549,13 @@ export default function SuperAdminSaloes() {
               </div>
             </div>
 
-            {formError && <div className="rounded-[1rem] border border-red-300/16 bg-red-400/10 px-4 py-3 text-sm text-red-200">{formError}</div>}
+            {formError && <div className="rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">{formError}</div>}
 
-            <div className="flex gap-3">
-              <button type="button" onClick={() => { setCreateOpen(false); setFormError(''); }} className="flex-1 rounded-[1.2rem] border border-white/8 bg-white/[0.04] px-4 py-3 text-[10px] font-black uppercase tracking-[0.22em] text-white/76">
+            <div className="flex gap-3 pt-2">
+              <button type="button" onClick={() => { setCreateOpen(false); setFormError(''); }} className="flex-1 rounded-xl border border-[#E2D5DA] bg-white px-4 py-3 text-xs font-bold text-[#23141C]">
                 Cancelar
               </button>
-              <button type="submit" disabled={creating} className="flex-1 rounded-[1.2rem] bg-gradient-to-r from-[#f0b5bf] via-[#de97a5] to-[#c77787] px-4 py-3 text-[10px] font-black uppercase tracking-[0.22em] text-white">
+              <button type="submit" disabled={creating} className="flex-1 rounded-xl bg-[#B84C6B] px-4 py-3 text-xs font-bold text-white hover:bg-[#9E3E5A]">
                 {creating ? 'Criando...' : 'Criar salão'}
               </button>
             </div>
@@ -596,13 +565,13 @@ export default function SuperAdminSaloes() {
 
       {credentialsModal && (
         <ModalShell onClose={() => setCredentialsModal(null)}>
-          <div className="space-y-5">
+          <div className="space-y-4">
             <div>
-              <p className="brand-kicker">Acesso inicial</p>
-              <h3 className="mt-2 text-3xl font-brand-display text-white">Credenciais prontas</h3>
+              <p className="text-[11px] font-bold uppercase tracking-[0.2em] text-[#B84C6B]">Acesso inicial</p>
+              <h3 className="mt-1 font-brand-display text-2xl font-semibold text-[#23141C]">Credenciais prontas</h3>
             </div>
 
-            <div className="rounded-[1.8rem] border border-white/6 bg-black/16 p-5 space-y-4">
+            <div className="space-y-3 rounded-2xl border border-[#EFE7EA] bg-[#FAF7F5] p-5">
               <CredentialItem label="Salão" value={credentialsModal.nomeSalao} />
               <CredentialItem label="E-mail" value={credentialsModal.email} onCopy={() => copy(credentialsModal.email)} />
               <CredentialItem label="Senha" value={credentialsModal.senha} onCopy={() => copy(credentialsModal.senha)} mono />
@@ -610,10 +579,10 @@ export default function SuperAdminSaloes() {
             </div>
 
             <div className="flex gap-3">
-              <button onClick={copyCredentials} className="flex-1 rounded-[1.2rem] border border-white/8 bg-white/[0.04] px-4 py-3 text-[10px] font-black uppercase tracking-[0.22em] text-white/76">
+              <button onClick={copyCredentials} className="flex-1 rounded-xl border border-[#E2D5DA] bg-white px-4 py-3 text-xs font-bold text-[#23141C]">
                 Copiar tudo
               </button>
-              <button onClick={handleSendCredentials} className="flex-1 rounded-[1.2rem] bg-gradient-to-r from-[#f0b5bf] via-[#de97a5] to-[#c77787] px-4 py-3 text-[10px] font-black uppercase tracking-[0.22em] text-white">
+              <button onClick={handleSendCredentials} className="flex-1 rounded-xl bg-[#B84C6B] px-4 py-3 text-xs font-bold text-white hover:bg-[#9E3E5A]">
                 Enviar por e-mail
               </button>
             </div>
@@ -623,11 +592,11 @@ export default function SuperAdminSaloes() {
 
       {resetModal && (
         <ModalShell onClose={() => setResetModal(null)}>
-          <form onSubmit={handleResetPassword} className="space-y-5">
+          <form onSubmit={handleResetPassword} className="space-y-4">
             <div>
-              <p className="brand-kicker">Redefinição</p>
-              <h3 className="mt-2 text-3xl font-brand-display text-white">Atualizar senha</h3>
-              <p className="mt-2 text-sm text-white/48">{resetModal.email}</p>
+              <p className="text-[11px] font-bold uppercase tracking-[0.2em] text-[#B84C6B]">Redefinição</p>
+              <h3 className="mt-1 font-brand-display text-2xl font-semibold text-[#23141C]">Atualizar senha</h3>
+              <p className="mt-1 text-sm text-[#6B5761]">{resetModal.email}</p>
             </div>
 
             <Input
@@ -639,10 +608,10 @@ export default function SuperAdminSaloes() {
             />
 
             <div className="flex gap-3">
-              <button type="button" onClick={() => setResetModal(null)} className="flex-1 rounded-[1.2rem] border border-white/8 bg-white/[0.04] px-4 py-3 text-[10px] font-black uppercase tracking-[0.22em] text-white/76">
+              <button type="button" onClick={() => setResetModal(null)} className="flex-1 rounded-xl border border-[#E2D5DA] bg-white px-4 py-3 text-xs font-bold text-[#23141C]">
                 Cancelar
               </button>
-              <button type="submit" className="flex-1 rounded-[1.2rem] bg-gradient-to-r from-[#f0b5bf] via-[#de97a5] to-[#c77787] px-4 py-3 text-[10px] font-black uppercase tracking-[0.22em] text-white">
+              <button type="submit" className="flex-1 rounded-xl bg-[#B84C6B] px-4 py-3 text-xs font-bold text-white hover:bg-[#9E3E5A]">
                 Redefinir
               </button>
             </div>
@@ -652,13 +621,13 @@ export default function SuperAdminSaloes() {
 
       {broadcastOpen && (
         <ModalShell onClose={() => setBroadcastOpen(false)} wide>
-          <form onSubmit={handleBroadcast} className="space-y-5">
+          <form onSubmit={handleBroadcast} className="space-y-4">
             <div>
-              <p className="brand-kicker">Comunicado em massa</p>
-              <h3 className="mt-2 text-3xl font-brand-display text-white">Enviar comunicado</h3>
+              <p className="text-[11px] font-bold uppercase tracking-[0.2em] text-[#B84C6B]">Comunicado em massa</p>
+              <h3 className="mt-1 font-brand-display text-2xl font-semibold text-[#23141C]">Enviar comunicado</h3>
             </div>
 
-            <div className="grid gap-4 md:grid-cols-2">
+            <div className="grid gap-3 md:grid-cols-2">
               <Select
                 label="Filtrar por plano"
                 value={broadcast.filtroPlano}
@@ -676,22 +645,22 @@ export default function SuperAdminSaloes() {
             <Input label="Assunto" value={broadcast.assunto} onChange={(value) => setBroadcast((prev) => ({ ...prev, assunto: value }))} required />
 
             <div>
-              <label className="mb-2 block text-[10px] font-black uppercase tracking-[0.22em] text-white/42">Mensagem</label>
+              <label className="mb-1.5 block text-[11px] font-bold uppercase tracking-[0.14em] text-[#6B5761]">Mensagem</label>
               <textarea
-                rows={6}
+                rows={5}
                 value={broadcast.mensagem}
                 onChange={(event) => setBroadcast((prev) => ({ ...prev, mensagem: event.target.value }))}
-                className="w-full rounded-[1.4rem] border border-white/8 bg-[#332832] px-4 py-3 text-sm text-white outline-none placeholder:text-white/28 focus:border-[#e29ba8]/28"
+                className="w-full rounded-xl border border-[#E2D5DA] bg-[#FAF7F5] px-4 py-3 text-sm text-[#23141C] outline-none placeholder:text-[#9E8792] focus:border-[#B84C6B] focus:bg-white"
                 placeholder="Escreva o comunicado para as unidades filtradas."
                 required
               />
             </div>
 
             <div className="flex gap-3">
-              <button type="button" onClick={() => setBroadcastOpen(false)} className="flex-1 rounded-[1.2rem] border border-white/8 bg-white/[0.04] px-4 py-3 text-[10px] font-black uppercase tracking-[0.22em] text-white/76">
+              <button type="button" onClick={() => setBroadcastOpen(false)} className="flex-1 rounded-xl border border-[#E2D5DA] bg-white px-4 py-3 text-xs font-bold text-[#23141C]">
                 Cancelar
               </button>
-              <button type="submit" disabled={sendingBroadcast} className="flex-1 rounded-[1.2rem] bg-gradient-to-r from-[#f0b5bf] via-[#de97a5] to-[#c77787] px-4 py-3 text-[10px] font-black uppercase tracking-[0.22em] text-white">
+              <button type="submit" disabled={sendingBroadcast} className="flex-1 rounded-xl bg-[#B84C6B] px-4 py-3 text-xs font-bold text-white hover:bg-[#9E3E5A]">
                 {sendingBroadcast ? 'Enviando...' : 'Enviar comunicado'}
               </button>
             </div>
@@ -702,14 +671,30 @@ export default function SuperAdminSaloes() {
   );
 }
 
+function SwitchRow({ label, checked, onToggle, tone = 'rose' }) {
+  const activeBg = tone === 'emerald' ? 'bg-emerald-500' : 'bg-[#B84C6B]';
+  return (
+    <div className="flex items-center justify-between rounded-2xl border border-[#EFE7EA] bg-[#FAF7F5] px-4 py-3">
+      <span className="text-sm font-semibold text-[#23141C]">{label}</span>
+      <button
+        type="button"
+        onClick={onToggle}
+        className={`relative h-6 w-11 rounded-full transition ${checked ? activeBg : 'bg-[#D5C9CE]'}`}
+      >
+        <span className={`absolute top-0.5 h-5 w-5 rounded-full bg-white shadow-sm transition ${checked ? 'left-5' : 'left-0.5'}`} />
+      </button>
+    </div>
+  );
+}
+
 function ModalShell({ children, onClose, wide = false }) {
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center overflow-y-auto overscroll-contain bg-black/82 p-3 backdrop-blur-md sm:p-4">
-      <div className={`flex max-h-[calc(100dvh-1.5rem)] w-full flex-col overflow-hidden rounded-[2rem] border border-white/8 bg-[#231b22] shadow-[0_40px_90px_-40px_rgba(0,0,0,0.9)] ${wide ? 'max-w-2xl' : 'max-w-xl'}`}>
-        <div className="mb-0 flex shrink-0 justify-end border-b border-white/8 px-6 py-4">
-          <button onClick={onClose} className="text-sm text-white/46 transition hover:text-white">Fechar</button>
+    <div className="fixed inset-0 z-50 flex items-center justify-center overflow-y-auto overscroll-contain bg-[#23141C]/50 p-3 sm:p-4">
+      <div className={`flex max-h-[calc(100dvh-1.5rem)] w-full flex-col overflow-hidden rounded-3xl border border-[#EAE1E4] bg-white shadow-xl ${wide ? 'max-w-2xl' : 'max-w-xl'}`}>
+        <div className="flex shrink-0 justify-end border-b border-[#EFE7EA] px-6 py-3.5">
+          <button onClick={onClose} className="text-xs font-bold text-[#8E7682] transition hover:text-[#23141C]">Fechar</button>
         </div>
-        <div className="min-h-0 flex-1 overflow-y-auto px-6 py-5 custom-scrollbar">
+        <div className="custom-scrollbar min-h-0 flex-1 overflow-y-auto px-6 py-5">
           {children}
         </div>
       </div>
@@ -720,13 +705,13 @@ function ModalShell({ children, onClose, wide = false }) {
 function Input({ label, value, onChange, type = 'text', required = false, className = '' }) {
   return (
     <div className={className}>
-      <label className="mb-2 block text-[10px] font-black uppercase tracking-[0.22em] text-white/42">{label}</label>
+      <label className="mb-1.5 block text-[11px] font-bold uppercase tracking-[0.14em] text-[#6B5761]">{label}</label>
       <input
         type={type}
         value={value}
         onChange={(event) => onChange(event.target.value)}
         required={required}
-        className="w-full rounded-[1.25rem] border border-white/8 bg-[#332832] px-4 py-3 text-sm text-white outline-none placeholder:text-white/28 focus:border-[#e29ba8]/28"
+        className="w-full rounded-xl border border-[#E2D5DA] bg-[#FAF7F5] px-4 py-2.5 text-sm text-[#23141C] outline-none transition focus:border-[#B84C6B] focus:bg-white"
       />
     </div>
   );
@@ -735,11 +720,11 @@ function Input({ label, value, onChange, type = 'text', required = false, classN
 function Select({ label, value, onChange, options }) {
   return (
     <div>
-      <label className="mb-2 block text-[10px] font-black uppercase tracking-[0.22em] text-white/42">{label}</label>
+      <label className="mb-1.5 block text-[11px] font-bold uppercase tracking-[0.14em] text-[#6B5761]">{label}</label>
       <select
         value={value}
         onChange={(event) => onChange(event.target.value)}
-        className="w-full rounded-[1.25rem] border border-white/8 bg-[#332832] px-4 py-3 text-sm text-white outline-none focus:border-[#e29ba8]/28"
+        className="w-full rounded-xl border border-[#E2D5DA] bg-[#FAF7F5] px-4 py-2.5 text-sm text-[#23141C] outline-none transition focus:border-[#B84C6B] focus:bg-white"
       >
         {options.map((option) => (
           <option key={option.value} value={option.value}>
@@ -753,22 +738,22 @@ function Select({ label, value, onChange, options }) {
 
 function StatCard({ label, value }) {
   return (
-    <div className="rounded-[1.4rem] border border-white/6 bg-black/16 p-4 text-center">
-      <p className="text-2xl font-semibold text-white">{value}</p>
-      <p className="mt-2 text-[10px] font-black uppercase tracking-[0.18em] text-white/40">{label}</p>
+    <div className="rounded-2xl border border-[#EFE7EA] bg-[#FAF7F5] p-3.5 text-center">
+      <p className="text-xl font-bold text-[#23141C]">{value}</p>
+      <p className="mt-1 text-[10px] font-bold uppercase tracking-[0.14em] text-[#8E7682]">{label}</p>
     </div>
   );
 }
 
 function CredentialItem({ label, value, onCopy, mono = false }) {
   return (
-    <div className="flex items-center justify-between gap-4">
+    <div className="flex items-center justify-between gap-3">
       <div className="min-w-0">
-        <p className="text-[10px] font-black uppercase tracking-[0.18em] text-white/38">{label}</p>
-        <p className={`mt-1 truncate text-sm text-white ${mono ? 'font-mono text-[#efbac2]' : 'font-semibold'}`}>{value}</p>
+        <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-[#8E7682]">{label}</p>
+        <p className={`mt-0.5 truncate text-sm text-[#23141C] ${mono ? 'font-mono font-bold text-[#B84C6B]' : 'font-semibold'}`}>{value}</p>
       </div>
       {onCopy && (
-        <button onClick={onCopy} className="rounded-xl border border-white/8 bg-white/[0.04] px-3 py-2 text-[10px] font-black uppercase tracking-[0.16em] text-white/74">
+        <button onClick={onCopy} className="shrink-0 rounded-lg border border-[#E2D5DA] bg-white px-3 py-1.5 text-[11px] font-bold text-[#23141C] transition hover:border-[#B84C6B] hover:text-[#B84C6B]">
           Copiar
         </button>
       )}

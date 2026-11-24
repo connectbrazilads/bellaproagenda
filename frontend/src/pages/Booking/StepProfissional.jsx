@@ -1,5 +1,4 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { motion } from 'framer-motion';
 import { User, Star, Zap, Users, CheckCircle2 } from 'lucide-react';
 import { getProfissionaisPorServico, getProfissionaisPorPacote } from '../../services/api';
 import { cn } from '../../lib/utils';
@@ -9,13 +8,13 @@ const CARREGAMENTO_MAX_MS = 12000;
 function buildSyntheticTeamSelection(multiItens) {
   return {
     id: 'multi',
-    nome: 'Equipe do salao',
+    nome: 'Equipe do salão',
     fotoUrl: null,
     multiItens,
   };
 }
 
-export default function StepProfissional({ booking, set, next, cor }) {
+export default function StepProfissional({ booking, set, next }) {
   const [profissionais, setProfissionais] = useState([]);
   const [loading, setLoading] = useState(true);
   const [avisoFlexivel, setAvisoFlexivel] = useState(false);
@@ -55,7 +54,7 @@ export default function StepProfissional({ booking, set, next, cor }) {
           const fetcher = item.isPacote ? getProfissionaisPorPacote : getProfissionaisPorServico;
           return comTimeout(
             fetcher(booking.slug, item.id),
-            `A busca de especialistas para ${item.nome || 'este servico'} demorou demais.`
+            `A busca de especialistas para ${item.nome || 'este serviço'} demorou demais.`
           );
         })
       );
@@ -64,7 +63,7 @@ export default function StepProfissional({ booking, set, next, cor }) {
 
       const rejeitado = respostas.find((resultado) => resultado.status === 'rejected');
       if (rejeitado) {
-        throw rejeitado.reason || new Error('Nao foi possivel carregar especialistas no momento.');
+        throw rejeitado.reason || new Error('Não foi possível carregar especialistas no momento.');
       }
 
       const listas = respostas.map((resposta) => resposta.value?.data || []);
@@ -116,7 +115,7 @@ export default function StepProfissional({ booking, set, next, cor }) {
         setProfissionais([]);
         setProfissionaisPorServico({});
         setAvisoFlexivel(false);
-        setErroCarregamento(error?.message || 'Nao foi possivel carregar especialistas no momento.');
+        setErroCarregamento(error?.message || 'Não foi possível carregar especialistas no momento.');
       })
       .finally(() => {
         if (!cancelado) setLoading(false);
@@ -173,29 +172,27 @@ export default function StepProfissional({ booking, set, next, cor }) {
 
   if (loading) {
     return (
-      <div className="flex flex-col items-center justify-center space-y-4 py-20">
-        <div className="h-12 w-12 animate-spin rounded-full border-4 border-[#d4af37]/10 border-t-[#d4af37]" />
-        <p className="text-[10px] font-black uppercase tracking-[0.3em] text-[#d4af37]">Buscando especialistas</p>
+      <div className="flex flex-col items-center justify-center space-y-4 py-16">
+        <div className="h-10 w-10 animate-spin rounded-full border-[3px] border-[#EAE1E4] border-t-[#B84C6B]" />
+        <p className="text-xs font-bold uppercase tracking-[0.2em] text-[#8E7682]">Buscando especialistas</p>
       </div>
     );
   }
 
   if (erroCarregamento) {
     return (
-      <div className="space-y-6 py-20 text-center">
-        <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-[2rem] bg-rose-500/10 text-rose-400 border border-rose-500/20">
-          <Users size={40} />
+      <div className="space-y-5 py-14 text-center">
+        <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl border border-rose-200 bg-rose-50 text-rose-600">
+          <Users size={30} />
         </div>
         <div>
-          <p className="text-xl font-brand-display font-black tracking-tight text-[#f4ecd8]">Não conseguimos carregar</p>
-          <p className="mx-auto mt-2 max-w-xs text-[11px] font-light leading-relaxed text-[#b299a0]">
-            {erroCarregamento}
-          </p>
+          <p className="font-brand-display text-2xl font-semibold text-[#23141C]">Não conseguimos carregar</p>
+          <p className="mx-auto mt-2 max-w-xs text-sm text-[#6B5761]">{erroCarregamento}</p>
         </div>
         <button
           type="button"
           onClick={() => setTentativa((current) => current + 1)}
-          className="premium-btn-secondary px-8 py-4 text-[10px] font-black uppercase tracking-[0.2em]"
+          className="rounded-xl border border-[#E2D5DA] bg-white px-6 py-3 text-xs font-bold uppercase tracking-[0.14em] text-[#23141C] transition hover:border-[#B84C6B] hover:text-[#B84C6B]"
         >
           Tentar novamente
         </button>
@@ -205,13 +202,13 @@ export default function StepProfissional({ booking, set, next, cor }) {
 
   if (!avisoFlexivel && profissionais.length === 0) {
     return (
-      <div className="space-y-6 py-20 text-center">
-        <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-[2rem] bg-black/40 border border-white/10 text-[#d4af37]">
-          <Users size={40} />
+      <div className="space-y-4 py-14 text-center">
+        <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl border border-[#EAE1E4] bg-[#FAF7F5] text-[#B84C6B]">
+          <Users size={30} />
         </div>
         <div>
-          <p className="text-xl font-brand-display font-black tracking-tight text-[#f4ecd8]">Nenhum especialista disponível</p>
-          <p className="mx-auto mt-2 max-w-xs text-[11px] font-light leading-relaxed text-[#b299a0]">
+          <p className="font-brand-display text-2xl font-semibold text-[#23141C]">Nenhum especialista disponível</p>
+          <p className="mx-auto mt-2 max-w-xs text-sm text-[#6B5761]">
             Não encontramos profissionais disponíveis para todos os serviços selecionados. Tente ajustar sua escolha.
           </p>
         </div>
@@ -221,81 +218,71 @@ export default function StepProfissional({ booking, set, next, cor }) {
 
   if (avisoFlexivel) {
     return (
-      <div className="space-y-8">
-        <motion.div
-          initial={{ opacity: 0, scale: 0.95 }}
-          animate={{ opacity: 1, scale: 1 }}
-          className="rounded-[2rem] border border-[#d4af37]/30 bg-[#d4af37]/5 p-5 backdrop-blur-md"
-        >
-          <div className="flex items-start gap-4">
-            <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl border border-[#d4af37]/30 bg-black/40 text-[#d4af37] shadow-[0_0_15px_rgba(212,175,55,0.2)]">
-              <Star size={20} fill="currentColor" />
+      <div className="space-y-6">
+        <div className="rounded-2xl border border-[#F0D5DE] bg-[#FDF7F9] p-4">
+          <div className="flex items-start gap-3.5">
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#B84C6B] text-white">
+              <Star size={18} fill="currentColor" />
             </div>
             <div>
-              <p className="text-[11px] font-black uppercase tracking-[0.1em] text-[#d4af37]">Modo multi-profissional</p>
-              <p className="mt-1.5 text-[11px] font-light leading-relaxed text-[#f4ecd8]">
-                Não existe um único especialista para todos os serviços. Escolha um para cada item da comanda.
+              <p className="text-xs font-bold uppercase tracking-[0.12em] text-[#B84C6B]">Modo multi-profissional</p>
+              <p className="mt-1 text-xs leading-relaxed text-[#6B5761]">
+                Não existe um único especialista para todos os serviços. Escolha um profissional para cada item da comanda.
               </p>
             </div>
           </div>
-        </motion.div>
+        </div>
 
-        <div className="space-y-5">
-          {servicosSelecionados.map((servico, idx) => {
+        <div className="space-y-4">
+          {servicosSelecionados.map((servico) => {
             const profissionaisDoServico = profissionaisPorServico[servico.id] || [];
             const selecionado = multiSelecionado[servico.id];
 
             return (
-              <motion.div
-                key={servico.id}
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: idx * 0.05 }}
-                className="glass-card-neon rounded-[2.5rem] p-6"
-              >
-                <div className="mb-6 flex items-center justify-between gap-3">
+              <div key={servico.id} className="rounded-2xl border border-[#EAE1E4] bg-[#FAF7F5] p-4 sm:p-5">
+                <div className="mb-4 flex items-center justify-between gap-3">
                   <div>
-                    <p className="text-[9px] font-black uppercase tracking-[0.3em] text-[#8a6c74]">Serviço</p>
-                    <h3 className="mt-1 text-lg font-brand-display font-black tracking-tight text-[#f4ecd8]">{servico.nome}</h3>
+                    <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-[#8E7682]">Serviço</p>
+                    <h3 className="mt-0.5 text-base font-bold text-[#23141C]">{servico.nome}</h3>
                   </div>
                   {selecionado && (
-                    <div className="inline-flex items-center gap-2 rounded-full border border-[#d4af37]/30 bg-[#d4af37]/10 px-4 py-2 text-[9px] font-black uppercase tracking-[0.2em] text-[#d4af37]">
-                      <CheckCircle2 size={14} />
+                    <span className="inline-flex items-center gap-1.5 rounded-full border border-[#F0D5DE] bg-white px-3 py-1 text-[11px] font-bold text-[#B84C6B]">
+                      <CheckCircle2 size={13} />
                       {selecionado.nome}
-                    </div>
+                    </span>
                   )}
                 </div>
 
-                <div className="grid gap-3 sm:grid-cols-2">
+                <div className="grid gap-2.5 sm:grid-cols-2">
                   {profissionaisDoServico.map((profissional) => (
                     <button
                       key={`${servico.id}-${profissional.id}`}
                       type="button"
                       onClick={() => selecionarProfissionalDoServico(servico, profissional)}
                       className={cn(
-                        'group rounded-[2rem] border p-4 text-left transition-all',
+                        'rounded-2xl border p-3.5 text-left transition',
                         selecionado?.id === profissional.id
-                          ? 'border-[#d4af37] bg-[#d4af37]/10 shadow-[0_0_15px_rgba(212,175,55,0.15)]'
-                          : 'border-white/10 bg-black/40 hover:border-[#d4af37]/40 hover:bg-black/60'
+                          ? 'border-[#B84C6B] bg-white ring-1 ring-[#B84C6B]/20'
+                          : 'border-[#EAE1E4] bg-white hover:border-[#D9C6CE]'
                       )}
                     >
-                      <div className="flex items-center gap-4">
-                        <div className="flex h-12 w-12 items-center justify-center overflow-hidden rounded-2xl border border-white/5 bg-black/60 shadow-sm">
+                      <div className="flex items-center gap-3">
+                        <div className="flex h-11 w-11 shrink-0 items-center justify-center overflow-hidden rounded-xl border border-[#EAE1E4] bg-[#FAF7F5]">
                           {profissional.fotoUrl ? (
-                            <img src={profissional.fotoUrl} alt={profissional.nome} className="h-full w-full object-cover transition-transform group-hover:scale-110" />
+                            <img src={profissional.fotoUrl} alt={profissional.nome} className="h-full w-full object-cover" />
                           ) : (
-                            <User size={20} className="text-[#8a6c74]" />
+                            <User size={18} className="text-[#8E7682]" />
                           )}
                         </div>
                         <div className="min-w-0">
-                          <p className="truncate text-sm font-black uppercase tracking-[0.1em] text-[#f4ecd8] group-hover:text-[#d4af37] transition-colors">{profissional.nome}</p>
-                          <p className="mt-1 text-[9px] font-light uppercase tracking-[0.2em] text-[#b299a0]">Especialista</p>
+                          <p className="truncate text-sm font-bold text-[#23141C]">{profissional.nome}</p>
+                          <p className="text-[11px] text-[#8E7682]">Especialista</p>
                         </div>
                       </div>
                     </button>
                   ))}
                 </div>
-              </motion.div>
+              </div>
             );
           })}
         </div>
@@ -304,7 +291,7 @@ export default function StepProfissional({ booking, set, next, cor }) {
           type="button"
           onClick={continuarMulti}
           disabled={multiItensProntos.length !== servicosSelecionados.length}
-          className="premium-btn-primary w-full disabled:cursor-not-allowed disabled:opacity-50 disabled:filter-grayscale"
+          className="w-full rounded-2xl bg-[#B84C6B] py-4 text-sm font-bold text-white transition hover:bg-[#9E3E5A] disabled:cursor-not-allowed disabled:opacity-45"
         >
           Continuar com equipe
         </button>
@@ -313,84 +300,73 @@ export default function StepProfissional({ booking, set, next, cor }) {
   }
 
   return (
-    <div className="space-y-8">
-      <div className="grid grid-cols-1 gap-4">
-        <motion.button
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          whileHover={{ scale: 1.02 }}
-          whileTap={{ scale: 0.99 }}
-          onClick={() => selecionar({ id: 'any', nome: 'Qualquer Profissional', fotoUrl: null })}
-          className="group relative overflow-hidden rounded-[2.5rem] border border-dashed border-[#d4af37]/30 bg-black/40 p-6 text-left transition-all hover:border-[#d4af37] hover:bg-[#d4af37]/5"
-        >
-          <div className="relative z-10 flex items-center gap-6">
-            <div className="relative flex h-16 w-16 items-center justify-center rounded-2xl border border-[#d4af37]/20 bg-[#d4af37]/10 text-[#d4af37] shadow-[0_0_20px_rgba(212,175,55,0.15)] transition-transform group-hover:scale-110">
-              <Zap size={28} fill="currentColor" className="opacity-20" />
-              <Users size={28} className="absolute" />
-            </div>
-            <div>
-              <h3 className="text-xl font-brand-display font-black uppercase tracking-tight text-[#f4ecd8] group-hover:text-[#d4af37] transition-colors">O Primeiro Disponível</h3>
-              <p className="mt-1.5 text-[10px] font-bold uppercase tracking-[0.2em] text-[#b299a0]">Agendamento ultra rápido e prático</p>
-            </div>
+    <div className="space-y-6">
+      <button
+        type="button"
+        onClick={() => selecionar({ id: 'any', nome: 'Qualquer Profissional', fotoUrl: null })}
+        className="group w-full rounded-2xl border border-dashed border-[#D9C6CE] bg-[#FAF7F5] p-4 text-left transition hover:border-[#B84C6B] hover:bg-[#FDF7F9]"
+      >
+        <div className="flex items-center gap-4">
+          <div className="relative flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-[#23141C] text-white">
+            <Zap size={20} className="text-[#E6A3B5]" />
           </div>
-        </motion.button>
-      </div>
+          <div>
+            <h3 className="text-base font-bold text-[#23141C]">O Primeiro Disponível</h3>
+            <p className="mt-0.5 text-xs text-[#6B5761]">Agendamento mais rápido com qualquer especialista livre</p>
+          </div>
+        </div>
+      </button>
 
-      <div className="relative">
-        <div className="mb-8 flex items-center gap-4">
-          <span className="text-[10px] font-black uppercase tracking-[0.4em] text-[#d4af37]">Nossos Especialistas</span>
-          <div className="h-px flex-1 bg-gradient-to-r from-[#d4af37]/30 to-transparent" />
+      <div>
+        <div className="mb-4 flex items-center gap-3">
+          <span className="text-[11px] font-bold uppercase tracking-[0.2em] text-[#8E7682]">Nossos Especialistas</span>
+          <div className="h-px flex-1 bg-[#EAE1E4]" />
         </div>
 
-        <div className="custom-scrollbar grid max-h-[500px] grid-cols-1 gap-5 overflow-y-auto px-1 pb-10 sm:grid-cols-2 md:gap-6">
-          {profissionais.map((profissional, idx) => (
-            <motion.button
-              key={profissional.id}
-              initial={{ opacity: 0, scale: 0.95 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ delay: idx * 0.05 }}
-              whileHover={{ y: -5 }}
-              whileTap={{ scale: 0.98 }}
-              onClick={() => selecionar(profissional)}
-              className={cn(
-                'group relative flex flex-col items-center gap-5 rounded-[2.5rem] border p-6 text-center transition-all',
-                booking.profissional?.id === profissional.id
-                  ? 'border-[#d4af37] bg-[#d4af37]/10 shadow-[0_0_20px_rgba(212,175,55,0.2)] backdrop-blur-md'
-                  : 'border-white/10 bg-black/40 shadow-xl hover:border-[#d4af37]/40 hover:bg-black/60'
-              )}
-            >
-              <div className="relative h-28 w-28 flex-shrink-0 overflow-hidden rounded-[2.2rem] border-2 border-white/10 bg-black/60 shadow-2xl md:h-32 md:w-32 group-hover:border-[#d4af37]/50 transition-colors">
-                {profissional.fotoUrl ? (
-                  <img
-                    src={profissional.fotoUrl}
-                    alt={profissional.nome}
-                    className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-110"
-                  />
-                ) : (
-                  <div className="flex h-full w-full items-center justify-center bg-black/40 text-[#8a6c74]">
-                    <User size={48} strokeWidth={1} />
-                  </div>
+        <div className="custom-scrollbar grid max-h-[430px] grid-cols-1 gap-4 overflow-y-auto pr-1 sm:grid-cols-2">
+          {profissionais.map((profissional) => {
+            const isSelected = booking.profissional?.id === profissional.id;
+            return (
+              <button
+                key={profissional.id}
+                type="button"
+                onClick={() => selecionar(profissional)}
+                className={cn(
+                  'group flex flex-col items-center gap-4 rounded-2xl border p-5 text-center transition',
+                  isSelected
+                    ? 'border-[#B84C6B] bg-[#FDF7F9] ring-1 ring-[#B84C6B]/20'
+                    : 'border-[#EAE1E4] bg-white hover:border-[#D9C6CE] hover:bg-[#FCFAFB]'
                 )}
-              </div>
-
-              <div className="w-full space-y-1">
-                <h3 className="truncate text-lg font-brand-display font-black uppercase tracking-tight text-[#f4ecd8] group-hover:text-[#d4af37] transition-colors md:text-xl">
-                  {profissional.nome}
-                </h3>
-              </div>
-
-              <div
-                className="w-full rounded-full py-3.5 text-center text-[10px] font-black uppercase tracking-[0.25em] transition-all"
-                style={{
-                  backgroundColor: booking.profissional?.id === profissional.id ? '#d4af37' : 'rgba(255,255,255,0.03)',
-                  color: booking.profissional?.id === profissional.id ? '#000' : '#8a6c74',
-                  border: booking.profissional?.id === profissional.id ? 'none' : '1px solid rgba(255,255,255,0.08)'
-                }}
               >
-                {booking.profissional?.id === profissional.id ? 'Selecionado' : 'Escolher Especialista'}
-              </div>
-            </motion.button>
-          ))}
+                <div className="h-24 w-24 overflow-hidden rounded-2xl border border-[#EAE1E4] bg-[#FAF7F5]">
+                  {profissional.fotoUrl ? (
+                    <img
+                      src={profissional.fotoUrl}
+                      alt={profissional.nome}
+                      className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
+                    />
+                  ) : (
+                    <div className="flex h-full w-full items-center justify-center text-[#9E8792]">
+                      <User size={36} strokeWidth={1.4} />
+                    </div>
+                  )}
+                </div>
+
+                <h3 className="w-full truncate text-base font-bold text-[#23141C]">{profissional.nome}</h3>
+
+                <span
+                  className={cn(
+                    'w-full rounded-xl py-2.5 text-xs font-bold transition',
+                    isSelected
+                      ? 'bg-[#23141C] text-white'
+                      : 'border border-[#EAE1E4] bg-[#FAF7F5] text-[#6B5761] group-hover:border-[#B84C6B] group-hover:text-[#B84C6B]'
+                  )}
+                >
+                  {isSelected ? 'Selecionado' : 'Escolher especialista'}
+                </span>
+              </button>
+            );
+          })}
         </div>
       </div>
     </div>

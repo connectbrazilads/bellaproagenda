@@ -56,23 +56,27 @@ export default function SuperAdminComunicacao() {
   if (error) return <StateBox message={error} error />;
 
   return (
-    <div className="mx-auto max-w-7xl space-y-8">
-      <section className="rounded-[2.5rem] border border-white/6 bg-[#231b22] p-6 sm:p-8">
-        <p className="brand-kicker">Comunicação de base</p>
-        <h1 className="mt-3 font-brand-display text-5xl leading-none text-white">Comunique a base com segmentação simples e histórico.</h1>
-        <p className="mt-4 max-w-3xl text-sm leading-relaxed text-white/58">
+    <div className="mx-auto max-w-7xl space-y-6">
+      <section className="rounded-3xl border border-[#EAE1E4] bg-white p-6 shadow-sm sm:p-8">
+        <p className="text-[11px] font-bold uppercase tracking-[0.22em] text-[#B84C6B]">Comunicação de base</p>
+        <h1 className="mt-2 font-brand-display text-3xl font-semibold tracking-tight text-[#23141C] sm:text-4xl">
+          Comunique a base com segmentação simples e histórico
+        </h1>
+        <p className="mt-2.5 max-w-3xl text-sm leading-relaxed text-[#6B5761]">
           Envie avisos por plano ou status, acompanhe campanhas recentes e mantenha relacionamento operacional com os salões.
         </p>
       </section>
 
       <section className="grid gap-6 xl:grid-cols-[1fr_0.9fr]">
-        <form onSubmit={handleSubmit} className="rounded-[2rem] border border-white/6 bg-[#231b22] p-6 space-y-5">
-          <div className="flex items-center gap-3">
-            <Megaphone className="h-5 w-5 text-[#efb1bb]" />
-            <h2 className="text-lg font-black text-white">Novo comunicado</h2>
+        <form onSubmit={handleSubmit} className="space-y-4 rounded-3xl border border-[#EAE1E4] bg-white p-6 shadow-sm">
+          <div className="flex items-center gap-2.5">
+            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-[#FDF7F9] text-[#B84C6B]">
+              <Megaphone className="h-4 w-4" />
+            </div>
+            <h2 className="text-base font-bold text-[#23141C]">Novo comunicado</h2>
           </div>
 
-          <div className="grid gap-4 md:grid-cols-2">
+          <div className="grid gap-3 md:grid-cols-2">
             <Select
               label="Plano"
               value={form.filtroPlano}
@@ -101,47 +105,47 @@ export default function SuperAdminComunicacao() {
           <Field label="Assunto" value={form.assunto} onChange={(value) => setForm((prev) => ({ ...prev, assunto: value }))} />
 
           <div>
-            <label className="mb-2 block text-[10px] font-black uppercase tracking-[0.22em] text-white/42">Mensagem</label>
+            <label className="mb-1.5 block text-[11px] font-bold uppercase tracking-[0.14em] text-[#6B5761]">Mensagem</label>
             <textarea
-              rows={8}
+              rows={7}
               value={form.mensagem}
               onChange={(event) => setForm((prev) => ({ ...prev, mensagem: event.target.value }))}
-              className="w-full rounded-[1.4rem] border border-white/8 bg-[#332832] px-4 py-3 text-sm text-white outline-none placeholder:text-white/28 focus:border-[#e29ba8]/28"
+              className="w-full rounded-xl border border-[#E2D5DA] bg-[#FAF7F5] px-4 py-3 text-sm text-[#23141C] outline-none transition placeholder:text-[#9E8792] focus:border-[#B84C6B] focus:bg-white"
               placeholder="Escreva aqui a mensagem que será enviada para os salões."
               required
             />
           </div>
 
           {feedback && (
-            <div className={`rounded-[1rem] px-4 py-3 text-sm ${feedback.includes('sucesso') ? 'border border-emerald-500/20 bg-emerald-500/10 text-emerald-200' : 'border border-red-500/20 bg-red-500/10 text-red-200'}`}>
+            <div className={`rounded-xl border px-4 py-3 text-sm font-medium ${feedback.includes('sucesso') ? 'border-emerald-200 bg-emerald-50 text-emerald-700' : 'border-rose-200 bg-rose-50 text-rose-700'}`}>
               {feedback}
             </div>
           )}
 
-          <button type="submit" disabled={sending} className="brand-button-primary inline-flex items-center justify-center gap-3 rounded-[1.3rem] px-6 py-4 text-[11px] font-black uppercase tracking-[0.24em]">
+          <button type="submit" disabled={sending} className="inline-flex items-center justify-center gap-2 rounded-xl bg-[#B84C6B] px-6 py-3.5 text-xs font-bold text-white transition hover:bg-[#9E3E5A] disabled:opacity-60">
             {sending ? 'Enviando...' : 'Enviar comunicado'}
             <Send className="h-4 w-4" />
           </button>
         </form>
 
-        <div className="rounded-[2rem] border border-white/6 bg-[#231b22] p-6">
-          <h2 className="text-lg font-black text-white">Histórico recente</h2>
-          <div className="mt-5 space-y-3">
+        <div className="rounded-3xl border border-[#EAE1E4] bg-white p-6 shadow-sm">
+          <h2 className="text-base font-bold text-[#23141C]">Histórico recente</h2>
+          <div className="mt-4 space-y-3">
             {history.length === 0 && <EmptyCopy text="Nenhuma campanha registrada ainda." />}
             {history.map((item) => (
-              <div key={item.id} className="rounded-[1.3rem] border border-white/6 bg-black/16 p-4">
-                <div className="flex items-start justify-between gap-4">
+              <div key={item.id} className="rounded-2xl border border-[#EFE7EA] bg-[#FAF7F5] p-4">
+                <div className="flex items-start justify-between gap-3">
                   <div className="min-w-0">
-                    <p className="truncate text-sm font-semibold text-white">{item.assunto}</p>
-                    <p className="mt-1 text-xs text-white/42">
+                    <p className="truncate text-sm font-bold text-[#23141C]">{item.assunto}</p>
+                    <p className="mt-1 text-xs text-[#6B5761]">
                       {new Date(item.createdAt).toLocaleString('pt-BR')} · plano {item.filtroPlano || 'todos'} · status {item.filtroStatus || 'todos'}
                     </p>
                   </div>
-                  <span className="rounded-full border border-white/8 bg-white/[0.05] px-2 py-1 text-[10px] font-black uppercase tracking-[0.16em] text-[#efb1bb]">
+                  <span className="shrink-0 rounded-full border border-[#F0D5DE] bg-[#FDF7F9] px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-[0.12em] text-[#B84C6B]">
                     {item.enviados} envios
                   </span>
                 </div>
-                <p className="mt-3 line-clamp-3 text-sm leading-relaxed text-white/58">{item.mensagem}</p>
+                <p className="mt-2.5 line-clamp-3 text-xs leading-relaxed text-[#6B5761]">{item.mensagem}</p>
               </div>
             ))}
           </div>
@@ -154,11 +158,11 @@ export default function SuperAdminComunicacao() {
 function Field({ label, value, onChange }) {
   return (
     <div>
-      <label className="mb-2 block text-[10px] font-black uppercase tracking-[0.22em] text-white/42">{label}</label>
+      <label className="mb-1.5 block text-[11px] font-bold uppercase tracking-[0.14em] text-[#6B5761]">{label}</label>
       <input
         value={value}
         onChange={(event) => onChange(event.target.value)}
-        className="w-full rounded-[1.25rem] border border-white/8 bg-[#332832] px-4 py-3 text-sm text-white outline-none focus:border-[#e29ba8]/28"
+        className="w-full rounded-xl border border-[#E2D5DA] bg-[#FAF7F5] px-4 py-2.5 text-sm text-[#23141C] outline-none transition focus:border-[#B84C6B] focus:bg-white"
         required
       />
     </div>
@@ -168,11 +172,11 @@ function Field({ label, value, onChange }) {
 function Select({ label, value, onChange, options }) {
   return (
     <div>
-      <label className="mb-2 block text-[10px] font-black uppercase tracking-[0.22em] text-white/42">{label}</label>
+      <label className="mb-1.5 block text-[11px] font-bold uppercase tracking-[0.14em] text-[#6B5761]">{label}</label>
       <select
         value={value}
         onChange={(event) => onChange(event.target.value)}
-        className="w-full rounded-[1.25rem] border border-white/8 bg-[#332832] px-4 py-3 text-sm text-white outline-none focus:border-[#e29ba8]/28"
+        className="w-full rounded-xl border border-[#E2D5DA] bg-[#FAF7F5] px-4 py-2.5 text-sm text-[#23141C] outline-none transition focus:border-[#B84C6B] focus:bg-white"
       >
         {options.map((option) => (
           <option key={option.value} value={option.value}>{option.label}</option>
@@ -183,12 +187,12 @@ function Select({ label, value, onChange, options }) {
 }
 
 function EmptyCopy({ text }) {
-  return <div className="rounded-[1.3rem] border border-white/6 bg-black/16 px-4 py-6 text-sm text-white/48">{text}</div>;
+  return <div className="rounded-2xl border border-[#EFE7EA] bg-[#FAF7F5] px-4 py-6 text-center text-sm text-[#6B5761]">{text}</div>;
 }
 
 function StateBox({ message, error = false }) {
   return (
-    <div className={`rounded-[2rem] border px-6 py-16 text-center ${error ? 'border-red-500/20 bg-red-500/10 text-red-200' : 'border-white/6 bg-[#231b22] text-white/54'}`}>
+    <div className={`rounded-3xl border px-6 py-16 text-center text-sm font-medium ${error ? 'border-rose-200 bg-rose-50 text-rose-700' : 'border-[#EAE1E4] bg-white text-[#6B5761]'}`}>
       {message}
     </div>
   );

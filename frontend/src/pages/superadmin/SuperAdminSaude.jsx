@@ -16,11 +16,13 @@ export default function SuperAdminSaude() {
   if (error) return <StateBox message={error} error />;
 
   return (
-    <div className="mx-auto max-w-7xl space-y-8">
-      <section className="rounded-[2.5rem] border border-white/6 bg-[#231b22] p-6 sm:p-8">
-        <p className="brand-kicker">Saúde da base</p>
-        <h1 className="mt-3 font-brand-display text-5xl leading-none text-white">Risco, adoção e onboarding por salão</h1>
-        <p className="mt-4 max-w-3xl text-sm leading-relaxed text-white/58">
+    <div className="mx-auto max-w-7xl space-y-6">
+      <section className="rounded-3xl border border-[#EAE1E4] bg-white p-6 shadow-sm sm:p-8">
+        <p className="text-[11px] font-bold uppercase tracking-[0.22em] text-[#B84C6B]">Saúde da base</p>
+        <h1 className="mt-2 font-brand-display text-3xl font-semibold tracking-tight text-[#23141C] sm:text-4xl">
+          Risco, adoção e onboarding por salão
+        </h1>
+        <p className="mt-2.5 max-w-3xl text-sm leading-relaxed text-[#6B5761]">
           Priorize quem precisa de recuperação, implantação ou atenção comercial antes que o churn apareça.
         </p>
       </section>
@@ -31,9 +33,9 @@ export default function SuperAdminSaude() {
         <Metric title="Críticos" value={insights.criticalCount} tone="red" />
       </section>
 
-      <section className="rounded-[2rem] border border-white/6 bg-[#231b22] p-6">
+      <section className="rounded-3xl border border-[#EAE1E4] bg-white p-6 shadow-sm">
         <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-          <h2 className="text-lg font-black text-white">Mapa da saúde operacional</h2>
+          <h2 className="text-base font-bold text-[#23141C]">Mapa da saúde operacional</h2>
           <div className="flex flex-wrap gap-2">
             {[
               { value: '', label: 'Todos' },
@@ -44,7 +46,11 @@ export default function SuperAdminSaude() {
               <button
                 key={option.value || 'all'}
                 onClick={() => setFilter(option.value)}
-                className={`rounded-[1rem] px-4 py-2 text-[10px] font-black uppercase tracking-[0.18em] ${filter === option.value ? 'bg-[#de97a5] text-white' : 'bg-white/[0.05] text-white/60'}`}
+                className={`rounded-xl px-4 py-2 text-xs font-bold transition ${
+                  filter === option.value
+                    ? 'bg-[#23141C] text-white'
+                    : 'border border-[#EAE1E4] bg-[#FAF7F5] text-[#6B5761] hover:text-[#23141C]'
+                }`}
               >
                 {option.label}
               </button>
@@ -54,19 +60,19 @@ export default function SuperAdminSaude() {
 
         <div className="mt-6 space-y-3">
           {rows.map((salao) => (
-            <div key={salao.id} className="rounded-[1.5rem] border border-white/6 bg-black/16 p-4">
+            <div key={salao.id} className="rounded-2xl border border-[#EFE7EA] bg-[#FAF7F5] p-4">
               <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
                 <div className="min-w-0">
-                  <div className="flex items-center gap-3">
-                    <p className="truncate text-base font-semibold text-white">{salao.nome}</p>
-                    <span className={`rounded-full border px-3 py-1 text-[10px] font-black uppercase tracking-[0.16em] ${healthBadge(salao.health)}`}>
+                  <div className="flex flex-wrap items-center gap-2.5">
+                    <p className="truncate text-base font-bold text-[#23141C]">{salao.nome}</p>
+                    <span className={`rounded-full border px-3 py-0.5 text-[10px] font-bold uppercase tracking-[0.14em] ${healthBadge(salao.health)}`}>
                       {salao.health}
                     </span>
                   </div>
-                  <p className="mt-2 text-sm text-white/44">/{salao.slug}</p>
+                  <p className="mt-1 text-xs text-[#6B5761]">/{salao.slug}</p>
                 </div>
 
-                <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+                <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-4">
                   <MiniStat label="Risco" value={salao.riskScore} />
                   <MiniStat label="Onboarding" value={`${salao.onboardingScore || 0}/5`} />
                   <MiniStat label="Adoção" value={`${salao.adoptionRate}%`} />
@@ -75,7 +81,11 @@ export default function SuperAdminSaude() {
               </div>
             </div>
           ))}
-          {rows.length === 0 && <div className="rounded-[1.4rem] border border-white/6 bg-black/16 px-4 py-6 text-sm text-white/48">Nenhum salão encontrado para esse filtro.</div>}
+          {rows.length === 0 && (
+            <div className="rounded-2xl border border-[#EFE7EA] bg-[#FAF7F5] px-4 py-8 text-center text-sm text-[#6B5761]">
+              Nenhum salão encontrado para esse filtro.
+            </div>
+          )}
         </div>
       </section>
     </div>
@@ -84,30 +94,30 @@ export default function SuperAdminSaude() {
 
 function Metric({ title, value, tone }) {
   const tones = {
-    emerald: 'border-emerald-500/20 bg-emerald-500/10 text-emerald-200',
-    amber: 'border-amber-500/20 bg-amber-500/10 text-amber-200',
-    red: 'border-red-500/20 bg-red-500/10 text-red-200',
+    emerald: 'border-emerald-200 bg-emerald-50 text-emerald-800',
+    amber: 'border-amber-200 bg-amber-50 text-amber-800',
+    red: 'border-rose-200 bg-rose-50 text-rose-800',
   };
   return (
-    <div className={`rounded-[2rem] border p-6 ${tones[tone]}`}>
-      <p className="text-3xl font-black">{value}</p>
-      <p className="mt-2 text-[10px] font-black uppercase tracking-[0.22em]">{title}</p>
+    <div className={`rounded-3xl border p-6 ${tones[tone]}`}>
+      <p className="text-3xl font-bold">{value}</p>
+      <p className="mt-1.5 text-xs font-bold uppercase tracking-[0.16em]">{title}</p>
     </div>
   );
 }
 
 function MiniStat({ label, value }) {
   return (
-    <div className="rounded-[1rem] border border-white/6 bg-white/[0.03] px-3 py-3 text-center">
-      <p className="text-sm font-black text-white">{value}</p>
-      <p className="mt-1 text-[10px] font-black uppercase tracking-[0.18em] text-white/34">{label}</p>
+    <div className="rounded-xl border border-[#EAE1E4] bg-white px-3.5 py-2.5 text-center">
+      <p className="text-sm font-bold text-[#23141C]">{value}</p>
+      <p className="mt-0.5 text-[10px] font-bold uppercase tracking-[0.14em] text-[#8E7682]">{label}</p>
     </div>
   );
 }
 
 function StateBox({ message, error = false }) {
   return (
-    <div className={`rounded-[2rem] border px-6 py-16 text-center ${error ? 'border-red-500/20 bg-red-500/10 text-red-200' : 'border-white/6 bg-[#231b22] text-white/54'}`}>
+    <div className={`rounded-3xl border px-6 py-16 text-center text-sm font-medium ${error ? 'border-rose-200 bg-rose-50 text-rose-700' : 'border-[#EAE1E4] bg-white text-[#6B5761]'}`}>
       {message}
     </div>
   );

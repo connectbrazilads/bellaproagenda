@@ -1,7 +1,7 @@
 import React, { useMemo, useState } from 'react';
 import { criarAgendamentoPublico, criarAgendamentoPublicoMultiplo } from '../../services/api';
 
-export default function StepConfirmacao({ booking, back, cor, salao, onSuccess }) {
+export default function StepConfirmacao({ booking, back, onSuccess }) {
   const [loading, setLoading] = useState(false);
   const [erro, setErro] = useState('');
   const dataFormatada = booking.data
@@ -61,74 +61,90 @@ export default function StepConfirmacao({ booking, back, cor, salao, onSuccess }
   }
 
   return (
-    <div className="space-y-8">
-      <div className="glass-card-neon space-y-6 rounded-[2.5rem] p-8">
+    <div className="space-y-6">
+      <div className="space-y-5 rounded-2xl border border-[#EAE1E4] bg-[#FAF7F5] p-5 sm:p-6">
         {booking.multiProfissional && (
-          <div className="rounded-2xl border border-[#d4af37]/30 bg-[#d4af37]/10 px-5 py-4 text-[11px] font-light leading-relaxed text-[#f4ecd8] backdrop-blur-sm">
-            Cada serviço será executado pelo especialista escolhido. Tudo ficará centralizado na mesma comanda para sua conveniência.
+          <div className="rounded-xl border border-[#F0D5DE] bg-[#FDF7F9] px-4 py-3 text-xs leading-relaxed text-[#6B5761]">
+            Cada serviço será executado pelo especialista escolhido, tudo centralizado na mesma comanda.
           </div>
         )}
 
-        <div className="border-b border-[#d4af37]/20 pb-4">
-          <span className="mb-3 block text-[9px] font-black uppercase tracking-[0.3em] text-[#8a6c74]">Serviços Selecionados</span>
-          <div className="space-y-3">
+        <div className="border-b border-[#EAE1E4] pb-4">
+          <span className="mb-3 block text-[11px] font-bold uppercase tracking-[0.18em] text-[#8E7682]">
+            Serviços Selecionados
+          </span>
+          <div className="space-y-2.5">
             {(booking.multiProfissional ? booking.multiItens : booking.servicos).map((item) => (
               <div key={item.servicoId || item.id} className="flex items-start justify-between gap-4">
                 <div>
-                  <span className="text-sm font-brand-display font-black text-[#f4ecd8] uppercase tracking-tight">{item.servicoNome || item.nome}</span>
+                  <span className="text-sm font-bold text-[#23141C]">{item.servicoNome || item.nome}</span>
                   {booking.multiProfissional && (
-                    <p className="mt-1 text-[9px] font-black uppercase tracking-[0.2em] text-[#b299a0]">
-                      {item.profissionalNome} · <span className="text-[#d4af37]">{item.hora}</span>
+                    <p className="mt-0.5 text-xs text-[#6B5761]">
+                      {item.profissionalNome} · <span className="font-bold text-[#B84C6B]">{item.hora}</span>
                     </p>
                   )}
                 </div>
-                <span className="text-sm font-brand-display font-black text-[#d4af37]">R$ {Number(item.preco || 0).toFixed(2).replace('.', ',')}</span>
+                <span className="text-sm font-bold text-[#23141C]">
+                  R$ {Number(item.preco || 0).toFixed(2).replace('.', ',')}
+                </span>
               </div>
             ))}
-            <div className="mt-4 flex items-center justify-between border-t border-dashed border-white/10 pt-4">
-              <span className="text-[10px] font-black uppercase tracking-widest text-[#b299a0]">Investimento</span>
-              <span className="text-xl font-brand-display font-black text-[#d4af37]">R$ {total.toFixed(2).replace('.', ',')}</span>
+            <div className="mt-3 flex items-center justify-between border-t border-dashed border-[#D9C6CE] pt-3">
+              <span className="text-xs font-bold uppercase tracking-[0.14em] text-[#6B5761]">Total estimado</span>
+              <span className="text-xl font-bold text-[#B84C6B]">R$ {total.toFixed(2).replace('.', ',')}</span>
             </div>
           </div>
         </div>
 
-        <div className="flex justify-between border-b border-[#d4af37]/20 pb-4">
-          <span className="text-[10px] font-black uppercase tracking-[0.3em] text-[#8a6c74]">Data</span>
-          <span className="text-right text-xs font-brand-display font-black uppercase tracking-widest text-[#f4ecd8]">{dataFormatada}</span>
+        <div className="flex items-center justify-between border-b border-[#EAE1E4] pb-3">
+          <span className="text-xs font-bold uppercase tracking-[0.14em] text-[#8E7682]">Data</span>
+          <span className="text-right text-sm font-bold capitalize text-[#23141C]">{dataFormatada}</span>
         </div>
 
         {!booking.multiProfissional && (
-          <div className="flex justify-between border-b border-[#d4af37]/20 pb-4">
-            <span className="text-[10px] font-black uppercase tracking-[0.3em] text-[#8a6c74]">Profissional</span>
-            <span className="text-xs font-brand-display font-black uppercase tracking-widest text-[#f4ecd8]">{booking.profissional.nome}</span>
+          <div className="flex items-center justify-between border-b border-[#EAE1E4] pb-3">
+            <span className="text-xs font-bold uppercase tracking-[0.14em] text-[#8E7682]">Profissional</span>
+            <span className="text-sm font-bold text-[#23141C]">{booking.profissional.nome}</span>
           </div>
         )}
 
         {!booking.multiProfissional && (
-          <div className="flex justify-between">
-            <span className="text-[10px] font-black uppercase tracking-[0.3em] text-[#8a6c74]">Horário</span>
-            <span className="text-xs font-brand-display font-black uppercase tracking-widest text-[#d4af37]">{booking.hora}</span>
+          <div className="flex items-center justify-between border-b border-[#EAE1E4] pb-3">
+            <span className="text-xs font-bold uppercase tracking-[0.14em] text-[#8E7682]">Horário</span>
+            <span className="text-sm font-bold text-[#B84C6B]">{booking.hora}</span>
           </div>
         )}
+
+        <div className="flex items-center justify-between">
+          <span className="text-xs font-bold uppercase tracking-[0.14em] text-[#8E7682]">Cliente</span>
+          <span className="text-right text-sm font-semibold text-[#23141C]">
+            {booking.clienteNome} · {booking.clienteTelefone}
+          </span>
+        </div>
       </div>
 
-      {erro && <p className="text-center text-[11px] font-black uppercase tracking-[0.1em] text-rose-400 bg-rose-500/10 p-4 rounded-xl border border-rose-500/20">{erro}</p>}
+      {erro && (
+        <p className="rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-center text-xs font-semibold text-rose-700">
+          {erro}
+        </p>
+      )}
 
-      <div className="flex flex-col gap-4 sm:flex-row">
+      <div className="flex flex-col gap-3 sm:flex-row">
         <button
           onClick={back}
           type="button"
           disabled={loading}
-          className="premium-btn-secondary w-full sm:w-1/3 text-sm py-5 disabled:opacity-50 disabled:cursor-not-allowed"
+          className="w-full rounded-2xl border border-[#E2D5DA] bg-white py-3.5 text-sm font-bold text-[#23141C] transition hover:border-[#B84C6B] hover:text-[#B84C6B] disabled:cursor-not-allowed disabled:opacity-50 sm:w-1/3"
         >
           Voltar
         </button>
         <button
           onClick={finalizar}
+          type="button"
           disabled={loading}
-          className="premium-btn-primary w-full sm:w-2/3 text-sm py-5 disabled:opacity-50 disabled:filter-grayscale"
+          className="w-full rounded-2xl bg-[#23141C] py-3.5 text-sm font-bold text-white transition hover:bg-[#3A222E] disabled:opacity-50 sm:w-2/3"
         >
-          {loading ? 'Processando...' : 'Confirmar Agendamento'}
+          {loading ? 'Confirmando...' : 'Confirmar Agendamento'}
         </button>
       </div>
     </div>

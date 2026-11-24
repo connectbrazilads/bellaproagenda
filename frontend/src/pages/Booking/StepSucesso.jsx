@@ -2,7 +2,7 @@ import React, { useMemo } from 'react';
 import { motion } from 'framer-motion';
 import { Check, Calendar, User, Phone, Share2, Heart } from 'lucide-react';
 
-export default function StepSucesso({ agendamento, salao, cor }) {
+export default function StepSucesso({ agendamento, salao }) {
   const listaAgendamentos = useMemo(() => agendamento?.agendamentos || [], [agendamento]);
   const agendamentoBase = listaAgendamentos[0] || agendamento;
   const dataBruta = agendamentoBase?.data;
@@ -32,102 +32,108 @@ export default function StepSucesso({ agendamento, salao, cor }) {
     : [];
 
   return (
-    <div className="flex items-center justify-center overflow-x-hidden">
+    <div className="flex min-h-screen items-center justify-center bg-[#FAF7F5] px-4 py-10 text-[#23141C] sm:px-6">
       <motion.div
-        initial={{ opacity: 0, scale: 0.94 }}
+        initial={{ opacity: 0, scale: 0.97 }}
         animate={{ opacity: 1, scale: 1 }}
-        className="max-w-xl w-full text-center relative overflow-hidden"
+        className="w-full max-w-xl text-center"
       >
-        <div className="relative z-10 py-10">
-          <div className="w-24 h-24 rounded-full flex items-center justify-center bg-gradient-to-tr from-[#d4af37] to-[#e4c96b] text-black mx-auto mb-10 shadow-[0_0_40px_rgba(212,175,55,0.4)]">
-            <Check size={44} strokeWidth={3} />
-          </div>
-
-          <h1 className="text-4xl md:text-5xl font-brand-display font-black text-[#f4ecd8] mb-4 tracking-tighter uppercase leading-none">Tudo Pronto!</h1>
-          <p className="text-[#b299a0] text-sm mb-12 max-w-xs mx-auto">
-            Sua reserva foi criada com sucesso. Preparamos tudo para te receber de forma exclusiva!
-          </p>
-
-          <div className="glass-card-neon rounded-[2.5rem] p-8 text-left space-y-6 mb-10 border border-[#d4af37]/20">
-            <div className="flex items-start gap-5">
-              <div className="p-3 rounded-2xl bg-[#d4af37]/10 text-[#d4af37]">
-                <Calendar className="w-5 h-5" />
-              </div>
-              <div>
-                <p className="text-xs font-semibold text-[#a88b94] uppercase tracking-wider mb-1">Data e horário</p>
-                <p className="text-lg font-brand-display font-black text-[#f4ecd8] tracking-tight">{dataFormatada} - <span className="text-[#d4af37]">{horarioResumo}</span></p>
-              </div>
-            </div>
-
-            <div className="flex items-start gap-5">
-              <div className="p-3 rounded-2xl bg-[#d4af37]/10 text-[#d4af37]">
-                <Heart className="w-5 h-5" />
-              </div>
-              <div>
-                <p className="text-xs font-semibold text-[#a88b94] uppercase tracking-wider mb-1">Serviços</p>
-                <p className="text-lg font-brand-display font-black text-[#f4ecd8] tracking-tight uppercase">{nomeServico}</p>
-              </div>
-            </div>
-
-            <div className="flex items-start gap-5">
-              <div className="p-3 rounded-2xl bg-[#d4af37]/10 text-[#d4af37]">
-                <User className="w-5 h-5" />
-              </div>
-              <div>
-                <p className="text-xs font-semibold text-[#a88b94] uppercase tracking-wider mb-1">Especialista</p>
-                <p className="text-lg font-brand-display font-black text-[#f4ecd8] tracking-tight uppercase">{nomeProfissional}</p>
-              </div>
-            </div>
-
-            {itensResumo.length > 1 && (
-              <div className="rounded-[2rem] border border-[#d4af37]/20 bg-black/40 px-5 py-5 mt-8">
-                <p className="text-xs font-semibold uppercase tracking-wider text-[#a88b94]">Itens da comanda</p>
-                <div className="mt-4 space-y-3">
-                  {itensResumo.map((item) => (
-                    <div key={item.id} className="rounded-2xl border border-white/5 bg-black/60 px-4 py-4 flex justify-between items-center">
-                      <p className="text-xs font-brand-display font-black uppercase tracking-tight text-[#f4ecd8]">{item.titulo}</p>
-                      <p className="text-xs font-semibold uppercase tracking-wider text-[#b299a0]">
-                        {item.profissional} - <span className="text-[#d4af37]">{item.hora}</span>
-                      </p>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-          </div>
-
-          <div className="space-y-4">
-            <button
-              onClick={() => {
-                const text = encodeURIComponent(`Olá! Acabei de marcar um horário em ${salao?.nome || 'seu salão'} para ${nomeServico} dia ${dataFormatada} às ${horarioResumo}.`);
-                window.open(`https://wa.me/${salao?.whatsapp || salao?.telefone || ''}?text=${text}`, '_blank');
-              }}
-              className="w-full py-5 rounded-[2rem] bg-gradient-to-r from-[#25D366] to-[#1DA851] text-white font-bold uppercase tracking-wider text-xs flex items-center justify-center gap-3 shadow-[0_10px_20px_-10px_rgba(37,211,102,0.5)] hover:scale-[1.02] transition-all border border-white/20"
-            >
-              <Share2 size={18} /> Confirmar no WhatsApp do Salão
-            </button>
-
-            <button
-              onClick={() => window.location.reload()}
-              className="premium-btn-secondary w-full py-5 text-xs tracking-wider font-semibold"
-            >
-              Fazer novo agendamento
-            </button>
-          </div>
-
-          <div className="mt-12 pt-8 border-t border-white/10 flex flex-col items-center gap-4">
-            <p className="text-xs font-semibold text-[#a88b94] uppercase tracking-wider">Dúvidas ou cancelamentos?</p>
-            {salao?.telefone && (
-              <a
-                href={`tel:${salao.telefone}`}
-                className="flex items-center gap-3 px-8 py-4 rounded-full bg-black/60 border border-[#d4af37]/20 shadow-[0_0_15px_rgba(212,175,55,0.05)] text-[#d4af37] hover:bg-[#d4af37]/10 transition-colors"
-              >
-                <Phone size={16} />
-                <span className="text-sm font-brand-display font-semibold tracking-wider">{salao.telefone}</span>
-              </a>
-            )}
-          </div>
+        <div className="mx-auto mb-6 flex h-20 w-20 items-center justify-center rounded-full bg-emerald-600 text-white shadow-sm">
+          <Check size={38} strokeWidth={2.8} />
         </div>
+
+        <p className="text-[11px] font-bold uppercase tracking-[0.22em] text-emerald-700">Reserva confirmada</p>
+        <h1 className="mt-2 font-brand-display text-4xl font-semibold tracking-tight text-[#23141C] sm:text-5xl">
+          Tudo Pronto!
+        </h1>
+        <p className="mx-auto mt-3 max-w-sm text-sm leading-relaxed text-[#6B5761]">
+          Sua reserva foi criada com sucesso em <strong className="text-[#23141C]">{salao?.nome}</strong>. Esperamos por você!
+        </p>
+
+        <div className="mt-8 space-y-5 rounded-3xl border border-[#EAE1E4] bg-white p-6 text-left shadow-sm sm:p-7">
+          <div className="flex items-start gap-4">
+            <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-[#FDF7F9] text-[#B84C6B]">
+              <Calendar className="h-5 w-5" />
+            </div>
+            <div>
+              <p className="text-[11px] font-bold uppercase tracking-[0.14em] text-[#8E7682]">Data e horário</p>
+              <p className="mt-0.5 text-base font-bold text-[#23141C]">
+                {dataFormatada} · <span className="text-[#B84C6B]">{horarioResumo}</span>
+              </p>
+            </div>
+          </div>
+
+          <div className="flex items-start gap-4">
+            <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-[#FDF7F9] text-[#B84C6B]">
+              <Heart className="h-5 w-5" />
+            </div>
+            <div>
+              <p className="text-[11px] font-bold uppercase tracking-[0.14em] text-[#8E7682]">Serviços</p>
+              <p className="mt-0.5 text-base font-bold text-[#23141C]">{nomeServico}</p>
+            </div>
+          </div>
+
+          <div className="flex items-start gap-4">
+            <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-[#FDF7F9] text-[#B84C6B]">
+              <User className="h-5 w-5" />
+            </div>
+            <div>
+              <p className="text-[11px] font-bold uppercase tracking-[0.14em] text-[#8E7682]">Especialista</p>
+              <p className="mt-0.5 text-base font-bold text-[#23141C]">{nomeProfissional}</p>
+            </div>
+          </div>
+
+          {itensResumo.length > 1 && (
+            <div className="rounded-2xl border border-[#EAE1E4] bg-[#FAF7F5] p-4">
+              <p className="text-[11px] font-bold uppercase tracking-[0.14em] text-[#8E7682]">Itens da comanda</p>
+              <div className="mt-3 space-y-2">
+                {itensResumo.map((item) => (
+                  <div key={item.id} className="flex items-center justify-between rounded-xl border border-[#EAE1E4] bg-white px-3.5 py-2.5 text-xs">
+                    <span className="font-bold text-[#23141C]">{item.titulo}</span>
+                    <span className="text-[#6B5761]">
+                      {item.profissional} · <strong className="text-[#B84C6B]">{item.hora}</strong>
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+
+        <div className="mt-6 space-y-3">
+          <button
+            type="button"
+            onClick={() => {
+              const text = encodeURIComponent(`Olá! Acabei de marcar um horário em ${salao?.nome || 'seu salão'} para ${nomeServico} dia ${dataFormatada} às ${horarioResumo}.`);
+              window.open(`https://wa.me/${salao?.whatsapp || salao?.telefone || ''}?text=${text}`, '_blank');
+            }}
+            className="flex w-full items-center justify-center gap-2.5 rounded-2xl bg-[#1DA851] py-4 text-sm font-bold text-white shadow-sm transition hover:bg-[#179045]"
+          >
+            <Share2 size={18} />
+            Confirmar no WhatsApp do Salão
+          </button>
+
+          <button
+            type="button"
+            onClick={() => window.location.reload()}
+            className="w-full rounded-2xl border border-[#E2D5DA] bg-white py-3.5 text-sm font-bold text-[#23141C] transition hover:border-[#B84C6B] hover:text-[#B84C6B]"
+          >
+            Fazer novo agendamento
+          </button>
+        </div>
+
+        {salao?.telefone && (
+          <div className="mt-8 flex flex-col items-center gap-2 border-t border-[#EAE1E4] pt-6">
+            <p className="text-xs font-medium text-[#8E7682]">Dúvidas ou reagendamentos?</p>
+            <a
+              href={`tel:${salao.telefone}`}
+              className="inline-flex items-center gap-2 rounded-full border border-[#EAE1E4] bg-white px-5 py-2.5 text-sm font-semibold text-[#23141C] transition hover:border-[#B84C6B] hover:text-[#B84C6B]"
+            >
+              <Phone size={15} className="text-[#B84C6B]" />
+              <span>{salao.telefone}</span>
+            </a>
+          </div>
+        )}
       </motion.div>
     </div>
   );

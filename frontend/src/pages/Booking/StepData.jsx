@@ -1,11 +1,10 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { motion } from 'framer-motion';
 import { ChevronLeft, ChevronRight, Calendar as CalendarIcon, User, Users } from 'lucide-react';
 import { getDatasDisponiveis } from '../../services/api';
 import { cn } from '../../lib/utils';
 
-const DIAS_SEMANA = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sab'];
-const MESES = ['Janeiro', 'Fevereiro', 'Marco', 'Abril', 'Maio', 'Junho', 'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'];
+const DIAS_SEMANA = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
+const MESES = ['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', 'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'];
 
 function intersectDateLists(lists) {
   if (!lists.length) return [];
@@ -13,7 +12,7 @@ function intersectDateLists(lists) {
   return first.filter((date) => rest.every((list) => list.includes(date)));
 }
 
-export default function StepData({ booking, set, next, cor }) {
+export default function StepData({ booking, set, next }) {
   const hoje = new Date();
   hoje.setHours(0, 0, 0, 0);
 
@@ -122,7 +121,7 @@ export default function StepData({ booking, set, next, cor }) {
       } catch (error) {
         if (cancelado) return;
         setDatasDisponiveis([]);
-        setErroDisponibilidade(error.response?.data?.error || 'Nao foi possivel consultar a agenda desta selecao.');
+        setErroDisponibilidade(error.response?.data?.error || 'Não foi possível consultar a agenda desta seleção.');
       } finally {
         if (!cancelado) setLoadingDisponibilidade(false);
       }
@@ -138,70 +137,65 @@ export default function StepData({ booking, set, next, cor }) {
     ? new Date(`${booking.data}T00:00:00`)
     : null;
 
+  const isPrevDisabled = ano < hoje.getFullYear() || (ano === hoje.getFullYear() && mais <= hoje.getMonth());
+
   return (
-    <div className="space-y-8 pb-6">
-      <div className="flex items-center gap-5 rounded-[2rem] border border-[#d4af37]/20 bg-black/40 p-5 backdrop-blur-md">
-        <div className="flex h-14 w-14 flex-shrink-0 items-center justify-center overflow-hidden rounded-2xl border border-white/5 bg-black/60 shadow-[0_0_15px_rgba(212,175,55,0.15)]">
+    <div className="space-y-6">
+      <div className="flex items-center gap-4 rounded-2xl border border-[#EAE1E4] bg-[#FAF7F5] p-4">
+        <div className="flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-xl border border-[#EAE1E4] bg-white">
           {booking.multiProfissional ? (
-            <Users size={24} className="text-[#d4af37]" />
+            <Users size={20} className="text-[#B84C6B]" />
           ) : booking.profissional?.fotoUrl ? (
             <img src={booking.profissional.fotoUrl} alt={booking.profissional.nome} className="h-full w-full object-cover" />
           ) : (
-            <div className="flex h-full w-full items-center justify-center bg-black/40 text-[#8a6c74]">
-              <User size={24} />
-            </div>
+            <User size={20} className="text-[#8E7682]" />
           )}
         </div>
         <div>
-          <p className="mb-1 text-[10px] font-black uppercase tracking-[0.2em] text-[#b299a0]">
+          <p className="text-[11px] font-bold uppercase tracking-[0.16em] text-[#8E7682]">
             {booking.multiProfissional ? 'Com equipe' : 'Agendando com'}
           </p>
-          <p className="text-lg font-brand-display font-black uppercase leading-none tracking-tight text-[#f4ecd8]">
+          <p className="text-base font-bold text-[#23141C]">
             {booking.multiProfissional ? 'Especialistas por serviço' : booking.profissional?.nome}
           </p>
         </div>
       </div>
 
-      <div className="glass-card-neon overflow-hidden rounded-[2.5rem]">
-        <div className="relative overflow-hidden bg-black/60 p-8 border-b border-[#d4af37]/20">
-          <div className="absolute right-0 top-0 h-40 w-40 -translate-y-1/2 translate-x-1/2 rounded-full bg-[#d4af37]/10 blur-[40px]" />
+      <div className="overflow-hidden rounded-2xl border border-[#EAE1E4] bg-white">
+        <div className="flex items-center justify-between border-b border-[#EAE1E4] bg-[#FAF7F5] px-5 py-4">
+          <button
+            type="button"
+            onClick={mesAnterior}
+            disabled={isPrevDisabled}
+            className="flex h-10 w-10 items-center justify-center rounded-xl border border-[#E2D5DA] bg-white text-[#23141C] transition hover:border-[#B84C6B] hover:text-[#B84C6B] disabled:cursor-not-allowed disabled:opacity-35"
+          >
+            <ChevronLeft size={18} />
+          </button>
 
-          <div className="relative z-10 flex items-center justify-between">
-            <button
-              onClick={mesAnterior}
-              disabled={ano < hoje.getFullYear() || (ano === hoje.getFullYear() && mais <= hoje.getMonth())}
-              className={cn(
-                "flex h-12 w-12 items-center justify-center rounded-2xl border border-[#d4af37]/20 bg-[#d4af37]/5 transition-all text-[#f4ecd8] disabled:opacity-30 disabled:cursor-not-allowed",
-                !(ano < hoje.getFullYear() || (ano === hoje.getFullYear() && mais <= hoje.getMonth())) && "hover:bg-[#d4af37]/10 active:scale-95"
-              )}
-            >
-              <ChevronLeft size={20} strokeWidth={2.5} />
-            </button>
-
-            <div className="text-center">
-              <p className="mb-1 text-[10px] font-black uppercase tracking-[0.3em] text-[#b299a0]">{ano}</p>
-              <h3 className="text-xl font-brand-display font-black uppercase tracking-widest text-[#d4af37]">{MESES[mais]}</h3>
-            </div>
-
-            <button
-              onClick={proximoMes}
-              className="flex h-12 w-12 items-center justify-center rounded-2xl border border-[#d4af37]/20 bg-[#d4af37]/5 transition-all hover:bg-[#d4af37]/10 active:scale-95 text-[#f4ecd8]"
-            >
-              <ChevronRight size={20} strokeWidth={2.5} />
-            </button>
+          <div className="text-center">
+            <p className="text-[11px] font-bold uppercase tracking-[0.2em] text-[#8E7682]">{ano}</p>
+            <h3 className="font-brand-display text-xl font-semibold text-[#23141C]">{MESES[mais]}</h3>
           </div>
+
+          <button
+            type="button"
+            onClick={proximoMes}
+            className="flex h-10 w-10 items-center justify-center rounded-xl border border-[#E2D5DA] bg-white text-[#23141C] transition hover:border-[#B84C6B] hover:text-[#B84C6B]"
+          >
+            <ChevronRight size={18} />
+          </button>
         </div>
 
-        <div className="p-8 bg-black/20">
-          <div className="mb-6 grid grid-cols-7 gap-2">
+        <div className="p-4 sm:p-6">
+          <div className="mb-3 grid grid-cols-7 gap-2">
             {DIAS_SEMANA.map((d) => (
-              <div key={d} className="text-center text-[10px] font-black uppercase tracking-widest text-[#8a6c74]">
+              <div key={d} className="text-center text-[11px] font-bold uppercase tracking-wider text-[#8E7682]">
                 {d}
               </div>
             ))}
           </div>
 
-          <div className="grid grid-cols-7 gap-3">
+          <div className="grid grid-cols-7 gap-2">
             {Array.from({ length: primeiroDia }).map((_, i) => (
               <div key={`e-${i}`} />
             ))}
@@ -217,42 +211,41 @@ export default function StepData({ booking, set, next, cor }) {
                 && dataAtual.getFullYear() === ano;
 
               return (
-                <motion.button
+                <button
                   key={d}
-                  whileHover={!disabled ? { scale: 1.15, y: -2 } : {}}
-                  whileTap={!disabled ? { scale: 0.95 } : {}}
+                  type="button"
                   onClick={() => selecionar(d)}
                   disabled={disabled}
                   className={cn(
-                    'relative flex aspect-square flex-col items-center justify-center rounded-2xl text-sm font-black transition-all',
-                    selecionado ? 'z-10 border border-[#d4af37]' : !disabled ? 'hover:bg-[#d4af37]/10 border border-transparent hover:border-[#d4af37]/30' : ''
+                    'relative flex aspect-square flex-col items-center justify-center rounded-xl text-sm font-bold transition',
+                    selecionado
+                      ? 'bg-[#23141C] text-white shadow-sm'
+                      : !disabled
+                        ? 'border border-[#EAE1E4] bg-white text-[#23141C] hover:border-[#B84C6B] hover:bg-[#FDF7F9] hover:text-[#B84C6B]'
+                        : past
+                          ? 'cursor-not-allowed text-[#D5C9CE]'
+                          : 'cursor-not-allowed bg-[#FAF7F5] text-[#B8A8B0]',
+                    loadingDisponibilidade && !past && 'opacity-45'
                   )}
-                  style={{
-                    backgroundColor: selecionado ? '#d4af37' : 'transparent',
-                    boxShadow: selecionado ? '0 15px 30px -10px rgba(212,175,55,0.4)' : 'none',
-                    color: selecionado ? '#000' : past ? '#3b2a35' : !disponivel ? '#5d4d57' : '#f4ecd8',
-                    opacity: loadingDisponibilidade && !past ? 0.45 : 1,
-                    cursor: disabled ? 'not-allowed' : 'pointer',
-                  }}
                 >
-                  <span className="relative z-10">{d}</span>
+                  <span>{d}</span>
                   {!past && !selecionado && disponivel && (
-                    <div className="relative z-10 mt-1 h-1.5 w-1.5 rounded-full bg-[#d4af37] shadow-[0_0_8px_rgba(212,175,55,0.8)]" />
+                    <span className="mt-1 h-1.5 w-1.5 rounded-full bg-[#B84C6B]" />
                   )}
-                </motion.button>
+                </button>
               );
             })}
           </div>
         </div>
       </div>
 
-      <div className="flex items-center justify-center gap-3 text-[10px] font-black uppercase tracking-widest text-[#8a6c74]">
-        <CalendarIcon size={12} className={loadingDisponibilidade ? 'animate-pulse text-[#d4af37]' : ''} />
-        {loadingDisponibilidade ? 'Consultando agenda...' : 'Selecione uma data para o atendimento'}
+      <div className="flex items-center justify-center gap-2 text-xs font-medium text-[#8E7682]">
+        <CalendarIcon size={14} className={loadingDisponibilidade ? 'animate-pulse text-[#B84C6B]' : 'text-[#B84C6B]'} />
+        {loadingDisponibilidade ? 'Consultando disponibilidade...' : 'Datas com ponto rosé possuem horários livres'}
       </div>
 
       {erroDisponibilidade && (
-        <div className="rounded-[2rem] border border-rose-500/20 bg-rose-500/10 px-6 py-5 text-center text-[11px] font-black uppercase tracking-[0.1em] text-rose-400 backdrop-blur-md">
+        <div className="rounded-2xl border border-rose-200 bg-rose-50 px-5 py-4 text-center text-xs font-semibold text-rose-700">
           {erroDisponibilidade}
         </div>
       )}

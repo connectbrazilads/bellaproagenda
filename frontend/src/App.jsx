@@ -2,7 +2,7 @@ import React, { Suspense, lazy } from 'react';
 import { Routes, Route, Navigate, useParams } from 'react-router-dom';
 import { Toaster } from 'react-hot-toast';
 import { hasAdminSession, hasSuperAdminSession } from './lib/session';
-import BrandLogo from './components/BrandLogo';
+import LandingBrandLogo from './components/LandingBrandLogo';
 
 const LandingPage = lazy(() => import('./pages/LandingPage'));
 const BookingPage = lazy(() => import('./pages/Booking/BookingPage'));
@@ -64,15 +64,15 @@ function AdminBookingRedirect() {
 
 function RouteLoader() {
   return (
-    <div className="brand-page-dark flex min-h-screen items-center justify-center px-6">
-      <div className="text-center space-y-6">
+    <div className="flex min-h-screen items-center justify-center bg-[#FAF7F5] px-6 text-[#23141C]">
+      <div className="space-y-5 text-center">
         <div className="mx-auto flex justify-center">
-          <BrandLogo />
+          <LandingBrandLogo variant="lightBg" size="sm" />
         </div>
-        <div className="mx-auto h-12 w-12 rounded-full border-4 border-white/10 border-t-[#e29ba8] animate-spin" />
+        <div className="mx-auto h-10 w-10 animate-spin rounded-full border-[3px] border-[#EAE1E4] border-t-[#B84C6B]" />
         <div>
-          <p className="brand-kicker text-[#efb1bb]">Carregando interface</p>
-          <p className="mt-2 text-sm text-white/55">Preparando a proxima experiencia BellaPro.</p>
+          <p className="text-[11px] font-bold uppercase tracking-[0.22em] text-[#B84C6B]">Carregando interface</p>
+          <p className="mt-1.5 text-sm text-[#6B5761]">Preparando sua experiência BellaPro.</p>
         </div>
       </div>
     </div>
@@ -97,17 +97,17 @@ class SuperAdminErrorBoundary extends React.Component {
   render() {
     if (this.state.hasError) {
       return (
-        <div className="brand-page-dark flex min-h-screen items-center justify-center px-6">
-          <div className="brand-panel-dark w-full max-w-xl rounded-[2rem] p-8 text-center">
-            <p className="brand-kicker text-[#efb1bb]">Super Admin</p>
-            <h1 className="mt-3 font-brand-display text-4xl text-white">Nao foi possivel abrir esta tela.</h1>
-            <p className="mt-4 text-sm text-white/58">
+        <div className="flex min-h-screen items-center justify-center bg-[#FAF7F5] px-6 text-[#23141C]">
+          <div className="w-full max-w-xl rounded-3xl border border-[#EAE1E4] bg-white p-8 text-center shadow-sm">
+            <p className="text-[11px] font-bold uppercase tracking-[0.22em] text-[#B84C6B]">Super Admin</p>
+            <h1 className="mt-3 font-brand-display text-3xl font-semibold text-[#23141C]">Não foi possível abrir esta tela.</h1>
+            <p className="mt-3 text-sm text-[#6B5761]">
               A interface evitou a tela branca e capturou o erro abaixo.
             </p>
-            <div className="mt-6 rounded-[1.3rem] border border-red-500/20 bg-red-500/10 p-4 text-left text-sm text-red-100">
+            <div className="mt-6 rounded-2xl border border-rose-200 bg-rose-50 p-4 text-left text-sm text-rose-800">
               <p className="font-semibold">{this.state.error?.message || 'Erro sem mensagem.'}</p>
               {this.state.stack ? (
-                <pre className="mt-3 overflow-x-auto whitespace-pre-wrap text-xs text-red-100/80">{this.state.stack}</pre>
+                <pre className="mt-3 overflow-x-auto whitespace-pre-wrap text-xs text-rose-700/80">{this.state.stack}</pre>
               ) : null}
             </div>
           </div>
