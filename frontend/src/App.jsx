@@ -126,6 +126,8 @@ export default function App() {
       <Suspense fallback={<RouteLoader />}>
         <Routes>
           <Route path="/" element={<LandingPage />} />
+          <Route path="/login" element={<LoginPage />} />
+          <Route path="/cadastro" element={<SignupPage />} />
           <Route path="/signup" element={<SignupPage />} />
           <Route path="/admin/login" element={<LoginPage />} />
 

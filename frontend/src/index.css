@@ -792,3 +792,98 @@ h6,
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05), 0 25px 50px rgba(226, 155, 168, 0.08);
 }
 
+/* ============================================================================
+   BellaPro Editorial Luxury Light — Landing, Login & Signup System
+   ============================================================================ */
+.editorial-light-page {
+  min-height: 100vh;
+  background-color: #faf7f5;
+  color: #23141c;
+  background-image:
+    radial-gradient(circle at 0% 0%, rgba(226, 155, 168, 0.2), transparent 34%),
+    radial-gradient(circle at 100% 8%, rgba(247, 193, 182, 0.22), transparent 30%);
+}
+
+.editorial-grid-bg {
+  background-size: 36px 36px;
+  background-image:
+    linear-gradient(to right, rgba(35, 20, 28, 0.035) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(35, 20, 28, 0.035) 1px, transparent 1px);
+}
+
+.editorial-card {
+  background: #ffffff;
+  border: 1px solid rgba(35, 20, 28, 0.08);
+  box-shadow: 0 20px 50px -28px rgba(35, 20, 28, 0.14);
+  transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1),
+    box-shadow 0.3s cubic-bezier(0.16, 1, 0.3, 1),
+    border-color 0.3s ease;
+}
+
+.editorial-card:hover {
+  border-color: rgba(190, 91, 117, 0.28);
+  box-shadow: 0 28px 64px -30px rgba(35, 20, 28, 0.2);
+}
+
+.editorial-btn-primary {
+  background: linear-gradient(135deg, #c65d7b 0%, #b34968 100%);
+  color: #ffffff;
+  box-shadow: 0 14px 32px -12px rgba(179, 73, 104, 0.52);
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.editorial-btn-primary:hover {
+  background: linear-gradient(135deg, #b84f6e 0%, #9c3b57 100%);
+  transform: translateY(-1px);
+  box-shadow: 0 18px 36px -12px rgba(179, 73, 104, 0.62);
+}
+
+.editorial-btn-dark {
+  background: #23141c;
+  color: #faf7f5;
+  box-shadow: 0 14px 30px -14px rgba(35, 20, 28, 0.45);
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.editorial-btn-dark:hover {
+  background: #361f2b;
+  transform: translateY(-1px);
+}
+
+.editorial-btn-outline {
+  background: #ffffff;
+  color: #23141c;
+  border: 1px solid rgba(35, 20, 28, 0.14);
+  transition: all 0.25s ease;
+}
+
+.editorial-btn-outline:hover {
+  border-color: rgba(190, 91, 117, 0.45);
+  background: #fdf5f7;
+  color: #9c3b57;
+}
+
+.editorial-input {
+  background: #ffffff;
+  border: 1px solid rgba(35, 20, 28, 0.14);
+  color: #23141c;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease, background-color 0.2s ease;
+}
+
+.editorial-input::placeholder {
+  color: #9e8892;
+}
+
+.editorial-input:focus {
+  border-color: #be5b75;
+  box-shadow: 0 0 0 4px rgba(190, 91, 117, 0.12);
+  outline: none;
+}
+
+.editorial-input:disabled {
+  background: #f5eff1;
+  color: #7c6771;
+  cursor: not-allowed;
+}
+
+
