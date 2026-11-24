@@ -206,6 +206,7 @@ function ModalNovoAgendamento({ onClose, onSave, preData, preHora, preProf, pref
   const [buscaServico, setBuscaServico] = useState('');
   const [buscaPacote, setBuscaPacote] = useState('');
   const [buscaProfissional, setBuscaProfissional] = useState('');
+  const [saving, setSaving] = useState(false);
 
   useEffect(() => {
     if (!prefillData) return;
@@ -317,6 +318,23 @@ function ModalNovoAgendamento({ onClose, onSave, preData, preHora, preProf, pref
     () => multiItens.reduce((sum, item) => sum + Number(servicoMap.get(item.servicoId)?.preco || 0), 0),
     [multiItens, servicoMap]
   );
+
+  const resumoSimples = useMemo(() => {
+    if (isPacote && form.pacoteId) {
+      const pacote = pacotes.find((item) => item.id === form.pacoteId);
+      return {
+        total: Number(pacote?.preco || 0),
+        duracaoMin: Number(pacote?.duracaoMin || 0),
+        qtd: pacote ? 1 : 0,
+      };
+    }
+    const selecionados = (form.servicoIds || []).map((id) => servicoMap.get(id)).filter(Boolean);
+    return {
+      total: selecionados.reduce((sum, item) => sum + Number(item.preco || 0), 0),
+      duracaoMin: selecionados.reduce((sum, item) => sum + Number(item.duracaoMin || 0), 0),
+      qtd: selecionados.length,
+    };
+  }, [isPacote, form.pacoteId, form.servicoIds, pacotes, servicoMap]);
 
   useEffect(() => {
     if (!form.profissionalId) return;
@@ -465,11 +483,13 @@ function ModalNovoAgendamento({ onClose, onSave, preData, preHora, preProf, pref
   }
 
   async function salvar() {
+    if (saving) return;
     if (!form.clienteNome || !form.clienteTelefone) {
       window.alert('Preencha nome e telefone do cliente.');
       return;
     }
 
+    setSaving(true);
     try {
       if (modoReserva === 'multi') {
         if (!form.data || multiItens.length === 0) {
@@ -489,7 +509,7 @@ function ModalNovoAgendamento({ onClose, onSave, preData, preHora, preProf, pref
         });
       } else {
         if (!form.profissionalId || (form.servicoIds.length === 0 && !form.pacoteId) || !form.hora) {
-          window.alert('Preencha todos os campos obrigatorios.');
+          window.alert('Preencha todos os campos obrigatórios (profissional, serviço/pacote e horário).');
           return;
         }
 
@@ -499,6 +519,8 @@ function ModalNovoAgendamento({ onClose, onSave, preData, preHora, preProf, pref
       onSave();
     } catch (e) {
       window.alert(e.response?.data?.error || 'Erro ao criar agendamento.');
+    } finally {
+      setSaving(false);
     }
   }
 
@@ -507,458 +529,229 @@ function ModalNovoAgendamento({ onClose, onSave, preData, preHora, preProf, pref
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
-      className="fixed inset-0 z-[200] flex items-center justify-center overflow-y-auto overscroll-contain bg-black/80 p-3 backdrop-blur-2xl sm:p-4"
+      onClick={onClose}
+      className="fixed inset-0 z-[200] flex items-end justify-center overflow-y-auto overscroll-contain bg-[#23141c]/55 p-0 sm:items-center sm:p-4"
     >
       <motion.div
-        initial={{ scale: 0.9, y: 40, opacity: 0 }}
+        initial={{ scale: 0.97, y: 16, opacity: 0 }}
         animate={{ scale: 1, y: 0, opacity: 1 }}
-        exit={{ scale: 0.9, y: 40, opacity: 0 }}
-        className="relative h-[95dvh] w-full max-w-2xl overflow-y-auto rounded-t-[2rem] border border-gray-200 bg-white p-4 shadow-[0_50px_100px_-20px_rgba(0,0,0,0.6)] dark:border-white/5 dark:bg-[#0c0c0e] md:h-auto md:max-h-[92dvh] md:rounded-[3rem] md:p-10 md:pr-6 xl:p-14 xl:pr-8"
+        exit={{ scale: 0.97, y: 16, opacity: 0 }}
+        transition={{ duration: 0.18, ease: 'easeOut' }}
+        onClick={(e) => e.stopPropagation()}
+        className="flex max-h-[94dvh] w-full max-w-3xl flex-col overflow-hidden rounded-t-3xl border border-[#eae1e4] bg-white shadow-2xl dark:border-[#28212f] dark:bg-[#18131d] sm:max-h-[90dvh] sm:rounded-3xl"
       >
-        <div className="absolute left-0 top-0 h-1.5 w-full bg-gradient-to-r from-[#d48997] via-fuchsia-500 to-indigo-600" />
-
-        <button
-          onClick={onClose}
-          className="absolute right-6 top-4 flex h-12 w-12 items-center justify-center rounded-full border border-gray-200 bg-white text-[#3b2a35] shadow-sm transition-all hover:scale-105 hover:text-red-500 active:scale-95 dark:border-white/10 dark:bg-white/10 dark:text-white md:right-10 md:top-5"
-        >
-          <X size={24} />
-        </button>
-
-        <div className="mb-8 pr-14 md:mb-12 md:pr-16">
-          <div className="mb-3 flex items-center gap-4">
-            <div className="rounded-2xl bg-[#d48997] p-3 shadow-xl shadow-[#E29BA8]/20">
-              <CalendarIcon size={24} className="text-gray-900 dark:text-white" />
+        {/* Sticky Header */}
+        <div className="flex shrink-0 flex-wrap items-center justify-between gap-3 border-b border-[#efe7ea] bg-white px-5 py-4 dark:border-[#28212f] dark:bg-[#18131d] sm:px-6">
+          <div className="flex items-center gap-3">
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#fdf2f5] text-[#b84c6b] dark:bg-[#c65d7b]/15 dark:text-[#f0aab8]">
+              <CalendarIcon size={18} />
             </div>
             <div>
-              <h2 className="text-2xl font-black uppercase tracking-tighter text-gray-900 dark:text-white md:text-3xl xl:text-4xl">
+              <h2 className="font-brand-display text-xl font-bold leading-tight text-[#23141c] dark:text-white sm:text-2xl">
                 Nova Reserva
               </h2>
-              <p className="mt-1 text-[10px] font-black uppercase tracking-[0.3em] text-[#E29BA8]">BellaPro Agenda</p>
+              <p className="text-xs text-[#745e69] dark:text-white/55">
+                Cadastre um agendamento simples ou comanda multi-profissional
+              </p>
             </div>
+          </div>
+
+          <div className="flex items-center gap-2.5">
+            <div className="inline-flex rounded-xl border border-[#eae1e4] bg-[#faf7f5] p-1 dark:border-[#28212f] dark:bg-[#120f15]">
+              <button
+                type="button"
+                onClick={() => setModoReserva('simples')}
+                className={cn(
+                  'rounded-lg px-3 py-1.5 text-xs font-bold transition',
+                  modoReserva === 'simples'
+                    ? 'bg-[#23141c] text-white shadow-sm dark:bg-[#c65d7b]'
+                    : 'text-[#6b5761] hover:text-[#23141c] dark:text-white/60 dark:hover:text-white'
+                )}
+              >
+                Simples
+              </button>
+              <button
+                type="button"
+                onClick={() => setModoReserva('multi')}
+                className={cn(
+                  'rounded-lg px-3 py-1.5 text-xs font-bold transition',
+                  modoReserva === 'multi'
+                    ? 'bg-[#23141c] text-white shadow-sm dark:bg-[#c65d7b]'
+                    : 'text-[#6b5761] hover:text-[#23141c] dark:text-white/60 dark:hover:text-white'
+                )}
+              >
+                Multi-profissional
+              </button>
+            </div>
+
+            <button
+              type="button"
+              onClick={onClose}
+              aria-label="Fechar"
+              className="flex h-9 w-9 items-center justify-center rounded-xl border border-[#e2d5da] bg-[#faf7f5] text-[#6b5761] transition hover:border-[#b84c6b] hover:text-[#23141c] dark:border-[#352b3e] dark:bg-white/5 dark:text-white/70 dark:hover:text-white"
+            >
+              <X size={18} />
+            </button>
           </div>
         </div>
 
-        <div className="space-y-8">
-          <div className="rounded-[2rem] border border-gray-200 bg-gray-50 p-2 dark:border-white/5 dark:bg-white/5">
-            <div className="flex gap-2">
-              <button
-                type="button"
-                onClick={() => setAbaResumo('dados')}
-                className={cn(
-                  'flex-1 rounded-[2rem] px-5 py-4 text-[10px] font-black uppercase tracking-[0.2em] transition-all',
-                  abaResumo === 'dados' ? 'bg-white text-[#d48997] shadow-xl dark:bg-[#d48997] dark:text-white' : 'text-gray-400'
-                )}
-              >
-                Dados da Reserva
-              </button>
-              <button
-                type="button"
-                onClick={() => setAbaResumo('conflitos')}
-                className={cn(
-                  'flex-1 rounded-[2rem] px-5 py-4 text-[10px] font-black uppercase tracking-[0.2em] transition-all',
-                  abaResumo === 'conflitos' ? 'bg-white text-bellapro-blush shadow-xl dark:bg-bellapro-blush/90 dark:text-white' : 'text-gray-400',
-                  agendamentosCliente.length > 0 && 'text-bellapro-blush dark:text-amber-300'
-                )}
-              >
-                Outro Agendamento
-              </button>
-            </div>
-          </div>
-
-          {abaResumo === 'conflitos' && (
-            <div className="space-y-4 rounded-[2rem] border border-amber-200 bg-amber-50/80 p-4 dark:border-bellapro-blush/20 dark:bg-bellapro-blush/10 sm:p-6 md:p-8">
-              <div className="flex items-start justify-between gap-4">
-                <div>
-                  <p className="text-[10px] font-black uppercase tracking-[0.3em] text-bellapro-blush">Cliente ja possui agenda no dia</p>
-                  <h3 className="mt-2 text-xl font-black text-gray-900 dark:text-white">
-                    {loadingDuplicidade ? 'Verificando agendamentos...' : `${agendamentosCliente.length} horario(s) encontrado(s) em ${formatDateBR(form.data)}`}
-                  </h3>
-                </div>
-                {agendamentosCliente.length > 0 && (
-                  <span className="rounded-full bg-bellapro-blush px-3 py-1 text-[10px] font-black uppercase tracking-widest text-white">
-                    Agenda
-                  </span>
-                )}
-              </div>
-
-              {agendamentosCliente.length > 0 ? (
-                <div className="space-y-3">
-                  {agendamentosCliente.map((ag) => (
-                    <div key={ag.id} className="flex items-center justify-between gap-4 rounded-[1.75rem] border border-amber-100 bg-white px-5 py-4 dark:border-white/5 dark:bg-black/20">
-                      <div>
-                        <p className="text-sm font-black uppercase text-gray-900 dark:text-white">{ag.profissional?.nome}</p>
-                        <p className="mt-1 text-[10px] font-black uppercase tracking-[0.2em] text-bellapro-blush">
-                          {ag.inicioHora} - {getAgendamentoTitulo(ag)}
-                        </p>
-                      </div>
-                      <p className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-400">
-                        {formatDurationLabel(calculateAgendamentoDuration(ag))}
-                      </p>
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                <p className="text-sm font-bold text-gray-500 dark:text-gray-300">
-                  Nenhum outro agendamento encontrado para este cliente nesta data.
-                </p>
-              )}
-            </div>
-          )}
-
-          <div className="grid grid-cols-1 gap-4 md:grid-cols-2 md:p-4">
-            <div className="relative space-y-3">
-              <label className="ml-6 flex items-center gap-2 text-[9px] font-black uppercase tracking-[0.4em] text-gray-500">
-                <Phone size={10} className="text-[#d48997]" /> WhatsApp / Telefone
-              </label>
-              <input
-                value={form.clienteTelefone}
-                onChange={(e) => {
-                  const valor = e.target.value.replace(/\D/g, '');
-                  setForm((prev) => ({ ...prev, clienteTelefone: valor }));
-                  buscar(valor);
-                }}
-                placeholder="(00) 00000-0000"
-                className="w-full rounded-[2rem] border border-gray-100 bg-gray-50 px-8 py-5 text-sm font-black text-gray-900 outline-none transition-all focus:ring-4 ring-[#E29BA8]/10 dark:border-white/5 dark:bg-white/5 dark:text-white"
-              />
-            </div>
-
-            <div className="relative space-y-3">
-              <label className="ml-6 flex items-center gap-2 text-[9px] font-black uppercase tracking-[0.4em] text-gray-500">
-                <User size={10} className="text-[#d48997]" /> Nome Completo
-              </label>
-              <input
-                value={form.clienteNome}
-                onChange={(e) => {
-                  setForm((prev) => ({ ...prev, clienteNome: e.target.value }));
-                  buscar(e.target.value);
-                }}
-                placeholder="Identificacao do cliente..."
-                className="w-full rounded-[2rem] border border-gray-100 bg-gray-50 px-8 py-5 text-sm font-black text-gray-900 outline-none transition-all focus:ring-4 ring-[#E29BA8]/10 dark:border-white/5 dark:bg-white/5 dark:text-white"
-              />
-
-              <AnimatePresence>
-                {showSug && sugestoes.length > 0 && (
-                  <motion.div
-                    initial={{ opacity: 0, y: 15, scale: 0.95 }}
-                    animate={{ opacity: 1, y: 0, scale: 1 }}
-                    exit={{ opacity: 0, y: 15, scale: 0.95 }}
-                    className="absolute left-0 right-0 top-full z-[210] mt-4 overflow-hidden rounded-3xl border border-gray-100 bg-white shadow-[0_30px_60px_-12px_rgba(0,0,0,0.5)] backdrop-blur-3xl dark:border-white/10 dark:bg-[#121214]"
-                  >
-                    {sugestoes.map((sugestao) => (
-                      <button
-                        key={sugestao.id}
-                        onClick={() => selecionar(sugestao)}
-                        className="group flex w-full items-center justify-between px-8 py-5 text-left transition-all hover:bg-[#d48997]"
-                      >
-                        <div>
-                          <p className="text-xs font-black uppercase tracking-tight text-gray-900 transition-colors group-hover:text-gray-900 dark:text-white">
-                            {sugestao.nome}
-                          </p>
-                          <p className="text-[10px] font-bold tracking-[0.2em] text-gray-400 group-hover:text-gray-600 dark:text-white/60">
-                            {sugestao.telefone}
-                          </p>
-                        </div>
-                        <Check size={16} className="text-[#E29BA8] opacity-0 transition-all group-hover:opacity-100 group-hover:text-gray-900 dark:text-white" />
-                      </button>
-                    ))}
-                  </motion.div>
-                )}
-              </AnimatePresence>
-            </div>
-          </div>
-
-          <div className="flex rounded-[2rem] border border-gray-200 bg-gray-100 p-2 dark:border-white/5 dark:bg-white/5">
-            <button
-              type="button"
-              onClick={() => setModoReserva('simples')}
-              className={cn(
-                'flex-1 rounded-[2rem] py-4 text-[10px] font-black uppercase tracking-[0.2em] transition-all duration-500',
-                modoReserva === 'simples' ? 'bg-white text-[#d48997] shadow-xl dark:bg-[#d48997] dark:text-white' : 'text-gray-400 hover:text-gray-600 dark:hover:text-gray-200'
-              )}
-            >
-              Reserva Simples
-            </button>
-            <button
-              type="button"
-              onClick={() => setModoReserva('multi')}
-              className={cn(
-                'flex-1 rounded-[2rem] py-4 text-[10px] font-black uppercase tracking-[0.2em] transition-all duration-500',
-                modoReserva === 'multi' ? 'bg-white text-[#d48997] shadow-xl dark:bg-[#d48997] dark:text-white' : 'text-gray-400 hover:text-gray-600 dark:hover:text-gray-200'
-              )}
-            >
-              Multi-Profissional
-            </button>
-          </div>
-
-          <div className="grid grid-cols-1 gap-4 md:grid-cols-2 md:p-4">
-            <div className="space-y-3">
-              <label className="ml-6 text-[9px] font-black uppercase tracking-[0.4em] text-gray-500">Data</label>
-              <div className="relative w-full rounded-[2rem] border border-gray-100 bg-gray-50 py-5 pl-16 pr-8 dark:border-white/5 dark:bg-white/5">
-                <CalendarIcon size={16} className="absolute left-8 top-1/2 -translate-y-1/2 text-[#E29BA8]" />
-                <span className="block text-sm font-black tracking-[0.15em] text-gray-900 dark:text-white">
-                  {formatDateBR(form.data)}
-                </span>
-                <input
-                  type="date"
-                  value={form.data}
-                  onChange={(e) => setForm((prev) => ({ ...prev, data: e.target.value }))}
-                  className="absolute inset-0 cursor-pointer opacity-0"
-                  aria-label="Selecionar data"
-                />
-              </div>
-            </div>
-
-            {modoReserva === 'simples' ? (
-              <div className="space-y-3">
-                <label className="ml-6 text-[9px] font-black uppercase tracking-[0.4em] text-gray-500">Horario</label>
+        {/* Scrollable Body */}
+        <div className="custom-scrollbar min-h-0 flex-1 space-y-5 overflow-y-auto px-5 py-5 sm:px-6">
+          {/* Bloco 1: Cliente */}
+          <section className="space-y-3">
+            <p className="text-[11px] font-bold uppercase tracking-[0.16em] text-[#8c727e] dark:text-white/45">
+              1. Dados do cliente
+            </p>
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+              <div className="relative">
+                <label className="mb-1.5 block text-xs font-semibold text-[#5b4852] dark:text-white/70">
+                  WhatsApp / Telefone
+                </label>
                 <div className="relative">
-                  <Clock size={16} className="absolute left-8 top-1/2 -translate-y-1/2 text-[#E29BA8]" />
-                  <select
-                    value={form.hora}
-                    onChange={(e) => setForm((prev) => ({ ...prev, hora: e.target.value }))}
-                    className="w-full cursor-pointer appearance-none rounded-[2rem] border border-gray-100 bg-gray-50 py-5 pl-16 pr-8 text-sm font-black text-gray-900 outline-none dark:border-white/5 dark:bg-white/5 dark:text-white"
-                  >
-                    <option value="">Selecione...</option>
-                    {hourOptions.map((time) => (
-                      <option key={time} value={time}>
-                        {time}
-                      </option>
-                    ))}
-                  </select>
+                  <Phone size={15} className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-[#b84c6b]" />
+                  <input
+                    value={form.clienteTelefone}
+                    onChange={(e) => {
+                      const valor = e.target.value.replace(/\D/g, '');
+                      setForm((prev) => ({ ...prev, clienteTelefone: valor }));
+                      buscar(valor);
+                    }}
+                    placeholder="(00) 00000-0000"
+                    className="h-11 w-full rounded-xl border border-[#e2d5da] bg-[#faf7f5] pl-10 pr-4 text-sm font-medium text-[#23141c] outline-none transition placeholder:text-[#9e8792] focus:border-[#b84c6b] focus:bg-white focus:ring-2 focus:ring-[#b84c6b]/15 dark:border-[#352b3e] dark:bg-[#120f15] dark:text-white dark:focus:bg-[#1c1721]"
+                  />
                 </div>
               </div>
-            ) : (
-              <div className="rounded-[2rem] border border-[#E29BA8]/20 bg-[#E29BA8]/5 px-5 py-4 text-sm font-bold text-[#8a4a58] dark:text-[#f0c1ca]">
-                Todos os itens criados neste modo ficam na mesma comanda e usam a data acima.
-              </div>
-            )}
-          </div>
 
-          {modoReserva === 'simples' ? (
-            <>
-              <div className="flex rounded-[2rem] border border-gray-200 bg-gray-100 p-2 dark:border-white/5 dark:bg-white/5">
-                <button
-                  onClick={() => setIsPacote(false)}
-                  className={cn(
-                    'flex-1 rounded-[2rem] py-4 text-[10px] font-black uppercase tracking-[0.2em] transition-all duration-500',
-                    !isPacote ? 'bg-white text-[#d48997] shadow-xl dark:bg-[#d48997] dark:text-white' : 'text-gray-400 hover:text-gray-600 dark:hover:text-gray-200'
-                  )}
-                >
-                  Servicos Individuais
-                </button>
-                <button
-                  onClick={() => setIsPacote(true)}
-                  className={cn(
-                    'flex-1 rounded-[2rem] py-4 text-[10px] font-black uppercase tracking-[0.2em] transition-all duration-500',
-                    isPacote ? 'bg-white text-[#d48997] shadow-xl dark:bg-[#d48997] dark:text-white' : 'text-gray-400 hover:text-gray-600 dark:hover:text-gray-200'
-                  )}
-                >
-                  Pacotes Combo
-                </button>
-              </div>
+              <div className="relative">
+                <label className="mb-1.5 block text-xs font-semibold text-[#5b4852] dark:text-white/70">
+                  Nome completo
+                </label>
+                <div className="relative">
+                  <User size={15} className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-[#b84c6b]" />
+                  <input
+                    value={form.clienteNome}
+                    onChange={(e) => {
+                      setForm((prev) => ({ ...prev, clienteNome: e.target.value }));
+                      buscar(e.target.value);
+                    }}
+                    placeholder="Buscar ou digitar nome do cliente..."
+                    className="h-11 w-full rounded-xl border border-[#e2d5da] bg-[#faf7f5] pl-10 pr-4 text-sm font-medium text-[#23141c] outline-none transition placeholder:text-[#9e8792] focus:border-[#b84c6b] focus:bg-white focus:ring-2 focus:ring-[#b84c6b]/15 dark:border-[#352b3e] dark:bg-[#120f15] dark:text-white dark:focus:bg-[#1c1721]"
+                  />
+                </div>
 
-              <div className="grid grid-cols-1 gap-4 md:p-4">
-                {isPacote ? (
-                  <div className="space-y-3">
-                    <label className="ml-6 text-[9px] font-black uppercase tracking-[0.4em] text-gray-500">Catalogo de Pacotes</label>
-                    <div className="relative">
-                      <Search size={16} className="absolute left-5 top-1/2 -translate-y-1/2 text-gray-400" />
-                      <input
-                        value={buscaPacote}
-                        onChange={(e) => setBuscaPacote(e.target.value)}
-                        placeholder="Escreva para buscar um pacote"
-                        className="w-full rounded-[1.75rem] border border-gray-200 bg-white py-4 pl-12 pr-4 text-sm font-bold text-gray-700 outline-none dark:border-white/10 dark:bg-white/5 dark:text-white"
-                      />
-                    </div>
-                    <select
-                      value={form.pacoteId}
-                      onChange={(e) => setForm((prev) => ({ ...prev, pacoteId: e.target.value, servicoIds: [] }))}
-                      className="w-full cursor-pointer appearance-none rounded-[2rem] border border-gray-200 bg-gray-50 px-8 py-5 text-sm font-black text-gray-900 outline-none dark:border-white/5 dark:bg-white/5 dark:text-white"
+                <AnimatePresence>
+                  {showSug && sugestoes.length > 0 && (
+                    <motion.div
+                      initial={{ opacity: 0, y: 6 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: 6 }}
+                      className="absolute left-0 right-0 top-full z-[210] mt-1.5 max-h-52 overflow-y-auto rounded-2xl border border-[#e2d5da] bg-white shadow-xl custom-scrollbar dark:border-[#352b3e] dark:bg-[#1c1721]"
                     >
-                      <option value="" className="dark:bg-gray-900">Escolha o combo...</option>
-                      {pacotesDisponiveisFiltrados.map((pacote) => (
-                        <option key={pacote.id} value={pacote.id} className="dark:bg-gray-900">
-                          {pacote.nome} - R$ {pacote.preco}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-                ) : (
-                  <div className="space-y-4">
-                    <label className="ml-6 text-[9px] font-black uppercase tracking-[0.4em] text-gray-500">Selecao Multi-Servico</label>
-                    <div className="relative">
-                      <Search size={16} className="absolute left-5 top-1/2 -translate-y-1/2 text-gray-400" />
-                      <input
-                        value={buscaServico}
-                        onChange={(e) => setBuscaServico(e.target.value)}
-                        placeholder="Escreva para buscar um servico"
-                        className="w-full rounded-[1.75rem] border border-gray-200 bg-white py-4 pl-12 pr-4 text-sm font-bold text-gray-700 outline-none dark:border-white/10 dark:bg-white/5 dark:text-white"
-                      />
-                    </div>
-                    <div className="grid max-h-56 grid-cols-1 gap-3 overflow-y-auto rounded-[2rem] border border-gray-200 bg-gray-100 p-4 shadow-inner custom-scrollbar dark:border-white/5 dark:bg-white/5 sm:grid-cols-2 xl:grid-cols-3 md:gap-4 md:p-6">
-                      {servicosDisponiveisFiltrados.map((servico) => (
+                      {sugestoes.map((sugestao) => (
                         <button
-                          key={servico.id}
+                          key={sugestao.id}
                           type="button"
-                          onClick={() => toggleServico(servico.id)}
-                          className={cn(
-                            'relative overflow-hidden rounded-2xl border-2 px-5 py-4 text-left text-[10px] font-black uppercase tracking-tight transition-all duration-500',
-                            form.servicoIds.includes(servico.id)
-                              ? 'border-[#d48997] bg-[#d48997] text-white shadow-lg shadow-[#E29BA8]/30'
-                              : 'border-gray-200 bg-white text-gray-600 hover:border-[#E29BA8]/40 dark:border-white/5 dark:bg-[#1a1a1c]'
-                          )}
+                          onClick={() => selecionar(sugestao)}
+                          className="group flex w-full items-center justify-between border-b border-[#f5eef1] px-4 py-3 text-left transition last:border-b-0 hover:bg-[#fdf2f5] dark:border-[#28212f] dark:hover:bg-white/5"
                         >
-                          {servico.nome}
-                          {form.servicoIds.includes(servico.id) && <Check size={10} className="absolute right-2 top-2" />}
+                          <div className="min-w-0">
+                            <p className="truncate text-sm font-bold text-[#23141c] dark:text-white">
+                              {sugestao.nome}
+                            </p>
+                            <p className="text-xs text-[#745e69] dark:text-white/55">
+                              {sugestao.telefone}
+                            </p>
+                          </div>
+                          <Check size={15} className="shrink-0 text-[#b84c6b] opacity-0 transition group-hover:opacity-100" />
                         </button>
                       ))}
-                    </div>
-                  </div>
-                )}
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </div>
+            </div>
 
-                <div className="space-y-3">
-                  <label className="ml-6 text-[9px] font-black uppercase tracking-[0.4em] text-gray-500">Artista Responsavel</label>
-                  <div className="relative">
-                    <Search size={16} className="absolute left-5 top-1/2 -translate-y-1/2 text-gray-400" />
-                    <input
-                      value={buscaProfissional}
-                      onChange={(e) => setBuscaProfissional(e.target.value)}
-                      placeholder="Escreva para buscar o profissional"
-                      className="w-full rounded-[1.75rem] border border-gray-200 bg-white py-4 pl-12 pr-4 text-sm font-bold text-gray-700 outline-none dark:border-white/10 dark:bg-white/5 dark:text-white"
-                    />
+            {/* Inline alert only when client already has booking on selected date */}
+            {(loadingDuplicidade || agendamentosCliente.length > 0) && (
+              <div className="rounded-2xl border border-amber-200 bg-amber-50/90 p-3.5 dark:border-amber-500/25 dark:bg-amber-500/10">
+                <div className="flex items-center justify-between gap-3">
+                  <div className="flex items-center gap-2 text-xs font-bold text-amber-800 dark:text-amber-300">
+                    <AlertCircle size={15} className="shrink-0" />
+                    <span>
+                      {loadingDuplicidade
+                        ? 'Verificando agendamentos existentes...'
+                        : `Cliente já possui ${agendamentosCliente.length} horário(s) em ${formatDateBR(form.data)}`}
+                    </span>
                   </div>
-                  <select
-                    value={form.profissionalId}
-                    onChange={(e) => setForm((prev) => ({ ...prev, profissionalId: e.target.value }))}
-                    className="w-full cursor-pointer appearance-none rounded-[2rem] border border-gray-100 bg-gray-50 px-8 py-5 text-sm font-black text-gray-900 outline-none dark:border-white/5 dark:bg-white/5 dark:text-white"
-                  >
-                    <option value="" className="dark:bg-gray-900">Selecione o profissional...</option>
-                    {profissionaisCompativeisFiltrados.map((profissional) => (
-                      <option key={profissional.id} value={profissional.id} className="dark:bg-gray-900">
-                        {profissional.nome}
-                      </option>
-                    ))}
-                  </select>
-                  {(form.servicoIds.length > 0 || form.pacoteId) && profissionaisCompativeis.length === 0 && (
-                    <p className="ml-6 text-xs font-bold text-bellapro-blush">
-                      Nenhum profissional atende essa combinacao de servicos.
-                    </p>
+                  {agendamentosCliente.length > 0 && (
+                    <button
+                      type="button"
+                      onClick={() => setAbaResumo((prev) => (prev === 'conflitos' ? 'dados' : 'conflitos'))}
+                      className="text-xs font-bold text-amber-900 underline-offset-2 hover:underline dark:text-amber-200"
+                    >
+                      {abaResumo === 'conflitos' ? 'Ocultar' : 'Ver horários'}
+                    </button>
                   )}
                 </div>
-              </div>
 
-              <div className="grid grid-cols-1 gap-4 md:grid-cols-2 md:p-4">
-                <div className="flex items-center gap-4 rounded-[2rem] border border-gray-100 bg-gray-50 p-4 dark:border-white/5 dark:bg-white/5 sm:p-6">
-                  <input
-                    type="checkbox"
-                    id="recorrente"
-                    checked={form.recorrente}
-                    onChange={(e) => setForm((prev) => ({ ...prev, recorrente: e.target.checked }))}
-                    className="h-6 w-6 cursor-pointer rounded-lg accent-[#d48997]"
-                  />
-                  <label htmlFor="recorrente" className="cursor-pointer text-xs font-black uppercase tracking-widest text-gray-600 dark:text-gray-300">
-                    Repetir Semanalmente
-                  </label>
-                </div>
-
-                {form.recorrente && (
-                  <div className="space-y-3">
-                    <label className="ml-6 text-[9px] font-black uppercase tracking-[0.4em] text-gray-500">Numero de Semanas</label>
-                    <select
-                      value={form.semanas}
-                      onChange={(e) => setForm((prev) => ({ ...prev, semanas: Number(e.target.value) }))}
-                      className="w-full rounded-[2rem] border border-gray-100 bg-gray-50 px-8 py-5 text-sm font-black text-gray-900 outline-none dark:border-white/5 dark:bg-white/5 dark:text-white"
-                    >
-                      <option value={4}>4 Semanas (1 mes)</option>
-                      <option value={8}>8 Semanas (2 mes)</option>
-                      <option value={12}>12 Semanas (3 mes)</option>
-                    </select>
+                {abaResumo === 'conflitos' && agendamentosCliente.length > 0 && (
+                  <div className="mt-3 space-y-2">
+                    {agendamentosCliente.map((ag) => (
+                      <div
+                        key={ag.id}
+                        className="flex items-center justify-between gap-3 rounded-xl border border-amber-200/80 bg-white px-3.5 py-2.5 text-xs dark:border-white/10 dark:bg-[#18131d]"
+                      >
+                        <div className="min-w-0">
+                          <span className="font-bold text-[#23141c] dark:text-white">{ag.inicioHora}</span>
+                          <span className="mx-1.5 text-[#8c727e]">·</span>
+                          <span className="font-semibold text-[#b84c6b]">{getAgendamentoTitulo(ag)}</span>
+                          <span className="ml-1.5 text-[#745e69] dark:text-white/55">({ag.profissional?.nome})</span>
+                        </div>
+                        <span className="shrink-0 font-semibold text-[#745e69] dark:text-white/55">
+                          {formatDurationLabel(calculateAgendamentoDuration(ag))}
+                        </span>
+                      </div>
+                    ))}
                   </div>
                 )}
               </div>
+            )}
+          </section>
 
-              <div className="flex items-center gap-4 rounded-[2rem] border border-gray-100 bg-gray-50 p-4 dark:border-white/5 dark:bg-white/5">
-                <input
-                  type="checkbox"
-                  id="encaixe"
-                  checked={form.encaixe}
-                  onChange={(e) => setForm((prev) => ({ ...prev, encaixe: e.target.checked }))}
-                  className="h-6 w-6 cursor-pointer rounded-lg accent-[#d48997]"
-                />
-                <label htmlFor="encaixe" className="cursor-pointer text-xs font-black uppercase tracking-widest text-gray-600 dark:text-gray-300">
-                  Forcar Encaixe (Permitir Sobreposicao)
-                </label>
-              </div>
-            </>
-          ) : (
-            <>
-              <div className="space-y-4 rounded-[2rem] border border-gray-200 bg-gray-50 p-5 dark:border-white/5 dark:bg-white/5">
-                <div className="flex items-center justify-between gap-4">
-                  <div>
-                    <p className="text-[10px] font-black uppercase tracking-[0.3em] text-[#E29BA8]">Comanda do dia</p>
-                    <h3 className="mt-2 text-xl font-black uppercase tracking-tight text-gray-900 dark:text-white">
-                      Adicione os procedimentos por profissional
-                    </h3>
-                  </div>
-                  <Layers size={22} className="text-[#d48997]" />
-                </div>
+          {/* Bloco 2: Data, Horário e Profissional */}
+          <section className="space-y-3 border-t border-[#f2eaed] pt-5 dark:border-[#28212f]">
+            <p className="text-[11px] font-bold uppercase tracking-[0.16em] text-[#8c727e] dark:text-white/45">
+              2. Data{modoReserva === 'simples' ? ', horário e profissional' : ' do atendimento'}
+            </p>
 
-                <div className="space-y-3">
-                  <label className="ml-2 text-[9px] font-black uppercase tracking-[0.4em] text-gray-500">Servico do item</label>
+            {modoReserva === 'simples' ? (
+              <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+                <div>
+                  <label className="mb-1.5 block text-xs font-semibold text-[#5b4852] dark:text-white/70">
+                    Data
+                  </label>
                   <div className="relative">
-                    <Search size={16} className="absolute left-5 top-1/2 -translate-y-1/2 text-gray-400" />
+                    <CalendarIcon size={15} className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-[#b84c6b]" />
                     <input
-                      value={buscaServico}
-                      onChange={(e) => setBuscaServico(e.target.value)}
-                      placeholder="Escreva para buscar um servico"
-                      className="w-full rounded-[1.75rem] border border-gray-200 bg-white py-4 pl-12 pr-4 text-sm font-bold text-gray-700 outline-none dark:border-white/10 dark:bg-white/5 dark:text-white"
+                      type="date"
+                      value={form.data}
+                      onChange={(e) => setForm((prev) => ({ ...prev, data: e.target.value }))}
+                      className="h-11 w-full rounded-xl border border-[#e2d5da] bg-[#faf7f5] pl-10 pr-3 text-sm font-semibold text-[#23141c] outline-none transition focus:border-[#b84c6b] focus:bg-white dark:border-[#352b3e] dark:bg-[#120f15] dark:text-white"
+                      aria-label="Selecionar data"
                     />
                   </div>
-                  <div className="grid max-h-48 grid-cols-1 gap-3 overflow-y-auto rounded-[2rem] border border-gray-200 bg-white p-4 custom-scrollbar dark:border-white/5 dark:bg-[#121214] sm:grid-cols-2">
-                    {servicosDisponiveisFiltrados.map((servico) => (
-                      <button
-                        key={servico.id}
-                        type="button"
-                        onClick={() => setMultiItemForm((prev) => ({ ...prev, servicoId: servico.id }))}
-                        className={cn(
-                          'rounded-2xl border px-4 py-3 text-left text-[11px] font-black uppercase tracking-[0.14em] transition-all',
-                          multiItemForm.servicoId === servico.id
-                            ? 'border-[#d48997] bg-[#d48997] text-white shadow-lg shadow-[#E29BA8]/30'
-                            : 'border-gray-200 bg-gray-50 text-gray-700 dark:border-white/10 dark:bg-white/5 dark:text-white'
-                        )}
-                      >
-                        <span className="block">{servico.nome}</span>
-                        <span className={cn('mt-2 block text-[10px]', multiItemForm.servicoId === servico.id ? 'text-white/80' : 'text-gray-400')}>
-                          R$ {Number(servico.preco || 0).toFixed(2)}
-                        </span>
-                      </button>
-                    ))}
-                  </div>
                 </div>
 
-                <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-                  <div className="space-y-3">
-                    <label className="ml-2 text-[9px] font-black uppercase tracking-[0.4em] text-gray-500">Profissional do item</label>
+                <div>
+                  <label className="mb-1.5 block text-xs font-semibold text-[#5b4852] dark:text-white/70">
+                    Horário
+                  </label>
+                  <div className="relative">
+                    <Clock size={15} className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-[#b84c6b]" />
                     <select
-                      value={multiItemForm.profissionalId}
-                      onChange={(e) => setMultiItemForm((prev) => ({ ...prev, profissionalId: e.target.value }))}
-                      className="w-full cursor-pointer appearance-none rounded-[2rem] border border-gray-100 bg-white px-8 py-5 text-sm font-black text-gray-900 outline-none dark:border-white/5 dark:bg-white/5 dark:text-white"
-                    >
-                      <option value="">Selecione o profissional...</option>
-                      {profissionaisMultiCompativeisFiltrados.map((profissional) => (
-                        <option key={profissional.id} value={profissional.id} className="dark:bg-gray-900">
-                          {profissional.nome}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-
-                  <div className="space-y-3">
-                    <label className="ml-2 text-[9px] font-black uppercase tracking-[0.4em] text-gray-500">Horario do item</label>
-                    <select
-                      value={multiItemForm.hora}
-                      onChange={(e) => setMultiItemForm((prev) => ({ ...prev, hora: e.target.value }))}
-                      className="w-full cursor-pointer appearance-none rounded-[2rem] border border-gray-100 bg-white px-8 py-5 text-sm font-black text-gray-900 outline-none dark:border-white/5 dark:bg-white/5 dark:text-white"
+                      value={form.hora}
+                      onChange={(e) => setForm((prev) => ({ ...prev, hora: e.target.value }))}
+                      className="h-11 w-full cursor-pointer rounded-xl border border-[#e2d5da] bg-[#faf7f5] pl-10 pr-3 text-sm font-semibold text-[#23141c] outline-none transition focus:border-[#b84c6b] focus:bg-white dark:border-[#352b3e] dark:bg-[#120f15] dark:text-white"
                     >
                       <option value="">Selecione...</option>
                       {hourOptions.map((time) => (
@@ -970,56 +763,341 @@ function ModalNovoAgendamento({ onClose, onSave, preData, preHora, preProf, pref
                   </div>
                 </div>
 
-                <button
-                  type="button"
-                  onClick={addMultiItem}
-                  className="flex w-full items-center justify-center gap-3 rounded-[2rem] bg-[#d48997] px-6 py-5 text-sm font-black uppercase tracking-[0.22em] text-white shadow-xl shadow-[#E29BA8]/25 transition-all hover:bg-[#c97b8a]"
-                >
-                  <Plus size={18} /> Adicionar Item na Comanda
-                </button>
+                <div>
+                  <label className="mb-1.5 block text-xs font-semibold text-[#5b4852] dark:text-white/70">
+                    Profissional
+                  </label>
+                  <select
+                    value={form.profissionalId}
+                    onChange={(e) => setForm((prev) => ({ ...prev, profissionalId: e.target.value }))}
+                    className="h-11 w-full cursor-pointer rounded-xl border border-[#e2d5da] bg-[#faf7f5] px-3.5 text-sm font-semibold text-[#23141c] outline-none transition focus:border-[#b84c6b] focus:bg-white dark:border-[#352b3e] dark:bg-[#120f15] dark:text-white"
+                  >
+                    <option value="">Selecione o profissional...</option>
+                    {profissionaisCompativeisFiltrados.map((profissional) => (
+                      <option key={profissional.id} value={profissional.id}>
+                        {profissional.nome}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 gap-3 sm:grid-cols-[200px_minmax(0,1fr)] sm:items-end">
+                <div>
+                  <label className="mb-1.5 block text-xs font-semibold text-[#5b4852] dark:text-white/70">
+                    Data da comanda
+                  </label>
+                  <div className="relative">
+                    <CalendarIcon size={15} className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-[#b84c6b]" />
+                    <input
+                      type="date"
+                      value={form.data}
+                      onChange={(e) => setForm((prev) => ({ ...prev, data: e.target.value }))}
+                      className="h-11 w-full rounded-xl border border-[#e2d5da] bg-[#faf7f5] pl-10 pr-3 text-sm font-semibold text-[#23141c] outline-none transition focus:border-[#b84c6b] focus:bg-white dark:border-[#352b3e] dark:bg-[#120f15] dark:text-white"
+                      aria-label="Selecionar data"
+                    />
+                  </div>
+                </div>
+                <div className="rounded-xl border border-[#f0d5de] bg-[#fdf7f9] px-4 py-3 text-xs font-medium text-[#745e69] dark:border-[#c65d7b]/25 dark:bg-[#c65d7b]/10 dark:text-[#f0c1ca]">
+                  Todos os procedimentos adicionados abaixo ficam agrupados na mesma comanda para a data selecionada.
+                </div>
+              </div>
+            )}
+
+            {modoReserva === 'simples' && (form.servicoIds.length > 0 || form.pacoteId) && profissionaisCompativeis.length === 0 && (
+              <p className="text-xs font-semibold text-rose-600 dark:text-rose-400">
+                Nenhum profissional atende essa combinação de serviços. Use o modo Multi-profissional.
+              </p>
+            )}
+          </section>
+
+          {/* Bloco 3: Serviços / Pacotes ou Comanda Multi */}
+          {modoReserva === 'simples' ? (
+            <section className="space-y-3 border-t border-[#f2eaed] pt-5 dark:border-[#28212f]">
+              <div className="flex flex-wrap items-center justify-between gap-2.5">
+                <div className="flex items-center gap-3">
+                  <p className="text-[11px] font-bold uppercase tracking-[0.16em] text-[#8c727e] dark:text-white/45">
+                    3. Procedimentos
+                  </p>
+                  <div className="inline-flex rounded-lg border border-[#eae1e4] bg-[#faf7f5] p-0.5 dark:border-[#28212f] dark:bg-[#120f15]">
+                    <button
+                      type="button"
+                      onClick={() => setIsPacote(false)}
+                      className={cn(
+                        'rounded-md px-2.5 py-1 text-[11px] font-bold transition',
+                        !isPacote
+                          ? 'bg-white text-[#b84c6b] shadow-sm dark:bg-[#23141c] dark:text-[#f0aab8]'
+                          : 'text-[#745e69] hover:text-[#23141c] dark:text-white/55'
+                      )}
+                    >
+                      Serviços
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setIsPacote(true)}
+                      className={cn(
+                        'rounded-md px-2.5 py-1 text-[11px] font-bold transition',
+                        isPacote
+                          ? 'bg-white text-[#b84c6b] shadow-sm dark:bg-[#23141c] dark:text-[#f0aab8]'
+                          : 'text-[#745e69] hover:text-[#23141c] dark:text-white/55'
+                      )}
+                    >
+                      Pacotes
+                    </button>
+                  </div>
+                </div>
+
+                <div className="relative w-full sm:w-64">
+                  <Search size={14} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-[#9e8792]" />
+                  <input
+                    value={isPacote ? buscaPacote : buscaServico}
+                    onChange={(e) => (isPacote ? setBuscaPacote(e.target.value) : setBuscaServico(e.target.value))}
+                    placeholder={isPacote ? 'Buscar pacote...' : 'Buscar serviço...'}
+                    className="h-9 w-full rounded-xl border border-[#e2d5da] bg-[#faf7f5] pl-8 pr-3 text-xs font-medium text-[#23141c] outline-none placeholder:text-[#9e8792] focus:border-[#b84c6b] focus:bg-white dark:border-[#352b3e] dark:bg-[#120f15] dark:text-white"
+                  />
+                </div>
               </div>
 
-              <div className="space-y-4 rounded-[2rem] border border-gray-200 bg-white p-5 dark:border-white/5 dark:bg-white/5">
-                <div className="flex items-center justify-between gap-4">
-                  <div>
-                    <p className="text-[10px] font-black uppercase tracking-[0.3em] text-[#E29BA8]">Resumo da comanda</p>
-                    <h3 className="mt-2 text-xl font-black uppercase tracking-tight text-gray-900 dark:text-white">
-                      {multiItens.length} item(ns) adicionados
-                    </h3>
+              {isPacote ? (
+                <div className="grid max-h-52 grid-cols-1 gap-2 overflow-y-auto rounded-2xl border border-[#eae1e4] bg-[#faf7f5] p-3 custom-scrollbar dark:border-[#28212f] dark:bg-[#120f15] sm:grid-cols-2">
+                  {pacotesDisponiveisFiltrados.length === 0 ? (
+                    <p className="col-span-full py-6 text-center text-xs text-[#745e69] dark:text-white/50">
+                      Nenhum pacote encontrado.
+                    </p>
+                  ) : (
+                    pacotesDisponiveisFiltrados.map((pacote) => {
+                      const active = form.pacoteId === pacote.id;
+                      return (
+                        <button
+                          key={pacote.id}
+                          type="button"
+                          onClick={() => setForm((prev) => ({ ...prev, pacoteId: active ? '' : pacote.id, servicoIds: [] }))}
+                          className={cn(
+                            'flex items-center justify-between gap-2 rounded-xl border px-3.5 py-2.5 text-left transition',
+                            active
+                              ? 'border-[#b84c6b] bg-[#fdf2f5] ring-1 ring-[#b84c6b]/20 dark:bg-[#c65d7b]/20'
+                              : 'border-[#eae1e4] bg-white hover:border-[#d9c6ce] dark:border-[#28212f] dark:bg-[#1c1721]'
+                          )}
+                        >
+                          <div className="min-w-0">
+                            <p className="truncate text-xs font-bold text-[#23141c] dark:text-white">{pacote.nome}</p>
+                            <p className="mt-0.5 text-[11px] font-semibold text-[#b84c6b] dark:text-[#f0aab8]">
+                              {Number(pacote.preco || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
+                            </p>
+                          </div>
+                          {active && (
+                            <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-[#b84c6b] text-white">
+                              <Check size={12} strokeWidth={3} />
+                            </span>
+                          )}
+                        </button>
+                      );
+                    })
+                  )}
+                </div>
+              ) : (
+                <div className="grid max-h-56 grid-cols-1 gap-2 overflow-y-auto rounded-2xl border border-[#eae1e4] bg-[#faf7f5] p-3 custom-scrollbar dark:border-[#28212f] dark:bg-[#120f15] sm:grid-cols-2 lg:grid-cols-3">
+                  {servicosDisponiveisFiltrados.length === 0 ? (
+                    <p className="col-span-full py-6 text-center text-xs text-[#745e69] dark:text-white/50">
+                      Nenhum serviço disponível para este filtro.
+                    </p>
+                  ) : (
+                    servicosDisponiveisFiltrados.map((servico) => {
+                      const active = form.servicoIds.includes(servico.id);
+                      return (
+                        <button
+                          key={servico.id}
+                          type="button"
+                          onClick={() => toggleServico(servico.id)}
+                          className={cn(
+                            'flex items-start justify-between gap-2 rounded-xl border px-3 py-2.5 text-left transition',
+                            active
+                              ? 'border-[#b84c6b] bg-[#fdf2f5] ring-1 ring-[#b84c6b]/20 dark:border-[#c65d7b] dark:bg-[#c65d7b]/20'
+                              : 'border-[#eae1e4] bg-white hover:border-[#d9c6ce] dark:border-[#28212f] dark:bg-[#1c1721]'
+                          )}
+                        >
+                          <div className="min-w-0">
+                            <p className="line-clamp-2 text-xs font-bold leading-snug text-[#23141c] dark:text-white">
+                              {servico.nome}
+                            </p>
+                            <p className="mt-1 text-[11px] font-medium text-[#745e69] dark:text-white/60">
+                              <span className="font-bold text-[#b84c6b] dark:text-[#f0aab8]">
+                                {Number(servico.preco || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
+                              </span>
+                              {servico.duracaoMin ? ` · ${formatDurationLabel(servico.duracaoMin)}` : ''}
+                            </p>
+                          </div>
+                          {active && (
+                            <span className="mt-0.5 flex h-4 w-4 shrink-0 items-center justify-center rounded-full bg-[#b84c6b] text-white">
+                              <Check size={10} strokeWidth={3} />
+                            </span>
+                          )}
+                        </button>
+                      );
+                    })
+                  )}
+                </div>
+              )}
+
+              {/* Opções extras compactas */}
+              <div className="flex flex-wrap items-center gap-3 pt-1">
+                <label className="inline-flex cursor-pointer items-center gap-2.5 rounded-xl border border-[#eae1e4] bg-[#faf7f5] px-3.5 py-2.5 text-xs font-semibold text-[#5b4852] transition hover:border-[#d9c6ce] dark:border-[#28212f] dark:bg-[#120f15] dark:text-white/75">
+                  <input
+                    type="checkbox"
+                    id="recorrente"
+                    checked={form.recorrente}
+                    onChange={(e) => setForm((prev) => ({ ...prev, recorrente: e.target.checked }))}
+                    className="h-4 w-4 cursor-pointer rounded accent-[#b84c6b]"
+                  />
+                  <span>Repetir semanalmente</span>
+                </label>
+
+                {form.recorrente && (
+                  <select
+                    value={form.semanas}
+                    onChange={(e) => setForm((prev) => ({ ...prev, semanas: Number(e.target.value) }))}
+                    className="h-9 rounded-xl border border-[#e2d5da] bg-white px-3 text-xs font-bold text-[#23141c] outline-none focus:border-[#b84c6b] dark:border-[#352b3e] dark:bg-[#1c1721] dark:text-white"
+                  >
+                    <option value={4}>4 semanas (1 mês)</option>
+                    <option value={8}>8 semanas (2 meses)</option>
+                    <option value={12}>12 semanas (3 meses)</option>
+                  </select>
+                )}
+
+                <label className="inline-flex cursor-pointer items-center gap-2.5 rounded-xl border border-[#eae1e4] bg-[#faf7f5] px-3.5 py-2.5 text-xs font-semibold text-[#5b4852] transition hover:border-[#d9c6ce] dark:border-[#28212f] dark:bg-[#120f15] dark:text-white/75">
+                  <input
+                    type="checkbox"
+                    id="encaixe"
+                    checked={form.encaixe}
+                    onChange={(e) => setForm((prev) => ({ ...prev, encaixe: e.target.checked }))}
+                    className="h-4 w-4 cursor-pointer rounded accent-[#b84c6b]"
+                  />
+                  <span>Forçar encaixe (permitir sobreposição)</span>
+                </label>
+              </div>
+            </section>
+          ) : (
+            <section className="space-y-4 border-t border-[#f2eaed] pt-5 dark:border-[#28212f]">
+              <div className="space-y-3 rounded-2xl border border-[#eae1e4] bg-[#faf7f5] p-4 dark:border-[#28212f] dark:bg-[#120f15]">
+                <div className="flex flex-wrap items-center justify-between gap-2">
+                  <div className="flex items-center gap-2">
+                    <Layers size={15} className="text-[#b84c6b]" />
+                    <p className="text-xs font-bold text-[#23141c] dark:text-white">
+                      Adicionar procedimento na comanda
+                    </p>
                   </div>
-                  <p className="text-lg font-black text-[#d48997]">
-                    {totalMulti.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
+                  <div className="relative w-full sm:w-56">
+                    <Search size={13} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-[#9e8792]" />
+                    <input
+                      value={buscaServico}
+                      onChange={(e) => setBuscaServico(e.target.value)}
+                      placeholder="Buscar serviço..."
+                      className="h-8 w-full rounded-lg border border-[#e2d5da] bg-white pl-8 pr-3 text-xs text-[#23141c] outline-none focus:border-[#b84c6b] dark:border-[#352b3e] dark:bg-[#1c1721] dark:text-white"
+                    />
+                  </div>
+                </div>
+
+                <div className="grid max-h-40 grid-cols-1 gap-2 overflow-y-auto custom-scrollbar sm:grid-cols-2 lg:grid-cols-3">
+                  {servicosDisponiveisFiltrados.map((servico) => {
+                    const active = multiItemForm.servicoId === servico.id;
+                    return (
+                      <button
+                        key={servico.id}
+                        type="button"
+                        onClick={() => setMultiItemForm((prev) => ({ ...prev, servicoId: servico.id }))}
+                        className={cn(
+                          'rounded-xl border px-3 py-2 text-left transition',
+                          active
+                            ? 'border-[#b84c6b] bg-[#fdf2f5] ring-1 ring-[#b84c6b]/20 dark:bg-[#c65d7b]/20'
+                            : 'border-[#eae1e4] bg-white hover:border-[#d9c6ce] dark:border-[#28212f] dark:bg-[#1c1721]'
+                        )}
+                      >
+                        <p className="truncate text-xs font-bold text-[#23141c] dark:text-white">{servico.nome}</p>
+                        <p className="mt-0.5 text-[11px] font-semibold text-[#b84c6b] dark:text-[#f0aab8]">
+                          {Number(servico.preco || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
+                        </p>
+                      </button>
+                    );
+                  })}
+                </div>
+
+                <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-[1fr_140px_auto]">
+                  <select
+                    value={multiItemForm.profissionalId}
+                    onChange={(e) => setMultiItemForm((prev) => ({ ...prev, profissionalId: e.target.value }))}
+                    className="h-10 rounded-xl border border-[#e2d5da] bg-white px-3 text-xs font-semibold text-[#23141c] outline-none focus:border-[#b84c6b] dark:border-[#352b3e] dark:bg-[#1c1721] dark:text-white"
+                  >
+                    <option value="">Profissional...</option>
+                    {profissionaisMultiCompativeisFiltrados.map((profissional) => (
+                      <option key={profissional.id} value={profissional.id}>
+                        {profissional.nome}
+                      </option>
+                    ))}
+                  </select>
+
+                  <select
+                    value={multiItemForm.hora}
+                    onChange={(e) => setMultiItemForm((prev) => ({ ...prev, hora: e.target.value }))}
+                    className="h-10 rounded-xl border border-[#e2d5da] bg-white px-3 text-xs font-semibold text-[#23141c] outline-none focus:border-[#b84c6b] dark:border-[#352b3e] dark:bg-[#1c1721] dark:text-white"
+                  >
+                    <option value="">Horário...</option>
+                    {hourOptions.map((time) => (
+                      <option key={time} value={time}>
+                        {time}
+                      </option>
+                    ))}
+                  </select>
+
+                  <button
+                    type="button"
+                    onClick={addMultiItem}
+                    className="inline-flex h-10 items-center justify-center gap-1.5 rounded-xl bg-[#23141c] px-4 text-xs font-bold text-white transition hover:bg-[#3a222f] dark:bg-[#c65d7b] dark:hover:bg-[#b84c6b]"
+                  >
+                    <Plus size={14} /> Adicionar
+                  </button>
+                </div>
+              </div>
+
+              <div className="space-y-2.5">
+                <div className="flex items-center justify-between">
+                  <p className="text-[11px] font-bold uppercase tracking-[0.16em] text-[#8c727e] dark:text-white/45">
+                    Itens da comanda ({multiItens.length})
                   </p>
+                  <span className="text-sm font-bold text-[#b84c6b]">
+                    {totalMulti.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
+                  </span>
                 </div>
 
                 {multiItens.length === 0 ? (
-                  <div className="rounded-[1.75rem] border border-dashed border-gray-300 px-5 py-8 text-center text-sm font-bold text-gray-500 dark:border-white/10 dark:text-gray-400">
-                    Adicione os procedimentos e profissionais para montar a comanda do atendimento.
+                  <div className="rounded-2xl border border-dashed border-[#e2d5da] px-4 py-6 text-center text-xs text-[#745e69] dark:border-[#352b3e] dark:text-white/50">
+                    Adicione os procedimentos acima para montar a comanda multi-profissional.
                   </div>
                 ) : (
-                  <div className="space-y-3">
+                  <div className="space-y-2">
                     {multiItens.map((item, index) => {
                       const servico = servicoMap.get(item.servicoId);
                       const profissional = profissionais.find((entry) => entry.id === item.profissionalId);
                       return (
-                        <div key={item.id} className="flex items-center justify-between gap-4 rounded-[1.5rem] border border-gray-100 bg-gray-50 px-4 py-4 dark:border-white/5 dark:bg-black/20">
-                          <div className="min-w-0 flex-1">
-                            <p className="text-[10px] font-black uppercase tracking-[0.24em] text-[#d48997]">Item {index + 1}</p>
-                            <p className="mt-2 text-sm font-black uppercase tracking-tight text-gray-900 dark:text-white">
-                              {servico?.nome || 'Servico'}
+                        <div
+                          key={item.id}
+                          className="flex items-center justify-between gap-3 rounded-xl border border-[#eae1e4] bg-white px-4 py-3 dark:border-[#28212f] dark:bg-[#1c1721]"
+                        >
+                          <div className="min-w-0">
+                            <p className="truncate text-sm font-bold text-[#23141c] dark:text-white">
+                              {index + 1}. {servico?.nome || 'Serviço'}
                             </p>
-                            <p className="mt-1 text-[11px] font-bold uppercase tracking-[0.14em] text-gray-500 dark:text-gray-300">
-                              {profissional?.nome || 'Profissional'} · {item.hora}
+                            <p className="text-xs text-[#745e69] dark:text-white/55">
+                              {profissional?.nome || 'Profissional'} · <strong className="text-[#b84c6b]">{item.hora}</strong>
                             </p>
                           </div>
                           <div className="flex items-center gap-3">
-                            <p className="text-sm font-black text-gray-900 dark:text-white">
+                            <span className="text-sm font-bold text-[#23141c] dark:text-white">
                               {Number(servico?.preco || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
-                            </p>
+                            </span>
                             <button
                               type="button"
                               onClick={() => removeMultiItem(item.id)}
-                              className="rounded-full border border-gray-200 p-2 text-gray-500 transition hover:border-red-200 hover:text-red-500 dark:border-white/10 dark:text-white/70"
+                              className="rounded-lg border border-[#eae1e4] p-1.5 text-[#745e69] transition hover:border-rose-200 hover:bg-rose-50 hover:text-rose-600 dark:border-[#352b3e] dark:text-white/60"
                             >
                               <Trash2 size={14} />
                             </button>
@@ -1030,18 +1108,46 @@ function ModalNovoAgendamento({ onClose, onSave, preData, preHora, preProf, pref
                   </div>
                 )}
               </div>
-            </>
+            </section>
           )}
+        </div>
 
-          <motion.button
-            whileHover={{ scale: 1.02, y: -5 }}
-            whileTap={{ scale: 0.98 }}
-            onClick={salvar}
-            className="group flex w-full items-center justify-center gap-4 rounded-[2rem] bg-[#0a0a0a] py-8 text-xl font-black uppercase tracking-[0.3em] text-white shadow-[0_30px_60px_-15px_rgba(0,0,0,0.4)] transition-all dark:bg-white dark:text-gray-950"
-          >
-            {modoReserva === 'multi' ? 'Criar Comanda' : 'Confirmar Reserva'}
-            <Plus size={24} className="transition-transform group-hover:rotate-90" />
-          </motion.button>
+        {/* Sticky Footer with Live Summary */}
+        <div className="flex shrink-0 flex-col gap-3 border-t border-[#efe7ea] bg-[#faf7f5] px-5 py-4 dark:border-[#28212f] dark:bg-[#120f15] sm:flex-row sm:items-center sm:justify-between sm:px-6">
+          <div className="flex items-center gap-4">
+            <div>
+              <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-[#8c727e] dark:text-white/45">
+                {modoReserva === 'multi'
+                  ? `Comanda · ${multiItens.length} item(ns)`
+                  : `Total · ${resumoSimples.qtd} item(ns)${resumoSimples.duracaoMin ? ` · ${formatDurationLabel(resumoSimples.duracaoMin)}` : ''}`}
+              </p>
+              <p className="text-lg font-extrabold text-[#23141c] tabular-nums dark:text-white">
+                {(modoReserva === 'multi' ? totalMulti : resumoSimples.total).toLocaleString('pt-BR', {
+                  style: 'currency',
+                  currency: 'BRL',
+                })}
+              </p>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-2.5">
+            <button
+              type="button"
+              onClick={onClose}
+              className="h-11 flex-1 rounded-xl border border-[#e2d5da] bg-white px-5 text-xs font-bold text-[#5b4852] transition hover:border-[#b84c6b] hover:text-[#23141c] dark:border-[#352b3e] dark:bg-white/5 dark:text-white/75 sm:flex-none"
+            >
+              Cancelar
+            </button>
+            <button
+              type="button"
+              onClick={salvar}
+              disabled={saving}
+              className="inline-flex h-11 flex-1 items-center justify-center gap-2 rounded-xl bg-[#b84c6b] px-6 text-xs font-bold text-white shadow-sm transition hover:bg-[#9c3b57] disabled:opacity-55 sm:flex-none"
+            >
+              <Plus size={15} />
+              {saving ? 'Salvando...' : modoReserva === 'multi' ? 'Criar Comanda' : 'Confirmar Reserva'}
+            </button>
+          </div>
         </div>
       </motion.div>
     </motion.div>
@@ -1154,188 +1260,193 @@ function ModalAjusteAgendamento({ agendamento, profissionais, onClose, onSave })
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
-      className="fixed inset-0 bg-black/80 backdrop-blur-2xl z-[210] flex items-start justify-center overflow-y-auto overscroll-contain p-3 sm:items-center sm:p-4"
+      onClick={onClose}
+      className="fixed inset-0 z-[210] flex items-end justify-center overflow-y-auto overscroll-contain bg-[#23141c]/55 p-0 sm:items-center sm:p-4"
     >
       <motion.form
-        initial={{ scale: 0.96, y: 24, opacity: 0 }}
+        initial={{ scale: 0.97, y: 16, opacity: 0 }}
         animate={{ scale: 1, y: 0, opacity: 1 }}
-        exit={{ scale: 0.96, y: 24, opacity: 0 }}
+        exit={{ scale: 0.97, y: 16, opacity: 0 }}
+        transition={{ duration: 0.18, ease: 'easeOut' }}
+        onClick={(e) => e.stopPropagation()}
         onSubmit={salvar}
-        className="relative max-h-[calc(100dvh-1.5rem)] w-full max-w-xl overflow-y-auto rounded-[1.6rem] border border-gray-200 bg-white p-5 shadow-[0_40px_90px_-40px_rgba(0,0,0,0.92)] dark:border-white/5 dark:bg-[#0c0c0e] sm:max-h-[calc(100dvh-2rem)] sm:rounded-[2.4rem] sm:p-8"
+        className="flex max-h-[92dvh] w-full max-w-xl flex-col overflow-hidden rounded-t-3xl border border-[#eae1e4] bg-white shadow-2xl dark:border-[#28212f] dark:bg-[#18131d] sm:rounded-3xl"
       >
-        <button
-          type="button"
-          onClick={onClose}
-          className="absolute right-5 top-5 rounded-full border border-gray-200 dark:border-white/5 p-2 text-[#8a7079] transition hover:text-[#3b2a35] dark:text-[#c7adb4] dark:hover:text-[#faf7f6]"
-        >
-          <X size={16} />
-        </button>
-
-        <div className="mb-8">
-          <p className="text-[10px] font-black uppercase tracking-[0.3em] text-[#E29BA8]">Alteracao de agenda</p>
-          <h2 className="mt-3 text-3xl font-black uppercase tracking-tight text-gray-900 dark:text-white">Alterar horario</h2>
-          <p className="mt-3 text-sm text-gray-500 dark:text-gray-400">
-            {agendamento?.clienteNome} · {getAgendamentoTitulo(agendamento)}
-          </p>
-        </div>
-
-        <div className="grid gap-4 sm:grid-cols-2">
-          <label className="space-y-3">
-            <span className="text-[10px] font-black uppercase tracking-[0.28em] text-gray-500">Dia</span>
-            <input
-              type="text"
-              inputMode="numeric"
-              value={dataText}
-              onChange={(event) => {
-                const nextText = maskDateForEdit(event.target.value);
-                setDataText(nextText);
-                setForm((prev) => ({ ...prev, data: parseEditDateToIso(nextText) }));
-              }}
-              placeholder="dd/mm/aaaa"
-              className="h-14 w-full rounded-[1.5rem] border border-gray-200 dark:border-white/5 bg-white dark:bg-[#111113] px-5 text-sm font-black text-gray-900 dark:text-white outline-none"
-            />
-          </label>
-
-          <label className="space-y-3">
-            <span className="text-[10px] font-black uppercase tracking-[0.28em] text-gray-500">Horario</span>
-            <select
-              value={form.hora}
-              onMouseDown={blurActiveField}
-              onTouchStart={blurActiveField}
-              onChange={(event) => setForm((prev) => ({ ...prev, hora: event.target.value }))}
-              className="h-14 w-full rounded-[1.5rem] border border-gray-200 dark:border-white/5 bg-white dark:bg-[#111113] px-5 text-sm font-black text-gray-900 dark:text-white outline-none"
-            >
-              <option value="">Selecione...</option>
-              {Array.from({ length: (END_HOUR - START_HOUR) * 4 + 1 }, (_, i) => {
-                const totalMin = START_HOUR * 60 + i * 15;
-                const h = String(Math.floor(totalMin / 60)).padStart(2, '0');
-                const m = String(totalMin % 60).padStart(2, '0');
-                const time = `${h}:${m}`;
-                return <option key={time} value={time}>{time}</option>;
-              })}
-            </select>
-          </label>
-        </div>
-
-        <label className="mt-5 block space-y-3">
-          <span className="text-[10px] font-black uppercase tracking-[0.28em] text-gray-500">Profissional</span>
-          <select
-            value={form.profissionalId}
-            onMouseDown={blurActiveField}
-            onTouchStart={blurActiveField}
-            onChange={(event) => setForm((prev) => ({ ...prev, profissionalId: event.target.value }))}
-            className="h-14 w-full rounded-[1.5rem] border border-gray-200 dark:border-white/5 bg-white dark:bg-[#111113] px-5 text-sm font-black text-gray-900 dark:text-white outline-none"
-          >
-            <option value="">Selecione...</option>
-            {(profissionais || []).map((profissional) => (
-              <option key={profissional.id} value={profissional.id}>{profissional.nome}</option>
-            ))}
-          </select>
-        </label>
-
-        <label className="mt-5 flex items-center gap-4 rounded-[1.5rem] border border-gray-200 bg-[#f8f3f5] p-4 dark:border-white/5 dark:bg-[#111113]">
-          <input
-            type="checkbox"
-            checked={form.encaixe}
-            onChange={(event) => setForm((prev) => ({ ...prev, encaixe: event.target.checked }))}
-            className="h-5 w-5 cursor-pointer rounded-lg accent-[#d48997]"
-          />
-          <span className="cursor-pointer text-[10px] font-black uppercase tracking-[0.18em] text-gray-600 dark:text-gray-300">
-            Forcar encaixe
-          </span>
-        </label>
-
-        <div className="mt-5 grid gap-4 sm:grid-cols-[minmax(0,1fr)_220px]">
-          <div className="space-y-3">
-            <div className="flex flex-wrap items-center justify-between gap-3">
-              <span className="text-[10px] font-black uppercase tracking-[0.28em] text-gray-500">Ajuste no servico</span>
-              <div className="flex flex-wrap items-center gap-2">
-                {[
-                  { id: 'desconto', label: 'Desconto' },
-                  { id: 'acrescimo', label: 'Acrescimo' },
-                ].map((tipo) => (
-                  <button
-                    key={tipo.id}
-                    type="button"
-                    onMouseDown={dismissActiveField}
-                    onClick={() => setAjusteTipo(tipo.id)}
-                    className={cn(
-                      'rounded-xl border px-3 py-2 text-[10px] font-black uppercase tracking-[0.16em] transition-all',
-                      ajusteTipo === tipo.id
-                        ? 'border-[#d48997] bg-[#d48997] text-white'
-                        : 'border-gray-200 text-gray-500 hover:border-[#d48997]/30 dark:border-white/10 dark:text-white/70'
-                    )}
-                  >
-                    {tipo.label}
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            <input
-              type="number"
-              step="0.01"
-              min="0"
-              value={ajusteValor}
-              onChange={(event) => setAjusteValor(event.target.value)}
-              placeholder="0,00"
-              className="h-14 w-full rounded-[1.5rem] border border-gray-200 dark:border-white/5 bg-white dark:bg-[#111113] px-5 text-sm font-black text-gray-900 dark:text-white outline-none"
-            />
-
-            <div className="flex flex-wrap items-center justify-between gap-3 text-[10px] font-bold uppercase tracking-[0.16em]">
-              <span className="text-gray-400">
-                Original {precoBaseOriginal.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
-              </span>
-              {valorBaseAjustadoAtivo && (
-                <span className="text-[#d48997]">
-                  {ajusteTipo === 'acrescimo' ? 'Acrescimo' : 'Desconto'} {ajusteAplicado.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
-                </span>
-              )}
-            </div>
-          </div>
-
-          <div className="rounded-[1.5rem] border border-gray-200 dark:border-white/5 bg-[#f8f3f5] px-5 py-4 dark:bg-[#111113]">
-            <p className="text-[10px] font-black uppercase tracking-[0.22em] text-gray-500">Referencia</p>
-            <p className="mt-2 text-lg font-black text-gray-900 dark:text-white">
-              {precoBaseOriginal.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
+        <div className="flex shrink-0 items-start justify-between gap-4 border-b border-[#efe7ea] px-6 py-4 dark:border-[#28212f]">
+          <div>
+            <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-[#b84c6b]">Alteração de agenda</p>
+            <h2 className="mt-0.5 font-brand-display text-2xl font-bold text-[#23141c] dark:text-white">
+              Alterar horário
+            </h2>
+            <p className="mt-1 text-xs font-medium text-[#745e69] dark:text-white/55">
+              {agendamento?.clienteNome} · {getAgendamentoTitulo(agendamento)}
             </p>
-            <p className="mt-3 text-[10px] font-bold uppercase tracking-[0.16em] text-gray-500">
-              Final {precoBaseFinal.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
-            </p>
-            <div className="mt-3 flex items-center justify-between gap-3">
-              <button
-                type="button"
-                onClick={() => {
-                  setAjusteTipo('desconto');
-                  setAjusteValor('');
-                }}
-                className="text-[10px] font-black uppercase tracking-[0.18em] text-[#c27a89] transition hover:text-[#a55e6e]"
-              >
-                Restaurar
-              </button>
-              {valorBaseAjustadoAtivo && (
-                <span className="text-[10px] font-black uppercase tracking-[0.18em] text-amber-500 dark:text-amber-200">
-                  Ajustado
-                </span>
-              )}
-            </div>
           </div>
-        </div>
-
-        <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:justify-end">
           <button
             type="button"
             onClick={onClose}
-            className="inline-flex min-h-[50px] items-center justify-center rounded-full border border-gray-200 px-6 text-[11px] font-black uppercase tracking-[0.18em] text-[#8a7079] transition hover:border-[rgba(233,155,168,0.18)] hover:text-[#3b2a35] dark:border-white/5 dark:text-[#c7adb4] dark:hover:text-[#faf7f6]"
+            className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-[#e2d5da] bg-[#faf7f5] text-[#6b5761] transition hover:border-[#b84c6b] hover:text-[#23141c] dark:border-[#352b3e] dark:bg-white/5 dark:text-white/70"
+          >
+            <X size={16} />
+          </button>
+        </div>
+
+        <div className="custom-scrollbar min-h-0 flex-1 space-y-4 overflow-y-auto px-6 py-5">
+          <div className="grid gap-3 sm:grid-cols-2">
+            <label className="space-y-1.5">
+              <span className="block text-xs font-semibold text-[#5b4852] dark:text-white/70">Dia</span>
+              <input
+                type="text"
+                inputMode="numeric"
+                value={dataText}
+                onChange={(event) => {
+                  const nextText = maskDateForEdit(event.target.value);
+                  setDataText(nextText);
+                  setForm((prev) => ({ ...prev, data: parseEditDateToIso(nextText) }));
+                }}
+                placeholder="dd/mm/aaaa"
+                className="h-11 w-full rounded-xl border border-[#e2d5da] bg-[#faf7f5] px-4 text-sm font-semibold text-[#23141c] outline-none transition focus:border-[#b84c6b] focus:bg-white dark:border-[#352b3e] dark:bg-[#120f15] dark:text-white"
+              />
+            </label>
+
+            <label className="space-y-1.5">
+              <span className="block text-xs font-semibold text-[#5b4852] dark:text-white/70">Horário</span>
+              <select
+                value={form.hora}
+                onMouseDown={blurActiveField}
+                onTouchStart={blurActiveField}
+                onChange={(event) => setForm((prev) => ({ ...prev, hora: event.target.value }))}
+                className="h-11 w-full rounded-xl border border-[#e2d5da] bg-[#faf7f5] px-3.5 text-sm font-semibold text-[#23141c] outline-none transition focus:border-[#b84c6b] focus:bg-white dark:border-[#352b3e] dark:bg-[#120f15] dark:text-white"
+              >
+                <option value="">Selecione...</option>
+                {Array.from({ length: (END_HOUR - START_HOUR) * 4 + 1 }, (_, i) => {
+                  const totalMin = START_HOUR * 60 + i * 15;
+                  const h = String(Math.floor(totalMin / 60)).padStart(2, '0');
+                  const m = String(totalMin % 60).padStart(2, '0');
+                  const time = `${h}:${m}`;
+                  return <option key={time} value={time}>{time}</option>;
+                })}
+              </select>
+            </label>
+          </div>
+
+          <label className="block space-y-1.5">
+            <span className="block text-xs font-semibold text-[#5b4852] dark:text-white/70">Profissional</span>
+            <select
+              value={form.profissionalId}
+              onMouseDown={blurActiveField}
+              onTouchStart={blurActiveField}
+              onChange={(event) => setForm((prev) => ({ ...prev, profissionalId: event.target.value }))}
+              className="h-11 w-full rounded-xl border border-[#e2d5da] bg-[#faf7f5] px-3.5 text-sm font-semibold text-[#23141c] outline-none transition focus:border-[#b84c6b] focus:bg-white dark:border-[#352b3e] dark:bg-[#120f15] dark:text-white"
+            >
+              <option value="">Selecione...</option>
+              {(profissionais || []).map((profissional) => (
+                <option key={profissional.id} value={profissional.id}>{profissional.nome}</option>
+              ))}
+            </select>
+          </label>
+
+          <label className="flex cursor-pointer items-center gap-3 rounded-xl border border-[#eae1e4] bg-[#faf7f5] px-4 py-3 dark:border-[#28212f] dark:bg-[#120f15]">
+            <input
+              type="checkbox"
+              checked={form.encaixe}
+              onChange={(event) => setForm((prev) => ({ ...prev, encaixe: event.target.checked }))}
+              className="h-4 w-4 cursor-pointer rounded accent-[#b84c6b]"
+            />
+            <span className="text-xs font-semibold text-[#5b4852] dark:text-white/75">
+              Forçar encaixe (permitir sobreposição)
+            </span>
+          </label>
+
+          <div className="grid gap-3 sm:grid-cols-[minmax(0,1fr)_200px]">
+            <div className="space-y-2.5">
+              <div className="flex flex-wrap items-center justify-between gap-2">
+                <span className="text-xs font-semibold text-[#5b4852] dark:text-white/70">Ajuste no serviço</span>
+                <div className="inline-flex rounded-lg border border-[#eae1e4] bg-[#faf7f5] p-0.5 dark:border-[#28212f] dark:bg-[#120f15]">
+                  {[
+                    { id: 'desconto', label: 'Desconto' },
+                    { id: 'acrescimo', label: 'Acréscimo' },
+                  ].map((tipo) => (
+                    <button
+                      key={tipo.id}
+                      type="button"
+                      onMouseDown={dismissActiveField}
+                      onClick={() => setAjusteTipo(tipo.id)}
+                      className={cn(
+                        'rounded-md px-2.5 py-1 text-[11px] font-bold transition',
+                        ajusteTipo === tipo.id
+                          ? 'bg-[#23141c] text-white dark:bg-[#c65d7b]'
+                          : 'text-[#745e69] hover:text-[#23141c] dark:text-white/60'
+                      )}
+                    >
+                      {tipo.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              <input
+                type="number"
+                step="0.01"
+                min="0"
+                value={ajusteValor}
+                onChange={(event) => setAjusteValor(event.target.value)}
+                placeholder="0,00"
+                className="h-11 w-full rounded-xl border border-[#e2d5da] bg-[#faf7f5] px-4 text-sm font-semibold text-[#23141c] outline-none transition focus:border-[#b84c6b] focus:bg-white dark:border-[#352b3e] dark:bg-[#120f15] dark:text-white"
+              />
+
+              <div className="flex flex-wrap items-center justify-between gap-2 text-xs">
+                <span className="text-[#8c727e] dark:text-white/50">
+                  Original {precoBaseOriginal.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
+                </span>
+                {valorBaseAjustadoAtivo && (
+                  <span className="font-bold text-[#b84c6b]">
+                    {ajusteTipo === 'acrescimo' ? 'Acréscimo' : 'Desconto'} {ajusteAplicado.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
+                  </span>
+                )}
+              </div>
+            </div>
+
+            <div className="rounded-2xl border border-[#eae1e4] bg-[#faf7f5] px-4 py-3.5 dark:border-[#28212f] dark:bg-[#120f15]">
+              <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-[#8c727e] dark:text-white/45">Valor final</p>
+              <p className="mt-1 text-lg font-extrabold text-[#23141c] tabular-nums dark:text-white">
+                {precoBaseFinal.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
+              </p>
+              <div className="mt-2.5 flex items-center justify-between gap-2">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setAjusteTipo('desconto');
+                    setAjusteValor('');
+                  }}
+                  className="text-xs font-bold text-[#b84c6b] hover:underline"
+                >
+                  Restaurar
+                </button>
+                {valorBaseAjustadoAtivo && (
+                  <span className="rounded-md bg-amber-100 px-2 py-0.5 text-[10px] font-bold text-amber-800 dark:bg-amber-500/20 dark:text-amber-300">
+                    Ajustado
+                  </span>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div className="flex shrink-0 flex-col gap-2.5 border-t border-[#efe7ea] bg-[#faf7f5] px-6 py-4 dark:border-[#28212f] dark:bg-[#120f15] sm:flex-row sm:justify-end">
+          <button
+            type="button"
+            onClick={onClose}
+            className="inline-flex h-11 items-center justify-center rounded-xl border border-[#e2d5da] bg-white px-5 text-xs font-bold text-[#5b4852] transition hover:border-[#b84c6b] hover:text-[#23141c] dark:border-[#352b3e] dark:bg-white/5 dark:text-white/75"
           >
             Cancelar
           </button>
           <button
             type="submit"
             disabled={saving}
-            className="inline-flex min-h-[50px] items-center justify-center rounded-full bg-[#E29BA8] px-6 text-[11px] font-black uppercase tracking-[0.18em] text-white transition hover:bg-[#d48997] disabled:opacity-60"
+            className="inline-flex h-11 items-center justify-center rounded-xl bg-[#b84c6b] px-6 text-xs font-bold text-white shadow-sm transition hover:bg-[#9c3b57] disabled:opacity-60"
           >
-            {saving ? 'Salvando...' : 'Salvar alteracao'}
+            {saving ? 'Salvando...' : 'Salvar alteração'}
           </button>
         </div>
       </motion.form>

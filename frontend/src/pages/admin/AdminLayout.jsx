@@ -211,7 +211,7 @@ export default function AdminLayout() {
   const location = useLocation();
   const { dark, toggle } = useTheme();
   const isSubPage = location.pathname !== '/admin' && location.pathname !== '/admin/';
-  const isAgendaRoute = location.pathname.startsWith('/admin/agenda');
+  const isAgendaRoute = location.pathname === '/admin/agenda' || location.pathname === '/admin/agenda/';
   const knownAlertasRef = useRef(new Set());
   const alertasHydratedRef = useRef(false);
 
