@@ -820,11 +820,9 @@ export default function Inbox() {
               ) : null}
 
               <div className="space-y-4 max-w-3xl mx-auto">
-                <AnimatePresence mode="popLayout">
-                  {mensagens.map((m, index) => (
-                    <MensagemBolha key={m.id || `mensagem-${index}`} m={m} />
-                  ))}
-                </AnimatePresence>
+                {mensagens.map((m, index) => (
+                  <MensagemBolha key={m.id || `mensagem-${index}`} m={m} />
+                ))}
               </div>
             </div>
 
@@ -964,10 +962,18 @@ export default function Inbox() {
              
              <div className="space-y-4">
                <div>
-                 <span className="text-[9px] font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wider block mb-1">Status da Fila</span>
-                 <Badge active={selecionada.atendimento !== 'humano'}>
+                 <span className="text-[9px] font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wider block mb-1.5">Status da Fila</span>
+                 <span
+                   className={cn(
+                     'inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-[11px] font-bold',
+                     selecionada.atendimento === 'humano'
+                       ? 'border-emerald-200 bg-emerald-50 text-emerald-700 dark:border-emerald-500/25 dark:bg-emerald-500/15 dark:text-emerald-300'
+                       : 'border-[#eccbd4] bg-[#fdf2f5] text-[#b84c6b] dark:border-[#c65d7b]/30 dark:bg-[#c65d7b]/15 dark:text-[#f0aab8]'
+                   )}
+                 >
+                   {selecionada.atendimento === 'humano' ? <User size={11} /> : <Bot size={11} />}
                    {selecionada.atendimento === 'humano' ? 'Suporte Humano' : 'Respostas por IA'}
-                 </Badge>
+                 </span>
                </div>
 
                <div className="grid grid-cols-2 gap-3 pt-2">
@@ -1023,7 +1029,7 @@ function MensagemMidia({ m, isClient }) {
     "rounded-xl border p-2.5 mb-2.5",
     isClient
       ? "bg-gray-50 dark:bg-zinc-800 border-black/[0.04] dark:border-white/5 text-gray-700 dark:text-gray-300"
-      : "bg-white/10 border-white/20 text-white"
+      : "bg-white border-[#eccbd4] text-[#23141c] dark:bg-white/10 dark:border-white/20 dark:text-white"
   );
 
   if (m.tipo === 'imagem') {
