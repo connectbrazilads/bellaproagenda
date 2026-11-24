@@ -1,84 +1,99 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { Outlet, NavLink, useNavigate, useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { 
-  LayoutDashboard, 
-  Calendar, 
-  ClipboardList, 
-  MessageSquare, 
+import {
+  LayoutDashboard,
+  Calendar,
+  ClipboardList,
+  MessageSquare,
   Bell,
-  Brain, 
-  User, 
-  Scissors, 
-  Gift, 
-  Users, 
-  Ban, 
-  Package, 
-  Download, 
-  DollarSign, 
+  Brain,
+  User,
+  Scissors,
+  Gift,
+  Users,
+  Ban,
+  Package,
+  Download,
+  DollarSign,
   FileText,
-  Gem, 
+  Gem,
   LifeBuoy,
-  Smartphone, 
-  Settings, 
-  LogOut, 
-  Sun, 
-  Moon, 
+  Smartphone,
+  Settings,
+  LogOut,
+  Sun,
+  Moon,
   Menu,
   X,
   TrendingUp,
   ChevronLeft,
   ChevronRight,
-  CheckCheck
+  CheckCheck,
 } from 'lucide-react';
 import { useTheme } from '../../context/ThemeContext';
 import { cn } from '../../lib/utils';
-import { getEffectivePermissions, getEffectiveActionPermissions, readStoredPermissions, readStoredActionPermissions } from '../../lib/permissions';
+import {
+  getEffectivePermissions,
+  getEffectiveActionPermissions,
+  readStoredPermissions,
+  readStoredActionPermissions,
+} from '../../lib/permissions';
 import ModalPDV from '../../components/ModalPDV';
 import { clearAdminSession } from '../../lib/session';
-import { getAlertasAgendamento, logoutAdmin, markAlertaAgendamentoLido, markTodosAlertasAgendamentoLidos } from '../../services/api';
+import {
+  getAlertasAgendamento,
+  logoutAdmin,
+  markAlertaAgendamentoLido,
+  markTodosAlertasAgendamentoLidos,
+} from '../../services/api';
 import BrandLogo from '../../components/BrandLogo';
 import toast from 'react-hot-toast';
 
 const NAV_GROUPS = [
   {
-    label: 'Principal',
+    label: 'Operação',
     items: [
       { to: '/admin', label: 'Dashboard', icon: LayoutDashboard, end: true, permission: 'dashboard' },
       { to: '/admin/agenda', label: 'Agenda', icon: Calendar, permission: 'agenda' },
+      { to: '/admin/agendamentos', label: 'Agendamentos', icon: ClipboardList, permission: 'agendamentos' },
       { to: '/admin/inbox', label: 'Inbox', icon: MessageSquare, permission: 'inbox' },
     ],
   },
   {
-    label: 'Gestao',
+    label: 'Cadastros',
     items: [
       { to: '/admin/clientes', label: 'Clientes', icon: Users, permission: 'clientes' },
       { to: '/admin/profissionais', label: 'Profissionais', icon: User, permission: 'profissionais' },
-      { to: '/admin/servicos', label: 'Servicos', icon: Scissors, permission: 'servicos' },
+      { to: '/admin/servicos', label: 'Serviços', icon: Scissors, permission: 'servicos' },
       { to: '/admin/pacotes', label: 'Pacotes', icon: Gift, permission: 'pacotes' },
       { to: '/admin/produtos', label: 'Estoque', icon: Package, permission: 'produtos' },
     ],
   },
   {
-    label: 'Inteligencia',
+    label: 'Financeiro',
     items: [
-      { to: '/admin/base-conhecimento', label: 'Base IA', icon: Brain, permission: 'base_conhecimento' },
-      { to: '/admin/fidelidade', label: 'Fidelidade', icon: Gem, permission: 'fidelidade' },
-      { to: '/admin/agendamentos', label: 'Agendamentos', icon: ClipboardList, permission: 'agendamentos' },
+      { to: '/admin/financeiro', label: 'Financeiro', icon: DollarSign, permission: 'financeiro' },
+      { to: '/admin/remuneracao', label: 'Remuneração', icon: ClipboardList, permission: 'remuneracao' },
+      { to: '/admin/relatorio', label: 'Relatórios', icon: TrendingUp, permission: 'relatorio' },
+      { to: '/admin/faturas', label: 'Faturas', icon: FileText, permission: 'faturas' },
     ],
   },
   {
-    label: 'Configuracoes',
+    label: 'Crescimento',
     items: [
-      { to: '/admin/financeiro', label: 'Financeiro', icon: DollarSign, permission: 'financeiro' },
-      { to: '/admin/faturas', label: 'Faturas', icon: FileText, permission: 'faturas' },
-      { to: '/admin/suporte', label: 'Suporte', icon: LifeBuoy, permission: 'suporte' },
-      { to: '/admin/remuneracao', label: 'Remuneracao', icon: ClipboardList },
-      { to: '/admin/relatorio', label: 'Analise', icon: TrendingUp },
-      { to: '/admin/bloqueios', label: 'Bloqueios', icon: Ban, permission: 'bloqueios' },
+      { to: '/admin/base-conhecimento', label: 'Base IA', icon: Brain, permission: 'base_conhecimento' },
+      { to: '/admin/fidelidade', label: 'Fidelidade', icon: Gem, permission: 'fidelidade' },
       { to: '/admin/notificacoes', label: 'Mensagens', icon: Smartphone, permission: 'notificacoes' },
-      { to: '/admin/migracao', label: 'Migracao', icon: Download },
-      { to: '/admin/configuracoes', label: 'Configuracoes', icon: Settings },
+    ],
+  },
+  {
+    label: 'Sistema',
+    items: [
+      { to: '/admin/bloqueios', label: 'Bloqueios', icon: Ban, permission: 'bloqueios' },
+      { to: '/admin/migracao', label: 'Migração', icon: Download, permission: 'migracao' },
+      { to: '/admin/suporte', label: 'Suporte', icon: LifeBuoy, permission: 'suporte' },
+      { to: '/admin/configuracoes', label: 'Configurações', icon: Settings, permission: 'configuracoes' },
     ],
   },
 ];
@@ -144,22 +159,35 @@ class AdminErrorBoundary extends React.Component {
     super(props);
     this.state = { hasError: false };
   }
-  static getDerivedStateFromError(error) {
+  static getDerivedStateFromError() {
     return { hasError: true };
   }
   componentDidCatch(error, errorInfo) {
-    console.error("AdminErrorBoundary caught an error:", error, errorInfo);
+    console.error('AdminErrorBoundary caught an error:', error, errorInfo);
   }
   render() {
     if (this.state.hasError) {
       return (
-        <div className="flex-1 flex flex-col items-center justify-center p-6 text-center">
-          <div className="w-16 h-16 bg-red-100 dark:bg-red-900/30 text-red-500 rounded-full flex items-center justify-center mb-4">
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
+        <div className="flex flex-1 flex-col items-center justify-center p-6 text-center">
+          <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-rose-50 text-rose-600 dark:bg-rose-500/15 dark:text-rose-300">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <circle cx="12" cy="12" r="10" />
+              <line x1="12" y1="8" x2="12" y2="12" />
+              <line x1="12" y1="16" x2="12.01" y2="16" />
+            </svg>
           </div>
-          <h2 className="text-lg font-bold text-slate-800 dark:text-white mb-2">Ops! Algo deu errado.</h2>
-          <p className="text-sm text-slate-500 dark:text-slate-400 max-w-md mb-6">Nao foi possivel carregar esta tela. Tente recarregar a pagina ou voltar para o inicio.</p>
-          <button onClick={() => window.location.href = '/admin'} className="px-5 py-2.5 bg-slate-900 dark:bg-white text-white dark:text-slate-900 rounded-xl text-sm font-bold shadow-lg">Voltar ao Inicio</button>
+          <h2 className="mb-2 font-brand-display text-2xl font-bold text-[#23141c] dark:text-white">
+            Ops! Algo deu errado.
+          </h2>
+          <p className="mb-6 max-w-md text-sm text-[#6b5761] dark:text-white/60">
+            Não foi possível carregar esta tela. Tente recarregar a página ou voltar para o início.
+          </p>
+          <button
+            onClick={() => (window.location.href = '/admin')}
+            className="rounded-full bg-[#23141c] px-6 py-3 text-xs font-bold text-white transition hover:bg-[#3a222f] dark:bg-white dark:text-[#23141c]"
+          >
+            Voltar ao início
+          </button>
         </div>
       );
     }
@@ -169,8 +197,12 @@ class AdminErrorBoundary extends React.Component {
 
 export default function AdminLayout() {
   const [menuOpen, setMenuOpen] = useState(false);
-  const [collapsed, setCollapsed] = useState(false);
-  const [viewportWidth, setViewportWidth] = useState(() => (typeof window === 'undefined' ? 1440 : window.innerWidth));
+  const [collapsed, setCollapsed] = useState(() =>
+    typeof window !== 'undefined' ? window.innerWidth < 1280 : false
+  );
+  const [viewportWidth, setViewportWidth] = useState(() =>
+    typeof window === 'undefined' ? 1440 : window.innerWidth
+  );
   const [alertasOpen, setAlertasOpen] = useState(false);
   const [alertas, setAlertas] = useState([]);
   const [alertasUnread, setAlertasUnread] = useState(0);
@@ -179,18 +211,19 @@ export default function AdminLayout() {
   const location = useLocation();
   const { dark, toggle } = useTheme();
   const isSubPage = location.pathname !== '/admin' && location.pathname !== '/admin/';
+  const isAgendaRoute = location.pathname.startsWith('/admin/agenda');
   const knownAlertasRef = useRef(new Set());
   const alertasHydratedRef = useRef(false);
 
   const role = localStorage.getItem('salao_user_role') || 'gestor';
-  const pid = localStorage.getItem('salao_user_pid');
   const userId = localStorage.getItem('salao_user_id') || '';
   const userPermissions = getEffectivePermissions(role, readStoredPermissions());
   const userActionPermissions = getEffectiveActionPermissions(role, readStoredActionPermissions());
-  const podeVerAlertas = ['agenda', 'dashboard', 'agendamentos'].some((permission) => userPermissions.includes(permission));
-  const shouldForceCollapse = viewportWidth < 1440;
-  const effectiveCollapsed = collapsed || shouldForceCollapse;
-  const canToggleSidebar = viewportWidth >= 1440;
+  const podeVerAlertas = ['agenda', 'dashboard', 'agendamentos'].some((permission) =>
+    userPermissions.includes(permission)
+  );
+  const canToggleSidebar = viewportWidth >= 1024;
+  const effectiveCollapsed = collapsed;
 
   useEffect(() => {
     function handleResize() {
@@ -277,13 +310,15 @@ export default function AdminLayout() {
 
     window.setTimeout(() => {
       navigate(to);
-    }, 300);
+    }, 220);
   }
 
   function canAccessPath(path) {
     if (path === '/admin/financeiro') {
-      return userPermissions.includes('financeiro')
-        || CAIXA_ACTION_PERMISSIONS.some((permission) => userActionPermissions.includes(permission));
+      return (
+        userPermissions.includes('financeiro') ||
+        CAIXA_ACTION_PERMISSIONS.some((permission) => userActionPermissions.includes(permission))
+      );
     }
 
     const permission = PATH_PERMISSIONS[path];
@@ -326,7 +361,7 @@ export default function AdminLayout() {
       alertasHydratedRef.current = true;
     } catch {
       if (!silent) {
-        toast.error('Nao foi possivel carregar as notificacoes.');
+        toast.error('Não foi possível carregar as notificações.');
       }
     } finally {
       if (!silent) setLoadingAlertas(false);
@@ -355,7 +390,7 @@ export default function AdminLayout() {
       await markTodosAlertasAgendamentoLidos();
       carregarAlertas({ silent: true });
     } catch {
-      toast.error('Nao foi possivel marcar as notificacoes como lidas.');
+      toast.error('Não foi possível marcar as notificações como lidas.');
     }
   }
 
@@ -367,31 +402,11 @@ export default function AdminLayout() {
     }
 
     clearAdminSession();
-    navigate('/admin/login');
+    navigate('/login');
   }
 
-  // Logica de visibilidade por role
-  const filteredGroups = NAV_GROUPS.map(group => {
-    const filteredItems = group.items.filter(item => {
-      // Regras de restricao
-      if (role === 'profissional') {
-        const allowed = ['Dashboard', 'Agenda', 'Remuneracao'];
-        return allowed.includes(item.label);
-      }
-      if (role === 'recepcao') {
-        const forbidden = ['Financeiro', 'Analise', 'Configuracoes', 'Migracao', 'Usuarios'];
-        return !forbidden.includes(item.label);
-      }
-      return true; // gestor/admin ve tudo
-    });
-    return { ...group, items: filteredItems };
-  }).filter(group => group.items.length > 0);
-
   const visibleGroups = NAV_GROUPS.map((group) => {
-    const visibleItems = group.items.filter((item) => {
-      return canAccessPath(item.to);
-    });
-
+    const visibleItems = group.items.filter((item) => canAccessPath(item.to));
     return { ...group, items: visibleItems };
   }).filter((group) => group.items.length > 0);
 
@@ -422,319 +437,435 @@ export default function AdminLayout() {
   }, [location.pathname]);
 
   return (
-    <div className={cn(
-      "admin-panel flex min-h-screen md:h-screen font-sans overflow-x-hidden md:overflow-hidden",
-      dark ? "bg-[#121116] text-white" : "bg-[#faf7f6] text-slate-900"
-    )} style={{ '--admin-mobile-header-height': '73px' }}>
-      {/* Sidebar — desktop */}
-      <aside className={cn(
-        "hidden lg:flex flex-col transition-all duration-500 ease-in-out relative group/sidebar",
-        effectiveCollapsed ? "w-24" : "w-[290px]",
-        dark ? "bg-gradient-to-b from-[#121116] via-[#16141a] to-[#0c0a0f] border-r border-white/[0.03]" : "bg-[#fcfafa]/80 backdrop-blur-3xl border-r border-black/[0.03] shadow-[0_24px_60px_-32px_rgba(140,107,117,0.06)]"
-      )}>
-        {/* Toggle Button */}
-        <div className={cn("absolute -right-4 top-24 z-50", !canToggleSidebar && "hidden")}>
-          <button 
-            onClick={() => setCollapsed(!collapsed)}
+    <div
+      className={cn(
+        'admin-panel flex min-h-screen md:h-screen font-sans overflow-x-hidden md:overflow-hidden',
+        dark ? 'bg-[#120f15] text-[#faf7f5]' : 'bg-[#faf7f5] text-[#23141c]'
+      )}
+      style={{ '--admin-mobile-header-height': '64px' }}
+    >
+      {/* Desktop Sidebar — Clean, Solid, Fast */}
+      <aside
+        className={cn(
+          'relative hidden lg:flex flex-col shrink-0 transition-[width] duration-200 ease-out border-r',
+          effectiveCollapsed ? 'w-[76px]' : 'w-[244px]',
+          dark
+            ? 'bg-[#18131d] border-[#28212f]'
+            : 'bg-white border-[#eae1e4]'
+        )}
+      >
+        {/* Collapse Toggle */}
+        {canToggleSidebar && (
+          <button
+            type="button"
+            onClick={() => setCollapsed((prev) => !prev)}
             className={cn(
-              "w-8 h-8 rounded-full border flex items-center justify-center transition-all duration-300",
-              dark 
-                ? "bg-slate-900 border-white/10 text-white hover:bg-[#d48997]/20 hover:text-[#d48997] hover:border-[#d48997]/30" 
-                : "bg-white border-slate-200 text-[#8c6b75] hover:text-[#b56f7c] hover:border-[#d48997] shadow-xl shadow-slate-200/70",
-              "scale-100 active:scale-90"
+              'absolute -right-3.5 top-6 z-40 flex h-7 w-7 items-center justify-center rounded-full border shadow-sm transition',
+              dark
+                ? 'border-[#352b3e] bg-[#1c1721] text-white/75 hover:border-[#c65d7b] hover:text-white'
+                : 'border-[#e2d5da] bg-white text-[#6b5761] hover:border-[#c65d7b] hover:text-[#23141c]'
             )}
-            title={effectiveCollapsed ? "Expandir Menu" : "Recolher Menu"}
+            title={effectiveCollapsed ? 'Expandir menu' : 'Recolher menu'}
           >
-            <motion.div
-              animate={{ rotate: effectiveCollapsed ? 180 : 0 }}
-              transition={{ type: "spring", stiffness: 300, damping: 20 }}
-            >
-              <ChevronLeft size={16} />
-            </motion.div>
+            <ChevronLeft
+              size={14}
+              className={cn('transition-transform duration-200', effectiveCollapsed && 'rotate-180')}
+            />
           </button>
-        </div>
+        )}
 
-        <div className={cn("p-4 md:p-6 xl:p-8", effectiveCollapsed && "px-4 flex justify-center")}>
-          <div className={cn("flex items-center justify-between", effectiveCollapsed ? "flex-col gap-4 sm:p-6" : "mb-2")}>
-            <div className={cn("flex items-center gap-3", effectiveCollapsed && "flex-col")}>
-              {effectiveCollapsed ? (
-                <div className="flex h-10 w-10 items-center justify-center rounded-xl border border-[#e7c4c8] bg-[linear-gradient(180deg,#fff8f7_0%,#f9e0dd_100%)] text-[#a45f69] shadow-[0_18px_38px_-22px_rgba(226,155,168,0.9)]">
-                  <span className="font-brand-display text-2xl leading-none">B</span>
-                </div>
-              ) : (
-                <BrandLogo compact variant={dark ? 'darkBg' : 'lightBg'} />
-              )}
+        {/* Brand & Quick Utility Icons */}
+        <div
+          className={cn(
+            'flex items-center border-b px-4 py-4',
+            dark ? 'border-[#28212f]' : 'border-[#f0e8eb]',
+            effectiveCollapsed ? 'flex-col gap-3 px-2' : 'justify-between gap-2'
+          )}
+        >
+          {effectiveCollapsed ? (
+            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#23141c] text-[#f0aab8] font-brand-display text-xl font-bold">
+              B
             </div>
-            <div className={cn("flex items-center gap-2", effectiveCollapsed && "flex-col")}>
-              {podeVerAlertas && (
-                <button
-                  onClick={() => {
-                    setAlertasOpen(true);
-                    carregarAlertas({ silent: true });
-                  }}
-                  className={cn(
-                    "relative p-2 rounded-xl transition-all hover:scale-110 active:scale-90",
-                    dark ? "bg-white/5 text-[#d6b6bc] hover:text-white" : "bg-[#fff2f1] text-[#8c6b75] hover:text-[#c2737f]"
-                  )}
-                  title="Central de notificacoes"
-                >
-                  <Bell className="w-4 h-4" />
-                  {alertasUnread > 0 && (
-                    <span className="absolute -right-1 -top-1 min-w-[18px] rounded-full bg-[#e29ba8] px-1.5 py-0.5 text-[10px] font-bold leading-none text-[#1a1a1f] shadow-sm">
-                      {alertasUnread > 9 ? '9+' : alertasUnread}
-                    </span>
-                  )}
-                </button>
-              )}
+          ) : (
+            <BrandLogo
+              compact
+              variant={dark ? 'darkBg' : 'lightBg'}
+              imageClassName="w-[132px] drop-shadow-none"
+            />
+          )}
+
+          <div className={cn('flex items-center gap-1.5', effectiveCollapsed && 'flex-col')}>
+            {podeVerAlertas && (
               <button
-                onClick={toggle}
+                type="button"
+                onClick={() => {
+                  setAlertasOpen(true);
+                  carregarAlertas({ silent: true });
+                }}
                 className={cn(
-                  "p-2 rounded-xl transition-all hover:scale-110 active:scale-90",
-                  dark ? "bg-white/5 text-[#d6b6bc] hover:text-white" : "bg-[#fff2f1] text-[#8c6b75] hover:text-[#c2737f]"
+                  'relative flex h-8 w-8 items-center justify-center rounded-lg transition',
+                  dark
+                    ? 'text-white/65 hover:bg-white/10 hover:text-white'
+                    : 'text-[#6b5761] hover:bg-[#f6eef0] hover:text-[#23141c]'
                 )}
+                title="Central de notificações"
               >
-                {dark ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
+                <Bell className="h-4 w-4" />
+                {alertasUnread > 0 && (
+                  <span className="absolute -right-0.5 -top-0.5 flex h-4 min-w-[16px] items-center justify-center rounded-full bg-[#c65d7b] px-1 text-[9px] font-bold leading-none text-white">
+                    {alertasUnread > 9 ? '9+' : alertasUnread}
+                  </span>
+                )}
               </button>
-            </div>
+            )}
+            <button
+              type="button"
+              onClick={toggle}
+              className={cn(
+                'flex h-8 w-8 items-center justify-center rounded-lg transition',
+                dark
+                  ? 'text-white/65 hover:bg-white/10 hover:text-white'
+                  : 'text-[#6b5761] hover:bg-[#f6eef0] hover:text-[#23141c]'
+              )}
+              title={dark ? 'Mudar para modo claro' : 'Mudar para modo escuro'}
+            >
+              {dark ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
+            </button>
           </div>
         </div>
 
-        <nav className="flex-1 px-4 space-y-8 overflow-y-auto custom-scrollbar pb-10">
+        {/* Navigation Groups */}
+        <nav className="flex-1 overflow-y-auto px-3 py-4 space-y-5 custom-scrollbar">
           {visibleGroups.map((group) => (
-            <div key={group.label} className="space-y-2">
+            <div key={group.label} className="space-y-1">
               {!effectiveCollapsed && (
-                <h3 className="px-5 text-[9px] font-black uppercase tracking-[0.3em] text-gray-400/80 dark:text-gray-400/30">
+                <p
+                  className={cn(
+                    'px-3 pb-1 text-[10px] font-bold uppercase tracking-[0.16em]',
+                    dark ? 'text-white/35' : 'text-[#967e8a]'
+                  )}
+                >
                   {group.label}
-                </h3>
+                </p>
               )}
-              <div className="space-y-1">
-                {group.items.map((item) => (
-                  <NavLink
-                    key={item.to}
-                    to={item.to}
-                    end={item.end}
-                    title={effectiveCollapsed ? item.label : ""}
-                    className={({ isActive }) =>
-                      cn(
-                        "flex items-center rounded-[1.25rem] transition-all duration-300 group relative overflow-hidden",
-                        effectiveCollapsed ? "justify-center p-4" : "gap-4 px-5 py-3.5",
-                        isActive
-                          ? dark
-                            ? "bg-gradient-to-r from-[#d48997]/15 to-[#d48997]/5 text-white shadow-[inset_0_1px_0_0_rgba(255,255,255,0.05)] translate-x-1"
-                            : "bg-gradient-to-r from-[#fff0f1] to-white text-[#b56f7c] shadow-sm translate-x-1"
-                          : cn(
-                              "hover:translate-x-1",
-                              dark ? "text-[#a98690] hover:text-[#faf7f6] hover:bg-white/[0.02]" : "text-[#8c6b75] hover:text-[#1a1a1f] hover:bg-[#fff2f1]"
-                            )
-                      )
-                    }
-                  >
-                    <item.icon className={cn("w-4 h-4 flex-shrink-0", "transition-transform group-hover:scale-110 group-hover:translate-x-0.5 duration-300")} />
-                    {!effectiveCollapsed && (
-                      <span className="text-[11px] font-black uppercase tracking-widest whitespace-nowrap">
-                        {item.label}
-                      </span>
-                    )}
-                  </NavLink>
-                ))}
-              </div>
+              {group.items.map((item) => (
+                <NavLink
+                  key={item.to}
+                  to={item.to}
+                  end={item.end}
+                  title={effectiveCollapsed ? item.label : ''}
+                  className={({ isActive }) =>
+                    cn(
+                      'group flex items-center rounded-xl transition-colors duration-150',
+                      effectiveCollapsed ? 'justify-center p-2.5' : 'gap-3 px-3 py-2.5',
+                      isActive
+                        ? dark
+                          ? 'bg-[#c65d7b]/20 text-white font-semibold'
+                          : 'bg-[#23141c] text-white font-semibold shadow-sm'
+                        : dark
+                          ? 'text-white/65 hover:bg-white/5 hover:text-white font-medium'
+                          : 'text-[#5b4852] hover:bg-[#f7eff1] hover:text-[#23141c] font-medium'
+                    )
+                  }
+                >
+                  {({ isActive }) => (
+                    <>
+                      <item.icon
+                        className={cn(
+                          'h-4 w-4 shrink-0 transition-colors',
+                          isActive
+                            ? 'text-[#f0aab8]'
+                            : dark
+                              ? 'text-white/45 group-hover:text-[#f0aab8]'
+                              : 'text-[#8c727e] group-hover:text-[#b84c6b]'
+                        )}
+                      />
+                      {!effectiveCollapsed && (
+                        <span className="truncate text-[13px] leading-none">{item.label}</span>
+                      )}
+                    </>
+                  )}
+                </NavLink>
+              ))}
             </div>
           ))}
         </nav>
 
-        <div className="p-4 sm:p-6 border-t border-gray-200 dark:border-white/5">
+        {/* Logout Footer */}
+        <div className={cn('border-t p-3', dark ? 'border-[#28212f]' : 'border-[#f0e8eb]')}>
           <button
+            type="button"
             onClick={logout}
-            title={effectiveCollapsed ? "Encerrar Sessao" : ""}
+            title={effectiveCollapsed ? 'Encerrar sessão' : ''}
             className={cn(
-              "w-full flex items-center transition-all rounded-2xl text-[10px] font-black uppercase tracking-[0.2em]",
-              effectiveCollapsed ? "justify-center p-4" : "gap-3 px-5 py-4",
-              dark ? "text-slate-500 hover:text-red-400 hover:bg-red-400/10" : "text-slate-600 hover:text-red-600 hover:bg-red-50"
+              'flex w-full items-center rounded-xl text-[13px] font-semibold transition-colors',
+              effectiveCollapsed ? 'justify-center p-2.5' : 'gap-3 px-3 py-2.5',
+              dark
+                ? 'text-white/55 hover:bg-rose-500/15 hover:text-rose-300'
+                : 'text-[#6b5761] hover:bg-rose-50 hover:text-rose-700'
             )}
           >
-            <LogOut className="w-4 h-4 flex-shrink-0" />
-            {!effectiveCollapsed && <span>Encerrar Sessao</span>}
+            <LogOut className="h-4 w-4 shrink-0" />
+            {!effectiveCollapsed && <span>Encerrar sessão</span>}
           </button>
         </div>
       </aside>
 
-      {/* Topbar — mobile */}
-      <div className={cn(
-        "lg:hidden fixed top-0 left-0 right-0 z-[70] flex items-center justify-between px-5 py-4 border-b",
-        dark ? "bg-[#121116]/90 backdrop-blur-xl border-white/[0.02]" : "bg-white/90 backdrop-blur-xl border-black/[0.02] shadow-[0_4px_30px_rgba(226,155,168,0.02)]"
-      )}>
-        <div className="flex items-center gap-3">
+      {/* Mobile Topbar */}
+      <div
+        className={cn(
+          'lg:hidden fixed top-0 left-0 right-0 z-[70] flex h-16 items-center justify-between px-4 border-b',
+          dark
+            ? 'bg-[#18131d] border-[#28212f]'
+            : 'bg-white border-[#eae1e4]'
+        )}
+      >
+        <div className="flex items-center gap-2.5">
           {isSubPage && (
-            <button 
+            <button
+              type="button"
               onClick={() => navigate(-1)}
               className={cn(
-                "w-9 h-9 flex items-center justify-center rounded-xl mr-1 transition-all",
-                dark ? "bg-white/5 text-gray-400" : "bg-gray-100 text-gray-500"
+                'flex h-9 w-9 items-center justify-center rounded-xl transition',
+                dark ? 'bg-white/5 text-white/75' : 'bg-[#f6eef0] text-[#5b4852]'
               )}
+              aria-label="Voltar"
             >
-              <ChevronLeft size={20} />
+              <ChevronLeft size={18} />
             </button>
           )}
-          <BrandLogo compact variant={dark ? 'darkBg' : 'lightBg'} imageClassName="w-[148px]" />
+          <BrandLogo
+            compact
+            variant={dark ? 'darkBg' : 'lightBg'}
+            imageClassName="w-[126px] drop-shadow-none"
+          />
         </div>
-        <div className="flex items-center gap-4">
+
+        <div className="flex items-center gap-2">
           {podeVerAlertas && (
             <button
+              type="button"
               onClick={() => {
                 setAlertasOpen(true);
                 carregarAlertas({ silent: true });
               }}
-              className="relative text-[#a98690]"
-              aria-label="Abrir notificacoes"
+              className={cn(
+                'relative flex h-9 w-9 items-center justify-center rounded-xl',
+                dark ? 'text-white/70 hover:bg-white/10' : 'text-[#5b4852] hover:bg-[#f6eef0]'
+              )}
+              aria-label="Abrir notificações"
             >
-              <Bell className="w-5 h-5" />
+              <Bell className="h-5 w-5" />
               {alertasUnread > 0 && (
-                <span className="absolute -right-2 -top-2 min-w-[18px] rounded-full bg-[#e29ba8] px-1.5 py-0.5 text-[9px] font-black leading-none text-[#1a1a1f]">
+                <span className="absolute right-1 top-1 flex h-4 min-w-[16px] items-center justify-center rounded-full bg-[#c65d7b] px-1 text-[9px] font-bold text-white">
                   {alertasUnread > 9 ? '9+' : alertasUnread}
                 </span>
               )}
             </button>
           )}
-          <button onClick={toggle} className="text-[#a98690]">{dark ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}</button>
           <button
+            type="button"
+            onClick={toggle}
+            className={cn(
+              'flex h-9 w-9 items-center justify-center rounded-xl',
+              dark ? 'text-white/70 hover:bg-white/10' : 'text-[#5b4852] hover:bg-[#f6eef0]'
+            )}
+            aria-label="Alternar tema"
+          >
+            {dark ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
+          </button>
+          <button
+            type="button"
             onClick={() => setMenuOpen((open) => !open)}
             aria-label={menuOpen ? 'Fechar menu' : 'Abrir menu'}
             aria-expanded={menuOpen}
-            className="text-gray-900 dark:text-white"
+            className={cn(
+              'flex h-9 w-9 items-center justify-center rounded-xl',
+              dark ? 'bg-white/10 text-white' : 'bg-[#23141c] text-white'
+            )}
           >
-            {menuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+            {menuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
           </button>
         </div>
       </div>
 
-      {/* Mobile drawer */}
+      {/* Mobile Drawer */}
       <AnimatePresence>
         {menuOpen && (
-          <motion.div 
+          <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="lg:hidden fixed inset-0 bg-black/60 z-[75] backdrop-blur-sm" 
+            className="fixed inset-0 z-[75] bg-black/50 lg:hidden"
             onClick={closeMobileMenu}
           >
-            <motion.div 
+            <motion.div
               initial={{ x: -280 }}
               animate={{ x: 0 }}
               exit={{ x: -280 }}
-              transition={{ type: "spring", damping: 25, stiffness: 200 }}
+              transition={{ duration: 0.22, ease: 'easeOut' }}
               className={cn(
-                "w-72 h-full shadow-2xl overflow-y-auto overscroll-contain px-4 py-8 z-[80]",
-                dark ? "bg-slate-950/95 backdrop-blur-2xl border-r border-white/5" : "bg-white/95 backdrop-blur-2xl border-r border-[#edd7d4]"
-              )} 
+                'z-[80] h-full w-72 overflow-y-auto overscroll-contain border-r px-4 py-6 shadow-2xl',
+                dark
+                  ? 'border-[#28212f] bg-[#18131d]'
+                  : 'border-[#eae1e4] bg-white'
+              )}
               onClick={(e) => e.stopPropagation()}
             >
-              <div className="mb-10 px-4">
-                 <BrandLogo variant={dark ? 'darkBg' : 'lightBg'} />
+              <div className="mb-6 flex items-center justify-between px-2">
+                <BrandLogo
+                  compact
+                  variant={dark ? 'darkBg' : 'lightBg'}
+                  imageClassName="w-[136px] drop-shadow-none"
+                />
+                <button
+                  type="button"
+                  onClick={closeMobileMenu}
+                  className={cn(
+                    'flex h-8 w-8 items-center justify-center rounded-lg',
+                    dark ? 'text-white/60 hover:bg-white/10' : 'text-[#6b5761] hover:bg-[#f6eef0]'
+                  )}
+                >
+                  <X className="h-4 w-4" />
+                </button>
               </div>
-              <nav className="space-y-8">
+
+              <nav className="space-y-5">
                 {visibleGroups.map((group) => (
-                  <div key={group.label} className="space-y-2">
-                    <h3 className="px-5 text-[9px] font-black uppercase tracking-[0.3em] text-gray-500/60 dark:text-gray-400/30">
+                  <div key={group.label} className="space-y-1">
+                    <p
+                      className={cn(
+                        'px-3 pb-1 text-[10px] font-bold uppercase tracking-[0.16em]',
+                        dark ? 'text-white/35' : 'text-[#967e8a]'
+                      )}
+                    >
                       {group.label}
-                    </h3>
-                    <div className="space-y-1">
-                      {group.items.map((item) => (
+                    </p>
+                    {group.items.map((item) => {
+                      const active = isItemActive(item);
+                      return (
                         <button
                           key={item.to}
                           type="button"
                           onClick={() => handleMobileNavigate(item.to)}
                           className={cn(
-                            "w-full flex items-center gap-4 px-5 py-4 rounded-[1.25rem] text-[11px] font-black uppercase tracking-widest transition-all text-left",
-                            isItemActive(item)
+                            'flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left text-[13px] transition-colors',
+                            active
                               ? dark
-                                ? "bg-gradient-to-r from-[#d48997]/15 to-[#d48997]/5 text-white"
-                                : "bg-[#fff0f1] text-[#b56f7c]"
-                              : cn(
-                                  dark ? "text-[#d6b6bc] hover:text-[#faf7f6]" : "text-[#8c6b75] hover:text-[#1a1a1f]"
-                                )
+                                ? 'bg-[#c65d7b]/20 text-white font-semibold'
+                                : 'bg-[#23141c] text-white font-semibold'
+                              : dark
+                                ? 'text-white/70 hover:bg-white/5 hover:text-white font-medium'
+                                : 'text-[#5b4852] hover:bg-[#f7eff1] hover:text-[#23141c] font-medium'
                           )}
                         >
-                          <item.icon className="w-4 h-4" />
-                          {item.label}
+                          <item.icon
+                            className={cn(
+                              'h-4 w-4 shrink-0',
+                              active ? 'text-[#f0aab8]' : 'text-[#8c727e]'
+                            )}
+                          />
+                          <span>{item.label}</span>
                         </button>
-                      ))}
-                    </div>
+                      );
+                    })}
                   </div>
                 ))}
               </nav>
-              <button
-                onClick={() => {
-                  closeMobileMenu();
-                  logout();
-                }}
-                className="mt-10 flex items-center gap-4 px-5 py-4 text-[10px] font-black text-red-500 uppercase tracking-widest w-full"
-              >
-                <LogOut className="w-4 h-4" /> Encerrar Sessao
-              </button>
+
+              <div className={cn('mt-6 border-t pt-4', dark ? 'border-[#28212f]' : 'border-[#f0e8eb]')}>
+                <button
+                  type="button"
+                  onClick={() => {
+                    closeMobileMenu();
+                    logout();
+                  }}
+                  className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-[13px] font-semibold text-rose-600 hover:bg-rose-50 dark:text-rose-400 dark:hover:bg-rose-500/15"
+                >
+                  <LogOut className="h-4 w-4" />
+                  <span>Encerrar sessão</span>
+                </button>
+              </div>
             </motion.div>
           </motion.div>
         )}
       </AnimatePresence>
 
+      {/* Alerts Drawer */}
       <AnimatePresence>
         {alertasOpen && (
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 z-[82] bg-black/55 backdrop-blur-sm"
+            className="fixed inset-0 z-[82] bg-black/45"
             onClick={() => setAlertasOpen(false)}
           >
             <motion.aside
               initial={{ x: 360 }}
               animate={{ x: 0 }}
               exit={{ x: 360 }}
-              transition={{ type: 'spring', damping: 26, stiffness: 220 }}
+              transition={{ duration: 0.22, ease: 'easeOut' }}
               className={cn(
-                "ml-auto flex h-full w-full max-w-md flex-col border-l shadow-2xl",
-                dark ? "bg-[#121116]/95 backdrop-blur-3xl border-white/[0.03]" : "bg-white/95 backdrop-blur-3xl border-black/[0.03]"
+                'ml-auto flex h-full w-full max-w-md flex-col border-l shadow-2xl',
+                dark
+                  ? 'border-[#28212f] bg-[#18131d]'
+                  : 'border-[#eae1e4] bg-white'
               )}
               onClick={(event) => event.stopPropagation()}
             >
-              <div className="border-b border-gray-200 px-5 py-5 dark:border-white/5">
+              <div className={cn('border-b px-5 py-5', dark ? 'border-[#28212f]' : 'border-[#f0e8eb]')}>
                 <div className="flex items-start justify-between gap-4">
                   <div>
-                    <p className="text-[10px] font-black uppercase tracking-[0.28em] text-[#e29ba8]">Central de alertas</p>
-                    <h2 className="mt-2 text-2xl font-brand-display text-gray-900 dark:text-white">Agendamentos</h2>
-                    <p className="mt-2 text-sm text-[#8c6b75] dark:text-white/55">
-                      {alertasUnread > 0 ? `${alertasUnread} notificacao(oes) sem leitura.` : 'Tudo em dia por aqui.'}
+                    <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-[#b84c6b]">
+                      Central de alertas
+                    </p>
+                    <h2 className="mt-1 font-brand-display text-2xl font-bold text-[#23141c] dark:text-white">
+                      Agendamentos
+                    </h2>
+                    <p className="mt-1 text-xs text-[#6b5761] dark:text-white/60">
+                      {alertasUnread > 0
+                        ? `${alertasUnread} notificação(ões) sem leitura.`
+                        : 'Tudo em dia por aqui.'}
                     </p>
                   </div>
                   <button
+                    type="button"
                     onClick={() => setAlertasOpen(false)}
                     className={cn(
-                      "rounded-2xl p-3 transition-all",
-                      dark ? "bg-white/5 text-white/60 hover:text-white" : "bg-[#fff0f1] text-[#8c6b75] hover:text-[#1a1a1f]"
+                      'rounded-xl p-2 transition',
+                      dark
+                        ? 'bg-white/5 text-white/65 hover:text-white'
+                        : 'bg-[#f6eef0] text-[#6b5761] hover:text-[#23141c]'
                     )}
                   >
-                    <X className="h-5 w-5" />
+                    <X className="h-4 w-4" />
                   </button>
                 </div>
 
-                <div className="mt-5 flex items-center justify-between gap-3">
+                <div className="mt-4 flex items-center justify-between gap-2.5">
                   <button
+                    type="button"
                     onClick={() => carregarAlertas()}
                     className={cn(
-                      "rounded-[1.1rem] border px-4 py-3 text-[10px] font-black uppercase tracking-[0.22em] transition-all",
-                      dark ? "border-white/10 bg-white/5 text-white/70 hover:text-white" : "border-[#edd7d4] bg-white text-[#8c6b75] hover:text-[#1a1a1f]"
+                      'rounded-xl border px-3.5 py-2 text-xs font-semibold transition',
+                      dark
+                        ? 'border-white/10 bg-white/5 text-white/75 hover:text-white'
+                        : 'border-[#e2d5da] bg-white text-[#5b4852] hover:bg-[#faf7f5]'
                     )}
                   >
                     {loadingAlertas ? 'Atualizando...' : 'Atualizar'}
                   </button>
                   <button
+                    type="button"
                     onClick={handleMarcarTodasLidas}
                     disabled={alertasUnread === 0}
                     className={cn(
-                      "inline-flex items-center gap-2 rounded-[1.1rem] px-4 py-3 text-[10px] font-black uppercase tracking-[0.22em] transition-all disabled:cursor-not-allowed disabled:opacity-45",
-                      dark ? "bg-[#e29ba8] text-[#1a1a1f]" : "bg-[#2f242d] text-white"
+                      'inline-flex items-center gap-1.5 rounded-xl px-3.5 py-2 text-xs font-semibold transition disabled:cursor-not-allowed disabled:opacity-45',
+                      dark ? 'bg-[#c65d7b] text-white' : 'bg-[#23141c] text-white hover:bg-[#38212d]'
                     )}
                   >
-                    <CheckCheck className="h-4 w-4" />
+                    <CheckCheck className="h-3.5 w-3.5" />
                     Marcar tudo como lido
                   </button>
                 </div>
@@ -742,50 +873,62 @@ export default function AdminLayout() {
 
               <div className="flex-1 overflow-y-auto px-4 py-4 custom-scrollbar">
                 {alertas.length === 0 ? (
-                  <div className={cn(
-                    "mt-6 rounded-[2rem] border border-dashed p-8 text-center",
-                    dark ? "border-white/10 bg-white/[0.03]" : "border-[#edd7d4] bg-white"
-                  )}>
-                    <Bell className="mx-auto h-10 w-10 text-[#e29ba8]" />
-                    <p className="mt-4 text-lg font-black text-gray-900 dark:text-white">Nenhum alerta por enquanto</p>
-                    <p className="mt-2 text-sm text-[#8c6b75] dark:text-white/55">
-                      Novos agendamentos online vao aparecer aqui automaticamente.
+                  <div
+                    className={cn(
+                      'mt-6 rounded-2xl border border-dashed p-8 text-center',
+                      dark ? 'border-white/10 bg-white/[0.02]' : 'border-[#e2d5da] bg-[#faf7f5]'
+                    )}
+                  >
+                    <Bell className="mx-auto h-8 w-8 text-[#c65d7b]" />
+                    <p className="mt-3 text-base font-bold text-[#23141c] dark:text-white">
+                      Nenhum alerta por enquanto
+                    </p>
+                    <p className="mt-1 text-xs text-[#6b5761] dark:text-white/55">
+                      Novos agendamentos online vão aparecer aqui automaticamente.
                     </p>
                   </div>
                 ) : (
-                  <div className="space-y-3">
+                  <div className="space-y-2.5">
                     {alertas.map((alerta) => {
-                      const lida = Array.isArray(alerta.lidaPorUserIds) && alerta.lidaPorUserIds.includes(userId);
+                      const lida =
+                        Array.isArray(alerta.lidaPorUserIds) &&
+                        alerta.lidaPorUserIds.includes(userId);
                       return (
                         <button
                           key={alerta.id}
                           type="button"
                           onClick={() => handleOpenAlerta(alerta)}
                           className={cn(
-                            "w-full rounded-[1.6rem] border p-4 text-left transition-all",
+                            'w-full rounded-2xl border p-4 text-left transition-colors',
                             lida
                               ? dark
-                                ? "border-white/5 bg-white/[0.03] text-white/72"
-                                : "border-[#edd7d4] bg-white text-[#5d4750]"
+                                ? 'border-[#28212f] bg-white/[0.02] text-white/70 hover:bg-white/[0.04]'
+                                : 'border-[#efe7ea] bg-white text-[#5b4852] hover:bg-[#faf7f5]'
                               : dark
-                                ? "border-[#e29ba8]/28 bg-[#e29ba8]/10 text-white shadow-[0_24px_48px_-32px_rgba(226,155,168,0.6)]"
-                                : "border-[#efc8ce] bg-[#fff4f5] text-[#2f242d] shadow-[0_24px_48px_-34px_rgba(226,155,168,0.45)]"
+                                ? 'border-[#c65d7b]/40 bg-[#c65d7b]/15 text-white'
+                                : 'border-[#c65d7b]/30 bg-[#fdf3f6] text-[#23141c]'
                           )}
                         >
-                          <div className="flex items-start justify-between gap-4">
+                          <div className="flex items-start justify-between gap-3">
                             <div className="min-w-0">
                               <div className="flex items-center gap-2">
-                                {!lida && <span className="h-2 w-2 rounded-full bg-[#10b981]" />}
-                                <p className="truncate text-[10px] font-black uppercase tracking-[0.2em] text-[#e29ba8]">
-                                  {alerta.tipo === 'agendamento_online_novo' ? 'Agendamento online' : 'Alerta'}
+                                {!lida && <span className="h-2 w-2 rounded-full bg-emerald-500" />}
+                                <p className="truncate text-[10px] font-bold uppercase tracking-[0.16em] text-[#b84c6b]">
+                                  {alerta.tipo === 'agendamento_online_novo'
+                                    ? 'Agendamento online'
+                                    : 'Alerta'}
                                 </p>
                               </div>
-                              <p className="mt-2 text-base font-black text-gray-900 dark:text-white">{alerta.titulo}</p>
-                              <p className="mt-2 text-sm leading-relaxed">{alerta.mensagem}</p>
+                              <p className="mt-1.5 text-sm font-bold text-[#23141c] dark:text-white">
+                                {alerta.titulo}
+                              </p>
+                              <p className="mt-1 text-xs leading-relaxed opacity-85">
+                                {alerta.mensagem}
+                              </p>
                             </div>
-                            <ChevronRight className="mt-1 h-4 w-4 flex-shrink-0 opacity-50" />
+                            <ChevronRight className="mt-1 h-4 w-4 shrink-0 opacity-45" />
                           </div>
-                          <p className="mt-3 text-[10px] font-black uppercase tracking-[0.22em] text-[#8c6b75] dark:text-white/38">
+                          <p className="mt-2.5 text-[10px] font-semibold text-[#8c727e] dark:text-white/40">
                             {formatAlertaData(alerta.createdAt)}
                           </p>
                         </button>
@@ -799,9 +942,15 @@ export default function AdminLayout() {
         )}
       </AnimatePresence>
 
-      <main className="flex-1 min-h-0 flex flex-col overflow-hidden relative">
+      {/* Main Content Area */}
+      <main className="relative flex min-h-0 flex-1 flex-col overflow-hidden">
         <div
-          className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden px-4 pb-8 pt-[calc(var(--admin-mobile-header-height,73px)+1rem)] md:px-5 md:pb-10 md:pt-6 lg:px-6 lg:pt-7 xl:px-8 xl:pb-12 xl:pt-8 2xl:px-10 2xl:pt-10 custom-scrollbar"
+          className={cn(
+            'flex-1 min-h-0 overflow-x-hidden custom-scrollbar',
+            isAgendaRoute
+              ? 'flex flex-col overflow-hidden pt-[var(--admin-mobile-header-height,64px)] lg:p-3 lg:pt-3 xl:p-4'
+              : 'overflow-y-auto px-4 pb-10 pt-[calc(var(--admin-mobile-header-height,64px)+1rem)] md:px-6 md:pt-6 lg:px-8 lg:pt-7 xl:px-10'
+          )}
         >
           <AdminErrorBoundary>
             <Outlet />

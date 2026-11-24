@@ -68,47 +68,47 @@ const END_HOUR = 22;
 const STATUS_CONFIG = {
   pendente: {
     label: 'Pendente',
-    bg: 'bg-white/85 dark:bg-[#1a191f]/65 backdrop-blur-md',
-    border: 'border-black/[0.04] dark:border-white/[0.04] hover:border-amber-500/30 dark:hover:border-amber-400/40',
-    text: 'text-amber-700 dark:text-[#f3c16e]',
-    accent: 'bg-amber-500 dark:bg-amber-400 shadow-[0_0_12px_rgba(245,158,11,0.3)]',
+    bg: 'bg-[#fffbeb] dark:bg-amber-950/45',
+    border: 'border-amber-200/90 dark:border-amber-500/30 hover:border-amber-400',
+    text: 'text-amber-800 dark:text-amber-300',
+    accent: 'bg-amber-500',
     dot: 'bg-amber-500',
     icon: Clock3
   },
   confirmado: {
     label: 'Confirmado',
-    bg: 'bg-white/85 dark:bg-[#1a191f]/65 backdrop-blur-md',
-    border: 'border-black/[0.04] dark:border-white/[0.04] hover:border-[#d48997]/30 dark:hover:border-[#d48997]/40',
-    text: 'text-[#9c515f] dark:text-[#f4d1d6]',
-    accent: 'bg-[#d48997] dark:bg-[#e29ba8] shadow-[0_0_12px_rgba(212,137,151,0.3)]',
-    dot: 'bg-[#d48997]',
+    bg: 'bg-[#fdf3f6] dark:bg-[#2a1a22]',
+    border: 'border-[#eccbd4] dark:border-[#c65d7b]/35 hover:border-[#c65d7b]',
+    text: 'text-[#9c3b57] dark:text-[#f2b8c6]',
+    accent: 'bg-[#c65d7b]',
+    dot: 'bg-[#c65d7b]',
     icon: CalendarDays
   },
   em_atendimento: {
     label: 'Em Agenda',
-    bg: 'bg-white/85 dark:bg-[#1a191f]/65 backdrop-blur-md',
-    border: 'border-black/[0.04] dark:border-white/[0.04] hover:border-blue-500/30 dark:hover:border-blue-400/40',
-    text: 'text-blue-700 dark:text-[#7bb0ff]',
-    accent: 'bg-blue-500 dark:bg-blue-400 shadow-[0_0_12px_rgba(59,130,246,0.3)]',
-    dot: 'bg-blue-500',
+    bg: 'bg-[#eff6ff] dark:bg-blue-950/45',
+    border: 'border-blue-200/90 dark:border-blue-500/35 hover:border-blue-400',
+    text: 'text-blue-800 dark:text-blue-300',
+    accent: 'bg-blue-600',
+    dot: 'bg-blue-600',
     icon: Zap
   },
   concluido: {
-    label: 'Concluido',
-    bg: 'bg-white/85 dark:bg-[#1a191f]/65 backdrop-blur-md',
-    border: 'border-black/[0.04] dark:border-white/[0.04] hover:border-emerald-500/30 dark:hover:border-emerald-400/40',
-    text: 'text-emerald-700 dark:text-[#72f1c5]',
-    accent: 'bg-emerald-500 dark:bg-emerald-400 shadow-[0_0_12px_rgba(16,185,129,0.3)]',
-    dot: 'bg-emerald-500',
+    label: 'Concluído',
+    bg: 'bg-[#ecfdf5] dark:bg-emerald-950/45',
+    border: 'border-emerald-200/90 dark:border-emerald-500/35 hover:border-emerald-400',
+    text: 'text-emerald-800 dark:text-emerald-300',
+    accent: 'bg-emerald-600',
+    dot: 'bg-emerald-600',
     icon: CheckCircle2
   },
   cancelado: {
     label: 'Cancelado',
-    bg: 'bg-white/85 dark:bg-[#1a191f]/65 backdrop-blur-md',
-    border: 'border-black/[0.04] dark:border-white/[0.04] hover:border-red-500/30 dark:hover:border-red-400/40',
-    text: 'text-red-600 dark:text-[#f87171]',
-    accent: 'bg-red-500 dark:bg-red-400 shadow-[0_0_12px_rgba(239,68,68,0.3)]',
-    dot: 'bg-red-500',
+    bg: 'bg-rose-50 dark:bg-rose-950/40',
+    border: 'border-rose-200 dark:border-rose-500/30 hover:border-rose-400',
+    text: 'text-rose-700 dark:text-rose-300',
+    accent: 'bg-rose-500',
+    dot: 'bg-rose-500',
     icon: AlertCircle
   },
 };
@@ -3645,14 +3645,14 @@ export default function Agenda() {
   }, [location.search]);
   const [contextMenu, setContextMenu] = useState(null);
 
-  const [colWidth, setColWidth] = useState(200);
+  const [colWidth, setColWidth] = useState(196);
   const [hourHeight, setHourHeight] = useState(80);
   const [profVisiveis, setProfVisiveis] = useState({});
   const [draggedProfId, setDraggedProfId] = useState('');
   const [dragOverProfId, setDragOverProfId] = useState('');
   const [savingProfessionalOrder, setSavingProfessionalOrder] = useState(false);
-  // Se??o visual BellaPro
-  const [sidebarOpen, setSidebarOpen] = useState(() => window.innerWidth >= 768);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [scalePopoverOpen, setScalePopoverOpen] = useState(false);
   const isMobile = typeof window !== 'undefined' && window.innerWidth < 768;
 
   const [preFill, setPreFill] = useState({ hora: '', profId: '' });
@@ -3934,38 +3934,35 @@ export default function Agenda() {
   }
 
   if (isMounting) return (
-    <div className="h-full flex items-center justify-center bg-gray-50 dark:bg-[#0a0a0c]">
-      <div className="w-10 h-10 border-4 border-[#ecd5d9] border-t-[#d48997] rounded-full animate-spin"></div>
+    <div className="h-full flex items-center justify-center bg-[#faf7f5] dark:bg-[#120f15]">
+      <div className="w-9 h-9 border-[3px] border-[#eadde1] border-t-[#b84c6b] rounded-full animate-spin" />
     </div>
   );
 
   if (loading) return (
-    <div className="h-full flex items-center justify-center bg-gray-50 dark:bg-[#0a0a0c]">
-       <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex flex-col items-center gap-4">
-         <div className="relative w-10 h-10">
-            <div className="absolute inset-0 border-4 border-[#E29BA8]/20 rounded-full" />
-            <motion.div animate={{ rotate: 360 }} transition={{ duration: 1.5, repeat: Infinity, ease: "linear" }} className="absolute inset-0 border-4 border-[#d48997] border-t-transparent rounded-full" />
-         </div>
-         <p className="text-[10px] font-black text-gray-500 uppercase tracking-widest animate-pulse">Sincronizando Agenda...</p>
-       </motion.div>
+    <div className="h-full flex items-center justify-center bg-[#faf7f5] dark:bg-[#120f15]">
+      <div className="flex flex-col items-center gap-3">
+        <div className="w-9 h-9 border-[3px] border-[#eadde1] border-t-[#b84c6b] rounded-full animate-spin" />
+        <p className="text-xs font-semibold text-[#745e69] dark:text-white/60">Sincronizando Agenda...</p>
+      </div>
     </div>
   );
 
+  const isHoje = dataFiltro === formatDateInput();
+  const currentTimeTop =
+    (currentTime.getHours() - START_HOUR) * hourHeight +
+    (currentTime.getMinutes() / 60) * hourHeight;
+  const currentTimeLabel = `${String(currentTime.getHours()).padStart(2, '0')}:${String(
+    currentTime.getMinutes()
+  ).padStart(2, '0')}`;
+
   return (
-    <motion.div 
-      initial={{ opacity: 0 }} 
-      animate={{ opacity: 1 }} 
-      className="agenda-page h-full flex bg-gray-50 dark:bg-bellapro-ink relative overflow-hidden"
-    >
-      {/* Se??o BellaPro */}
-      <div className="absolute top-[-20%] left-[-10%] w-[50%] h-[50%] bg-[#d48997]/20 blur-[120px] rounded-full pointer-events-none" />
-      <div className="absolute bottom-[-20%] right-[-10%] w-[50%] h-[50%] bg-indigo-600/10 blur-[120px] rounded-full pointer-events-none" />
-      
+    <div className="agenda-page relative flex h-full overflow-hidden bg-white dark:bg-[#16121b] lg:rounded-2xl lg:border lg:border-[#eae1e4] dark:lg:border-[#28212f] lg:shadow-sm">
       <AnimatePresence mode="wait">
         {modalNovo && (
-          <ModalNovoAgendamento 
-            onSave={() => { setModalNovo(false); carregar(); setPreFill({ hora: '', profId: '' }); setPrefillAgendaData(null); }} 
-            onClose={() => { setModalNovo(false); setPreFill({ hora: '', profId: '' }); setPrefillAgendaData(null); }} 
+          <ModalNovoAgendamento
+            onSave={() => { setModalNovo(false); carregar(); setPreFill({ hora: '', profId: '' }); setPrefillAgendaData(null); }}
+            onClose={() => { setModalNovo(false); setPreFill({ hora: '', profId: '' }); setPrefillAgendaData(null); }}
             preData={dataFiltro}
             preHora={preFill.hora}
             preProf={preFill.profId}
@@ -3992,14 +3989,14 @@ export default function Agenda() {
                 setModalAjuste(null);
                 await carregar();
               } catch (error) {
-                window.alert(error?.response?.data?.error || 'Nao foi possivel ajustar o agendamento.');
+                window.alert(error?.response?.data?.error || 'Não foi possível ajustar o agendamento.');
               }
             }}
           />
         )}
         {modalDetalhes && agendamentoSelecionado && (
-          <ModalDetalhesAgendamento 
-            agendamento={agendamentoSelecionado} 
+          <ModalDetalhesAgendamento
+            agendamento={agendamentoSelecionado}
             allAgendamentos={agendamentos}
             onUpdate={(updatedAgendamento) => {
               if (updatedAgendamento?.id) {
@@ -4008,66 +4005,88 @@ export default function Agenda() {
               } else {
                 carregar();
               }
-            }} 
+            }}
             onAjustar={(agendamento) => {
               setModalDetalhes(false);
               setModalAjuste(agendamento);
             }}
-            onClose={() => { setModalDetalhes(false); setAgendamentoSelecionado(null); }} 
+            onClose={() => { setModalDetalhes(false); setAgendamentoSelecionado(null); }}
           />
         )}
       </AnimatePresence>
 
-      <motion.div 
-        initial={false} 
-        animate={{ width: sidebarOpen ? 280 : 0 }} 
-        className="bg-gradient-to-b from-white/90 to-white/75 dark:from-[#0d0d10]/95 dark:to-[#09090b]/90 backdrop-blur-3xl border-r border-black/[0.03] dark:border-white/[0.03] flex flex-col z-[60] shrink-0 shadow-[20px_0_60px_-20px_rgba(0,0,0,0.05)] dark:shadow-none overflow-hidden"
+      {/* Collapsible Left Drawer: Equipe & Lista de Espera */}
+      <motion.div
+        initial={false}
+        animate={{ width: sidebarOpen ? 260 : 0 }}
+        transition={{ duration: 0.2, ease: 'easeOut' }}
+        className={cn(
+          'z-[60] flex shrink-0 flex-col overflow-hidden bg-[#fcfafb] dark:bg-[#18131d]',
+          sidebarOpen && 'border-r border-[#eae1e4] dark:border-[#28212f]'
+        )}
       >
-        <div className="p-4 md:p-8 space-y-8 w-[280px]">
-          <div>
-            <h3 className="text-xl font-serif font-normal text-gray-900 dark:text-white tracking-wide mb-1">Escala</h3>
-            <p className="text-[8px] font-bold text-[#d48997] uppercase tracking-[0.2em] bg-[#d48997]/10 px-2.5 py-1 rounded-md inline-flex">Customização Visual</p>
-          </div>
-          
-          <div className="space-y-6">
-            <div className="space-y-6 p-4 sm:p-5 bg-white/40 dark:bg-white/[0.01] rounded-3xl border border-black/[0.03] dark:border-white/[0.03] shadow-inner shadow-gray-200/10">
-              <div className="space-y-3">
-                <div className="flex justify-between text-[10px] font-bold uppercase tracking-widest text-gray-400">
-                  <span>Largura Coluna</span>
-                  <span className="text-[#d48997] font-semibold">{colWidth}px</span>
-                </div>
-                <input type="range" min="140" max="300" value={colWidth} onChange={e => setColWidth(Number(e.target.value))} className="w-full h-1 bg-gray-100 dark:bg-gray-800 rounded-lg appearance-none cursor-pointer accent-[#d48997]" />
-              </div>
-              <div className="space-y-3">
-                <div className="flex justify-between text-[10px] font-bold uppercase tracking-widest text-gray-400">
-                  <span>Altura Hora</span>
-                  <span className="text-[#d48997] font-semibold">{hourHeight}px</span>
-                </div>
-                <input type="range" min="50" max="150" value={hourHeight} onChange={e => setHourHeight(Number(e.target.value))} className="w-full h-1 bg-gray-100 dark:bg-gray-800 rounded-lg appearance-none cursor-pointer accent-[#d48997]" />
-              </div>
+        <div className="flex h-full w-[260px] flex-col p-4">
+          <div className="flex items-center justify-between border-b border-[#f0e8eb] pb-3 dark:border-[#28212f]">
+            <div>
+              <h3 className="font-brand-display text-lg font-bold text-[#23141c] dark:text-white">
+                Equipe & Espera
+              </h3>
+              <p className="text-[11px] text-[#745e69] dark:text-white/55">
+                Filtre colunas ou encaixe clientes
+              </p>
             </div>
+            <button
+              type="button"
+              onClick={() => setSidebarOpen(false)}
+              className="flex h-8 w-8 items-center justify-center rounded-lg text-[#745e69] transition hover:bg-[#f2e8eb] hover:text-[#23141c] dark:text-white/60 dark:hover:bg-white/10"
+              aria-label="Fechar painel lateral"
+            >
+              <X size={16} />
+            </button>
+          </div>
 
-            <div className="space-y-4">
-              <div className="flex items-center justify-between px-2">
-                <h4 className="text-[10px] font-bold text-gray-400 uppercase tracking-widest flex items-center gap-2"><Target size={12} className="text-[#E29BA8]"/> Lista de Espera</h4>
-                <button onClick={adicionarListaEsperaRapida} className="px-2 py-1 bg-[#E29BA8]/10 text-[#d48997] rounded-md text-[9px] font-bold uppercase tracking-widest transition-all hover:bg-[#E29BA8]/20">
-                  Novo
+          <div className="mt-4 flex-1 space-y-6 overflow-y-auto pr-1 custom-scrollbar">
+            {/* Lista de Espera */}
+            <div className="space-y-2.5">
+              <div className="flex items-center justify-between">
+                <h4 className="flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-[0.14em] text-[#745e69] dark:text-white/55">
+                  <Target size={13} className="text-[#b84c6b]" />
+                  Lista de Espera
+                  {listaEspera.length > 0 && (
+                    <span className="rounded-full bg-[#fdf2f5] px-1.5 py-0.5 text-[10px] font-bold text-[#b84c6b]">
+                      {listaEspera.length}
+                    </span>
+                  )}
+                </h4>
+                <button
+                  type="button"
+                  onClick={adicionarListaEsperaRapida}
+                  className="rounded-lg bg-[#fdf2f5] px-2.5 py-1 text-[11px] font-bold text-[#b84c6b] transition hover:bg-[#f8e1e8] dark:bg-[#c65d7b]/20 dark:text-[#f0aab8]"
+                >
+                  + Novo
                 </button>
               </div>
-              <div className="grid grid-cols-1 gap-2 max-h-[28vh] overflow-y-auto pr-2 custom-scrollbar">
+
+              <div className="space-y-2 max-h-[26vh] overflow-y-auto custom-scrollbar">
                 {(listaEspera || []).length === 0 ? (
-                  <div className="rounded-2xl border border-dashed border-black/[0.04] dark:border-white/5 px-4 py-4 text-[10px] font-medium tracking-wider text-gray-400 dark:text-gray-500">
-                    Nenhum cliente aguardando
+                  <div className="rounded-xl border border-dashed border-[#e2d5da] bg-white px-3.5 py-3 text-xs text-[#8c727e] dark:border-[#352b3e] dark:bg-white/[0.02] dark:text-white/45">
+                    Nenhum cliente aguardando hoje.
                   </div>
                 ) : (
                   (listaEspera || []).map((item) => (
-                    <div key={item.id} className="rounded-2xl border border-black/[0.03] dark:border-white/5 bg-white/40 dark:bg-white/[0.01] px-4 py-4 hover:shadow-md transition-all duration-300">
-                      <p className="text-xs font-semibold text-gray-900 dark:text-white leading-tight">{item.clienteNome}</p>
-                      <p className="mt-1 text-[10px] font-normal text-gray-400 dark:text-gray-500">
+                    <div
+                      key={item.id}
+                      className="rounded-xl border border-[#eae1e4] bg-white p-3 dark:border-[#28212f] dark:bg-[#1c1721]"
+                    >
+                      <p className="text-xs font-bold text-[#23141c] dark:text-white leading-tight">
+                        {item.clienteNome}
+                      </p>
+                      <p className="mt-0.5 text-[11px] text-[#745e69] dark:text-white/55">
                         {item.servico?.nome || 'Sem serviço definido'}
                       </p>
-                      <div className="mt-3 flex items-center gap-2">
+                      <div className="mt-2.5 flex items-center gap-1.5">
                         <button
+                          type="button"
                           onClick={() => {
                             setPrefillAgendaData({
                               clienteNome: item.clienteNome,
@@ -4077,13 +4096,14 @@ export default function Agenda() {
                             });
                             setModalNovo(true);
                           }}
-                          className="flex-1 rounded-xl bg-gradient-to-r from-[#d48997] to-[#e29ba8] px-3 py-2 text-[9px] font-bold uppercase tracking-widest text-white shadow-sm hover:opacity-90"
+                          className="flex-1 rounded-lg bg-[#c65d7b] px-2.5 py-1.5 text-[11px] font-bold text-white transition hover:bg-[#b24b69]"
                         >
                           Agendar
                         </button>
                         <button
+                          type="button"
                           onClick={() => removerDaListaEspera(item.id)}
-                          className="rounded-xl border border-gray-200 dark:border-white/10 px-3 py-2 text-[9px] font-bold uppercase tracking-widest text-gray-400 dark:text-gray-500 hover:border-red-200 hover:text-red-500 transition-colors"
+                          className="rounded-lg border border-[#e2d5da] px-2.5 py-1.5 text-[11px] font-semibold text-[#745e69] transition hover:border-rose-300 hover:text-rose-600 dark:border-[#352b3e] dark:text-white/60"
                         >
                           Remover
                         </button>
@@ -4094,249 +4114,504 @@ export default function Agenda() {
               </div>
             </div>
 
-            <div className="space-y-4">
-              <div className="flex items-center justify-between px-2">
-                <h4 className="text-[10px] font-bold text-gray-400 uppercase tracking-widest flex items-center gap-2"><Users size={12} className="text-[#E29BA8]"/> Equipe</h4>
-                <div className="px-2 py-1 bg-[#d48997]/10 text-[#d48997] rounded-md text-[9px] font-bold uppercase tracking-widest">{profsDisplay.length}/{profissionais.length}</div>
+            {/* Equipe */}
+            <div className="space-y-2.5">
+              <div className="flex items-center justify-between">
+                <h4 className="flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-[0.14em] text-[#745e69] dark:text-white/55">
+                  <Users size={13} className="text-[#b84c6b]" />
+                  Equipe ({profsDisplay.length}/{profissionais.length})
+                </h4>
+                <button
+                  type="button"
+                  onClick={() => {
+                    const allVisible = profsDisplay.length === profissionais.length;
+                    const next = {};
+                    profissionais.forEach((p, idx) => {
+                      next[p.id] = allVisible ? idx === 0 : true;
+                    });
+                    setProfVisiveis(next);
+                  }}
+                  className="text-[11px] font-bold text-[#b84c6b] hover:underline"
+                >
+                  {profsDisplay.length === profissionais.length ? 'Apenas 1' : 'Mostrar todos'}
+                </button>
               </div>
-              <div className="grid grid-cols-1 gap-2 max-h-[45vh] overflow-y-auto pr-2 custom-scrollbar">
-                {(profissionais || []).map(p => (
-                  <button 
-                    key={p.id}
-                    onClick={() => setProfVisiveis({...profVisiveis, [p.id]: !profVisiveis[p.id]})}
-                    className={cn(
-                      "flex items-center gap-3.5 p-3 rounded-2xl border transition-all duration-300 group w-full text-left",
-                      profVisiveis[p.id]
-                        ? "bg-white dark:bg-white/[0.04] border-[#d48997]/20 dark:border-white/10 shadow-[0_10px_30px_-10px_rgba(212,137,151,0.15)] dark:shadow-none translate-x-0.5"
-                        : "bg-transparent border-transparent opacity-40 hover:opacity-85 hover:bg-gray-100/50 dark:hover:bg-white/[0.01]"
-                    )}
-                  >
-                    <div className={cn(
-                      "w-10 h-10 rounded-xl flex items-center justify-center font-black text-xs relative overflow-hidden transition-all duration-500 shrink-0",
-                      profVisiveis[p.id] ? "bg-[#d48997]/10 text-[#d48997] dark:text-[#f4d1d6]" : "bg-gray-100 dark:bg-gray-800 text-gray-400"
-                    )}>
-                      {p.fotoUrl ? <img src={p.fotoUrl} className="w-full h-full object-cover" /> : p.nome?.[0]}
-                      {profVisiveis[p.id] && <div className="absolute inset-0 border border-[#d48997]/30 rounded-xl pointer-events-none" />}
-                    </div>
-                    <div className="overflow-hidden flex-1">
-                      <p className={cn(
-                        "text-xs font-semibold tracking-wide truncate transition-colors",
-                        profVisiveis[p.id] ? "text-gray-900 dark:text-white" : "text-gray-400"
-                      )}>{p.nome}</p>
-                      {profVisiveis[p.id] && <p className="text-[8px] text-[#d48997] uppercase tracking-[0.2em] mt-1 font-bold">Visível</p>}
-                    </div>
-                  </button>
-                ))}
+
+              <div className="space-y-1.5">
+                {(profissionais || []).map((p) => {
+                  const visible = !!profVisiveis[p.id];
+                  return (
+                    <button
+                      key={p.id}
+                      type="button"
+                      onClick={() => setProfVisiveis({ ...profVisiveis, [p.id]: !visible })}
+                      className={cn(
+                        'flex w-full items-center gap-2.5 rounded-xl border p-2.5 text-left transition-colors',
+                        visible
+                          ? 'border-[#eccbd4] bg-white shadow-sm dark:border-[#c65d7b]/35 dark:bg-[#1c1721]'
+                          : 'border-transparent bg-transparent opacity-50 hover:bg-white/70 hover:opacity-80 dark:hover:bg-white/5'
+                      )}
+                    >
+                      <div
+                        className={cn(
+                          'flex h-9 w-9 shrink-0 items-center justify-center overflow-hidden rounded-full text-xs font-bold',
+                          visible
+                            ? 'bg-[#fdf2f5] text-[#b84c6b] ring-2 ring-[#c65d7b]/30'
+                            : 'bg-[#efe7ea] text-[#745e69] dark:bg-white/10 dark:text-white/50'
+                        )}
+                      >
+                        {p.fotoUrl ? (
+                          <img src={p.fotoUrl} alt={p.nome} className="h-full w-full object-cover" />
+                        ) : (
+                          p.nome?.[0]
+                        )}
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <p className="truncate text-xs font-bold text-[#23141c] dark:text-white">
+                          {p.nome}
+                        </p>
+                        <p className="text-[10px] font-semibold text-[#8c727e] dark:text-white/45">
+                          {visible ? 'Visível na grade' : 'Oculto'}
+                        </p>
+                      </div>
+                      <span
+                        className={cn(
+                          'h-2.5 w-2.5 rounded-full',
+                          visible ? 'bg-[#c65d7b]' : 'bg-[#dcd0d5] dark:bg-white/20'
+                        )}
+                      />
+                    </button>
+                  );
+                })}
               </div>
             </div>
           </div>
         </div>
       </motion.div>
 
-      <div className="flex-1 flex flex-col relative min-w-0">
-        {/* Seção BellaPro */}
-        <div className="md:hidden px-3 py-3 border-b border-[#f0d6db] dark:border-white/5 bg-[#fff7f8]/95 dark:bg-[#16141a]/85 backdrop-blur-3xl sticky top-[var(--admin-mobile-header-height,73px)] z-50 shadow-sm space-y-3">
-          <div className="flex items-center justify-between gap-3">
-            <div className="flex items-center gap-3 min-w-0">
+      <div className="relative flex min-w-0 flex-1 flex-col">
+        {/* Mobile Header */}
+        <div className="sticky top-[var(--admin-mobile-header-height,64px)] z-40 space-y-2.5 border-b border-[#eae1e4] bg-white px-3 py-3 dark:border-[#28212f] dark:bg-[#18131d] md:hidden">
+          <div className="flex items-center justify-between gap-2">
+            <div className="flex min-w-0 items-center gap-2.5">
               <button
+                type="button"
                 onClick={() => setSidebarOpen(!sidebarOpen)}
-                className="w-11 h-11 flex items-center justify-center rounded-2xl border border-[#ecd5d9] dark:border-white/5 bg-white dark:bg-white/[0.04] text-[#6f5560] dark:text-white/80 shadow-sm"
+                className="flex h-10 w-10 items-center justify-center rounded-xl border border-[#e2d5da] bg-[#faf7f5] text-[#23141c] dark:border-[#352b3e] dark:bg-white/5 dark:text-white"
               >
-                <Menu size={20} />
+                <Filter size={18} />
               </button>
-              <h2 className="truncate text-[15px] font-black text-[#20191f] dark:text-white">Agenda</h2>
+              <h2 className="truncate font-brand-display text-xl font-bold text-[#23141c] dark:text-white">
+                Agenda
+              </h2>
             </div>
 
-            <div className="flex items-center gap-1">
-              <button className="flex h-10 w-10 items-center justify-center rounded-2xl bg-white dark:bg-white/[0.04] text-[#8c6b75] dark:text-white/80 border border-[#ecd5d9] dark:border-white/5 shadow-sm">
-                <Share2 size={18} />
+            <div className="flex items-center gap-1.5">
+              <button
+                type="button"
+                onClick={() => window.dispatchEvent(new CustomEvent('admin:open-notifications'))}
+                className="flex h-9 w-9 items-center justify-center rounded-xl border border-[#e2d5da] bg-white text-[#6b5761] dark:border-[#352b3e] dark:bg-white/5 dark:text-white/75"
+              >
+                <Bell size={16} />
               </button>
               <button
-                onClick={() => window.dispatchEvent(new CustomEvent('admin:open-notifications'))}
-                className="flex h-10 w-10 items-center justify-center rounded-2xl bg-white dark:bg-white/[0.04] text-[#8c6b75] dark:text-white/80 border border-[#ecd5d9] dark:border-white/5 shadow-sm"
+                type="button"
+                onClick={carregar}
+                className="flex h-9 w-9 items-center justify-center rounded-xl border border-[#e2d5da] bg-white text-[#6b5761] dark:border-[#352b3e] dark:bg-white/5 dark:text-white/75"
               >
-                <Bell size={18} />
+                <RefreshCw size={16} />
               </button>
-              <button onClick={carregar} className="flex h-10 w-10 items-center justify-center rounded-2xl bg-white dark:bg-white/[0.04] text-[#8c6b75] dark:text-white/80 border border-[#ecd5d9] dark:border-white/5 shadow-sm">
-                <RefreshCw size={18} />
+              <button
+                type="button"
+                onClick={() => setModalNovo(true)}
+                className="editorial-btn-primary inline-flex h-9 items-center gap-1.5 rounded-xl px-4 text-xs font-bold"
+              >
+                <Plus size={15} />
+                Agendar
               </button>
-              <div className="relative">
-                <select className="appearance-none h-11 rounded-2xl border border-[#ecd5d9] dark:border-white/5 bg-white dark:bg-white/[0.04] pl-4 pr-9 text-sm font-black text-[#20191f] dark:text-white outline-none shadow-sm">
-                  <option className="dark:bg-[#16141a]">Dia</option>
-                </select>
-                <ChevronRight size={14} className="absolute right-3 top-1/2 -translate-y-1/2 rotate-90 text-gray-400 pointer-events-none" />
-              </div>
             </div>
           </div>
 
-          <div className="flex items-center justify-between gap-3">
-            <div className="flex items-center gap-1 rounded-2xl border border-[#3b3139] dark:border-white/5 bg-[#2c232a] dark:bg-white/[0.04] px-2 py-1.5 shadow-[0_10px_26px_-18px_rgba(32,25,31,0.9)]">
-              <button onClick={() => setDataFiltro(addDays(dataFiltro, -1))} className="w-9 h-9 flex items-center justify-center rounded-xl text-gray-500 hover:text-white">
-                <ChevronLeft size={18} />
-              </button>
-              <div className="relative px-2">
-                <span className="block min-w-[118px] text-center text-[12px] font-black uppercase tracking-tight text-white">
-                  {formatDateBR(dataFiltro)}
-                </span>
-                <input type="date" value={dataFiltro} onChange={e => setDataFiltro(e.target.value)} className="absolute inset-0 opacity-0 cursor-pointer" aria-label="Selecionar data da agenda" />
-              </div>
-              <button onClick={() => setDataFiltro(addDays(dataFiltro, 1))} className="w-9 h-9 flex items-center justify-center rounded-xl text-gray-300 hover:text-white">
-                <ChevronRight size={18} />
-              </button>
-              <button className="w-9 h-9 flex items-center justify-center rounded-xl text-gray-300">
-                <MoreVertical size={18} />
-              </button>
-            </div>
-
-            <button onClick={() => setModalNovo(true)} className="shrink-0 rounded-2xl bg-[#E29BA8] px-5 text-sm font-black text-white shadow-[0_10px_22px_rgba(226,155,168,0.45)] transition hover:bg-[#d48997] h-12">
-              Agendar
-            </button>
-          </div>
-        </div>
-
-        <div className="hidden md:flex px-4 md:px-6 py-3.5 items-center justify-between gap-3 border-b border-black/[0.03] dark:border-white/[0.03] bg-white/95 dark:bg-[#0c0c0e]/95 sticky top-[var(--admin-mobile-header-height,73px)] md:top-0 z-50 shadow-[0_1px_3px_0_rgba(0,0,0,0.02)]">
-          <div className="flex items-center gap-4">
-            <button 
-              onClick={() => setSidebarOpen(!sidebarOpen)} 
-              className="hidden md:flex w-12 h-12 items-center justify-center rounded-2xl border bg-white dark:bg-white/5 border-gray-200 dark:border-white/5 text-gray-500 hover:text-[#d48997] hover:border-[#E29BA8]/30 hover:bg-[#E29BA8]/5 transition-all shadow-sm group"
-            >
-              <div className="group-active:scale-95 transition-transform">
-                {sidebarOpen ? <ChevronLeft size={20} /> : <Filter size={20} />}
-              </div>
-            </button>
-            <div className="flex flex-col">
-              <h2 className="text-xl md:text-2xl font-serif font-normal text-gray-900 dark:text-white tracking-wide">Agenda</h2>
-              <p className="text-[#d48997] text-[8px] font-bold uppercase tracking-[0.25em] mt-1 hidden md:block">
-                {savingProfessionalOrder ? 'Salvando ordem da equipe...' : 'Arraste os profissionais do topo para reorganizar'}
-              </p>
-            </div>
-          </div>
-
-          <div className="flex items-center gap-2 md:gap-4">
-            <div className="flex items-center bg-white/50 dark:bg-white/[0.02] backdrop-blur-md rounded-2xl p-1 border border-black/[0.04] dark:border-white/[0.04] shadow-sm">
-              <button onClick={() => setDataFiltro(addDays(dataFiltro, -1))} className="w-9 h-9 flex items-center justify-center text-gray-400 hover:text-[#d48997] hover:bg-white dark:hover:bg-white/10 rounded-xl transition-all">
+          <div className="flex items-center justify-between gap-2">
+            <div className="flex flex-1 items-center justify-between rounded-xl border border-[#e2d5da] bg-[#faf7f5] p-1 dark:border-[#352b3e] dark:bg-white/5">
+              <button
+                type="button"
+                onClick={() => setDataFiltro(addDays(dataFiltro, -1))}
+                className="flex h-8 w-8 items-center justify-center rounded-lg text-[#5b4852] hover:bg-white dark:text-white/70"
+              >
                 <ChevronLeft size={16} />
               </button>
-              <div className="relative px-2 md:px-4 flex items-center gap-1 md:gap-2">
-                <CalendarDays size={14} className="text-[#d48997] hidden md:block" />
-                <span className="font-semibold text-xs text-gray-800 dark:text-gray-200 tracking-wider w-[90px] md:w-[120px] text-center">{formatDateBR(dataFiltro)}</span>
-                <input type="date" value={dataFiltro} onChange={e => setDataFiltro(e.target.value)} className="absolute inset-0 opacity-0 cursor-pointer" aria-label="Selecionar data da agenda" />
+              <div className="relative px-2">
+                <span className="block text-center text-xs font-bold text-[#23141c] dark:text-white">
+                  {formatDateBR(dataFiltro)}
+                </span>
+                <input
+                  type="date"
+                  value={dataFiltro}
+                  onChange={(e) => setDataFiltro(e.target.value)}
+                  className="absolute inset-0 cursor-pointer opacity-0"
+                  aria-label="Selecionar data da agenda"
+                />
               </div>
-              <button onClick={() => setDataFiltro(addDays(dataFiltro, 1))} className="w-9 h-9 flex items-center justify-center text-gray-400 hover:text-[#d48997] hover:bg-white dark:hover:bg-white/10 rounded-xl transition-all">
+              <button
+                type="button"
+                onClick={() => setDataFiltro(addDays(dataFiltro, 1))}
+                className="flex h-8 w-8 items-center justify-center rounded-lg text-[#5b4852] hover:bg-white dark:text-white/70"
+              >
                 <ChevronRight size={16} />
               </button>
             </div>
 
-            <button onClick={carregar} className="w-10 h-10 md:w-12 md:h-12 flex items-center justify-center text-gray-400 hover:text-[#d48997] transition-all bg-white dark:bg-white/5 border border-gray-200 dark:border-white/5 rounded-2xl shadow-sm group">
-              <RefreshCw size={16} className="group-active:rotate-180 transition-transform duration-500" />
+            {!isHoje && (
+              <button
+                type="button"
+                onClick={() => setDataFiltro(formatDateInput())}
+                className="h-10 rounded-xl border border-[#e2d5da] bg-white px-3 text-xs font-bold text-[#b84c6b] dark:border-[#352b3e] dark:bg-white/5"
+              >
+                Hoje
+              </button>
+            )}
+          </div>
+        </div>
+
+        {/* Desktop Toolbar — Airy, Crisp & Functional */}
+        <div className="sticky top-0 z-40 hidden items-center justify-between gap-3 border-b border-[#eae1e4] bg-white px-5 py-3 dark:border-[#28212f] dark:bg-[#18131d] md:flex">
+          <div className="flex items-center gap-3.5">
+            <button
+              type="button"
+              onClick={() => setSidebarOpen((prev) => !prev)}
+              className={cn(
+                'inline-flex h-10 items-center gap-2 rounded-xl border px-3.5 text-xs font-bold transition',
+                sidebarOpen
+                  ? 'border-[#23141c] bg-[#23141c] text-white dark:border-[#c65d7b] dark:bg-[#c65d7b]'
+                  : 'border-[#e2d5da] bg-[#faf7f5] text-[#23141c] hover:border-[#c65d7b]/50 dark:border-[#352b3e] dark:bg-white/5 dark:text-white'
+              )}
+            >
+              <Users size={15} className={sidebarOpen ? 'text-[#f0aab8]' : 'text-[#b84c6b]'} />
+              <span>Equipe</span>
+              <span
+                className={cn(
+                  'rounded-md px-1.5 py-0.5 text-[10px] font-extrabold',
+                  sidebarOpen
+                    ? 'bg-white/15 text-white'
+                    : 'bg-white text-[#5b4852] dark:bg-white/10 dark:text-white/80'
+                )}
+              >
+                {profsDisplay.length}/{profissionais.length}
+              </span>
+              {listaEspera.length > 0 && (
+                <span className="rounded-full bg-[#c65d7b] px-1.5 py-0.5 text-[10px] font-bold text-white">
+                  +{listaEspera.length}
+                </span>
+              )}
             </button>
-            <button onClick={() => setModalNovo(true)} className="bg-gradient-to-r from-[#d48997] to-[#e29ba8] hover:from-[#c97b8a] hover:to-[#d48997] text-white px-5 md:px-7 py-3 h-10 md:h-12 rounded-2xl font-semibold text-xs shadow-lg shadow-[#E29BA8]/20 hover:shadow-xl hover:shadow-[#E29BA8]/35 transition-all uppercase tracking-widest flex items-center gap-2 hover:-translate-y-0.5 active:translate-y-0 duration-300">
+
+            <div className="h-6 w-px bg-[#eae1e4] dark:bg-[#28212f]" />
+
+            <div>
+              <h2 className="font-brand-display text-2xl font-bold leading-none text-[#23141c] dark:text-white">
+                Agenda
+              </h2>
+              <p className="mt-1 text-[11px] text-[#745e69] dark:text-white/50">
+                {savingProfessionalOrder
+                  ? 'Salvando ordem da equipe...'
+                  : 'Arraste os nomes no topo para reordenar colunas'}
+              </p>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-2.5">
+            {!isHoje && (
+              <button
+                type="button"
+                onClick={() => setDataFiltro(formatDateInput())}
+                className="h-10 rounded-xl border border-[#e2d5da] bg-white px-3.5 text-xs font-bold text-[#b84c6b] transition hover:bg-[#fdf2f5] dark:border-[#352b3e] dark:bg-white/5 dark:text-[#f0aab8]"
+              >
+                Hoje
+              </button>
+            )}
+
+            {/* Date Picker Pill */}
+            <div className="flex h-10 items-center rounded-xl border border-[#e2d5da] bg-[#faf7f5] p-1 dark:border-[#352b3e] dark:bg-white/5">
+              <button
+                type="button"
+                onClick={() => setDataFiltro(addDays(dataFiltro, -1))}
+                className="flex h-8 w-8 items-center justify-center rounded-lg text-[#5b4852] transition hover:bg-white hover:text-[#23141c] dark:text-white/70 dark:hover:bg-white/10"
+                title="Dia anterior"
+              >
+                <ChevronLeft size={16} />
+              </button>
+              <div className="relative flex items-center gap-2 px-3">
+                <CalendarDays size={14} className="text-[#b84c6b]" />
+                <span className="min-w-[88px] text-center text-xs font-bold text-[#23141c] tabular-nums dark:text-white">
+                  {formatDateBR(dataFiltro)}
+                </span>
+                <input
+                  type="date"
+                  value={dataFiltro}
+                  onChange={(e) => setDataFiltro(e.target.value)}
+                  className="absolute inset-0 cursor-pointer opacity-0"
+                  aria-label="Selecionar data da agenda"
+                />
+              </div>
+              <button
+                type="button"
+                onClick={() => setDataFiltro(addDays(dataFiltro, 1))}
+                className="flex h-8 w-8 items-center justify-center rounded-lg text-[#5b4852] transition hover:bg-white hover:text-[#23141c] dark:text-white/70 dark:hover:bg-white/10"
+                title="Próximo dia"
+              >
+                <ChevronRight size={16} />
+              </button>
+            </div>
+
+            {/* Visual Scale Popover Button */}
+            <div className="relative">
+              <button
+                type="button"
+                onClick={() => setScalePopoverOpen((prev) => !prev)}
+                className={cn(
+                  'inline-flex h-10 items-center gap-1.5 rounded-xl border px-3 text-xs font-bold transition',
+                  scalePopoverOpen
+                    ? 'border-[#23141c] bg-[#23141c] text-white'
+                    : 'border-[#e2d5da] bg-white text-[#5b4852] hover:border-[#c65d7b]/40 hover:text-[#23141c] dark:border-[#352b3e] dark:bg-white/5 dark:text-white/80'
+                )}
+                title="Ajustar escala da grade"
+              >
+                <Settings size={15} />
+                <span className="hidden xl:inline">Escala</span>
+              </button>
+
+              {scalePopoverOpen && (
+                <>
+                  <div
+                    className="fixed inset-0 z-40"
+                    onClick={() => setScalePopoverOpen(false)}
+                  />
+                  <div className="absolute right-0 top-12 z-50 w-64 rounded-2xl border border-[#e2d5da] bg-white p-4 shadow-xl dark:border-[#352b3e] dark:bg-[#1c1721]">
+                    <div className="mb-3 flex items-center justify-between">
+                      <p className="text-xs font-bold text-[#23141c] dark:text-white">
+                        Escala Visual
+                      </p>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setColWidth(196);
+                          setHourHeight(80);
+                        }}
+                        className="text-[11px] font-bold text-[#b84c6b] hover:underline"
+                      >
+                        Padrão
+                      </button>
+                    </div>
+                    <div className="space-y-4">
+                      <div>
+                        <div className="mb-1.5 flex justify-between text-[11px] font-semibold text-[#6b5761] dark:text-white/60">
+                          <span>Largura da coluna</span>
+                          <span className="font-bold text-[#23141c] dark:text-white">{colWidth}px</span>
+                        </div>
+                        <input
+                          type="range"
+                          min="140"
+                          max="300"
+                          value={colWidth}
+                          onChange={(e) => setColWidth(Number(e.target.value))}
+                          className="h-1.5 w-full cursor-pointer appearance-none rounded-lg bg-[#efe7ea] accent-[#b84c6b] dark:bg-white/15"
+                        />
+                      </div>
+                      <div>
+                        <div className="mb-1.5 flex justify-between text-[11px] font-semibold text-[#6b5761] dark:text-white/60">
+                          <span>Altura da hora</span>
+                          <span className="font-bold text-[#23141c] dark:text-white">{hourHeight}px</span>
+                        </div>
+                        <input
+                          type="range"
+                          min="56"
+                          max="140"
+                          value={hourHeight}
+                          onChange={(e) => setHourHeight(Number(e.target.value))}
+                          className="h-1.5 w-full cursor-pointer appearance-none rounded-lg bg-[#efe7ea] accent-[#b84c6b] dark:bg-white/15"
+                        />
+                      </div>
+                    </div>
+                  </div>
+                </>
+              )}
+            </div>
+
+            <button
+              type="button"
+              onClick={carregar}
+              className="flex h-10 w-10 items-center justify-center rounded-xl border border-[#e2d5da] bg-white text-[#5b4852] transition hover:border-[#c65d7b]/40 hover:text-[#b84c6b] dark:border-[#352b3e] dark:bg-white/5 dark:text-white/75"
+              title="Atualizar agenda"
+            >
+              <RefreshCw size={15} />
+            </button>
+
+            <button
+              type="button"
+              onClick={() => setModalNovo(true)}
+              className="editorial-btn-primary inline-flex h-10 items-center gap-2 rounded-xl px-5 text-xs font-bold"
+            >
               <Plus size={16} strokeWidth={2.5} />
-              <span className="hidden sm:inline">Reservar</span>
+              <span>Reservar</span>
             </button>
           </div>
         </div>
 
-        {/* Se??o BellaPro */}
-        <div className="md:hidden flex-1 overflow-hidden bg-[#f7f8fb] dark:bg-[#0b0b0d]">
+        {/* Mobile Grid */}
+        <div className="flex flex-1 flex-col overflow-hidden bg-[#faf7f5] dark:bg-[#120f15] md:hidden">
           {profsDisplay.length > 0 && (
             <>
-              <div className="px-3 py-3 overflow-x-auto custom-scrollbar border-b border-gray-100 dark:border-white/5 bg-white dark:bg-[#111214]">
-                <div className="flex gap-4 min-w-max">
+              <div className="overflow-x-auto border-b border-[#eae1e4] bg-white px-3 py-2.5 custom-scrollbar dark:border-[#28212f] dark:bg-[#18131d]">
+                <div className="flex min-w-max gap-3">
                   {profsDisplay.map((p) => (
-                    <div key={p.id} className="flex items-center gap-3 min-w-[132px]">
-                      <div className="w-12 h-12 rounded-full overflow-hidden bg-gray-100 dark:bg-white/10 shrink-0 border border-gray-200 dark:border-white/10">
-                        {p.fotoUrl ? <img src={p.fotoUrl} className="w-full h-full object-cover" alt={p.nome} /> : <div className="w-full h-full flex items-center justify-center font-black text-gray-500">{p.nome?.[0]}</div>}
+                    <div key={p.id} className="flex min-w-[126px] items-center gap-2.5">
+                      <div className="h-9 w-9 shrink-0 overflow-hidden rounded-full border border-[#e2d5da] bg-[#faf7f5] dark:border-white/10 dark:bg-white/10">
+                        {p.fotoUrl ? (
+                          <img src={p.fotoUrl} className="h-full w-full object-cover" alt={p.nome} />
+                        ) : (
+                          <div className="flex h-full w-full items-center justify-center text-xs font-bold text-[#745e69]">
+                            {p.nome?.[0]}
+                          </div>
+                        )}
                       </div>
-                      <div className="text-left">
-                        <p className="text-[11px] font-black text-gray-900 dark:text-white leading-tight line-clamp-2">{p.nome}</p>
-                      </div>
+                      <p className="line-clamp-2 text-xs font-bold leading-tight text-[#23141c] dark:text-white">
+                        {p.nome}
+                      </p>
                     </div>
                   ))}
                 </div>
               </div>
 
               <div className="flex-1 overflow-auto custom-scrollbar">
-                <div className="relative flex min-w-max" style={{ width: profsDisplay.length * mobileColWidth + 56 }}>
-                  <div className="sticky left-0 top-0 z-20 w-14 bg-white dark:bg-[#111214] border-r border-gray-200 dark:border-white/10">
-                    <div className="h-[52px] border-b border-gray-200 dark:border-white/10 bg-white dark:bg-[#111214]" />
+                <div
+                  className="relative flex min-w-max bg-white dark:bg-[#16121b]"
+                  style={{ width: profsDisplay.length * mobileColWidth + 56 }}
+                >
+                  <div className="sticky left-0 top-0 z-20 w-14 border-r border-[#eae1e4] bg-[#fcfafb] dark:border-[#28212f] dark:bg-[#18131d]">
+                    <div className="h-[48px] border-b border-[#eae1e4] bg-[#fcfafb] dark:border-[#28212f] dark:bg-[#18131d]" />
                     {hours.map((h) => (
-                      <div key={h} className="relative border-b border-gray-200/70 dark:border-white/5 flex items-start justify-center pt-2" style={{ height: mobileHourHeight }}>
-                        <span className="text-[10px] font-medium text-gray-500">{String(h).padStart(2, '0')}:00</span>
+                      <div
+                        key={h}
+                        className="relative flex items-start justify-center border-b border-[#f0e8eb] pt-2 dark:border-[#241d2b]"
+                        style={{ height: mobileHourHeight }}
+                      >
+                        <span className="text-[10px] font-semibold text-[#8c727e]">
+                          {String(h).padStart(2, '0')}:00
+                        </span>
                       </div>
                     ))}
                   </div>
 
-                  <div className="flex relative">
+                  <div className="relative flex">
                     {profsDisplay.map((p) => (
-                      <div key={p.id} className="relative flex-shrink-0 border-r border-black/[0.03] dark:border-white/[0.03]" style={{ width: mobileColWidth, height: hours.length * mobileHourHeight + 52 }}>
-                        <div className="sticky top-0 z-20 h-[52px] border-b border-black/[0.03] dark:border-white/[0.03] bg-white dark:bg-[#111214] flex items-center justify-center px-2">
-                          <p className="text-xs font-semibold text-gray-800 dark:text-gray-100 truncate">{p.nome}</p>
+                      <div
+                        key={p.id}
+                        className="relative flex-shrink-0 border-r border-[#f0e8eb] dark:border-[#241d2b]"
+                        style={{
+                          width: mobileColWidth,
+                          height: hours.length * mobileHourHeight + 48,
+                        }}
+                      >
+                        <div className="sticky top-0 z-20 flex h-[48px] items-center justify-center border-b border-[#eae1e4] bg-white px-2 dark:border-[#28212f] dark:bg-[#18131d]">
+                          <p className="truncate text-xs font-bold text-[#23141c] dark:text-white">
+                            {p.nome}
+                          </p>
                         </div>
                         {hours.map((h) => (
-                          <div key={h} onClick={(e) => handleGridClick(e, p.id, h)} className="w-full border-b border-dashed border-black/[0.04] dark:border-white/[0.03] relative" style={{ height: mobileHourHeight }}>
-                            <div className="absolute inset-0 bg-[linear-gradient(135deg,rgba(148,163,184,0.06)_0,rgba(148,163,184,0.06)_48%,transparent_48%,transparent_100%)] opacity-70" />
-                          </div>
+                          <div
+                            key={h}
+                            onClick={(e) => handleGridClick(e, p.id, h)}
+                            className="relative w-full border-b border-dashed border-[#efe7ea] dark:border-[#241d2b]"
+                            style={{ height: mobileHourHeight }}
+                          />
                         ))}
                         {(bloqueiosByProf[p.id] || []).map((b) => {
-                          const { inicioHora: inicioBloqueio, fimHora: fimBloqueio } = getBloqueioRenderWindow(b);
+                          const { inicioHora: inicioBloqueio, fimHora: fimBloqueio } =
+                            getBloqueioRenderWindow(b);
                           const [bh, bm] = inicioBloqueio.split(':').map(Number);
                           const [fh, fm] = fimBloqueio.split(':').map(Number);
-                          const duracao = Math.max(((fh * 60 + fm) - (bh * 60 + bm)), 30);
+                          const duracao = Math.max(fh * 60 + fm - (bh * 60 + bm), 30);
                           return (
                             <button
                               key={b.id}
                               type="button"
                               onClick={(event) => handleDesbloquearBloqueio(b, event)}
                               title="Clique para desfazer este bloqueio"
-                              style={{ top: ((bh - START_HOUR) * mobileHourHeight) + ((bm / 60) * mobileHourHeight) + 52, height: Math.max((duracao / 60) * mobileHourHeight, 30) }}
-                              className="absolute left-1 right-1 z-10 flex cursor-pointer flex-col items-center justify-center rounded-2xl border border-dashed border-slate-300 bg-slate-100/80 px-2 text-center transition hover:border-red-300 hover:bg-red-50 dark:bg-white/5 dark:hover:bg-red-500/10"
+                              style={{
+                                top:
+                                  (bh - START_HOUR) * mobileHourHeight +
+                                  (bm / 60) * mobileHourHeight +
+                                  48,
+                                height: Math.max((duracao / 60) * mobileHourHeight, 30),
+                              }}
+                              className="absolute left-1 right-1 z-10 flex cursor-pointer flex-col items-center justify-center rounded-xl border border-dashed border-[#d8cbd0] bg-[#f4f0f2] px-2 text-center transition hover:border-rose-300 hover:bg-rose-50 dark:border-white/15 dark:bg-white/5"
                             >
-                              <span className="text-[8px] font-black uppercase tracking-widest text-slate-500">{b.motivo || 'Bloqueio'}</span>
-                              <span className="mt-1 text-[7px] font-black uppercase tracking-widest text-red-400">Desfazer</span>
+                              <span className="text-[9px] font-bold uppercase tracking-wider text-[#745e69] dark:text-white/60">
+                                {b.motivo || 'Bloqueado'}
+                              </span>
                             </button>
                           );
                         })}
                         {(agendamentosByProf[p.id] || []).map((a) => {
                           const duracaoTotal = calculateAgendamentoDuration(a);
-                          const mobileLayout = getMobileAppointmentLayout(a.inicioHora, duracaoTotal, mobileHourHeight);
+                          const mobileLayout = getMobileAppointmentLayout(
+                            a.inicioHora,
+                            duracaoTotal,
+                            mobileHourHeight
+                          );
                           const isOnline = isAgendamentoOnline(a);
                           const config = STATUS_CONFIG[a.status] || STATUS_CONFIG.confirmado;
                           return (
                             <div
                               key={`grid-${a.id}`}
-                              onClick={(e) => { e.stopPropagation(); setAgendamentoSelecionado(a); setModalDetalhes(true); }}
-                              style={{ top: mobileLayout.top, height: mobileLayout.height, width: `calc(${mobileColWidth}px - 8px)` }}
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setAgendamentoSelecionado(a);
+                                setModalDetalhes(true);
+                              }}
+                              style={{
+                                top: mobileLayout.top - 4,
+                                height: mobileLayout.height,
+                                width: `calc(${mobileColWidth}px - 8px)`,
+                              }}
                               className={cn(
-                                "absolute left-1 rounded-[14px] border pl-3.5 pr-2 py-2 overflow-hidden z-20 cursor-pointer shadow-sm transition-all duration-150 active:scale-[0.98]",
+                                'absolute left-1 z-20 cursor-pointer overflow-hidden rounded-xl border py-2 pl-3 pr-2 shadow-sm transition active:scale-[0.98]',
                                 config.bg,
-                                config.border,
-                                isOnline && 'border-teal-500/20 dark:border-teal-400/20 shadow-[0_6px_12px_rgba(20,184,166,0.1)]'
+                                config.border
                               )}
                             >
-                              <div className={cn("absolute left-0 top-0 bottom-0 w-[3.5px]", config.accent)} />
-                              <div className="flex h-full flex-col justify-between">
-                                <div>
-                                  <div className="flex items-center justify-between gap-2">
-                                    <p className={cn("leading-none font-semibold text-[9px]", config.text)}>
-                                      {a.inicioHora}
-                                    </p>
-                                    {isOnline && !mobileLayout.compact && (
-                                      <span className="rounded-full bg-[#14b8a6]/10 text-[#14b8a6] border border-[#14b8a6]/25 px-1.5 py-0.5 text-[7px] font-bold uppercase tracking-widest leading-none">
-                                        Online
-                                      </span>
-                                    )}
-                                  </div>
-                                  <p className={cn("mt-1 font-semibold text-gray-800 dark:text-gray-100 leading-tight truncate normal-case tracking-wide", mobileLayout.compact ? "text-[9px]" : "text-xs")}>
-                                    {a.clienteNome}
-                                  </p>
-                                  {!mobileLayout.compact && (
-                                    <p className="mt-0.5 text-[10px] text-gray-500 dark:text-gray-400 truncate normal-case tracking-wide leading-none">{getAgendamentoTitulo(a)}</p>
-                                  )}
-                                </div>
+                              <div
+                                className={cn(
+                                  'absolute bottom-0 left-0 top-0 w-[3.5px]',
+                                  config.accent
+                                )}
+                              />
+                              <div className="flex items-center justify-between gap-1.5">
+                                <p className={cn('text-[10px] font-bold leading-none', config.text)}>
+                                  {a.inicioHora}
+                                </p>
+                                {isOnline && !mobileLayout.compact && (
+                                  <span className="rounded-full bg-teal-600/10 px-1.5 py-0.5 text-[8px] font-bold uppercase text-teal-700 dark:text-teal-300">
+                                    Online
+                                  </span>
+                                )}
                               </div>
+                              <p
+                                className={cn(
+                                  'mt-1 truncate font-bold leading-tight text-[#23141c] dark:text-white',
+                                  mobileLayout.compact ? 'text-[10px]' : 'text-xs'
+                                )}
+                              >
+                                {a.clienteNome}
+                              </p>
+                              {!mobileLayout.compact && (
+                                <p className="mt-0.5 truncate text-[10px] text-[#5b4852] dark:text-white/65">
+                                  {getAgendamentoTitulo(a)}
+                                </p>
+                              )}
                             </div>
-                        );
+                          );
                         })}
                       </div>
                     ))}
@@ -4345,72 +4620,19 @@ export default function Agenda() {
               </div>
             </>
           )}
-          <div className="hidden">
-          {agendamentos.filter(a => a.status !== 'cancelado').length === 0 ? (
-            <div className="flex flex-col items-center justify-center py-24 text-center">
-              <CalendarIcon size={48} className="text-gray-200 dark:text-gray-700 mb-4" />
-              <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Nenhum atendimento hoje</p>
-              <button onClick={() => setModalNovo(true)} className="mt-6 bg-[#d48997] text-white px-6 py-3 rounded-2xl font-black text-[11px] uppercase tracking-widest flex items-center gap-2 shadow-xl shadow-[#E29BA8]/20">
-                <Plus size={14} /> Novo Agendamento
-              </button>
-            </div>
-          ) : (
-            [...agendamentos]
-              .filter(a => a.status !== 'cancelado')
-              .sort((a, b) => a.inicioHora.localeCompare(b.inicioHora))
-              .map(a => {
-                const config = STATUS_CONFIG[a.status] || STATUS_CONFIG.confirmado;
-                const StatusIcon = config.icon;
-                const total = calculateAgendamentoTotal(a);
-                const isPago = a.statusPagamento === 'pago';
-                const isOnline = isAgendamentoOnline(a);
-                return (
-                  <motion.div
-                    key={a.id}
-                    initial={{ opacity: 0, y: 8 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    onClick={() => { setAgendamentoSelecionado(a); setModalDetalhes(true); }}
-                    className={cn(
-                      `rounded-[1.5rem] border p-4 flex items-center gap-4 cursor-pointer active:scale-[0.98] transition-all ${config.bg} ${config.border}`,
-                      isOnline && 'ring-1 ring-[#14b8a6]/40 shadow-[0_22px_44px_-34px_rgba(20,184,166,0.6)]'
-                    )}
-                  >
-                    {/* Se??o BellaPro */}
-                    <div className="w-14 h-14 rounded-2xl bg-white/60 dark:bg-black/20 flex flex-col items-center justify-center flex-shrink-0 border border-white/40">
-                      <span className={`text-base font-black leading-none ${config.text}`}>{a.inicioHora}</span>
-                      <span className="text-[7px] font-black text-gray-400 uppercase tracking-widest mt-0.5">hora</span>
-                    </div>
-                    {/* Se??o BellaPro */}
-                    <div className="flex-1 min-w-0">
-                      <p className={`text-sm font-black uppercase tracking-tight truncate ${config.text} dark:text-white`}>{a.clienteNome}</p>
-                      <p className="text-[10px] font-bold text-gray-500 truncate mt-0.5">{getAgendamentoTitulo(a)} • {a.profissional?.nome}</p>
-                      <div className="flex items-center gap-2 mt-1.5">
-                        <span className={`text-[9px] font-black uppercase tracking-widest px-2 py-0.5 rounded-lg ${config.bg} ${config.text} border ${config.border}`}>
-                          <StatusIcon size={8} className="inline mr-1" />{config.label || a.status}
-                        </span>
-                        {isOnline && (
-                          <span className="rounded-lg border border-[#14b8a6]/25 bg-[#14b8a6]/12 px-2 py-0.5 text-[9px] font-black uppercase tracking-widest text-[#0f9a8c]">
-                            Online
-                          </span>
-                        )}
-                        <span className={`text-[9px] font-black uppercase tracking-widest ${isPago ? 'text-[#E29BA8]' : 'text-bellapro-blush'}`}>
-                          {isPago ? 'Pago' : `R$ ${total.toFixed(2)}`}
-                        </span>
-                      </div>
-                    </div>
-                    <ChevronRight size={16} className="text-gray-300 flex-shrink-0" />
-                  </motion.div>
-                );
-              })
-          )}
-          </div>
         </div>
 
-        {/* Se??o BellaPro */}
-        <div ref={gridRef} className="hidden md:block flex-1 overflow-auto relative custom-scrollbar z-10 scroll-smooth">
-          {/* Se??o BellaPro */}
-          <div className="sticky top-0 z-40 flex bg-white/70 dark:bg-[#0c0c0e]/75 backdrop-blur-3xl border-b border-black/[0.03] dark:border-white/[0.03]" style={{ marginLeft: 60 }}>
-            {profsDisplay.map(p => (
+        {/* Desktop Calendar Grid — Pure White, High-Contrast, 60fps Snappy */}
+        <div
+          ref={gridRef}
+          className="relative z-10 hidden flex-1 overflow-auto bg-white custom-scrollbar dark:bg-[#16121b] md:block"
+        >
+          {/* Sticky Professional Columns Header */}
+          <div
+            className="sticky top-0 z-30 flex border-b border-[#eae1e4] bg-white dark:border-[#28212f] dark:bg-[#18131d]"
+            style={{ marginLeft: 64 }}
+          >
+            {profsDisplay.map((p) => (
               <div
                 key={p.id}
                 draggable
@@ -4419,65 +4641,76 @@ export default function Agenda() {
                 onDrop={handleProfessionalDrop(p.id)}
                 onDragEnd={handleProfessionalDragEnd}
                 className={cn(
-                  "py-4 px-3 flex flex-col items-center justify-center border-r border-black/[0.02] dark:border-white/[0.02] flex-shrink-0 relative group cursor-grab active:cursor-grabbing hover:bg-black/[0.01] dark:hover:bg-white/[0.01] transition-all duration-300",
-                  dragOverProfId === p.id && draggedProfId !== p.id && "bg-[#d48997]/10 dark:bg-[#d48997]/15",
-                  draggedProfId === p.id && "opacity-50"
+                  'group relative flex flex-shrink-0 cursor-grab flex-col items-center justify-center border-r border-[#f0e8eb] px-3 py-3.5 transition-colors active:cursor-grabbing hover:bg-[#faf7f5] dark:border-[#241d2b] dark:hover:bg-white/[0.02]',
+                  dragOverProfId === p.id &&
+                    draggedProfId !== p.id &&
+                    'bg-[#fdf2f5] dark:bg-[#c65d7b]/15',
+                  draggedProfId === p.id && 'opacity-50'
                 )}
                 style={{ width: colWidth }}
               >
-                <div className="absolute right-2 top-2 z-20 flex h-6 w-6 items-center justify-center rounded-full bg-white/60 dark:bg-white/5 text-[#d48997] dark:text-[#f1bcc4] opacity-0 group-hover:opacity-100 transition-opacity hover:scale-105 active:scale-95 shadow-sm">
-                  <MoreVertical size={12} />
-                </div>
-                <div className="w-12 h-12 rounded-full overflow-hidden bg-gray-100 dark:bg-white/[0.03] relative z-10 shadow-sm border-2 border-white dark:border-[#131118] group-hover:border-[#d48997] group-hover:shadow-md transition-all duration-500">
+                <div className="relative h-11 w-11 overflow-hidden rounded-full border-2 border-[#f0e8eb] bg-[#faf7f5] transition-colors group-hover:border-[#c65d7b] dark:border-[#352b3e] dark:bg-[#261f2d]">
                   {p.fotoUrl ? (
-                    <img src={p.fotoUrl} className="w-full h-full object-cover" />
+                    <img src={p.fotoUrl} alt={p.nome} className="h-full w-full object-cover" />
                   ) : (
-                    <div className="w-full h-full flex items-center justify-center font-bold text-gray-400 text-lg uppercase bg-gradient-to-tr from-gray-50 to-gray-200 dark:from-white/5 dark:to-white/10">
-                      {p.nome[0]}
+                    <div className="flex h-full w-full items-center justify-center text-sm font-extrabold uppercase text-[#745e69] dark:text-white/75">
+                      {p.nome?.[0]}
                     </div>
                   )}
                 </div>
-                <div className="text-center mt-2.5 overflow-hidden w-full relative z-10">
-                  <p className="text-xs font-semibold text-gray-800 dark:text-gray-100 tracking-wide truncate px-2 group-hover:text-[#d48997] transition-colors">{p.nome}</p>
-                </div>
+                <p className="mt-2 w-full truncate px-2 text-center text-xs font-bold text-[#23141c] group-hover:text-[#b84c6b] dark:text-white">
+                  {p.nome}
+                </p>
               </div>
             ))}
           </div>
 
-          <div className="relative flex" style={{ width: profsDisplay.length * colWidth + 60 }}>
-            <div className="sticky left-0 w-[60px] bg-white/70 dark:bg-[#0c0c0e]/75 backdrop-blur-2xl border-r border-black/[0.03] dark:border-white/[0.03] z-30 shadow-[10px_0_20px_-10px_rgba(0,0,0,0.02)] dark:shadow-none">
-              {hours.map(h => (
-                <div key={h} className="relative border-b border-dashed border-black/[0.03] dark:border-white/[0.03] flex items-center justify-center" style={{ height: hourHeight }}>
-                  <span className="text-[10px] font-light text-gray-400 dark:text-gray-500 tracking-wider relative -top-1/2">
+          <div className="relative flex" style={{ width: profsDisplay.length * colWidth + 64 }}>
+            {/* Sticky Hour Column */}
+            <div className="sticky left-0 z-20 w-[64px] border-r border-[#eae1e4] bg-[#fcfafb] dark:border-[#28212f] dark:bg-[#18131d]">
+              {hours.map((h) => (
+                <div
+                  key={h}
+                  className="relative flex items-start justify-center border-b border-[#f0e8eb] pt-1.5 dark:border-[#241d2b]"
+                  style={{ height: hourHeight }}
+                >
+                  <span className="text-[11px] font-semibold text-[#8c727e] tabular-nums dark:text-white/45">
                     {String(h).padStart(2, '0')}:00
                   </span>
                 </div>
               ))}
             </div>
 
-            <div className="flex relative">
-              {profsDisplay.map(p => (
-                <div key={p.id} className="relative border-r border-black/[0.03] dark:border-white/[0.03] last:border-r-0 flex-shrink-0" style={{ width: colWidth, height: hours.length * hourHeight }}>
-                  {hours.map(h => (
-                    <div 
-                      key={h} 
+            {/* Schedule Columns */}
+            <div className="relative flex">
+              {profsDisplay.map((p) => (
+                <div
+                  key={p.id}
+                  className="relative flex-shrink-0 border-r border-[#f0e8eb] last:border-r-0 dark:border-[#241d2b]"
+                  style={{ width: colWidth, height: hours.length * hourHeight }}
+                >
+                  {hours.map((h) => (
+                    <div
+                      key={h}
                       onClick={(e) => handleGridClick(e, p.id, h)}
-                      className="w-full border-b border-dashed border-black/[0.04] dark:border-white/[0.03] group relative cursor-pointer hover:bg-[#d48997]/[0.02] dark:hover:bg-[#E29BA8]/[0.05] transition-all" 
+                      className="group relative w-full cursor-pointer border-b border-dashed border-[#efe7ea] transition-colors hover:bg-[#fdf5f7] dark:border-[#241d2b] dark:hover:bg-[#c65d7b]/10"
                       style={{ height: hourHeight }}
                     >
-                       <div className="absolute inset-0 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity pointer-events-none scale-90 group-hover:scale-100 duration-300">
-                          <div className="px-4 py-2 rounded-xl bg-[#d48997] text-white font-semibold text-[9px] uppercase tracking-widest shadow-lg shadow-[#E29BA8]/30 flex items-center gap-2">
-                            <Plus size={12} /> Reservar
-                          </div>
-                       </div>
+                      <div className="pointer-events-none absolute inset-0 flex items-center justify-center opacity-0 transition-opacity group-hover:opacity-100">
+                        <span className="inline-flex items-center gap-1 rounded-lg bg-[#23141c] px-3 py-1.5 text-[11px] font-bold text-white shadow-sm dark:bg-[#c65d7b]">
+                          <Plus size={12} /> Reservar
+                        </span>
+                      </div>
                     </div>
                   ))}
 
-                  {(bloqueiosByProf[p.id] || []).map(b => {
-                    const { inicioHora: inicioBloqueio, fimHora: fimBloqueio } = getBloqueioRenderWindow(b);
+                  {/* Blocked Slots */}
+                  {(bloqueiosByProf[p.id] || []).map((b) => {
+                    const { inicioHora: inicioBloqueio, fimHora: fimBloqueio } =
+                      getBloqueioRenderWindow(b);
                     const [bh, bm] = inicioBloqueio.split(':').map(Number);
                     const [fh, fm] = fimBloqueio.split(':').map(Number);
-                    const duracao = Math.max(((fh * 60 + fm) - (bh * 60 + bm)), 30);
+                    const duracao = Math.max(fh * 60 + fm - (bh * 60 + bm), 30);
                     const pos = getPosition(inicioBloqueio, duracao);
                     return (
                       <button
@@ -4485,58 +4718,87 @@ export default function Agenda() {
                         type="button"
                         onClick={(event) => handleDesbloquearBloqueio(b, event)}
                         title="Clique para desfazer este bloqueio"
-                        style={{ top: pos.top, height: pos.height }}
-                        className="group absolute left-0.5 right-0.5 z-10 flex cursor-pointer flex-col items-center justify-center overflow-hidden rounded-[1rem] border border-dashed border-gray-200 bg-gray-100/40 px-2 text-center transition hover:border-red-300 hover:bg-red-50 dark:border-white/10 dark:bg-white/[0.02] dark:hover:bg-red-500/10"
+                        style={{ top: pos.top + 2, height: Math.max(pos.height - 4, 28) }}
+                        className="group absolute left-1.5 right-1.5 z-10 flex cursor-pointer flex-col items-center justify-center overflow-hidden rounded-xl border border-dashed border-[#d8cbd0] bg-[#f5f2f3] px-2 text-center transition hover:border-rose-300 hover:bg-rose-50 dark:border-white/15 dark:bg-white/[0.04] dark:hover:bg-rose-500/15"
                       >
-                         <span className="text-[8px] font-black uppercase tracking-widest text-gray-400 opacity-70 dark:text-gray-500">{b.motivo || 'Bloqueado'}</span>
-                         <span className="mt-1 text-[7px] font-black uppercase tracking-widest text-red-400 opacity-0 transition group-hover:opacity-100">Desfazer</span>
+                        <span className="text-[10px] font-bold uppercase tracking-wider text-[#745e69] dark:text-white/55">
+                          {b.motivo || 'Fechado'}
+                        </span>
+                        <span className="mt-0.5 text-[10px] font-bold text-rose-600 opacity-0 transition group-hover:opacity-100 dark:text-rose-300">
+                          Clique para desbloquear
+                        </span>
                       </button>
                     );
                   })}
 
-                  {(agendamentosByProf[p.id] || []).map(a => {
+                  {/* Appointments — Crisp Semantic Cards */}
+                  {(agendamentosByProf[p.id] || []).map((a) => {
                     const duracaoTotal = calculateAgendamentoDuration(a);
                     const pos = getPosition(a.inicioHora, duracaoTotal);
                     const config = STATUS_CONFIG[a.status] || STATUS_CONFIG.confirmado;
                     const isOnline = isAgendamentoOnline(a);
-                    
+                    const isPago = a.statusPagamento === 'pago';
+
                     return (
-                      <div 
-                        key={a.id} 
-                        onClick={(e) => { e.stopPropagation(); setAgendamentoSelecionado(a); setModalDetalhes(true); }}
-                        style={{ 
-                          top: pos.top + 1, 
-                          height: pos.height - 2,
+                      <div
+                        key={a.id}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setAgendamentoSelecionado(a);
+                          setModalDetalhes(true);
+                        }}
+                        style={{
+                          top: pos.top + 2,
+                          height: Math.max(pos.height - 4, 34),
                           zIndex: 20,
                           width: `calc(${colWidth}px - 12px)`,
-                        }} 
+                        }}
                         className={cn(
-                          `absolute left-1.5 rounded-[1.25rem] border shadow-sm ${config.bg} ${config.border} pl-4 pr-3 py-3 cursor-pointer overflow-hidden group hover:z-50 hover:-translate-y-0.5 hover:shadow-xl transition-all duration-150 active:scale-[0.98]`,
-                          isOnline ? 'border-teal-500/20 dark:border-teal-400/20 shadow-[0_10px_20px_-10px_rgba(20,184,166,0.15)]' : 'shadow-black/[0.02]'
+                          'group absolute left-1.5 cursor-pointer overflow-hidden rounded-xl border py-2 pl-3.5 pr-2.5 shadow-sm transition-shadow hover:z-30 hover:shadow-md',
+                          config.bg,
+                          config.border
                         )}
                       >
-                        <div className={cn("absolute left-0 top-0 bottom-0 w-[4.5px]", config.accent)} />
-                        <div className="flex justify-between items-center mb-1.5">
-                          <div className="flex items-center gap-1.5">
-                            <span className={cn("text-[10px] font-semibold tracking-wider", config.text)}>{a.inicioHora}</span>
-                          </div>
-                          <div className="flex items-center gap-1.5">
+                        <div
+                          className={cn('absolute bottom-0 left-0 top-0 w-[4px]', config.accent)}
+                        />
+
+                        <div className="flex items-center justify-between gap-1.5">
+                          <span className={cn('text-[11px] font-bold tabular-nums', config.text)}>
+                            {a.inicioHora}
+                          </span>
+                          <div className="flex items-center gap-1">
+                            {isPago && (
+                              <span className="rounded-md bg-emerald-600/15 px-1.5 py-0.5 text-[9px] font-bold text-emerald-700 dark:text-emerald-300">
+                                Pago
+                              </span>
+                            )}
                             {isOnline && (
-                              <span className="rounded-full bg-[#14b8a6]/10 text-[#14b8a6] border border-[#14b8a6]/20 px-1.5 py-0.5 text-[7px] font-bold uppercase tracking-widest">
+                              <span className="rounded-md bg-teal-600/15 px-1.5 py-0.5 text-[9px] font-bold text-teal-700 dark:text-teal-300">
                                 Online
                               </span>
                             )}
                           </div>
                         </div>
-                        
-                        <p className="text-xs font-semibold text-gray-800 dark:text-gray-100 truncate normal-case tracking-wide leading-tight mb-0.5">{a.clienteNome}</p>
-                        <p className="text-[10px] font-normal text-gray-500 dark:text-gray-400 truncate normal-case tracking-wide leading-none">{getAgendamentoTitulo(a)}</p>
 
-                        {pos.height > 60 && (
-                          <div className="absolute bottom-2.5 left-4 right-3 pt-1.5 border-t border-black/[0.03] dark:border-white/[0.03] flex items-center justify-between opacity-70">
-                             <p className="text-[9px] font-medium text-gray-400 dark:text-gray-500 flex items-center gap-1">
-                               <Clock size={8} /> {formatDurationLabel(duracaoTotal)}
-                             </p>
+                        <p className="mt-0.5 truncate text-xs font-bold leading-snug text-[#23141c] dark:text-white">
+                          {a.clienteNome}
+                        </p>
+
+                        {pos.height >= 48 && (
+                          <p className="truncate text-[11px] leading-snug text-[#5b4852] dark:text-white/70">
+                            {getAgendamentoTitulo(a)}
+                          </p>
+                        )}
+
+                        {pos.height >= 72 && (
+                          <div className="absolute bottom-2 left-3.5 right-2.5 flex items-center justify-between border-t border-black/5 pt-1.5 dark:border-white/10">
+                            <span className="inline-flex items-center gap-1 text-[10px] font-semibold text-[#745e69] dark:text-white/55">
+                              <Clock size={10} /> {formatDurationLabel(duracaoTotal)}
+                            </span>
+                            <span className={cn('text-[10px] font-bold', config.text)}>
+                              {config.label}
+                            </span>
                           </div>
                         )}
                       </div>
@@ -4546,52 +4808,63 @@ export default function Agenda() {
               ))}
             </div>
 
-            {dataFiltro === formatDateInput() && (
-              <div 
-                className="absolute left-0 right-0 border-t-2 border-[#E29BA8] z-30 pointer-events-none flex items-center shadow-[0_0_10px_rgba(168,85,247,0.5)]" 
-                style={{ top: (currentTime.getHours() - START_HOUR) * hourHeight + (currentTime.getMinutes() / 60) * hourHeight, width: profsDisplay.length * colWidth + 60 }}
+            {/* Clean Current-Time Indicator Line (No Blurry Purple Glow) */}
+            {isHoje && currentTimeTop >= 0 && currentTimeTop <= hours.length * hourHeight && (
+              <div
+                className="pointer-events-none absolute left-0 right-0 z-20 flex items-center"
+                style={{
+                  top: currentTimeTop,
+                  width: profsDisplay.length * colWidth + 64,
+                }}
               >
-                <div className="w-3 h-3 bg-[#E29BA8] rounded-full -ml-1.5 border-[3px] border-white dark:border-[#0c0c0e] shadow-[0_0_15px_rgba(168,85,247,1)] relative">
-                   <div className="absolute inset-0 bg-[#E29BA8] rounded-full animate-ping opacity-50" />
-                </div>
+                <span className="ml-1.5 rounded-md bg-[#b84c6b] px-1.5 py-0.5 text-[10px] font-bold leading-none text-white shadow-sm">
+                  {currentTimeLabel}
+                </span>
+                <div className="h-[1.5px] flex-1 bg-[#c65d7b]" />
               </div>
             )}
           </div>
         </div>
       </div>
 
-      {/* Se??o BellaPro */}
+      {/* Slot Context Menu */}
       <AnimatePresence>
         {contextMenu && (
           <>
             <div className="fixed inset-0 z-[150]" onClick={() => setContextMenu(null)} />
-            <motion.div 
-              initial={{ opacity: 0, scale: 0.9, y: 10 }}
+            <motion.div
+              initial={{ opacity: 0, scale: 0.96, y: 6 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.9, y: 10 }}
+              exit={{ opacity: 0, scale: 0.96, y: 6 }}
+              transition={{ duration: 0.14 }}
               style={{ left: contextMenu.x, top: contextMenu.y }}
-              className="fixed z-[160] bg-white dark:bg-[#121214] border border-gray-100 dark:border-white/10 rounded-2xl shadow-2xl overflow-hidden py-2 min-w-[180px] backdrop-blur-xl"
+              className="fixed z-[160] min-w-[204px] overflow-hidden rounded-2xl border border-[#e2d5da] bg-white py-1.5 shadow-xl dark:border-[#352b3e] dark:bg-[#1c1721]"
             >
-              <div className="px-4 py-2 border-b border-gray-100 dark:border-white/5 mb-1">
-                <p className="text-[8px] font-black text-gray-400 uppercase tracking-widest">{contextMenu.hora} - Opcoes</p>
+              <div className="mb-1 border-b border-[#f0e8eb] px-4 py-2 dark:border-[#28212f]">
+                <p className="text-[11px] font-bold text-[#745e69] dark:text-white/60">
+                  {contextMenu.hora} • Ações rápidas
+                </p>
               </div>
-              <button 
+              <button
+                type="button"
                 onClick={() => {
                   setPreFill({ hora: contextMenu.hora, profId: contextMenu.profId });
                   setModalNovo(true);
                   setContextMenu(null);
                 }}
-                className="w-full text-left px-6 py-3 hover:bg-[#d48997] hover:text-white transition-all flex items-center gap-3 text-[9px] font-black uppercase tracking-widest"
+                className="flex w-full items-center gap-2.5 px-4 py-2.5 text-left text-xs font-bold text-[#23141c] transition hover:bg-[#fdf2f5] hover:text-[#b84c6b] dark:text-white dark:hover:bg-[#c65d7b]/20"
               >
-                <Plus size={14} /> Novo Agendamento
-              </button>
-              <button 
-                onClick={handleBloquear}
-                className="w-full text-left px-6 py-3 hover:bg-bellapro-blush hover:text-white transition-all flex items-center gap-3 text-[9px] font-black uppercase tracking-widest"
-              >
-                <X size={14} /> Bloquear Horario
+                <Plus size={14} className="text-[#b84c6b]" /> Novo Agendamento
               </button>
               <button
+                type="button"
+                onClick={handleBloquear}
+                className="flex w-full items-center gap-2.5 px-4 py-2.5 text-left text-xs font-semibold text-[#5b4852] transition hover:bg-[#faf7f5] hover:text-[#23141c] dark:text-white/80 dark:hover:bg-white/10"
+              >
+                <X size={14} /> Bloquear 1 hora
+              </button>
+              <button
+                type="button"
                 onClick={() => {
                   setModalBloqueioPeriodo({
                     profId: contextMenu.profId,
@@ -4599,55 +4872,25 @@ export default function Agenda() {
                   });
                   setContextMenu(null);
                 }}
-                className="w-full text-left px-6 py-3 hover:bg-slate-100 dark:hover:bg-white/10 transition-all flex items-center gap-3 text-[9px] font-black uppercase tracking-widest"
+                className="flex w-full items-center gap-2.5 px-4 py-2.5 text-left text-xs font-semibold text-[#5b4852] transition hover:bg-[#faf7f5] hover:text-[#23141c] dark:text-white/80 dark:hover:bg-white/10"
               >
-                <Clock size={14} /> Bloquear Periodo
+                <Clock size={14} /> Bloquear período
               </button>
               <button
+                type="button"
                 onClick={handleBloquearDiaTodo}
-                className="w-full text-left px-6 py-3 hover:bg-slate-100 dark:hover:bg-white/10 transition-all flex items-center gap-3 text-[9px] font-black uppercase tracking-widest"
+                className="flex w-full items-center gap-2.5 px-4 py-2.5 text-left text-xs font-semibold text-[#5b4852] transition hover:bg-[#faf7f5] hover:text-[#23141c] dark:text-white/80 dark:hover:bg-white/10"
               >
-                <CalendarDays size={14} /> Bloquear Dia Inteiro
+                <CalendarDays size={14} /> Bloquear dia inteiro
               </button>
             </motion.div>
           </>
         )}
       </AnimatePresence>
 
-
       <style>{`
-        .custom-scrollbar::-webkit-scrollbar { width: 3px; height: 3px; }
-        .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
-        .custom-scrollbar::-webkit-scrollbar-thumb { background: rgba(226,155,168,0.2); border-radius: 999px; }
-        .dark .custom-scrollbar::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.05); }
-        .modal-scrollbar { scrollbar-width: thin; scrollbar-color: rgba(139,92,246,0.32) transparent; }
-        .modal-scrollbar::-webkit-scrollbar { width: 8px; }
-        .modal-scrollbar::-webkit-scrollbar-track { background: transparent; margin: 18px 0; }
-        .modal-scrollbar::-webkit-scrollbar-thumb {
-          background: linear-gradient(180deg, rgba(168,85,247,0.42), rgba(99,102,241,0.24));
-          border-radius: 999px;
-          border: 2px solid transparent;
-          background-clip: padding-box;
-        }
-        .modal-scrollbar::-webkit-scrollbar-thumb:hover {
-          background: linear-gradient(180deg, rgba(168,85,247,0.58), rgba(99,102,241,0.38));
-          border: 2px solid transparent;
-          background-clip: padding-box;
-        }
-        .dark .modal-scrollbar { scrollbar-color: rgba(255,255,255,0.16) transparent; }
-        .dark .modal-scrollbar::-webkit-scrollbar-thumb {
-          background: linear-gradient(180deg, rgba(255,255,255,0.18), rgba(255,255,255,0.08));
-          border: 2px solid transparent;
-          background-clip: padding-box;
-        }
-        .dark .modal-scrollbar::-webkit-scrollbar-thumb:hover {
-          background: linear-gradient(180deg, rgba(255,255,255,0.26), rgba(255,255,255,0.14));
-          border: 2px solid transparent;
-          background-clip: padding-box;
-        }
-        input[type="date"]::-webkit-calendar-picker-indicator { filter: invert(0.5); cursor: pointer; opacity: 0; position: absolute; left: 0; right: 0; top: 0; bottom: 0; width: 100%; height: 100%; }
-        .dark input[type="date"]::-webkit-calendar-picker-indicator { filter: invert(1); }
+        input[type="date"]::-webkit-calendar-picker-indicator { cursor: pointer; opacity: 0; position: absolute; inset: 0; width: 100%; height: 100%; }
       `}</style>
-    </motion.div>
+    </div>
   );
 }
