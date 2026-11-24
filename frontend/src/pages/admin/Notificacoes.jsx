@@ -167,7 +167,7 @@ export default function Notificacoes() {
           type="button"
           onClick={salvar}
           disabled={salvando}
-          className="inline-flex items-center justify-center gap-2 rounded-xl bg-[#d48997] hover:bg-[#c97b8a] text-white px-5 py-2.5 text-xs font-semibold shadow-sm transition-all shrink-0 disabled:opacity-50 disabled:cursor-not-allowed"
+          className="inline-flex items-center justify-center gap-2 rounded-xl bg-[#b84c6b] hover:bg-[#9c3b57] text-white px-5 py-2.5 text-xs font-semibold shadow-sm transition-all shrink-0 disabled:opacity-50 disabled:cursor-not-allowed"
         >
           <Save className="h-4 w-4" />
           {salvando ? 'Salvando...' : 'Salvar Modelos'}
@@ -183,7 +183,7 @@ export default function Notificacoes() {
             return (
               <div
                 key={section.key}
-                className="rounded-2xl border border-black/[0.04] dark:border-white/[0.04] bg-white/60 dark:bg-white/[0.02] backdrop-blur-md p-6 shadow-sm space-y-4"
+                className="rounded-2xl border border-[#eae1e4] dark:border-[#28212f] bg-white dark:bg-[#1c1721] p-6 shadow-sm space-y-4"
               >
                 <div className="flex items-center gap-3 border-b border-black/[0.03] dark:border-white/5 pb-3.5">
                   <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-[#d48997]/10 text-[#d48997]">
@@ -266,7 +266,7 @@ export default function Notificacoes() {
           </div>
 
           {/* Available variables */}
-          <div className="rounded-2xl border border-black/[0.04] dark:border-white/[0.04] bg-white/60 dark:bg-white/[0.02] backdrop-blur-md p-6 shadow-sm space-y-4">
+          <div className="rounded-2xl border border-[#eae1e4] dark:border-[#28212f] bg-white dark:bg-[#1c1721] p-6 shadow-sm space-y-4">
             <div className="flex items-center gap-2 text-[#d48997]">
               <Type className="h-4.5 w-4.5" />
               <span className="text-[10px] font-semibold uppercase tracking-wider text-gray-800 dark:text-gray-200">

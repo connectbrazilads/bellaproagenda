@@ -392,7 +392,7 @@ export default function Profissionais() {
         </div>
         <div className={cn('flex flex-col gap-4', !isCompactPage && 'lg:flex-row lg:items-center lg:justify-between')}>
           <div>
-            <h1 className="font-serif font-normal text-2xl md:text-3xl text-gray-905 dark:text-white leading-tight">
+            <h1 className="font-serif font-normal text-2xl md:text-3xl text-[#23141c] dark:text-white leading-tight">
               Profissionais da <span className="text-[#d48997]">Casa</span>
             </h1>
             <p className="mt-1.5 text-sm text-gray-400 dark:text-gray-500 font-normal">
@@ -412,7 +412,7 @@ export default function Profissionais() {
                 <button
                   onClick={openCreate}
                   disabled={salaoInfo && totalAtivos >= salaoInfo.maxProfissionais}
-                  className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-[#d48997] to-[#e29ba8] px-5 py-2.5 text-xs font-semibold text-white shadow-sm transition disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="inline-flex items-center gap-2 rounded-xl bg-[#b84c6b] hover:bg-[#9c3b57] px-5 py-2.5 text-xs font-semibold text-white shadow-sm transition disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   <Plus size={16} />
                   <span>Novo Profissional</span>
@@ -488,7 +488,7 @@ export default function Profissionais() {
               initial={{ opacity: 0, y: 15 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.98 }}
-              className="relative overflow-hidden rounded-2xl border border-black/[0.04] dark:border-white/[0.04] bg-white/60 dark:bg-white/[0.02] p-5 shadow-sm hover:shadow-md transition-all duration-300 flex flex-col justify-between gap-5"
+              className="relative overflow-hidden rounded-2xl border border-[#eae1e4] dark:border-[#28212f] bg-white dark:bg-[#1c1721] p-5 shadow-sm hover:shadow-md transition-all duration-300 flex flex-col justify-between gap-5"
             >
               <div>
                 <div className="flex items-start justify-between gap-4">
@@ -509,7 +509,7 @@ export default function Profissionais() {
 
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 flex-wrap">
-                      <h2 className="font-serif font-normal text-lg sm:text-xl text-gray-905 dark:text-white truncate leading-snug">{profissional.nome}</h2>
+                      <h2 className="font-serif font-normal text-lg sm:text-xl text-[#23141c] dark:text-white truncate leading-snug">{profissional.nome}</h2>
                       {!profissional.ativo && (
                         <span className="shrink-0 px-2 py-0.5 rounded-full text-[9px] font-bold bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20">
                           Inativo
@@ -580,7 +580,7 @@ export default function Profissionais() {
                   <div className="mb-3.5 flex h-11 w-11 items-center justify-center rounded-xl bg-[#d48997]/10 text-[#d48997]">
                     <User size={18} />
                   </div>
-                  <h2 className="text-xl sm:text-2xl font-serif font-normal text-gray-905 dark:text-white">{editingId ? 'Editar' : 'Novo'} Profissional</h2>
+                  <h2 className="text-xl sm:text-2xl font-serif font-normal text-[#23141c] dark:text-white">{editingId ? 'Editar' : 'Novo'} Profissional</h2>
                   <p className="mt-1.5 text-[10px] font-medium text-gray-400 dark:text-gray-500">
                     Carreira, escala e configurações.
                   </p>
@@ -739,7 +739,7 @@ export default function Profissionais() {
                     <div className="flex flex-col gap-3 rounded-2xl border border-black/[0.04] dark:border-white/[0.04] bg-white/40 dark:bg-white/[0.01] p-5 shadow-sm md:flex-row md:items-center md:justify-between">
                       <div>
                         <p className="text-xs font-semibold text-[#d48997]">Catálogo de Especialidades</p>
-                        <h3 className="mt-1.5 text-lg font-serif font-normal text-gray-905 dark:text-white">Serviços e Comissões</h3>
+                        <h3 className="mt-1.5 text-lg font-serif font-normal text-[#23141c] dark:text-white">Serviços e Comissões</h3>
                         <p className="mt-1 text-xs text-gray-400 dark:text-gray-500 font-normal">Libere serviços inteiros marcando as categorias de serviços correspondentes.</p>
                       </div>
                       <div className="rounded-full bg-[#d48997]/10 px-4 py-1.5 text-[10px] font-semibold text-[#d48997] shrink-0 border border-[#d48997]/20">
@@ -860,7 +860,7 @@ export default function Profissionais() {
         <div className="fixed inset-0 z-[120] flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm">
           <div className="w-full max-w-sm rounded-2xl border border-black/[0.04] bg-white p-5 shadow-xl dark:border-white/10 dark:bg-[#0c0c0e]">
             <div className="flex items-center justify-between mb-4 pb-2 border-b border-black/[0.03]">
-              <h3 className="text-lg font-serif font-normal text-gray-905 dark:text-white">Opções Gerais</h3>
+              <h3 className="text-lg font-serif font-normal text-[#23141c] dark:text-white">Opções Gerais</h3>
               <button onClick={() => setActionMenuModal(null)} className="rounded-xl border border-black/[0.04] dark:border-white/10 p-2 text-gray-400 hover:text-red-500 transition shadow-sm z-10 bg-white dark:bg-[#0c0c0e]">
                 <X size={16} />
               </button>
@@ -870,7 +870,7 @@ export default function Profissionais() {
               <button onClick={() => { openEdit(actionMenuModal, 'geral'); setActionMenuModal(null); }} className="flex items-center gap-3 rounded-xl border border-black/[0.04] bg-white dark:bg-white/[0.01] p-3 text-left transition hover:bg-gray-50 dark:hover:bg-white/5">
                 <User size={16} className="text-gray-400" />
                 <div>
-                  <p className="text-sm font-semibold text-gray-905 dark:text-white">Perfil e Configurações</p>
+                  <p className="text-sm font-semibold text-[#23141c] dark:text-white">Perfil e Configurações</p>
                   <p className="text-[10px] text-gray-405 dark:text-gray-500">Nome, biografia, foto e comissão padrão</p>
                 </div>
               </button>
@@ -878,7 +878,7 @@ export default function Profissionais() {
               <button onClick={() => { openEdit(actionMenuModal, 'servicos'); setActionMenuModal(null); }} className="flex items-center gap-3 rounded-xl border border-black/[0.04] bg-white dark:bg-white/[0.01] p-3 text-left transition hover:bg-gray-50 dark:hover:bg-white/5">
                 <Scissors size={16} className="text-[#d48997]" />
                 <div>
-                  <p className="text-sm font-semibold text-gray-905 dark:text-white">Serviços Habilitados</p>
+                  <p className="text-sm font-semibold text-[#23141c] dark:text-white">Serviços Habilitados</p>
                   <p className="text-[10px] text-gray-455 dark:text-gray-500">Ajustes manuais de comissões por serviço</p>
                 </div>
               </button>
@@ -886,7 +886,7 @@ export default function Profissionais() {
               <button onClick={() => { openEdit(actionMenuModal, 'banco'); setActionMenuModal(null); }} className="flex items-center gap-3 rounded-xl border border-black/[0.04] bg-white dark:bg-white/[0.01] p-3 text-left transition hover:bg-gray-50 dark:hover:bg-white/5">
                 <CreditCard size={16} className="text-blue-500" />
                 <div>
-                  <p className="text-sm font-semibold text-gray-905 dark:text-white">Dados Financeiros</p>
+                  <p className="text-sm font-semibold text-[#23141c] dark:text-white">Dados Financeiros</p>
                   <p className="text-[10px] text-gray-455 dark:text-gray-500">Banco, PIX e informações cadastrais</p>
                 </div>
               </button>
@@ -943,7 +943,7 @@ export default function Profissionais() {
             <div className="flex shrink-0 items-start justify-between gap-4 border-b border-black/[0.03] px-5 py-4 dark:border-white/5">
               <div>
                 <p className="text-[10px] font-semibold text-[#d48997]">Definição de Horários</p>
-                <h3 className="mt-1 font-serif font-normal text-xl sm:text-2xl text-gray-905 dark:text-white">{scheduleModal.nome}</h3>
+                <h3 className="mt-1 font-serif font-normal text-xl sm:text-2xl text-[#23141c] dark:text-white">{scheduleModal.nome}</h3>
               </div>
               <button onClick={() => setScheduleModal(null)} className="rounded-xl border border-black/[0.04] dark:border-white/10 p-2 text-gray-400 hover:text-red-500 transition shadow-sm z-10 bg-white dark:bg-[#0c0c0e]">
                 <X size={16} />

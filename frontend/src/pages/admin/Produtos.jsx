@@ -144,7 +144,7 @@ export default function Produtos() {
             whileTap={{ scale: 0.98 }}
             type="button"
             onClick={abrirNovo}
-            className="inline-flex items-center justify-center gap-2 rounded-xl bg-[#d48997] hover:bg-[#c97b8a] text-white px-5 py-2.5 text-xs font-semibold shadow-sm transition-all shrink-0"
+            className="inline-flex items-center justify-center gap-2 rounded-xl bg-[#b84c6b] hover:bg-[#9c3b57] text-white px-5 py-2.5 text-xs font-semibold shadow-sm transition-all shrink-0"
           >
             <Plus className="h-4 w-4" /> Novo produto
           </motion.button>
@@ -159,7 +159,7 @@ export default function Produtos() {
       ) : filtrados.length === 0 ? (
         <div className="rounded-2xl border border-dashed border-black/[0.06] dark:border-white/10 bg-white/40 dark:bg-white/[0.01] px-8 py-16 text-center shadow-sm">
           <Package className="mx-auto h-12 w-12 text-gray-300 dark:text-gray-600" />
-          <h2 className="mt-4 font-serif font-normal text-xl text-gray-905 dark:text-white">Nenhum produto encontrado</h2>
+          <h2 className="mt-4 font-serif font-normal text-xl text-[#23141c] dark:text-white">Nenhum produto encontrado</h2>
           <p className="mx-auto mt-2 max-w-sm text-xs leading-relaxed text-gray-400 dark:text-gray-500">
             Cadastre produtos para acompanhar revenda, uso interno e sinais de reposição.
           </p>
@@ -177,7 +177,7 @@ export default function Produtos() {
             return (
               <article
                 key={produto.id}
-                className="flex flex-col rounded-2xl border border-black/[0.04] dark:border-white/[0.04] bg-white/60 dark:bg-white/[0.02] backdrop-blur-md p-5 shadow-sm hover:border-[#e29ba8]/30 dark:hover:border-[#e29ba8]/20 transition-all duration-300 group"
+                className="flex flex-col rounded-2xl border border-[#eae1e4] dark:border-[#28212f] bg-white dark:bg-[#1c1721] p-5 shadow-sm hover:border-[#e29ba8]/30 dark:hover:border-[#e29ba8]/20 transition-all duration-300 group"
               >
                 <div className="mb-4 flex items-start justify-between gap-3">
                   <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-[#d48997]/10 text-[#d48997] border border-[#d48997]/20 shrink-0 group-hover:rotate-6 transition-all">
@@ -255,7 +255,7 @@ export default function Produtos() {
 
               <div className="mb-6 border-b border-black/[0.03] dark:border-white/5 pb-4">
                 <p className="text-[10px] font-semibold text-[#d48997]">Catálogo interno</p>
-                <h2 className="mt-1 font-serif font-normal text-xl sm:text-2xl text-gray-905 dark:text-white">
+                <h2 className="mt-1 font-serif font-normal text-xl sm:text-2xl text-[#23141c] dark:text-white">
                   {editing ? 'Editar produto' : 'Novo produto'}
                 </h2>
               </div>
@@ -314,7 +314,7 @@ export default function Produtos() {
                 <button type="button" onClick={fecharModal} className="inline-flex items-center justify-center rounded-xl border border-black/[0.04] dark:border-white/10 bg-gray-50 hover:bg-gray-100 dark:bg-white/5 dark:text-white px-5 py-2.5 text-xs font-semibold text-gray-500 transition">
                   Cancelar
                 </button>
-                <button type="submit" disabled={saving} className="inline-flex items-center justify-center rounded-xl bg-[#d48997] hover:bg-[#c97b8a] text-white px-5 py-2.5 text-xs font-semibold shadow-sm transition disabled:opacity-70">
+                <button type="submit" disabled={saving} className="inline-flex items-center justify-center rounded-xl bg-[#b84c6b] hover:bg-[#9c3b57] text-white px-5 py-2.5 text-xs font-semibold shadow-sm transition disabled:opacity-70">
                   {saving ? 'Salvando...' : 'Salvar produto'}
                 </button>
               </div>

@@ -146,16 +146,16 @@ export default function Configuracoes() {
       className="mx-auto max-w-6xl space-y-8 pb-20 px-4"
     >
       {/* Header */}
-      <header className="flex flex-col gap-4 border-b border-black/[0.03] dark:border-white/[0.03] pb-6 lg:flex-row lg:items-end lg:justify-between">
+      <header className="flex flex-col gap-4 border-b border-[#eae1e4] pb-5 dark:border-[#28212f] lg:flex-row lg:items-end lg:justify-between">
         <div>
-          <div className="flex items-center gap-2.5 mb-2.5">
-            <Store className="h-4 w-4 text-[#d48997]" />
-            <span className="text-[10px] font-semibold text-[#d48997] tracking-wide">Configurações Gerais</span>
+          <div className="mb-2 flex items-center gap-2 text-xs font-bold uppercase tracking-[0.16em] text-[#b84c6b]">
+            <Store className="h-4 w-4" />
+            <span>Configurações Gerais</span>
           </div>
-          <h1 className="text-2xl sm:text-3xl font-serif font-normal text-gray-900 dark:text-white tracking-wide leading-tight mb-2">
-            Painel de <span className="text-[#d48997]">Configurações</span>
+          <h1 className="font-brand-display text-3xl font-bold leading-tight text-[#23141c] dark:text-white sm:text-4xl">
+            Painel de <span className="italic text-[#b84c6b]">Configurações</span>
           </h1>
-          <p className="text-sm text-gray-400 dark:text-gray-500 leading-relaxed max-w-xl">
+          <p className="mt-1.5 max-w-xl text-sm leading-relaxed text-[#6b5761] dark:text-white/60">
             Ajuste a identidade visual da sua marca, as permissões da equipe de colaboradores e controle os logs do sistema.
           </p>
         </div>
@@ -164,7 +164,7 @@ export default function Configuracoes() {
       {/* Main Grid */}
       <div className={cn('grid gap-8', showRail ? 'lg:grid-cols-[260px,1fr]' : 'grid-cols-1')}>
         {/* Navigation Tabs */}
-        <aside className={cn(showRail ? 'space-y-2.5' : 'flex items-center gap-2 overflow-x-auto hide-scrollbar pb-1')}>
+        <aside className={cn(showRail ? 'space-y-2' : 'flex items-center gap-2 overflow-x-auto hide-scrollbar pb-1')}>
           {TABS.map((tab) => {
             const Icon = tab.icon;
             const active = activeTab === tab.id;
@@ -174,25 +174,32 @@ export default function Configuracoes() {
                 type="button"
                 onClick={() => setActiveTab(tab.id)}
                 className={cn(
-                  'flex items-center gap-3 rounded-xl border p-3.5 text-left transition-all',
+                  'flex items-center gap-3 rounded-xl border p-3.5 text-left transition-colors',
                   showRail ? 'w-full justify-between' : 'whitespace-nowrap',
                   active
-                    ? 'border-[#d48997] bg-[#d48997]/5 text-[#d48997] shadow-sm'
-                    : 'border-black/[0.04] dark:border-white/[0.04] bg-white/60 dark:bg-white/[0.02] backdrop-blur-md text-gray-600 dark:text-gray-400 hover:border-black/[0.08] dark:hover:border-white/[0.08]'
+                    ? 'border-[#23141c] bg-[#23141c] text-white shadow-sm dark:border-[#c65d7b] dark:bg-[#c65d7b]'
+                    : 'border-[#eae1e4] bg-white text-[#5b4852] hover:border-[#c65d7b]/40 hover:text-[#23141c] dark:border-[#28212f] dark:bg-[#1c1721] dark:text-white/70'
                 )}
               >
                 <div className="flex items-center gap-3">
-                  <span className={cn('flex h-8 w-8 items-center justify-center rounded-lg', active ? 'bg-[#d48997]/10 text-[#d48997]' : 'bg-black/[0.04] dark:bg-white/5')}>
+                  <span
+                    className={cn(
+                      'flex h-8 w-8 items-center justify-center rounded-lg',
+                      active
+                        ? 'bg-white/15 text-[#f0aab8] dark:text-white'
+                        : 'bg-[#faf7f5] text-[#b84c6b] dark:bg-white/5 dark:text-[#f0aab8]'
+                    )}
+                  >
                     <Icon size={16} />
                   </span>
-                  <span className="text-xs font-semibold">{tab.label}</span>
+                  <span className="text-xs font-bold">{tab.label}</span>
                 </div>
                 {showRail && (
                   <ChevronRight
                     size={14}
                     className={cn(
-                      'text-gray-400 dark:text-gray-600 transition-transform',
-                      active && 'text-[#d48997] translate-x-0.5'
+                      'transition-transform',
+                      active ? 'translate-x-0.5 text-[#f0aab8] dark:text-white' : 'text-[#8c727e] dark:text-white/35'
                     )}
                   />
                 )}
@@ -761,7 +768,7 @@ function SecaoUsuarios() {
           <button
             type="button"
             onClick={handleStartCreate}
-            className="inline-flex items-center gap-2 rounded-xl bg-[#d48997] hover:bg-[#c97b8a] text-white px-4 py-2 text-xs font-semibold shadow-sm transition-all shrink-0"
+            className="inline-flex items-center gap-2 rounded-xl bg-[#b84c6b] hover:bg-[#9c3b57] text-white px-4 py-2 text-xs font-semibold shadow-sm transition-all shrink-0"
           >
             <Plus className="h-4 w-4" /> Novo Login
           </button>
@@ -1113,13 +1120,13 @@ function SecaoSeguranca() {
 
 function SectionCard({ title, icon, children, action }) {
   return (
-    <div className="rounded-2xl border border-black/[0.04] dark:border-white/[0.04] bg-white/60 dark:bg-white/[0.02] backdrop-blur-md p-6 shadow-sm">
-      <div className="mb-6 flex items-center justify-between border-b border-black/[0.03] dark:border-white/5 pb-4">
+    <div className="rounded-2xl border border-[#eae1e4] bg-white p-6 shadow-sm dark:border-[#28212f] dark:bg-[#1c1721]">
+      <div className="mb-6 flex items-center justify-between border-b border-[#f0e8eb] pb-4 dark:border-[#28212f]">
         <div className="flex items-center gap-3.5">
-          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#d48997]/10 text-[#d48997]">
+          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#fdf2f5] text-[#b84c6b] dark:bg-[#c65d7b]/20 dark:text-[#f0aab8]">
             {icon}
           </div>
-          <h2 className="font-serif text-lg font-normal text-gray-900 dark:text-white leading-none">{title}</h2>
+          <h2 className="font-brand-display text-xl font-bold leading-none text-[#23141c] dark:text-white">{title}</h2>
         </div>
         {action}
       </div>
@@ -1140,7 +1147,7 @@ function Field({ label, value, onChange, type = 'text', placeholder, icon, helpe
           onChange={(event) => onChange(event.target.value)}
           placeholder={placeholder}
           className={cn(
-            'w-full h-11 rounded-xl border border-black/[0.08] dark:border-white/10 bg-white dark:bg-[#111113] px-4 text-xs text-gray-900 dark:text-white outline-none focus:border-[#d48997] focus:ring-2 focus:ring-[#d48997]/10 transition-all placeholder:text-gray-450',
+            'w-full h-11 rounded-xl border border-black/[0.08] dark:border-white/10 bg-white dark:bg-[#111113] px-4 text-xs text-gray-900 dark:text-white outline-none focus:border-[#d48997] focus:ring-2 focus:ring-[#d48997]/10 transition-all placeholder:text-[#8c727e]',
             icon && 'pl-10'
           )}
         />
@@ -1233,7 +1240,7 @@ function PrimaryButton({ loading, label, loadingLabel = 'Salvando...', type = 'b
       type={type}
       onClick={onClick}
       disabled={loading}
-      className="inline-flex h-10 items-center justify-center gap-1.5 rounded-xl bg-[#d48997] hover:bg-[#c97b8a] text-white px-5 text-xs font-semibold shadow-sm transition disabled:opacity-55"
+      className="inline-flex h-10 items-center justify-center gap-1.5 rounded-xl bg-[#b84c6b] hover:bg-[#9c3b57] text-white px-5 text-xs font-semibold shadow-sm transition disabled:opacity-55"
     >
       {loading ? <RefreshCw size={13} className="animate-spin" /> : <Save size={13} />}
       {loading ? loadingLabel : label}

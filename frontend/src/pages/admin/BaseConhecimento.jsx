@@ -147,7 +147,7 @@ export default function BaseConhecimento() {
           type="button"
           onClick={salvar}
           disabled={salvando}
-          className="inline-flex items-center justify-center gap-2 rounded-xl bg-[#d48997] hover:bg-[#c97b8a] text-white px-5 py-2.5 text-xs font-semibold shadow-sm transition-all shrink-0 disabled:opacity-50 disabled:cursor-not-allowed"
+          className="inline-flex items-center justify-center gap-2 rounded-xl bg-[#b84c6b] hover:bg-[#9c3b57] text-white px-5 py-2.5 text-xs font-semibold shadow-sm transition-all shrink-0 disabled:opacity-50 disabled:cursor-not-allowed"
         >
           <Save className="h-4 w-4" />
           {salvando ? 'Salvando...' : 'Salvar Treinamento'}
@@ -178,11 +178,11 @@ export default function BaseConhecimento() {
                   'group flex w-full items-center gap-3 rounded-xl border p-4 text-left transition-all',
                   ativa
                     ? 'border-[#d48997] bg-[#d48997]/5 shadow-sm'
-                    : 'border-black/[0.04] dark:border-white/[0.04] bg-white/60 dark:bg-white/[0.02] backdrop-blur-md hover:border-black/[0.08] dark:hover:border-white/[0.08]'
+                    : 'border-[#eae1e4] dark:border-[#28212f] bg-white dark:bg-[#1c1721] hover:border-[#c65d7b]/35'
                 )}
               >
                 <div className={cn('flex h-9 w-9 shrink-0 items-center justify-center rounded-lg transition-all', secao.accent)}>
-                  <Icon className="h-4.5 w-4.5" />
+                  <Icon className="h-4 w-4" />
                 </div>
                 <div className="min-w-0 flex-1">
                   <h4 className="text-xs font-semibold text-gray-900 dark:text-white truncate">
@@ -205,7 +205,7 @@ export default function BaseConhecimento() {
           {/* AI Banner Card */}
           <div className="rounded-xl border border-[#d48997]/25 bg-gradient-to-br from-[#d48997]/5 to-transparent p-5 space-y-3 shadow-sm">
             <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-[#d48997]/10 text-[#d48997]">
-              <Sparkles className="h-4.5 w-4.5" />
+              <Sparkles className="h-4 w-4" />
             </div>
             <div>
               <h4 className="font-serif text-sm font-semibold text-gray-900 dark:text-white">IA Generativa</h4>
@@ -217,7 +217,7 @@ export default function BaseConhecimento() {
         </aside>
 
         {/* Content Box */}
-        <div className="rounded-2xl border border-black/[0.04] dark:border-white/[0.04] bg-white/60 dark:bg-white/[0.02] backdrop-blur-md p-6 shadow-sm">
+        <div className="rounded-2xl border border-[#eae1e4] dark:border-[#28212f] bg-white dark:bg-[#1c1721] p-6 shadow-sm">
           <AnimatePresence mode="wait">
             <motion.div
               key={secaoAtiva.id}

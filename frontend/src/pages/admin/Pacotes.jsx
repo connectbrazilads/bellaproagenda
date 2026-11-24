@@ -166,7 +166,7 @@ export default function Pacotes() {
             whileTap={{ scale: 0.98 }}
             type="button"
             onClick={abrirNovo}
-            className="inline-flex items-center justify-center gap-2 rounded-xl bg-[#d48997] hover:bg-[#c97b8a] text-white px-5 py-2.5 text-xs font-semibold shadow-sm transition-all shrink-0"
+            className="inline-flex items-center justify-center gap-2 rounded-xl bg-[#b84c6b] hover:bg-[#9c3b57] text-white px-5 py-2.5 text-xs font-semibold shadow-sm transition-all shrink-0"
           >
             <Plus className="h-4 w-4" /> Novo pacote
           </motion.button>
@@ -196,7 +196,7 @@ export default function Pacotes() {
                 animate={{ opacity: 1, scale: 1 }}
                 exit={{ opacity: 0, scale: 0.95 }}
                 key={pacote.id}
-                className="group relative flex flex-col justify-between rounded-2xl border border-black/[0.04] dark:border-white/[0.04] bg-white/60 dark:bg-white/[0.02] backdrop-blur-md p-6 shadow-sm transition-all hover:shadow-md hover:border-black/[0.08] dark:hover:border-white/[0.08]"
+                className="group relative flex flex-col justify-between rounded-2xl border border-[#eae1e4] dark:border-[#28212f] bg-white dark:bg-[#1c1721] p-6 shadow-sm transition-all hover:shadow-md hover:border-black/[0.08] dark:hover:border-white/[0.08]"
               >
                 <div>
                   <div className="mb-4 flex items-center justify-between">
@@ -439,7 +439,7 @@ export default function Pacotes() {
                   <button
                     type="submit"
                     disabled={saving}
-                    className="h-10 rounded-xl bg-[#d48997] hover:bg-[#c97b8a] px-5 text-xs font-semibold text-white transition disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="h-10 rounded-xl bg-[#b84c6b] hover:bg-[#9c3b57] px-5 text-xs font-semibold text-white transition disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     {saving ? 'Salvando...' : editing ? 'Salvar Alterações' : 'Criar Pacote'}
                   </button>

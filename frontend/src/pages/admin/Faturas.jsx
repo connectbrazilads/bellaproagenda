@@ -115,7 +115,7 @@ export default function Faturas() {
       ) : (
         <div className="grid gap-6 md:grid-cols-2">
           {faturas.map((fatura) => (
-            <article key={fatura.id} className="rounded-2xl border border-black/[0.04] dark:border-white/[0.04] bg-white/60 dark:bg-white/[0.02] backdrop-blur-md p-6 shadow-sm flex flex-col justify-between">
+            <article key={fatura.id} className="rounded-2xl border border-[#eae1e4] dark:border-[#28212f] bg-white dark:bg-[#1c1721] p-6 shadow-sm flex flex-col justify-between">
               <div>
                 <div className="flex items-start justify-between gap-4">
                   <div>
@@ -132,7 +132,7 @@ export default function Faturas() {
                 </div>
 
                 {fatura.descricao && (
-                  <p className="mt-4 text-xs text-gray-450 dark:text-gray-400 leading-relaxed border-t border-black/[0.03] dark:border-white/5 pt-3">
+                  <p className="mt-4 text-xs text-[#6b5761] dark:text-gray-400 leading-relaxed border-t border-black/[0.03] dark:border-white/5 pt-3">
                     {fatura.descricao}
                   </p>
                 )}
@@ -205,7 +205,7 @@ export default function Faturas() {
                   <button
                     onClick={() => enviarComprovante(fatura)}
                     disabled={submittingId === fatura.id}
-                    className="w-full flex h-10 items-center justify-center gap-1.5 rounded-xl bg-[#d48997] hover:bg-[#c97b8a] text-white text-xs font-semibold transition shadow-sm disabled:opacity-55"
+                    className="w-full flex h-10 items-center justify-center gap-1.5 rounded-xl bg-[#b84c6b] hover:bg-[#9c3b57] text-white text-xs font-semibold transition shadow-sm disabled:opacity-55"
                   >
                     <Upload className="h-3.5 w-3.5" />
                     {submittingId === fatura.id ? 'Enviando...' : 'Enviar Comprovante'}

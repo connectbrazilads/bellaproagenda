@@ -1,33 +1,36 @@
 import React, { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { 
-  TrendingUp, 
-  DollarSign, 
-  MinusCircle, 
-  Award, 
-  Calendar, 
+import {
+  TrendingUp,
+  DollarSign,
+  MinusCircle,
+  Award,
   ArrowRight,
   Plus,
   Trash2,
   PieChart as PieIcon,
-  Filter,
-  ArrowUpRight,
-  ArrowDownRight
+  X,
 } from 'lucide-react';
-import { 
-  AreaChart, 
-  Area, 
-  XAxis, 
-  YAxis, 
-  CartesianGrid, 
-  Tooltip, 
+import {
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
   ResponsiveContainer,
   BarChart,
   Bar,
-  Cell
+  Cell,
 } from 'recharts';
 import { getRelatorio, createDespesa, deleteDespesa } from '../../services/api';
 import { cn, formatDateInput } from '../../lib/utils';
+
+function formatMoney(value) {
+  return Number(value || 0).toLocaleString('pt-BR', {
+    style: 'currency',
+    currency: 'BRL',
+    minimumFractionDigits: 2,
+  });
+}
 
 export default function Relatorio() {
   const today = formatDateInput();
@@ -36,11 +39,11 @@ export default function Relatorio() {
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(false);
   const [modalDespesa, setModalDespesa] = useState(false);
-  const [formDespesa, setFormDespesa] = useState({ 
-    descricao: '', 
-    valor: 0, 
-    categoria: 'outros', 
-    data: today 
+  const [formDespesa, setFormDespesa] = useState({
+    descricao: '',
+    valor: 0,
+    categoria: 'outros',
+    data: today,
   });
 
   async function carregar() {
@@ -53,17 +56,19 @@ export default function Relatorio() {
     }
   }
 
-  useEffect(() => { carregar(); }, [inicio, fim]);
+  useEffect(() => {
+    carregar();
+  }, [inicio, fim]);
 
   async function handleAddDespesa(e) {
     e.preventDefault();
     await createDespesa(formDespesa);
     setModalDespesa(false);
-    setFormDespesa({ 
-      descricao: '', 
-      valor: 0, 
-      categoria: 'outros', 
-      data: formatDateInput() 
+    setFormDespesa({
+      descricao: '',
+      valor: 0,
+      categoria: 'outros',
+      data: formatDateInput(),
     });
     carregar();
   }
@@ -74,136 +79,129 @@ export default function Relatorio() {
     carregar();
   }
 
-  const chartData = data ? Object.entries(data.porProfissional).map(([name, info]) => ({
-    name,
-    total: info.total,
-    comissao: info.comissao
-  })) : [];
+  const chartData = data?.porProfissional
+    ? Object.entries(data.porProfissional).map(([name, info]) => ({
+        name,
+        total: info.total,
+        comissao: info.comissao,
+      }))
+    : [];
+
+  const despesasPercentual =
+    data && Number(data.total || 0) > 0
+      ? ((Number(data.totalDespesas || 0) / Number(data.total)) * 100).toFixed(1)
+      : '0.0';
 
   return (
-    <motion.div 
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      className="max-w-7xl mx-auto space-y-12 pb-20"
-    >
-      <header className="flex flex-col md:flex-row justify-between items-end md:items-center gap-4 md:p-8 border-b border-gray-100 dark:border-white/5 pb-10">
+    <div className="mx-auto max-w-7xl space-y-6 pb-16">
+      <header className="flex flex-col items-start justify-between gap-4 border-b border-[#eae1e4] pb-5 dark:border-[#28212f] lg:flex-row lg:items-end">
         <div>
-          <div className="flex items-center gap-3 mb-4">
-            <TrendingUp className="w-4 h-4 text-emerald-500 transition-transform group-hover:scale-110 duration-300" />
-            <h2 className="text-[10px] font-black text-emerald-500 uppercase tracking-[0.4em]">Inteligência Financeira</h2>
+          <div className="mb-2 flex items-center gap-2 text-xs font-bold uppercase tracking-[0.16em] text-[#b84c6b]">
+            <TrendingUp className="h-4 w-4" />
+            <span>Inteligência Financeira</span>
           </div>
-          <h1 className="text-2xl sm:text-4xl sm:text-6xl font-black text-gray-900 dark:text-white tracking-tighter leading-none mb-4">Seu <span className="text-[#d48997]">Lucro</span></h1>
-          <p className="text-gray-400 font-medium text-xl max-w-xl leading-relaxed">Visão estratégica completa de receitas, despesas e performance.</p>
+          <h1 className="font-brand-display text-3xl font-bold leading-tight text-[#23141c] dark:text-white sm:text-4xl">
+            Análise de <span className="italic text-[#b84c6b]">Lucro</span>
+          </h1>
+          <p className="mt-1.5 max-w-xl text-sm text-[#6b5761] dark:text-white/60">
+            Visão estratégica de receitas, comissões, despesas e performance por profissional.
+          </p>
         </div>
-        
-        <div className="flex flex-wrap items-center gap-4">
-          <motion.button 
-            whileHover={{ scale: 1.05, y: -2 }}
-            whileTap={{ scale: 0.95 }}
-            onClick={() => setModalDespesa(true)}
-            className="bg-red-500 text-white px-8 py-5 rounded-[2rem] font-black text-xs shadow-2xl shadow-red-500/20 flex items-center gap-3 uppercase tracking-widest"
-          >
-            <Plus className="w-4 h-4" /> LANÇAR DESPESA
-          </motion.button>
-          
-          <div className="flex bg-white dark:bg-gray-900/40 backdrop-blur-xl rounded-[2rem] border border-gray-100 dark:border-white/5 p-2 shadow-xl shadow-gray-100/50 dark:shadow-none">
-            <input 
-              type="date" 
-              value={inicio} 
-              onChange={e => setInicio(e.target.value)} 
-              className="bg-transparent px-4 py-2 text-[10px] font-black uppercase tracking-widest outline-none text-gray-900 dark:text-white" 
+
+        <div className="flex flex-wrap items-center gap-3">
+          <div className="flex items-center gap-2 rounded-xl border border-[#e2d5da] bg-white px-3 py-2 text-xs font-semibold text-[#23141c] shadow-sm dark:border-[#352b3e] dark:bg-[#1c1721] dark:text-white">
+            <input
+              type="date"
+              value={inicio}
+              onChange={(e) => setInicio(e.target.value)}
+              className="bg-transparent outline-none"
             />
-            <div className="flex items-center px-2 text-gray-300"><ArrowRight size={14} strokeWidth={3} /></div>
-            <input 
-              type="date" 
-              value={fim} 
-              onChange={e => setFim(e.target.value)} 
-              className="bg-transparent px-4 py-2 text-[10px] font-black uppercase tracking-widest outline-none text-gray-900 dark:text-white" 
+            <ArrowRight size={14} className="text-[#b84c6b]" />
+            <input
+              type="date"
+              value={fim}
+              onChange={(e) => setFim(e.target.value)}
+              className="bg-transparent outline-none"
             />
           </div>
+
+          <button
+            type="button"
+            onClick={() => setModalDespesa(true)}
+            className="inline-flex h-10 items-center gap-2 rounded-xl bg-rose-600 px-4 text-xs font-bold text-white shadow-sm transition hover:bg-rose-700"
+          >
+            <Plus className="h-4 w-4" /> Lançar Despesa
+          </button>
         </div>
       </header>
 
       {loading ? (
-        <div className="py-40 text-center">
-          <div className="inline-block w-12 h-12 border-4 border-[#E29BA8] border-t-transparent rounded-full animate-spin"></div>
+        <div className="flex flex-col items-center justify-center gap-3 py-24">
+          <div className="h-9 w-9 animate-spin rounded-full border-[3px] border-[#eadde1] border-t-[#b84c6b]" />
+          <p className="text-xs font-semibold text-[#745e69] dark:text-white/60">
+            Carregando relatório...
+          </p>
         </div>
       ) : data ? (
-        <div className="space-y-12">
-          {/* Top Stats Bento Grid */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 sm:p-6">
-            <FinCard 
-              label="Receita Bruta" 
-              value={data.total} 
-              icon={<DollarSign />} 
-              color="emerald" 
-              trend="+15%" 
-            />
-            <FinCard 
-              label="Comissões" 
-              value={data.totalComissoes} 
-              icon={<Award />} 
-              color="orange" 
-              trend="-2%" 
-            />
-            <FinCard 
-              label="Despesas" 
-              value={data.totalDespesas} 
-              icon={<MinusCircle />} 
-              color="red" 
-              trend="+5%" 
-            />
-            <FinCard 
-              label="Lucro Real" 
-              value={data.lucroReal} 
-              icon={<TrendingUp />} 
-              color="purple" 
-              destaque 
-            />
+        <div className="space-y-6">
+          {/* Top KPI Row */}
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+            <FinCard label="Receita Bruta" value={data.total} icon={<DollarSign />} color="emerald" />
+            <FinCard label="Comissões" value={data.totalComissoes} icon={<Award />} color="amber" />
+            <FinCard label="Despesas" value={data.totalDespesas} icon={<MinusCircle />} color="rose" />
+            <FinCard label="Lucro Real" value={data.lucroReal} icon={<TrendingUp />} color="plum" destaque />
           </div>
 
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-5 md:p-10">
+          <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
             {/* Performance Chart */}
-            <div className="lg:col-span-2 bg-white dark:bg-gray-900/40 backdrop-blur-3xl rounded-[3rem] border border-gray-100 dark:border-white/5 p-12 shadow-2xl shadow-gray-200/20 dark:shadow-none">
-              <div className="flex items-center justify-between mb-12">
+            <div className="rounded-2xl border border-[#eae1e4] bg-white p-6 shadow-sm dark:border-[#28212f] dark:bg-[#1c1721] lg:col-span-2">
+              <div className="mb-6 flex items-center justify-between gap-4">
                 <div>
-                  <h3 className="text-sm font-black text-gray-400 uppercase tracking-[0.3em] mb-2">Ranking de Artistas</h3>
-                  <p className="text-2xl font-black text-gray-900 dark:text-white tracking-tighter uppercase">Performance por Volume</p>
+                  <p className="text-[11px] font-bold uppercase tracking-[0.16em] text-[#b84c6b]">
+                    Ranking da Equipe
+                  </p>
+                  <h3 className="mt-1 font-brand-display text-2xl font-bold text-[#23141c] dark:text-white">
+                    Performance por Volume
+                  </h3>
                 </div>
-                <div className="w-12 h-12 bg-[#E29BA8]/5 dark:bg-[#8c4a57]/20 rounded-2xl flex items-center justify-center border border-[#E29BA8]/10 dark:border-purple-800/30">
-                  <PieIcon className="w-6 h-6 text-[#d48997]" />
+                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#fdf2f5] text-[#b84c6b] dark:bg-[#c65d7b]/20 dark:text-[#f0aab8]">
+                  <PieIcon className="h-5 w-5" />
                 </div>
               </div>
-              
-              <div className="h-[400px] w-full">
+
+              <div className="h-[340px] w-full">
                 <ResponsiveContainer width="100%" height="100%">
-                  <BarChart data={chartData} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
-                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f0f0f0" />
-                    <XAxis 
-                      dataKey="name" 
-                      axisLine={false} 
-                      tickLine={false} 
-                      tick={{ fill: '#9ca3af', fontSize: 10, fontWeight: 900 }} 
-                      padding={{ left: 20, right: 20 }}
+                  <BarChart data={chartData} margin={{ top: 16, right: 16, left: 8, bottom: 5 }}>
+                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="rgba(35,20,28,0.08)" />
+                    <XAxis
+                      dataKey="name"
+                      axisLine={false}
+                      tickLine={false}
+                      tick={{ fill: '#745e69', fontSize: 11, fontWeight: 600 }}
+                      padding={{ left: 16, right: 16 }}
                     />
                     <YAxis hide />
-                    <Tooltip 
-                      cursor={{ fill: 'transparent' }}
-                      content={({ active, payload }) => {
-                        if (active && payload && payload.length) {
-                          return (
-                            <div className="bg-black text-white p-4 rounded-2xl shadow-2xl border border-gray-200 dark:border-white/10">
-                              <p className="text-[10px] font-black uppercase tracking-widest mb-1">{payload[0].payload.name}</p>
-                              <p className="text-lg font-black tracking-tighter text-emerald-400">R$ {payload[0].value?.toFixed(2)}</p>
-                            </div>
-                          );
-                        }
-                        return null;
-                      }}
+                    <Tooltip
+                      cursor={{ fill: 'rgba(198,93,123,0.06)' }}
+                      content={({ active, payload }) =>
+                        active && payload?.length ? (
+                          <div className="rounded-xl border border-[#eae1e4] bg-[#23141c] px-4 py-3 text-white shadow-lg">
+                            <p className="text-[11px] font-bold text-[#f0aab8]">
+                              {payload[0].payload.name}
+                            </p>
+                            <p className="mt-1 text-base font-extrabold tabular-nums">
+                              {formatMoney(payload[0].value)}
+                            </p>
+                          </div>
+                        ) : null
+                      }
                     />
-                    <Bar dataKey="total" radius={[10, 10, 0, 0]} barSize={40}>
+                    <Bar dataKey="total" radius={[10, 10, 0, 0]} barSize={36}>
                       {chartData.map((entry, index) => (
-                        <Cell key={`cell-${index}`} fill={index % 2 === 0 ? '#9333ea' : '#c084fc'} />
+                        <Cell
+                          key={`cell-${index}`}
+                          fill={index % 2 === 0 ? '#b84c6b' : '#23141c'}
+                        />
                       ))}
                     </Bar>
                   </BarChart>
@@ -212,62 +210,74 @@ export default function Relatorio() {
             </div>
 
             {/* Expenses List */}
-            <div className="bg-[#050505] rounded-[3rem] p-12 text-white shadow-2xl relative overflow-hidden flex flex-col">
-              <div className="absolute top-0 right-0 w-64 h-64 bg-red-600/20 blur-[100px] rounded-full -translate-y-1/2 translate-x-1/2" />
-              
-              <div className="relative z-10 flex flex-col h-full">
-                <div className="flex items-center justify-between mb-12">
-                  <h3 className="text-sm font-black text-red-400 uppercase tracking-[0.3em]">Extrato de Despesas</h3>
-                  <div className="px-4 py-2 bg-red-500/20 rounded-full border border-red-500/30 text-[10px] font-black text-red-400 uppercase tracking-widest">
-                    {data.despesas.length} ITENS
+            <div className="flex flex-col rounded-2xl border border-[#eae1e4] bg-white p-6 shadow-sm dark:border-[#28212f] dark:bg-[#1c1721]">
+              <div className="mb-5 flex items-center justify-between gap-2">
+                <div>
+                  <p className="text-[11px] font-bold uppercase tracking-[0.16em] text-rose-600 dark:text-rose-400">
+                    Extrato de Saídas
+                  </p>
+                  <h3 className="mt-0.5 font-brand-display text-xl font-bold text-[#23141c] dark:text-white">
+                    Despesas do Período
+                  </h3>
+                </div>
+                <span className="rounded-full bg-rose-50 px-2.5 py-1 text-[11px] font-bold text-rose-700 dark:bg-rose-500/15 dark:text-rose-300">
+                  {data.despesas?.length || 0} itens
+                </span>
+              </div>
+
+              <div className="flex-1 space-y-2.5 overflow-y-auto pr-1 custom-scrollbar max-h-[300px]">
+                {!data.despesas?.length ? (
+                  <div className="rounded-xl border border-dashed border-[#e2d5da] bg-[#faf7f5] py-12 text-center dark:border-[#352b3e] dark:bg-white/[0.02]">
+                    <MinusCircle className="mx-auto mb-2 h-8 w-8 text-[#c9b4be]" />
+                    <p className="text-xs font-semibold text-[#745e69] dark:text-white/55">
+                      Sem despesas registradas
+                    </p>
                   </div>
-                </div>
-
-                <div className="space-y-6 flex-1 overflow-y-auto pr-4 scrollbar-hide">
-                  {data.despesas.length === 0 ? (
-                    <div className="py-20 text-center opacity-30">
-                       <MinusCircle className="w-12 h-12 mx-auto mb-4" />
-                       <p className="text-[10px] font-black uppercase tracking-widest">Sem despesas registradas</p>
+                ) : (
+                  data.despesas.map((d) => (
+                    <div
+                      key={d.id}
+                      className="group flex items-center justify-between gap-3 rounded-xl border border-[#f0e8eb] bg-[#faf7f5] px-4 py-3 dark:border-[#28212f] dark:bg-white/[0.03]"
+                    >
+                      <div className="min-w-0">
+                        <p className="truncate text-xs font-bold text-[#23141c] dark:text-white">
+                          {d.descricao}
+                        </p>
+                        <p className="mt-0.5 text-[11px] text-[#745e69] dark:text-white/55">
+                          {new Date(d.data).toLocaleDateString('pt-BR')} · {d.categoria}
+                        </p>
+                      </div>
+                      <div className="flex shrink-0 items-center gap-2">
+                        <p className="text-sm font-extrabold text-rose-600 tabular-nums dark:text-rose-400">
+                          {formatMoney(d.valor)}
+                        </p>
+                        <button
+                          type="button"
+                          onClick={() => handleExcluirDespesa(d.id)}
+                          className="rounded-lg p-1.5 text-[#8c727e] transition hover:bg-rose-50 hover:text-rose-600 dark:hover:bg-rose-500/15"
+                          title="Excluir despesa"
+                        >
+                          <Trash2 size={14} />
+                        </button>
+                      </div>
                     </div>
-                  ) : (
-                    data.despesas.map((d, idx) => (
-                      <motion.div 
-                        initial={{ opacity: 0, x: 20 }}
-                        animate={{ opacity: 1, x: 0 }}
-                        transition={{ delay: idx * 0.05 }}
-                        key={d.id} 
-                        className="group flex items-center justify-between p-4 sm:p-6 bg-white/5 rounded-[2rem] border border-gray-200 dark:border-white/5 hover:bg-white/10 transition-all"
-                      >
-                        <div className="flex items-center gap-4 sm:p-6">
-                           <div className="w-12 h-12 bg-white/10 rounded-xl flex items-center justify-center text-xl shadow-inner group-hover:bg-red-500/20 transition-all">💸</div>
-                           <div>
-                              <p className="text-xs font-black uppercase tracking-widest text-gray-900 dark:text-white leading-none mb-2">{d.descricao}</p>
-                              <p className="text-[9px] font-black text-gray-500 uppercase tracking-widest">{new Date(d.data).toLocaleDateString()} • {d.categoria}</p>
-                           </div>
-                        </div>
-                        <div className="flex items-center gap-4">
-                           <p className="text-xl font-black text-red-400 tracking-tighter">R$ {Number(d.valor || 0).toFixed(0)}</p>
-                           <button onClick={() => handleExcluirDespesa(d.id)} className="p-2 text-gray-400 dark:text-white/20 hover:text-red-500 transition-colors opacity-0 group-hover:opacity-100">
-                             <Trash2 size={16} />
-                           </button>
-                        </div>
-                      </motion.div>
-                    ))
-                  )}
-                </div>
+                  ))
+                )}
+              </div>
 
-                <div className="mt-12 pt-12 border-t border-gray-200 dark:border-white/5">
-                   <div className="flex justify-between items-end">
-                      <div>
-                        <p className="text-[10px] font-black text-gray-500 uppercase tracking-widest mb-1">Total de Saídas</p>
-                        <p className="text-2xl sm:text-4xl font-black text-gray-900 dark:text-white tracking-tighter">R$ {data.totalDespesas.toFixed(2)}</p>
-                      </div>
-                      <div className="text-right">
-                        <span className="text-red-400 font-black text-xs bg-red-400/10 px-4 py-2 rounded-full border border-red-400/20">
-                          - {((data.totalDespesas / data.total) * 100).toFixed(1)}% da Receita
-                        </span>
-                      </div>
-                   </div>
+              <div className="mt-5 border-t border-[#f0e8eb] pt-4 dark:border-[#28212f]">
+                <div className="flex items-end justify-between gap-2">
+                  <div>
+                    <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-[#745e69] dark:text-white/55">
+                      Total de Saídas
+                    </p>
+                    <p className="mt-1 text-2xl font-extrabold text-[#23141c] tabular-nums dark:text-white">
+                      {formatMoney(data.totalDespesas)}
+                    </p>
+                  </div>
+                  <span className="rounded-full bg-rose-50 px-3 py-1 text-xs font-bold text-rose-700 dark:bg-rose-500/15 dark:text-rose-300">
+                    -{despesasPercentual}% da receita
+                  </span>
                 </div>
               </div>
             </div>
@@ -278,127 +288,156 @@ export default function Relatorio() {
       {/* Modal Despesa */}
       <AnimatePresence>
         {modalDespesa && (
-          <div className="fixed inset-0 z-[200] flex items-center justify-center overflow-y-auto overscroll-contain p-3 sm:p-6">
-            <motion.div 
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              onClick={() => setModalDespesa(false)}
-              className="absolute inset-0 bg-black/60 backdrop-blur-md" 
-            />
-            <motion.form 
-              initial={{ opacity: 0, scale: 0.9, y: 20 }}
-              animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.9, y: 20 }}
-              onSubmit={handleAddDespesa} 
-              className="relative max-h-[calc(100dvh-1.5rem)] w-full max-w-md overflow-y-auto rounded-[3rem] bg-white p-6 shadow-2xl custom-scrollbar dark:bg-gray-900 sm:p-10 md:p-12"
+          <div className="fixed inset-0 z-[200] flex items-center justify-center overflow-y-auto overscroll-contain bg-black/50 p-4">
+            <motion.form
+              initial={{ opacity: 0, scale: 0.96 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.96 }}
+              onSubmit={handleAddDespesa}
+              className="relative w-full max-w-md rounded-3xl border border-[#eae1e4] bg-white p-6 shadow-2xl dark:border-[#352b3e] dark:bg-[#1c1721] sm:p-7"
             >
-              <h2 className="text-3xl font-black text-gray-900 dark:text-white tracking-tighter mb-8">Lançar Despesa</h2>
-              <div className="space-y-6">
-                <div className="space-y-1">
-                  <label className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider ml-4">Descrição</label>
-                  <input 
-                    value={formDespesa.descricao} 
-                    onChange={e => setFormDespesa({...formDespesa, descricao: e.target.value})} 
-                    className="w-full bg-gray-50 dark:bg-white/5 border-2 border-transparent focus:border-red-500 rounded-2xl px-6 py-4 font-semibold text-gray-900 dark:text-white outline-none transition-all" 
-                    placeholder="Ex: Aluguel do Salão" 
-                    required 
+              <div className="mb-5 flex items-center justify-between border-b border-[#f0e8eb] pb-4 dark:border-[#28212f]">
+                <div>
+                  <p className="text-[11px] font-bold uppercase tracking-[0.16em] text-rose-600">
+                    Registro de saída
+                  </p>
+                  <h2 className="mt-0.5 font-brand-display text-2xl font-bold text-[#23141c] dark:text-white">
+                    Lançar Despesa
+                  </h2>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setModalDespesa(false)}
+                  className="rounded-xl border border-[#e2d5da] bg-[#faf7f5] p-2 text-[#6b5761] hover:text-[#23141c] dark:border-[#352b3e] dark:bg-white/5 dark:text-white/70"
+                >
+                  <X size={16} />
+                </button>
+              </div>
+
+              <div className="space-y-4">
+                <div>
+                  <label className="mb-1.5 block text-xs font-semibold text-[#5b4852] dark:text-white/65">
+                    Descrição
+                  </label>
+                  <input
+                    value={formDespesa.descricao}
+                    onChange={(e) => setFormDespesa({ ...formDespesa, descricao: e.target.value })}
+                    className="h-11 w-full rounded-xl border border-[#e2d5da] bg-white px-4 text-sm text-[#23141c] outline-none focus:border-[#b84c6b] dark:border-[#352b3e] dark:bg-[#151119] dark:text-white"
+                    placeholder="Ex: Aluguel do salão"
+                    required
                   />
                 </div>
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-1">
-                    <label className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider ml-4">Valor (R$)</label>
-                    <input 
-                      type="number" 
-                      step="0.01" 
-                      value={formDespesa.valor} 
-                      onChange={e => setFormDespesa({...formDespesa, valor: parseFloat(e.target.value)})} 
-                      className="w-full bg-gray-50 dark:bg-white/5 border-2 border-transparent focus:border-red-500 rounded-2xl px-6 py-4 font-semibold text-gray-900 dark:text-white outline-none transition-all" 
-                      required 
+
+                <div className="grid grid-cols-2 gap-3.5">
+                  <div>
+                    <label className="mb-1.5 block text-xs font-semibold text-[#5b4852] dark:text-white/65">
+                      Valor (R$)
+                    </label>
+                    <input
+                      type="number"
+                      step="0.01"
+                      value={formDespesa.valor}
+                      onChange={(e) =>
+                        setFormDespesa({ ...formDespesa, valor: parseFloat(e.target.value || 0) })
+                      }
+                      className="h-11 w-full rounded-xl border border-[#e2d5da] bg-white px-4 text-sm text-[#23141c] outline-none focus:border-[#b84c6b] dark:border-[#352b3e] dark:bg-[#151119] dark:text-white"
+                      required
                     />
                   </div>
-                  <div className="space-y-1">
-                    <label className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider ml-4">Data</label>
-                    <input 
-                      type="date" 
-                      value={formDespesa.data} 
-                      onChange={e => setFormDespesa({...formDespesa, data: e.target.value})} 
-                      className="w-full bg-gray-50 dark:bg-white/5 border-2 border-transparent focus:border-red-500 rounded-2xl px-6 py-4 font-semibold text-gray-900 dark:text-white outline-none transition-all" 
-                      required 
+                  <div>
+                    <label className="mb-1.5 block text-xs font-semibold text-[#5b4852] dark:text-white/65">
+                      Data
+                    </label>
+                    <input
+                      type="date"
+                      value={formDespesa.data}
+                      onChange={(e) => setFormDespesa({ ...formDespesa, data: e.target.value })}
+                      className="h-11 w-full rounded-xl border border-[#e2d5da] bg-white px-3 text-sm text-[#23141c] outline-none focus:border-[#b84c6b] dark:border-[#352b3e] dark:bg-[#151119] dark:text-white"
+                      required
                     />
                   </div>
                 </div>
-                <div className="space-y-1">
-                  <label className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider ml-4">Categoria</label>
-                  <select 
-                    value={formDespesa.categoria} 
-                    onChange={e => setFormDespesa({...formDespesa, categoria: e.target.value})} 
-                    className="w-full bg-gray-50 dark:bg-white/5 border-2 border-transparent focus:border-red-500 rounded-2xl px-6 py-4 font-semibold text-gray-900 dark:text-white outline-none appearance-none uppercase text-xs tracking-wider"
+
+                <div>
+                  <label className="mb-1.5 block text-xs font-semibold text-[#5b4852] dark:text-white/65">
+                    Categoria
+                  </label>
+                  <select
+                    value={formDespesa.categoria}
+                    onChange={(e) => setFormDespesa({ ...formDespesa, categoria: e.target.value })}
+                    className="h-11 w-full rounded-xl border border-[#e2d5da] bg-white px-3.5 text-sm text-[#23141c] outline-none focus:border-[#b84c6b] dark:border-[#352b3e] dark:bg-[#151119] dark:text-white"
                   >
-                     <option value="aluguel">Aluguel / Fixos</option>
-                     <option value="produtos">Produtos / Materiais</option>
-                     <option value="marketing">Marketing / Social</option>
-                     <option value="luz">Luz / Água / Net</option>
-                     <option value="outros">Outros</option>
+                    <option value="aluguel">Aluguel / Fixos</option>
+                    <option value="produtos">Produtos / Materiais</option>
+                    <option value="marketing">Marketing / Social</option>
+                    <option value="luz">Luz / Água / Internet</option>
+                    <option value="outros">Outros</option>
                   </select>
                 </div>
-                <div className="flex gap-4 pt-4">
-                   <button type="button" onClick={() => setModalDespesa(false)} className="flex-1 py-5 rounded-2xl border-2 border-gray-100 dark:border-white/5 text-xs font-semibold uppercase tracking-wider text-gray-400 hover:bg-gray-50 transition-all">Cancelar</button>
-                   <button type="submit" className="flex-1 py-5 bg-red-600 text-white rounded-2xl font-bold text-xs uppercase tracking-wider shadow-xl shadow-red-500/20 hover:bg-red-700 transition-all">Lançar Agora</button>
+
+                <div className="flex gap-2.5 pt-2">
+                  <button
+                    type="button"
+                    onClick={() => setModalDespesa(false)}
+                    className="flex-1 rounded-xl border border-[#e2d5da] bg-[#faf7f5] py-3 text-xs font-bold text-[#5b4852] transition hover:bg-[#f1e7ea] dark:border-[#352b3e] dark:bg-white/5 dark:text-white/75"
+                  >
+                    Cancelar
+                  </button>
+                  <button
+                    type="submit"
+                    className="flex-1 rounded-xl bg-rose-600 py-3 text-xs font-bold text-white shadow-sm transition hover:bg-rose-700"
+                  >
+                    Lançar Despesa
+                  </button>
                 </div>
               </div>
             </motion.form>
           </div>
         )}
       </AnimatePresence>
-    </motion.div>
+    </div>
   );
 }
 
-function FinCard({ label, value, icon, color, trend, destaque }) {
-  const colors = {
-    emerald: "bg-emerald-50 dark:bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-100 dark:border-emerald-500/20 shadow-emerald-500/5",
-    orange: "bg-orange-50 dark:bg-orange-500/10 text-orange-600 dark:text-orange-400 border-orange-100 dark:border-orange-500/20 shadow-orange-500/5",
-    red: "bg-red-50 dark:bg-red-500/10 text-red-600 dark:text-red-400 border-red-100 dark:border-red-500/20 shadow-red-500/5",
-    purple: "bg-gradient-to-br from-[#d48997] to-indigo-700 text-white border-transparent shadow-[#E29BA8]/20",
+function FinCard({ label, value, icon, color, destaque = false }) {
+  const iconTones = {
+    emerald: 'bg-emerald-50 text-emerald-700 dark:bg-emerald-500/15 dark:text-emerald-300',
+    amber: 'bg-amber-50 text-amber-700 dark:bg-amber-500/15 dark:text-amber-300',
+    rose: 'bg-rose-50 text-rose-700 dark:bg-rose-500/15 dark:text-rose-300',
+    plum: 'bg-white/15 text-[#f0aab8]',
   };
 
   return (
-    <motion.div 
-      whileHover={{ y: -5 }}
+    <div
       className={cn(
-        "p-5 md:p-10 rounded-[2rem] border relative overflow-hidden transition-all shadow-2xl",
-        colors[color],
-        destaque ? "shadow-[#E29BA8]/30 ring-4 ring-[#E29BA8]/10" : "shadow-gray-200/20 dark:shadow-none"
+        'rounded-2xl border p-5 shadow-sm',
+        destaque
+          ? 'border-[#23141c] bg-[#23141c] text-white'
+          : 'border-[#eae1e4] bg-white text-[#23141c] dark:border-[#28212f] dark:bg-[#1c1721] dark:text-white'
       )}
     >
-      <div className="flex justify-between items-start mb-8">
-        <div className={cn(
-          "w-14 h-14 rounded-2xl flex items-center justify-center text-2xl border",
-          color === 'purple' ? "bg-white/10 border-gray-200 dark:border-white/10" : "bg-white dark:bg-gray-800 border-inherit"
-        )}>
-          {React.cloneElement(icon, { size: 24, strokeWidth: 3 })}
+      <div className="mb-4 flex items-center justify-between">
+        <div
+          className={cn(
+            'flex h-10 w-10 items-center justify-center rounded-xl',
+            iconTones[color] || iconTones.emerald
+          )}
+        >
+          {React.cloneElement(icon, { size: 18, strokeWidth: 2.2 })}
         </div>
-        {trend && (
-          <span className={cn(
-            "flex items-center gap-1 text-[9px] font-black px-3 py-1.5 rounded-full border",
-            trend.startsWith('+') ? "text-emerald-500 border-emerald-500/20 bg-emerald-500/5" : "text-red-500 border-red-500/20 bg-red-500/5"
-          )}>
-            {trend.startsWith('+') ? <ArrowUpRight size={10} strokeWidth={4} /> : <ArrowDownRight size={10} strokeWidth={4} />}
-            {trend}
-          </span>
-        )}
       </div>
 
-      <p className={cn(
-        "text-[10px] font-black uppercase tracking-[0.3em] mb-2",
-        color === 'purple' ? "text-[#E29BA8]/10" : "text-gray-400"
-      )}>
+      <p
+        className={cn(
+          'text-[11px] font-bold uppercase tracking-[0.14em]',
+          destaque ? 'text-[#f0aab8]' : 'text-[#745e69] dark:text-white/55'
+        )}
+      >
         {label}
       </p>
-      <p className="text-2xl sm:text-4xl font-black tracking-tighter">
-        {Number(value || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL', minimumFractionDigits: 0, maximumFractionDigits: 0 })}
+      <p className="mt-1.5 text-2xl font-extrabold tracking-tight tabular-nums">
+        {formatMoney(value)}
       </p>
-    </motion.div>
+    </div>
   );
 }

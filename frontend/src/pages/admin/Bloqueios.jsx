@@ -113,7 +113,7 @@ export default function Bloqueios() {
           whileHover={{ scale: 1.02, y: -1 }}
           whileTap={{ scale: 0.98 }}
           onClick={() => setShowForm((v) => !v)}
-          className="inline-flex items-center justify-center gap-2 rounded-xl bg-[#d48997] hover:bg-[#c97b8a] text-white px-5 py-2.5 text-xs font-semibold shadow-sm transition-all"
+          className="inline-flex items-center justify-center gap-2 rounded-xl bg-[#b84c6b] hover:bg-[#9c3b57] text-white px-5 py-2.5 text-xs font-semibold shadow-sm transition-all"
         >
           <Plus className="h-4 w-4" /> Novo Bloqueio
         </motion.button>
@@ -127,12 +127,12 @@ export default function Bloqueios() {
             animate={{ opacity: 1, height: 'auto' }}
             exit={{ opacity: 0, height: 0 }}
             onSubmit={salvar}
-            className="overflow-hidden rounded-2xl border border-black/[0.04] dark:border-white/[0.04] bg-white/60 dark:bg-white/[0.02] backdrop-blur-md p-5 md:p-8 shadow-sm"
+            className="overflow-hidden rounded-2xl border border-[#eae1e4] dark:border-[#28212f] bg-white dark:bg-[#1c1721] p-5 md:p-8 shadow-sm"
           >
             <div className="flex items-center justify-between mb-6 border-b border-black/[0.03] dark:border-white/5 pb-4">
               <div>
                 <p className="text-[10px] font-semibold text-[#d48997]">Nova restrição</p>
-                <h2 className="mt-1 font-serif font-normal text-xl text-gray-905 dark:text-white">Bloquear Agenda</h2>
+                <h2 className="mt-1 font-serif font-normal text-xl text-[#23141c] dark:text-white">Bloquear Agenda</h2>
               </div>
               <button type="button" onClick={() => setShowForm(false)} className="rounded-full border border-black/[0.04] dark:border-white/10 p-2 text-gray-400 hover:text-red-500 transition shadow-sm">
                 <X className="h-4 w-4" />
@@ -258,7 +258,7 @@ export default function Bloqueios() {
               <button
                 type="submit"
                 disabled={saving}
-                className="inline-flex items-center justify-center rounded-xl bg-[#d48997] hover:bg-[#c97b8a] text-white px-5 py-2.5 text-xs font-semibold shadow-sm transition disabled:opacity-70"
+                className="inline-flex items-center justify-center rounded-xl bg-[#b84c6b] hover:bg-[#9c3b57] text-white px-5 py-2.5 text-xs font-semibold shadow-sm transition disabled:opacity-70"
               >
                 {saving ? 'Processando...' : 'Confirmar Bloqueio'}
               </button>
@@ -276,7 +276,7 @@ export default function Bloqueios() {
         ) : bloqueios.length === 0 ? (
           <div className="rounded-2xl border border-dashed border-black/[0.06] dark:border-white/10 bg-white/40 dark:bg-white/[0.01] px-8 py-16 text-center shadow-sm">
             <ShieldAlert className="mx-auto h-12 w-12 text-gray-300 dark:text-gray-600" />
-            <h2 className="mt-4 font-serif font-normal text-xl text-gray-905 dark:text-white">Agenda livre de bloqueios</h2>
+            <h2 className="mt-4 font-serif font-normal text-xl text-[#23141c] dark:text-white">Agenda livre de bloqueios</h2>
             <p className="mx-auto mt-2 max-w-sm text-xs leading-relaxed text-gray-400 dark:text-gray-500">
               Nenhum bloqueio registrado. Crie restrições de horário para organizar folgas e indisponibilidades.
             </p>
